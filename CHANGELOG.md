@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.4.1 (8 Nov 2026): Raids tab taken out for now
+
+- **The Raids tab is gone again.** It wasn't set up right yet, so Short
+  Royalty stays focused on crafting and professions for now. Raids will come
+  back later, re-planned. "My roles" went with it (nothing else used it).
+- Still here: the Overview's raid countdown and Onyxia attunement card, and
+  the Roster's raid attunement filter.
+- Everything else from v0.4.0 stays: the simpler "who has the addon" on the
+  Overview, the Alt rank left out of it, and scrolling menus.
+- Works with guildmates on v0.3.3 and later.
+
 ## v0.4.0 (7 Nov 2026): Raids
 
 A new **Raids** tab, after Crafters, built on **Blizzard's guild calendar**.

@@ -138,7 +138,8 @@ local FIELDS = {
 	end,
 	-- v0.3.6 sent "This is my alt" marks; v0.4.0 dropped the feature but still
 	-- checks the field, since guildmates on v0.3.6 keep sending it.
-	-- v0.4.0: raid roles { main = "TANK"|"HEALER"|"DPS", second = same or nil }.
+	-- v0.4.0 sent raid roles { main = "TANK"|"HEALER"|"DPS", second = ... };
+	-- v0.4.1 removed the Raids tab but still checks the field (v0.4.0 clients send it).
 	roles = function(v)
 		if v == nil then return true end
 		if type(v) ~= "table" then return false end

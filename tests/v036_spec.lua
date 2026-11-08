@@ -155,3 +155,18 @@ describe("v0.4.0 alt rank", function()
 		assert.equal(0, #SK.errors)
 	end)
 end)
+
+describe("v0.4.1 Raids tab removed", function()
+	it("profiles from v0.4.0 guildmates (with raid roles) are still accepted, and we no longer send roles", function()
+		local SK, W = H.load()
+		local p = { v = 1, guid = "P-1", updated = 1, hash = "h", roles = { main = "HEALER", second = "DPS" } }
+		assert.is_true((SK.Merge.Validate(p)))
+		p.roles = { main = "KING" }
+		assert.is_false((SK.Merge.Validate(p)))
+		assert.is_nil(SK.Raids)
+		W.member("Pocus Hocus", W.player.guid)
+		SK.Identity:ReadRoster()
+		SK.Profile:BuildSelf()
+		assert.is_nil(SK.DBM:Guild().profiles[W.player.guid].roles)
+	end)
+end)

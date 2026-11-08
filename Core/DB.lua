@@ -28,8 +28,6 @@ local DEFAULTS = {
 	own = {},             -- [guid] = full profile of our own characters (never sent)
 	cooldownSpells = {},  -- [guid] = { [recipeID] = true } recipes with cooldowns
 	account = {},  -- [guid] = true for characters seen on this account
-	roles = {},    -- [guid] = { main = "TANK"|"HEALER"|"DPS", second = ... } raid roles per character (v0.4.0, in the profile)
-	raidPick = {}, -- [eventID] = raid key: the player's own raid match for a calendar event (v0.4.0, local)
 	seenGuids = {}, -- [name] = { guid, first, logins, changedFrom } (GUID stability check for /sr debug)
 	feed = {},      -- recent milestones, newest first, max 50 (local only, never sent)
 	favourites = { recipes = {}, crafters = {} }, -- starred recipes and crafters (v0.3, local only)
