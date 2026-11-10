@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.2 (not released yet): fixes from the first big in-game report
+## v0.4.2 (10 Nov 2026): fixes from the first big in-game report
 
 From a `/sr debug` on v0.4.1 with 39 members and 24 sharing data:
 

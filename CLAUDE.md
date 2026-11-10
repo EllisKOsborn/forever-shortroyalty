@@ -236,7 +236,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   "doesn't have it"); **v0.4.0** (7 Nov, Raids tab read-only, simpler "who has
   the addon", Alt rank left out of the Overview, alt guessing removed);
   **v0.4.1** (8 Nov, Raids tab removed again: "keep it as crafting and
-  professions for now"). Tag only when
+  professions for now"); **v0.4.2** (10 Nov, fixes from the first big
+  in-game report: guild-nil error, lost profession scans, false send errors). Tag only when
   the user asks.
 
 ## Layout
@@ -477,7 +478,7 @@ messages → sender ignored for the session).
   `W.Menu:Choose`. The v0.4.0 notes above describe how the tab was built
   (git history has the code) if raids come back; re-plan with the owner
   first. TESTING 136.
-- **v0.4.2 (built 10 Nov, not on `main`)**: three fixes from the owner's
+- **v0.4.2 (on `main` 10 Nov, released automatically)**: three fixes from the owner's
   v0.4.1 report (see "Confirmed in game 10 Nov"): guild-nil crash, lost
   profession scans (`SK.DB.scanKeep[guid][skillLine] = { scanned, rank,
   recipes }`, restored when the profession returns at ≥ that rank), and
