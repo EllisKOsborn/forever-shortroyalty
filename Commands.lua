@@ -151,7 +151,8 @@ function Commands.BuildReport()
 	local canSend, why = Compat.CanSendAddonMessages()
 	add("Can send addon messages: %s %s   (Blizzard's 'restricted' flag: %s, ignored)", yesno(canSend),
 		why and ("(" .. why .. ")") or "", yesno(Compat.AddonChatFlag()))
-	add("Send errors: %d   last: %s", SK.Sync.stats.sendErrors or 0, tostring(SK.Sync.lastSendError))
+	add("Send errors: %d   last: %s   Whispers to players who had logged off (normal): %d",
+		SK.Sync.stats.sendErrors or 0, tostring(SK.Sync.lastSendError), SK.Sync.stats.targetOffline or 0)
 
 	add("")
 	add("== Guild ==")

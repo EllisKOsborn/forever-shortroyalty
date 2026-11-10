@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.4.2 (not released yet): fixes from the first big in-game report
+
+From a `/sr debug` on v0.4.1 with 39 members and 24 sharing data:
+
+- **Fixed a Lua error** ("attempt to index local 'guild'"). The game can say
+  "no guild" for a moment (a loading screen, just after login); a message
+  arriving right then failed. The addon now waits 15 seconds before
+  believing it, and messages that arrive without a guild are set aside
+  instead of failing.
+- **Fixed: profession recipes could be lost.** If the game's profession list
+  came back incomplete for a moment, the missing professions lost their
+  recorded recipes and went back to "open your profession window". Their
+  recipes are now kept and given back when the profession reappears. (If
+  yours were lost, open those windows once more; the orange bar says which.)
+- **"Send errors" no longer counts whispers to someone who just logged off.**
+  That's normal, and it could wrongly trigger the "Sending to guildmates is
+  failing" message. `/sr debug` shows them separately, and real errors now
+  name Blizzard's reason.
+
 ## v0.4.1 (8 Nov 2026): Raids tab taken out for now
 
 - **The Raids tab is gone again.** It wasn't set up right yet, so Short

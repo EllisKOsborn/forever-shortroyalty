@@ -166,13 +166,27 @@ end
 ---------------------------------------------------------------------------
 -- Roster reading
 ---------------------------------------------------------------------------
+-- The game can say "no guild" for a moment (loading screens, just after
+-- login). Dropping the guild then broke incoming messages (v0.4.1 report:
+-- "attempt to index local 'guild'"), so only believe it once it has said so
+-- for NO_GUILD_AFTER seconds.
+Identity.NO_GUILD_AFTER = 15
 function Identity:UpdateGuildKey()
 	local guildName, _, _, realm = Compat.GuildInfo()
 	if guildName then
 		SK.guildKey = SK.DBM.GuildKey(guildName, realm)
 		SK.guildName = guildName
+		self.noGuildSince = nil
 	elseif not Compat.IsInGuild() then
-		SK.guildKey, SK.guildName = nil, nil
+		local now = Compat.Now()
+		if not SK.guildKey then
+			self.noGuildSince = nil
+		elseif not self.noGuildSince then
+			self.noGuildSince = now
+			SK.After(Identity.NO_GUILD_AFTER + 1, function() Identity:UpdateGuildKey() end)
+		elseif now - self.noGuildSince >= Identity.NO_GUILD_AFTER then
+			SK.guildKey, SK.guildName, self.noGuildSince = nil, nil, nil
+		end
 	end
 	return SK.guildKey
 end

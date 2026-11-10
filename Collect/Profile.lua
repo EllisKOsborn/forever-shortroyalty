@@ -150,12 +150,33 @@ function Profile:BuildSelf()
 		recipes = {},
 		cds = {},
 	}
-	-- Keep scan results for professions the character still has.
+	-- Keep scan results for professions the character still has. The game's
+	-- profession list can come back incomplete (just after login, on a loading
+	-- screen): a profession missing from one read used to lose its recipes for
+	-- good (v0.4.1 report: Tailoring and First Aid back to "scanned NO"). So
+	-- a missing profession's scan is set aside (SK.DB.scanKeep, local) and
+	-- given back when the profession returns at the same or a higher skill.
+	-- A lower skill means it was dropped and started again: discard.
+	local keep = SK.DB.scanKeep[guid] or {}
+	for skillLine, oldProf in pairs(old.profs or {}) do
+		if not p.profs[skillLine] and oldProf.scanned then
+			keep[skillLine] = { scanned = oldProf.scanned, rank = oldProf.rank or 0,
+				recipes = old.recipes and old.recipes[skillLine] or nil }
+		end
+	end
 	for skillLine, prof in pairs(p.profs) do
 		local oldProf = old.profs and old.profs[skillLine]
-		if oldProf and oldProf.scanned then prof.scanned = oldProf.scanned end
+		local kept = keep[skillLine]
+		if oldProf and oldProf.scanned then
+			prof.scanned = oldProf.scanned
+		elseif kept and (prof.rank or 0) >= kept.rank then
+			prof.scanned = kept.scanned
+			if kept.recipes then p.recipes[skillLine] = kept.recipes end
+		end
 		if old.recipes and old.recipes[skillLine] then p.recipes[skillLine] = old.recipes[skillLine] end
+		keep[skillLine] = nil
 	end
+	SK.DB.scanKeep[guid] = next(keep) and keep or nil
 	-- Keep cooldowns: tracked cooldown recipes always (shown as "ready"
 	-- once expired), anything else only until it expires.
 	local tracked = cooldownSpells(guid)

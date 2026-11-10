@@ -65,6 +65,7 @@ function Sync:IsPaused()
 	if inInstance then return true, "instance (" .. tostring(kind) .. ")" end
 	if Compat.InChatLockdown() then return true, "chat lockdown" end
 	if not SK.Identity.loaded then return true, "roster not loaded" end
+	if not SK.DBM:Guild() then return true, "no guild" end
 	return false
 end
 
@@ -77,8 +78,20 @@ local function myGUID() return Compat.PlayerGUID() end
 ---------------------------------------------------------------------------
 -- Transport (replaced in tests)
 ---------------------------------------------------------------------------
+-- Every wire is one complete addon message (Frames.lua), so it goes straight
+-- to ChatThrottleLib, exactly as AceComm would send a single-part message
+-- (same prefix, text and queue), but with Blizzard's result code: AceComm's
+-- callback only passes "did it send", which made a whisper to someone who
+-- had just logged off look like a failure (v0.4.2). Receiving stays on AceComm.
 function Sync.transport(text, dist, target, prio, callback, arg)
-	Sync:SendCommMessage(SK.PREFIX, text, dist, target, prio, callback, arg)
+	local CTL = _G.ChatThrottleLib
+	if CTL and CTL.SendAddonMessage then
+		CTL:SendAddonMessage(prio or "NORMAL", SK.PREFIX, text, dist, target, SK.PREFIX, function(a, didSend, code)
+			if callback then callback(a, nil, nil, code == nil and didSend or code) end
+		end, arg)
+	else
+		Sync:SendCommMessage(SK.PREFIX, text, dist, target, prio, callback, arg)
+	end
 end
 
 ---------------------------------------------------------------------------
@@ -100,30 +113,37 @@ end
 
 local SUCCESS = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.Success or 0
 local THROTTLE = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.AddonMessageThrottle or 3
+local OFFLINE = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.TargetOffline or 12
 Sync.SEND_FAIL_WARN = 5 -- tell the player after this many failures in a row
 
 -- What happened to one sent chunk. AceComm calls us with
 -- (item, sentBytes, totalBytes, didSend): ChatThrottleLib passes AceComm
 -- "didSend" (true/false) and AceComm drops Blizzard's numeric result code.
 -- Numbers are handled too, in case a library version passes the code.
---   "ok" | "lockdown" | "throttle" | "failed", plus a reason for /sr debug
-function Sync.SendOutcome(result)
+--   "ok" | "lockdown" | "throttle" | "offline" | "failed", plus a reason for /sr debug
+-- "offline": a whisper to someone who has logged off. Normal, not an error.
+function Sync.SendOutcome(result, dist)
 	if result == true or result == SUCCESS then return "ok" end
 	if result == nil then return "ok" end -- older libraries: no information
 	if result == LOCKDOWN then return "lockdown" end
 	if result == THROTTLE then return "throttle" end
+	if result == OFFLINE then return "offline" end
 	if result == false then
-		-- No reason given; chat lockdown is by far the likeliest cause.
+		-- No reason given; chat lockdown is by far the likeliest cause, then
+		-- (for whispers) the other player having logged off.
 		if Compat.InChatLockdown() then return "lockdown" end
+		if dist == "WHISPER" then return "offline" end
 		return "failed", "not sent"
 	end
 	return "failed", SK.Compat.SendResultName(result)
 end
 
 local function onChunkSent(item, _, _, result)
-	local outcome, reason = Sync.SendOutcome(result)
+	local outcome, reason = Sync.SendOutcome(result, item and item.dist)
 	if outcome == "ok" then
 		Sync.failStreak = 0
+	elseif outcome == "offline" then
+		Sync.stats.targetOffline = (Sync.stats.targetOffline or 0) + 1
 	elseif outcome == "failed" then
 		Sync.stats.sendErrors = (Sync.stats.sendErrors or 0) + 1
 		Sync.lastSendError = reason
@@ -475,6 +495,13 @@ function Sync:Handle(text, dist, sender)
 	if not self.CHANNELS[dist] or self.blocked[sender] or not SK.Identity:KnownSender(sender) then
 		self.stats.dropped = self.stats.dropped + 1
 		if self.blocked[sender] then self.stats.blocked = self.stats.blocked + 1 end
+		return
+	end
+	-- No guild data to merge into (the game said "no guild" for a moment):
+	-- drop instead of failing in a handler.
+	if not SK.DBM:Guild() then
+		self.stats.dropped = self.stats.dropped + 1
+		self.lastReject = "no guild"
 		return
 	end
 	local msg, bad = SK.Codec.Decode(text)

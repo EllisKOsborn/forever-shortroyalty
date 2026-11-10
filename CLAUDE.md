@@ -143,6 +143,26 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   reason the alt guessing was dropped in v0.4.0. "Sent 0" in that report = taken in the
   first 10–20 s after login (the first HI waits that long); recheck if it
   stays 0.
+- **Confirmed in game 10 Nov (owner's v0.4.1 `/sr debug`, level 34, 39
+  members, 24 with data, 16 crafters, 322 recipes):**
+  - **Sync between players works** (sent 72, received 230, accepted 38; 265
+    numbered pieces received, 1 message given up on: likely a sender's
+    lockdown retry, which re-sends under a new id). First real confirmation
+    of protocol 2.
+  - The display font loads ("7 texts ok, 0 failed").
+  - Alts link themselves ("Family: 1").
+  - `IsInGuild()`/`GetGuildInfo` can be **momentarily empty** mid-session:
+    `SK.guildKey` went nil and SQ handling crashed (fixed v0.4.2:
+    `Identity.NO_GUILD_AFTER` 15 s, `Sync:IsPaused` "no guild", guard in
+    `Sync:Handle`).
+  - Tailoring/First Aid went from "scanned yes" (7 Nov) to "scanned NO":
+    most likely an **incomplete profession read** dropped them (or the
+    owner ran TESTING 116's reset). Fixed v0.4.2 with `SK.DB.scanKeep`.
+  - "Send errors: 9, last: not sent": whispers to players who had logged off
+    (`Enum.SendAddonMessageResult.TargetOffline` = 12; also NotInGuild 10,
+    ChannelThrottle 8). v0.4.2 sends each wire straight to
+    `ChatThrottleLib:SendAddonMessage` to get the code (callback
+    `(arg, didSend, code)`); outcome "offline" isn't an error.
 - **Realmless:** characters have two-part names that are unique per region.
   Key everything by **player GUID**. The `sender` format in addon messages is
   unconfirmed, so `Core/Identity.lua` matches it several ways.
@@ -161,7 +181,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   Reading their feature lists is fine. Credit sources in README.
 - Pause sync in combat, in every instance type (party/raid/pvp/arena/scenario)
   and during `C_ChatInfo.InChatMessagingLockdown()`. All sends go through
-  ChatThrottleLib via AceComm.
+  ChatThrottleLib (directly since v0.4.2, `Sync.transport`, same wire format
+  as AceComm single-part; receiving stays on AceComm).
 - **Security** (`docs/SECURITY-REVIEW.md`, 3 Nov): everything received is
   untrusted. New profile fields need a check in `Merge.FIELDS`; never run,
   link or chat received text unchecked; keep `tests/security_spec.lua` green.
@@ -456,6 +477,13 @@ messages → sender ignored for the session).
   `W.Menu:Choose`. The v0.4.0 notes above describe how the tab was built
   (git history has the code) if raids come back; re-plan with the owner
   first. TESTING 136.
+- **v0.4.2 (built 10 Nov, not on `main`)**: three fixes from the owner's
+  v0.4.1 report (see "Confirmed in game 10 Nov"): guild-nil crash, lost
+  profession scans (`SK.DB.scanKeep[guid][skillLine] = { scanned, rank,
+  recipes }`, restored when the profession returns at ≥ that rank), and
+  send results (`Sync.SendOutcome(result, dist)` → "offline";
+  `stats.targetOffline`). Tests: `tests/v042_spec.lua` (loads the real
+  ChatThrottleLib). TESTING 137–139.
 - **v0.3.7 (folded into v0.4.0, never released)**: wording only. The owner asked whether
   to remove alt features; advice was no (removing them wouldn't fix the
   per-character gap and would lose roster grouping and "on alt" whispers).

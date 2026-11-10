@@ -32,6 +32,7 @@ local DEFAULTS = {
 	feed = {},      -- recent milestones, newest first, max 50 (local only, never sent)
 	favourites = { recipes = {}, crafters = {} }, -- starred recipes and crafters (v0.3, local only)
 	reagents = { build = nil, list = {} },        -- recipe reagents read from the game (v0.3, local only)
+	scanKeep = {},  -- [guid] = { [skillLine] = { scanned, rank, recipes } } scans of professions missing from the last read (v0.4.2, local)
 	scanRank = {},  -- [guid] = { [skillLine] = skill when the recipes were last scanned } (nudges, local)
 	nudgedAt = nil, -- last "open your profession window" chat reminder
 	guilds = {},

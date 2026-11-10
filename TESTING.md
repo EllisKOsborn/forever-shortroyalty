@@ -397,6 +397,15 @@ in game if anything looks different and send it.
         Crafters, Professions, Settings. The Overview's Raids card and the
         Roster's raid filter still work.
 
+## v0.4.2
+
+137. [ ] After a play session with a few loading screens: `/sr debug` → "Recent
+        Lua errors caught: 0".
+138. [ ] `/sr debug` → "Send errors: 0 … Whispers to players who had logged off
+        (normal): N". If Send errors isn't 0, send me the "last:" reason.
+139. [ ] Open the profession windows the orange bar names. Over the next few
+        days they stay "scanned yes" in `/sr debug` (they don't go back to NO).
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).
