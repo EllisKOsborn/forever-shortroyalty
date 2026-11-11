@@ -317,6 +317,7 @@ local HELP = {
 	"/sr sync - share your data now",
 	"/sr reset - centre the window",
 }
+Commands.HELP = HELP
 
 function Commands.Run(msg)
 	local cmd = (msg or ""):lower():match("^%s*(%S*)")
@@ -326,6 +327,13 @@ function Commands.Run(msg)
 		SK.DebugWindow:Open(false)
 	elseif cmd == "log" then
 		SK.DebugWindow:Open(true)
+	elseif cmd == "profit" then
+		-- Not in the help list: the Profit view stays hidden unless unlocked.
+		SK.DB.unlocked = type(SK.DB.unlocked) == "table" and SK.DB.unlocked or {}
+		SK.DB.unlocked.profit = not SK.DB.unlocked.profit or nil
+		SK:Print(SK.DB.unlocked.profit and "Profit view on (Professions tab), for every character on this account."
+			or "Profit view hidden.")
+		if SK.ProfessionsTab then SK.ProfessionsTab:Refresh() end
 	elseif cmd == "scan" then
 		SK.Profile:BuildSelf()
 		SK:Print("Character rescanned.")

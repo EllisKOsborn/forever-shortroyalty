@@ -36,6 +36,7 @@ local DEFAULTS = {
 	favourites = { recipes = {}, crafters = {} }, -- starred recipes and crafters (v0.3, local only)
 	reagents = { build = nil, list = {} },        -- recipe reagents read from the game (v0.3, local only)
 	shopping = { list = {} },                     -- shopping list { { id = recipeID, n = crafts } } (v0.4.5, local only)
+	unlocked = {},                                -- [feature] = true: views the owner keeps hidden (v0.4.7: "profit"), whole account
 	vendorBuy = {},                               -- [itemID] = copper a merchant charged (cheapest seen; v0.4.6, local only)
 	colourCheck = { build = nil, match = 0, differ = 0, examples = {} }, -- our skill-up colours vs the window's (v0.4.4, local)
 	scanKeep = {},  -- [guid] = { [skillLine] = { scanned, rank, recipes } } scans of professions missing from the last read (v0.4.2, local)

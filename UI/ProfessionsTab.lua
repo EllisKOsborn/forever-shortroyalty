@@ -753,10 +753,10 @@ function Prof:Refresh()
 	local ctx = PB.Context()
 	self.now, self.ctx = ctx.now, ctx
 	local view = SK.DB.settings.profView
-	if not VIEW_OK[view] then view = "board" end
+	if not VIEW_OK[view] or (view == "profit" and not Prof.ProfitUnlocked()) then view = "board" end
 	local one = self.skillLine ~= nil
 	for _, c in ipairs(self.viewChips) do
-		c:SetShown(not one)
+		c:SetShown(not one and (c.value ~= "profit" or Prof.ProfitUnlocked()))
 		c:SetActive(c.value == view)
 	end
 	self.back:SetShown(one)
@@ -954,6 +954,12 @@ end
 ---------------------------------------------------------------------------
 -- Profit (v0.4.6)
 ---------------------------------------------------------------------------
+-- Profit is hidden until unlocked with /sr profit (the owner's wish, 11 Nov):
+-- once per account, every character.
+function Prof.ProfitUnlocked()
+	return type(SK.DB.unlocked) == "table" and SK.DB.unlocked.profit == true
+end
+
 function Prof.PriceItems()
 	local have = Compat.PriceAddons()
 	local function label(name, ok) return "Prices: " .. name .. (ok and "" or " (not installed)") end

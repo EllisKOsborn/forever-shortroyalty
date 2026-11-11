@@ -486,6 +486,10 @@ in game if anything looks different and send it.
         colours vs your profession window". **Send me this line**: it should
         say 0 differ, and no example "at skill 0".
 
+162. [ ] (Owner only) The Profit view is gone from Professions until you type
+        `/sr profit`; then it's back on every character of your account.
+        `/sr profit` again hides it.
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

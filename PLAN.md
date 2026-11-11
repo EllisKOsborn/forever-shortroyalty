@@ -548,7 +548,10 @@ efficient route on Forever.**
    code isn't on GitHub; TSM's API site returned 503), so the calls are
    guarded and `/sr debug` reports whether they answer (TESTING 156).
    Vendor buy prices are learned at merchants; items per craft come from
-   Forever's SpellEffect.EffectBasePointsF.
+   Forever's SpellEffect.EffectBasePointsF. **Hidden since v0.4.7** at the
+   owner's request: shown only after `/sr profit`.
+   Route planner decisions (owner, 11 Nov): "cheapest" counts selling what
+   you make (net cost); prices from TSM (the owner has no Auctionator).
 4. **Cheapest route:** from your skill to the next cap, choosing recipes by
    expected cost per skill-up (orange 1 point; yellow and green by chance),
    using 1–3. Limits: when trainers teach recipes and what they cost isn't in

@@ -43,7 +43,7 @@
 | 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
 | ⚒️ **Crafters** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
-| 🧪 **Professions** | Every profession in the guild, **every recipe in the game** (search by name, group or material), each profession's crafters, everyone's cooldowns, specialisations, favourites, a **Levelling** helper with skill-up colours from Forever's own data, a **Shopping list** and **Profit** (prices from Auctionator or TSM) |
+| 🧪 **Professions** | Every profession in the guild, **every recipe in the game** (search by name, group or material), each profession's crafters, everyone's cooldowns, specialisations, favourites, a **Levelling** helper with skill-up colours from Forever's own data, and a **Shopping list** |
 | ⚙️ **Settings** | Sharing and privacy switches, display options, window size, tools and a live status read-out |
 | 🧨 **Everywhere** | `/sr`, a minimap button, "Crafted by" lines on item tooltips, chat reminders and a copyable debug report |
 
@@ -142,13 +142,9 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 
 <p align="center"><img src="docs/images/levelling.png" alt="Professions → Levelling" width="100%"></p>
 
-- **Shopping list:** **Shift-click** a recipe (All recipes, Levelling or a profession's list), or press **+ List** on the Crafters tab, then set how many times you'll craft it with **−** and **+** (Shift: 5 at a time). The list adds up every reagent and shows how many you **have in your bags and bank** and how many are **still to get**, and says when you can make a reagent yourself (Bolt of Woolen Cloth, for example). **Copy** gives it as plain text. It's saved on your computer only and never sent to anyone. Reagents come from your game, or from Forever's own data when the profession window hasn't been opened.
+- **Shopping list:** **Shift-click** a recipe (All recipes, Levelling or a profession's list), or press **+ List** on the Crafters tab, then set how many times you'll craft it with **−** and **+** (Shift: 5 at a time). The list adds up every reagent and shows how many you **have in your bags and bank** and how many are **still to get**, and says when you can make a reagent yourself (Bolt of Woolen Cloth, for example). **Copy** gives it as plain text, and with TradeSkillMaster installed it shows roughly what the rest will cost (vendor prices are remembered each time you visit a vendor). It's saved on your computer only and never sent to anyone. Reagents come from your game, or from Forever's own data when the profession window hasn't been opened.
 
 <p align="center"><img src="docs/images/shopping.png" alt="Professions → Shopping list" width="100%"></p>
-
-- **Profit:** pick one of your professions and see every recipe you've learned with what its **reagents cost**, what it **sells for** and the **profit**, best first. Auction prices come from **Auctionator** or **TradeSkillMaster** if you have one installed (pick which in the menu; automatic uses Auctionator first). Short Royalty remembers what **vendors charge** each time you visit one, and buys each reagent the cheaper way. Sales at the auction house count the 5% auction cut; if a vendor pays more, that's used instead. A recipe that makes several items (ammo makes 200) counts them all, using Forever's own data. The **Shopping list** shows roughly what the rest of your reagents will cost. Without Auctionator or TSM you only get vendor prices, which rarely show a profit. Prices stay on your computer.
-
-<p align="center"><img src="docs/images/profit.png" alt="Professions → Profit (example prices)" width="100%"></p>
 
 - **Cooldowns:** everyone's profession cooldowns (transmutes, Mooncloth…), ready first, then soonest. Shows who, how long, and **as of** when we last heard from them (orange after a day: a cooldown only updates while its owner is online). **Whisper** when they're on.
 - **Specialisations** (Gnomish/Goblin Engineer, Dragonscale/Elemental/Tribal Leatherworking, Armorsmith/Weaponsmith and the master smiths) are read from your spellbook. A spell only counts when the game's own name for it matches, so a wrong ID can never mislabel anyone.
@@ -371,7 +367,7 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.4.3**: character model on the Character tab
 - [x] **v0.4.4**: **Levelling** helper (step 1 of the levelling tools): skill-up colours from Forever's data, crest icon, tagline gone from the game
 - [x] **v0.4.5**: **Shopping list** (step 2 of the levelling tools)
-- [x] **v0.4.6**: **Profit** (step 3 of the levelling tools), prices from Auctionator or TSM; drop-down menus readable on hover
+- [x] **v0.4.6**: shopping list prices (TSM and vendors); drop-down menus readable on hover
 - [ ] Next levelling step: cheapest levelling route
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders

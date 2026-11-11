@@ -160,8 +160,33 @@ describe("Professions → Profit", function()
 		_G.Auctionator = { API = { v1 = { GetAuctionPriceByItemID = function(_, id)
 			return ({ [LINEN] = 10, [BOLT] = 100 })[id]
 		end } } }
+		SK.DB.unlocked.profit = true
 	end)
 	after_each(function() _G.Auctionator = nil end)
+
+	it("is hidden until /sr profit unlocks it, for the whole account (v0.4.7)", function()
+		SK.DB.unlocked.profit = nil
+		SK.DB.settings.profView = "profit"
+		SK.MainFrame:Show("professions")
+		local tab = SK.ProfessionsTab
+		assert.is_false(tab.profitList:IsShown())
+		assert.is_true(tab.board:IsShown()) -- falls back to the Guild board
+		local chip
+		for _, c in ipairs(tab.viewChips) do if c.value == "profit" then chip = c end end
+		assert.is_false(chip:IsShown())
+		SK.Commands.Run("profit")
+		assert.is_true(SK.DB.unlocked.profit)
+		assert.is_true(chip:IsShown())
+		SK.DB.settings.profView = "profit"
+		tab:Refresh()
+		assert.is_true(tab.profitList:IsShown())
+		SK.Commands.Run("profit")
+		assert.is_nil(SK.DB.unlocked.profit)
+		assert.is_false(tab.profitList:IsShown())
+		assert.is_true(#SK.Commands.HELP > 0)
+		assert.is_nil(table.concat(SK.Commands.HELP, "\n"):find("profit", 1, true))
+		assert.equal(0, #SK.errors)
+	end)
 
 	it("shows your recipes with cost, value and profit", function()
 		SK.DB.settings.profView = "profit"

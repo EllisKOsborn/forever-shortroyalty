@@ -42,6 +42,13 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   solid texture on the HIGHLIGHT layer, which draws over text; now
   BACKGROUND, shown on enter). TESTING 155–160. **Get the owner's `/sr debug`
   "Prices:" line** (TESTING 156): the Auctionator/TSM calls are unverified.
+- **Profit is hidden (owner, 11 Nov: "I don't want others seeing this just
+  yet whilst I make money")**: the Profit view only shows after `/sr profit`
+  (`SK.DB.unlocked.profit`, account-wide, toggles; not in `/sr` help). The
+  README doesn't list it (an owner-approved exception to "What's inside lists
+  everything"); don't advertise it in README/CHANGELOG until the owner says.
+  Prices themselves are local and never synced. The owner has **TSM only**
+  (no Auctionator).
 - **Next feature work** (owner's order, PLAN.md section 13): 4 cheapest
   route planner (needs the skill-up colour check first, see below). **Forever data only** (wago.tools product `wowf`), never
   Retail/Classic. Don't copy Profession Master (All Rights Reserved).
