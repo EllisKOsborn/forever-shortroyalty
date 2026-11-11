@@ -6,7 +6,7 @@
 ## SavedVariables: ShortRoyaltyDB
 ## IconTexture: Interface\AddOns\ShortRoyalty\Media\Textures\crest
 ## X-License: MIT
-## X-Website: https://github.com/elliskosborn/forever-shortkings
+## X-Website: https://github.com/EllisKOsborn/forever-shortroyalty
 ## X-Curse-Project-ID: 1788068
 
 embeds.xml

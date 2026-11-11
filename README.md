@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/EllisKOsborn/forever-shortkings/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/EllisKOsborn/forever-shortkings/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="WoW Forever 1.60.1" src="https://img.shields.io/badge/WoW%20Forever-1.60.1%20%C2%B7%2016001-FFC000?labelColor=000000">
   <img alt="Version" src="https://img.shields.io/badge/version-0.4.2%20alpha-F06BB0?labelColor=000000">
   <img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-FF6A1A?labelColor=000000">
@@ -183,7 +183,7 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 ## 📦 Install
 
 1. Download **`ShortRoyalty-vX.Y.Z-forever.zip`** from
-   [**Releases**](https://github.com/EllisKOsborn/forever-shortkings/releases)
+   [**Releases**](https://github.com/EllisKOsborn/forever-shortroyalty/releases)
    (the first file under *Assets*).
 
    > [!WARNING]

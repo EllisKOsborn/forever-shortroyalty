@@ -14,7 +14,8 @@ the status or a convention, update this file in the same commit.
   `ShortRoyalty-vX.Y.Z-forever.zip` (`.pkgmeta` package-as). Releases up to
   v0.3.0 were `ShortKings`; v0.3.1 can't talk to them (different prefix).
   Still unchanged: the Lua namespace variable `SK` (invisible) and the repo
-  name `forever-shortkings` (only the owner can rename it on GitHub).
+  name was renamed by the owner to `forever-shortroyalty` (11 Nov; GitHub
+  redirects the old `forever-shortkings` URL, links updated in v0.4.3).
   **From now on** the folder, SavedVariables and prefix are fixed: changing
   them after rollout would wipe saved data or split the guild.
 - Slash commands: `/sr`, `/shortroyalty`, and `/sk` (kept, short).
