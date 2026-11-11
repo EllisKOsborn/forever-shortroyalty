@@ -187,6 +187,21 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
     ChannelThrottle 8). v0.4.2 sends each wire straight to
     `ChatThrottleLib:SendAddonMessage` to get the code (callback
     `(arg, didSend, code)`); outcome "offline" isn't an error.
+- **Confirmed in game 11 Nov (owner's v0.4.6 `/sr debug`, build 70888,
+  level 39, 39 members, 25 with data):**
+  - **TSM's API works**: `TSM_API.GetCustomPriceValue("DBMarket", "i:2589")`
+    = 26c, `DBMinBuyout` = 19c (Linen Cloth). Profit uses TSM.
+  - **Auctionator API: "no"** (`Auctionator.API.v1.GetAuctionPriceByItemID`
+    not found). Unknown yet whether Auctionator is installed on that
+    character; asked the owner.
+  - **Vendor price learning works**: 31 prices remembered from merchants.
+    `C_Item.GetItemInfo` sell price works (Linen Cloth 13c).
+  - Send errors 0 (v0.4.2 fix holds); no Lua errors; all 5 professions
+    "scanned yes".
+  - Skill-up colour check still "not checked yet": no profession window
+    opened that session (`Last scan: none`). `relativeDifficulty` is
+    Nilable in the docs; Blizzard's shared RecipeList uses it the same way.
+    If it stays 0/0 after opening a window, the field is nil in Forever.
 - **Realmless:** characters have two-part names that are unique per region.
   Key everything by **player GUID**. The `sender` format in addon messages is
   unconfirmed, so `Core/Identity.lua` matches it several ways.
@@ -739,8 +754,9 @@ a test send worked. The Mac AddOns path is still not confirmed by name
    crest icon, no tagline).
 2. v0.4.5 is out: TESTING 150–154, especially whether the bank count
    works away from the bank (152).
-2b. v0.4.6 is out: the `/sr debug` "Prices:" line (TESTING 156) and
-   whether Profit's numbers look right against the auction house (157).
+2b. v0.4.6: "Prices:" line received 11 Nov (TSM works, Auctionator "no").
+   Still: is Auctionator installed? Do Profit's numbers look right (157)?
+   And the colour-check line after opening a profession window.
 3. The Warband currency `/run` test (TESTING 124): if it lists their own
    alts, automatic "my alts" can be built on it. Otherwise alts stay as now.
 4. Onyxia attunement: whether any Horde members exist (Horde chain differs), and
