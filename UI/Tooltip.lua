@@ -7,9 +7,20 @@ local _, SK = ...
 local Tip = SK:NewModule("Tooltip")
 Tip.hooked = false
 
+-- "Shopping list: need 7, have 3" (v0.5.1), for items on your list.
+function Tip.ShoppingText(n)
+	if not n then return nil end
+	if n.make then return "Shopping list: make " .. n.make .. " (need " .. n.need .. ")" end
+	if n.have == nil then return "Shopping list: need " .. n.need end
+	return "Shopping list: need " .. n.need .. ", have " .. n.have ..
+		(n.short > 0 and (", " .. n.short .. " to get") or ", got it")
+end
+
 function Tip.Add(tooltip, itemID)
-	if not SK.DB or not SK.DB.settings.craftTooltips then return end
-	if tooltip.IsEmbedded then return end
+	if not SK.DB or tooltip.IsEmbedded then return end
+	local shop = SK.Shopping and Tip.ShoppingText(SK.Shopping.ItemNeed(itemID))
+	if shop then SK.Theme.TipLine(tooltip, SK.Theme.Code("beard") .. "Short Royalty:|r " .. shop, "text", true) end
+	if not SK.DB.settings.craftTooltips then return end
 	local guild = SK.DBM:Guild()
 	if not guild then return end
 	local text = SK.CraftIndex.TooltipText(SK.CraftIndex:Get(true), itemID, guild, SK.Compat.Now(), 3)

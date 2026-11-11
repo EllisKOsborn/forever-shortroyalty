@@ -595,7 +595,7 @@ small enough to test in game before the next one builds on it.
   Levelling view once trainer data is known.
 - In-game check needed: the `/sr debug` probe lines and one trainer visit.
 
-### v0.5.1 Shopping list upgrades
+### v0.5.1 Shopping list upgrades (✅ built 11 Nov)
 - **Item tooltips:** "Shopping list: need 7, have 3" on any reagent
   (we already add crafter lines to item tooltips).
 - **Make or buy:** a reagent you can make yourself (bolts, bars) is priced

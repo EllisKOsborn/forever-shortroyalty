@@ -123,8 +123,66 @@ function Shop.Totals(entries, reagentsOf, countOf)
 	return rows, unknown
 end
 
-function Shop.Rows()
-	return Shop.Totals(list(), SK.Reagents.All, Compat.ItemCounts)
+-- Raw materials (v0.5.1): reagents you make yourself and are short of
+-- (bolts, bars) become crafts, so their own reagents are added; up to three
+-- levels. Those rows get `make` = how many crafts. Pure apart from `totals`.
+-- makerOf(itemID) -> recipeID you know; yieldOf(recipeID) -> items per craft.
+function Shop.Expand(entries, rows, unknown, makerOf, yieldOf, totals)
+	local all, made = {}, {}
+	for i, e in ipairs(entries) do all[i] = e end
+	for _ = 1, 3 do
+		local added = false
+		for _, r in ipairs(rows) do
+			local short = r.have == nil and r.need or r.short
+			local recipe = r.itemID and not made[r.itemID] and short and short > 0 and makerOf(r.itemID)
+			if recipe then
+				local crafts = math.ceil(short / math.max(1, yieldOf(recipe)))
+				all[#all + 1] = { id = recipe, n = crafts }
+				made[r.itemID] = crafts
+				added = true
+			end
+		end
+		if not added then break end
+		rows, unknown = totals(all)
+	end
+	for _, r in ipairs(rows) do if r.itemID and made[r.itemID] then r.make = made[r.itemID] end end
+	return rows, unknown
+end
+
+local function totals(entries) return Shop.Totals(entries, SK.Reagents.All, Compat.ItemCounts) end
+
+function Shop.Rows(raw)
+	local entries = list()
+	local rows, unknown = totals(entries)
+	if raw == nil then raw = SK.DB.settings.shopRaw end
+	if not raw then return rows, unknown end
+	return Shop.Expand(entries, rows, unknown, Shop.YouMake, SK.Reagents.Yield, totals)
+end
+
+-- Item tooltips (v0.5.1): { need, have, short, make } for an item on the
+-- list, or nil. Rebuilt only when the list, bags or bank change.
+local needCache
+function Shop.ItemNeed(itemID)
+	if #list() == 0 then return nil end
+	if not needCache then
+		needCache = {}
+		for _, r in ipairs((Shop.Rows())) do if r.itemID then needCache[r.itemID] = r end end
+	end
+	return needCache[itemID]
+end
+function Shop.Dirty() needCache = nil end
+SK:On("SHOPPING_CHANGED", Shop.Dirty)
+SK:RegisterEvent("BAG_UPDATE_DELAYED", Shop.Dirty)
+SK:RegisterEvent("PLAYERBANKSLOTS_CHANGED", Shop.Dirty)
+
+-- TSM's item-list format ("i:2589,i:2592") for what you still have to buy (v0.5.1).
+function Shop.TSMList(rows)
+	local ids = {}
+	for _, r in ipairs(rows) do
+		local short = r.have == nil and r.need or r.short
+		if r.itemID and not r.make and short and short > 0 then ids[#ids + 1] = "i:" .. r.itemID end
+	end
+	return table.concat(ids, ",")
 end
 
 -- What the still-to-get reagents cost: total copper and how many have no
@@ -133,7 +191,7 @@ function Shop.Cost(rows, buy)
 	local total, missing = 0, 0
 	for _, r in ipairs(rows) do
 		local short = r.have == nil and r.need or r.short
-		if short and short > 0 then
+		if short and short > 0 and not r.make then
 			local each = r.itemID and buy(r.itemID) or nil
 			if each then total = total + each * short else missing = missing + 1 end
 		end
@@ -163,7 +221,9 @@ function Shop.Text(entries, rows, nameOf)
 	local still, got = {}, {}
 	for _, r in ipairs(rows) do
 		local name = r.itemID and Plain(nameOf(r.itemID) or ("item " .. r.itemID)) or "currency"
-		if r.have == nil then
+		if r.make then
+			still[#still + 1] = "- make " .. r.make .. "x " .. name
+		elseif r.have == nil then
 			still[#still + 1] = "- " .. r.need .. " " .. name
 		elseif r.short > 0 then
 			still[#still + 1] = "- " .. r.short .. " " .. name .. " (need " .. r.need .. ", have " .. r.have .. ")"

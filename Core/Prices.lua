@@ -90,14 +90,29 @@ end
 ---------------------------------------------------------------------------
 -- Buying reagents, selling what you make
 ---------------------------------------------------------------------------
--- Cheapest way to get one: a vendor you've visited, or the auction house.
--- Returns copper, "vendor" | "ah" (or nil).
+-- Making one yourself (v0.5.1): the cost of its reagents per item made,
+-- for an item a recipe you know makes (bolts, bars). Copper, recipeID or nil.
+local depth = 0
+function P.Make(itemID)
+	local recipe = SK.Shopping.YouMake(itemID)
+	if not recipe or depth >= 3 then return nil end
+	depth = depth + 1
+	local ok, c = pcall(P.Craft, SK.Reagents.All(recipe), 0, 1, P)
+	depth = depth - 1
+	if not ok or not c.cost then return nil end
+	return c.cost / math.max(1, SK.Reagents.Yield(recipe)), recipe
+end
+
+-- Cheapest way to get one: a vendor you've visited, the auction house, or
+-- making it yourself. Returns copper, "vendor" | "ah" | "make" (or nil).
 function P.Buy(itemID, prices)
 	prices = prices or P
-	local v, a = prices.VendorBuy(itemID), prices.Auction(itemID)
-	if v and (not a or v <= a) then return v, "vendor" end
-	if a then return a, "ah" end
-	return nil
+	local best, via
+	local function try(v, how) if v and (not best or v < best) then best, via = v, how end end
+	try(prices.VendorBuy(itemID), "vendor")
+	try(prices.Auction(itemID), "ah")
+	if prices.Make then try((prices.Make(itemID)), "make") end
+	return best, via
 end
 
 -- What one is worth to you: the auction price after the cut, or what a

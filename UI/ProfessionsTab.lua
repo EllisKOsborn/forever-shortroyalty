@@ -253,7 +253,8 @@ local function setShopReagentCell(fs, r, col)
 	elseif k == "have" then
 		fs:SetText(r.have == nil and Theme.DASH or Theme.Paint(r.have >= r.need and "good" or "text", r.have))
 	else
-		if r.have == nil then fs:SetText(Theme.Paint("dim", "?"))
+		if r.make then fs:SetText(Theme.Paint("good", "make " .. r.make))
+		elseif r.have == nil then fs:SetText(Theme.Paint("dim", "?"))
 		elseif r.short > 0 then fs:SetText(Theme.Paint("spark", r.short))
 		else fs:SetText(Theme.Paint("good", "got it")) end
 	end
@@ -332,7 +333,7 @@ function Prof.ProfitTip(tip, r)
 		local each, via = nil, nil
 		if x.i then each, via = P.Buy(x.i) end
 		Theme.TipLine(tip, x.q .. " " .. name .. ":  " .. (each and (money(each * x.q) ..
-			Theme.Paint("dim", via == "vendor" and "  (vendor)" or "  (auction)")) or Theme.Paint("spark", NO_PRICE)), "text")
+			Theme.Paint("dim", Prof.ViaText(via))) or Theme.Paint("spark", NO_PRICE)), "text")
 	end
 	if r.value then
 		Theme.TipLine(tip, "Makes " .. r.yield .. ", worth " .. money(r.value) .. (r.via == "ah" and
@@ -568,6 +569,16 @@ function Prof:Build(page)
 	self.shopClear = W.Button(page, "Clear list", nil, S.control, function() SK.Shopping.Clear() end, "quiet")
 	self.shopClear:SetPoint("LEFT", self.shopCopy, "RIGHT", SP.s, 0)
 	self.shopClear.tooltip = "Take every recipe off the list."
+	self.shopRaw = W.Chip(page, "Raw materials", function()
+		SK.DB.settings.shopRaw = not SK.DB.settings.shopRaw or nil
+		SK.Shopping.Dirty()
+		Prof:Refresh()
+	end)
+	self.shopRaw:SetPoint("LEFT", self.shopClear, "RIGHT", SP.s, 0)
+	self.shopRaw.tooltip = "Reagents you make yourself (bolts, bars) become crafts on the list, with what they're made from."
+	self.shopTSM = W.Button(page, "Copy for TSM", nil, S.control, function() Prof:CopyTSM() end, "quiet")
+	self.shopTSM:SetPoint("LEFT", self.shopRaw, "RIGHT", SP.s, 0)
+	self.shopTSM.tooltip = "What you still need to buy, as a TSM item list (i:2589,i:2592...) to import into a TSM group."
 	self.shopCost = Theme.Text(page, "body", "text")
 	self.shopCost:SetPoint("RIGHT", page, "RIGHT", 0, 0)
 	self.shopCost:SetPoint("TOP", self.shopCopy, "TOP", 0, 0)
@@ -609,7 +620,7 @@ function Prof:Build(page)
 			if r.itemID then
 				local each, via = SK.Prices.Buy(r.itemID)
 				Theme.TipLine(GameTooltip, each and ("Price: " .. money(each) .. " each" .. Theme.Paint("dim",
-					via == "vendor" and "  (vendor)" or "  (auction)")) or "No price yet", each and "text" or "dim")
+					Prof.ViaText(via))) or "No price yet", each and "text" or "dim")
 			end
 			local names = {}
 			for _, id in ipairs(r.recipes) do
@@ -858,6 +869,8 @@ function Prof:Refresh()
 	local shop = not one and view == "shopping"
 	self.shopCopy:SetShown(shop)
 	self.shopClear:SetShown(shop)
+	self.shopRaw:SetShown(shop)
+	self.shopTSM:SetShown(shop)
 	self.shopRecipes:SetShown(shop)
 	self.shopReagents:SetShown(shop)
 	self.shopCost:SetShown(shop)
@@ -1009,6 +1022,17 @@ local function shopName(id, isRecipe)
 	return CI.ItemName(id)
 end
 
+-- "  (vendor)" / "  (auction)" / "  (you make it)". Pure.
+function Prof.ViaText(via)
+	return via == "vendor" and "  (vendor)" or via == "make" and "  (you make it)" or "  (auction)"
+end
+
+function Prof:CopyTSM()
+	local text = SK.Shopping.TSMList((SK.Shopping.Rows()))
+	SK.DebugWindow:ShowText("Copy for TSM", text ~= "" and text or "Nothing left to buy.")
+	return text
+end
+
 function Prof:CopyShopping()
 	local rows = SK.Shopping.Rows()
 	local text = SK.Shopping.Text(SK.Shopping.Entries(), rows, shopName)
@@ -1034,6 +1058,8 @@ function Prof:RefreshShopping()
 	self.shopReagents:SetEmptyText(#items > 0 and "No reagent data for these recipes yet. Open the profession's " ..
 		"window once." or "The reagents show here, with how many you have in your bags and bank.")
 	self.shopClear:SetDisabled(#items == 0)
+	self.shopTSM:SetDisabled(#items == 0)
+	self.shopRaw:SetActive(SK.DB.settings.shopRaw == true)
 	self.shopCopy:SetDisabled(#items == 0)
 	local _, nReagents, nShort = SK.Shopping.Summary(entries, rows)
 	self.status:SetText(Prof.ShopSummary(#items, nReagents, nShort, #unknown))

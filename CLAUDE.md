@@ -90,7 +90,15 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   `Learn.Lines` (pure wording), `W.LearnLines` in every recipe tooltip
   (`W.SkillUpTip`) and the Crafters panel; Levelling "N to learn at your
   trainer" (`Learn.Trainable`). `/sr debug` "Where to learn" and
-  "Trainers" lines (TESTING 167–170). Next: v0.5.1.
+  "Trainers" lines (TESTING 167–170).
+- **Built, not released: v0.5.1 shopping upgrades.** `Prices.Make(itemID)`
+  (reagent cost per item via a recipe you know, depth ≤ 3) and `Prices.Buy`
+  now picks vendor / ah / **make** (`Prof.ViaText`); `Shopping.Expand`
+  (raw materials, `settings.shopRaw`, rows get `make`, `Shop.Cost` skips
+  them), `Shopping.ItemNeed` (cached, dirty on SHOPPING_CHANGED/BAG/BANK) →
+  `Tooltip.ShoppingText` on item tooltips (shown even with crafter lines
+  off), `Shopping.TSMList` ("i:1,i:2"; **TSM accepting it is unverified**,
+  TESTING 174). Tests: `tests/shopping2_spec.lua`. Next: v0.5.2.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from

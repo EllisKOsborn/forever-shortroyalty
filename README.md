@@ -147,7 +147,7 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 
 <p align="center"><img src="docs/images/route.png" alt="Professions → Route (example prices)" width="100%"></p>
 
-- **Shopping list:** **Shift-click** a recipe (All recipes, Levelling or a profession's list), or press **+ List** on the Crafters tab, then set how many times you'll craft it with **−** and **+** (Shift: 5 at a time). The list adds up every reagent and shows how many you **have in your bags and bank** and how many are **still to get**, and says when you can make a reagent yourself (Bolt of Woolen Cloth, for example). **Copy** gives it as plain text, and with TradeSkillMaster installed it shows roughly what the rest will cost (vendor prices are remembered each time you visit a vendor). It's saved on your computer only and never sent to anyone. Reagents come from your game, or from Forever's own data when the profession window hasn't been opened.
+- **Shopping list:** **Shift-click** a recipe (All recipes, Levelling or a profession's list), or press **+ List** on the Crafters tab, then set how many times you'll craft it with **−** and **+** (Shift: 5 at a time). The list adds up every reagent and shows how many you **have in your bags and bank** and how many are **still to get**, and says when you can make a reagent yourself (Bolt of Woolen Cloth, for example). **Copy** gives it as plain text and **Copy for TSM** as a TSM item list; **Raw materials** turns reagents you make yourself (bolts, bars) into what they're made from; items on the list say "need 7, have 3" in their tooltips; and with TradeSkillMaster installed it shows roughly what the rest will cost, pricing anything you can make at the cheaper of buying or making it (vendor prices are remembered each time you visit a vendor). It's saved on your computer only and never sent to anyone. Reagents come from your game, or from Forever's own data when the profession window hasn't been opened.
 
 <p align="center"><img src="docs/images/shopping.png" alt="Professions → Shopping list" width="100%"></p>
 
@@ -376,7 +376,8 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.4.7**: fix for the skill-up colour check in `/sr debug`
 - [x] **v0.4.8**: **cheapest levelling route** (step 4 of the levelling tools)
 - [ ] **v0.5.0** (built, not released): where to learn each recipe (recipe items, trainers, the game's own text)
-- [ ] **v0.5.1–v0.5.5**: shopping list upgrades, route with recipes you haven't learned, panel beside the profession window, filters, who has item X ([plan](PLAN.md))
+- [ ] **v0.5.1** (built, not released): shopping list upgrades (tooltips, make or buy, raw materials, Copy for TSM)
+- [ ] **v0.5.2–v0.5.5**: route with recipes you haven't learned, panel beside the profession window, filters, who has item X ([plan](PLAN.md))
 - [ ] Next levelling step: cheapest levelling route
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders

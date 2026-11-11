@@ -515,6 +515,17 @@ in game if anything looks different and send it.
 170. [ ] Levelling: "N to learn at your trainer" when a visited trainer
         teaches something at your skill.
 
+## v0.5.1 Shopping list upgrades
+
+171. [ ] Put a recipe on the shopping list, then point at one of its
+        reagents in your bags: "Short Royalty: Shopping list: need …, have …".
+172. [ ] A Tailoring recipe that uses bolts you know how to make: the bolt's
+        price says "(you make it)" when making is cheaper.
+173. [ ] **Raw materials** on: the bolt says "make N" and the cloth for it is
+        added. Off again: back to normal.
+174. [ ] **Copy for TSM**, paste the text into a TSM group's "Import items":
+        **tell me if TSM takes it** (format `i:2589,i:2592`).
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

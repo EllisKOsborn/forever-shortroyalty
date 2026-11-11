@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.5.1 (not released yet): Shopping list upgrades
+
+- **Item tooltips** show "Shopping list: need 7, have 3" for anything on
+  your shopping list (in your bags, at the auction house, anywhere).
+- **Make or buy:** a reagent you can make yourself (bolts, bars) is priced
+  at the cheaper of buying it and making it from its own reagents. The
+  shopping list, Route and Profit all use this; prices say "(you make it)".
+- **Raw materials** button on the Shopping list: reagents you make yourself
+  become "make 4" and what they're made from is added (Bolt of Woolen
+  Cloth → Wool Cloth).
+- **Copy for TSM:** what you still need to buy as a TSM item list
+  (`i:2589,i:2592…`) to import into a TSM group and shop it.
+
 ## v0.5.0 (not released yet): Where to learn each recipe
 
 - **Recipe tooltips say where to learn a recipe you don't know** (All

@@ -580,7 +580,7 @@ function professions() {
   }
   if (S.profView === "shopping") { // v0.4.5: Forever's reagents (Gray Woolen Shirt x5, Woolen Cape x3)
     const R = [["Gray Woolen Shirt", "#ffffff", 5], ["Woolen Cape", "#1eff00", 3]];
-    // [reagent, need, have (bags + bank), still to get, you make it]
+    // [reagent, need, have (bags + bank), still to get, you make it] (Raw materials off)
     const G = [["Bolt of Woolen Cloth", 13, 6, 7, true], ["Gray Dye", 5, 0, 5, false], ["Fine Thread", 8, 10, 0, false]];
     const rcell = (r, c) => c.key === "n" ? `<span style="color:${r[1]}">${esc(r[0])}</span>` : c.key === "c" ? r[2]
       : `<span style="display:flex;gap:4px;justify-content:flex-end">${btn("-", "small")}${btn("+", "small")}</span>`;
@@ -589,7 +589,7 @@ function professions() {
       : r[3] > 0 ? `<span class="spark">${r[3]}</span>` : '<span class="good">got it</span>';
     return `<div class="abs" style="left:0;top:0;display:flex;gap:4px">${chips(PROF_VIEWS, "shopping")}</div>
       <div class="abs dim ell" style="right:0;top:4px;font-size:12px">2 recipes &nbsp;·&nbsp; 3 reagents &nbsp;·&nbsp; <span class="spark">2 still to get</span></div>
-      <div class="abs" style="left:0;top:36px;display:flex;gap:${T.space.s}px">${btn("Copy")}${btn("Clear list", "quiet")}</div>
+      <div class="abs" style="left:0;top:36px;display:flex;gap:${T.space.s}px">${btn("Copy")}${btn("Clear list", "quiet")}${chips([["raw", "Raw materials"]], "")}${btn("Copy for TSM", "quiet")}</div>
       <div class="abs" style="right:0;top:42px">About 1g 4s 50c to buy</div>
       ${list([{ key: "n", t: "Recipe", w: 252 }, { key: "c", t: "Crafts", w: 60, r: 1 }, { key: "b", t: "", w: 76 }],
         R, rcell, { click: true, style: "left:0;top:72px;bottom:0;width:400px" })}
