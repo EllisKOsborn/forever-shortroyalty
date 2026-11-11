@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: |cffD94FA0Short Royalty|r
-## Notes: Guild gear, professions, recipes and raid sign-ups for the Short Royalty guild. Height is not a stat.
+## Notes: Guild gear, talents, professions and recipes for the Short Royalty guild.
 ## Author: Short Royalty guild
 ## Version: @project-version@
 ## SavedVariables: ShortRoyaltyDB

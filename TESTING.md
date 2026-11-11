@@ -419,7 +419,8 @@ in game if anything looks different and send it.
         you (85): yellow".
 
 143. [ ] The window's title bar shows the crest and SHORT ROYALTY, with no
-        "Height is not a stat." under it.
+        "Height is not a stat." under it. The minimap button's tooltip and
+        the addon's description in the AddOns list don't have it either.
 
 144. [ ] The AddOns list (character select → AddOns, and the in-game AddOns
         menu) and the minimap button show the Short Royalty crest, not a bomb.

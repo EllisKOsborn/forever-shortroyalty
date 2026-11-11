@@ -81,4 +81,14 @@ describe("Guild rename", function()
 		end
 		assert.is_not_nil(io.open("Media/Textures/crest.tga"), "missing crest.tga")
 	end)
+	it("shows no tagline in game: window, minimap tooltip or AddOns list (v0.4.3)", function()
+		for _, f in ipairs({ "ShortRoyalty.toc", "UI/Minimap.lua", "UI/MainFrame.lua", "Core/Init.lua" }) do
+			local text = io.open(f):read("*a")
+			assert.is_nil(text:find("TAGLINE", 1, true), f)
+			if f ~= "UI/MainFrame.lua" then -- MainFrame only mentions it in a comment
+				assert.is_nil(text:find("not a stat", 1, true), f)
+			end
+		end
+		assert.is_nil(io.open("ShortRoyalty.toc"):read("*a"):find("raid sign-ups", 1, true))
+	end)
 end)

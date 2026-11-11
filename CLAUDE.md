@@ -28,6 +28,22 @@ A World of Warcraft: **Forever** addon for the guild **Short Royalty**
 talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
+## Start here (handover, 11 Nov 2026)
+- **Released:** v0.4.2 on `main` (10 Nov). **Built, not released:** v0.4.3
+  on `claude/short-kings-addon-hlf0t4` (levelling helper, crest icon,
+  tagline removed everywhere in game, links to the renamed repo). Releasing
+  = owner says "put it on main": `git fetch origin main`, merge, date the
+  CHANGELOG heading, bump the README badge, push `main` (automatic release).
+- **Next feature work** (owner's order, PLAN.md section 13): 2 shopping
+  list → 3 profit (Auctionator's public API, else vendor prices) → 4 cheapest
+  route planner. **Forever data only** (wago.tools product `wowf`), never
+  Retail/Classic. Don't copy Profession Master (All Rights Reserved).
+- **Before building on the skill-up colours**, get the owner's `/sr debug`
+  line "Skill-up colours vs your profession window" (TESTING 140). If
+  anything differs, fix `RecipeDB.Range`'s green rule first.
+- **Open questions for the owner:** see "Waiting on the user" below.
+- Handover prompt used to start the next chat: `docs/prompts/next-chat.md`.
+
 ## The person you're working with
 - **Not a developer**, often on their **phone**. Explain steps in plain
   language, keep replies short, and put long material in repo files.
@@ -329,7 +345,7 @@ messages → sender ignored for the session).
 - Mockups: Playwright and Chromium are preinstalled. The stand-in font is
   Marcellus from fonts.gstatic.com (don't commit the font).
 
-## Status (7 Nov 2026)
+## Status (history, newest entries further down; current state: "Start here")
 - **v0.3.1 (Short Royalty rename)** on `main` 7 Nov (the owner publishes the
   release): new name everywhere, technical names too (folder, SavedVariables,
   prefix, zip `ShortRoyalty-vX.Y.Z-forever.zip`), `DBM.AdoptRenamedGuild`
@@ -520,7 +536,10 @@ messages → sender ignored for the session).
   - TESTING 140–142. Mock-up `profView=levelling` uses real Forever numbers.
   - Also in v0.4.3 (owner): the window's title bar no longer shows the
     "Height is not a stat." subtitle; the title is centred on the crest.
-    `SK.TAGLINE` stays for the minimap tooltip and the TOC Notes. TESTING 143.
+    Then (owner) removed from the minimap tooltip and TOC Notes too:
+    `SK.TAGLINE` no longer exists; the tagline lives only in the README/
+    preview banner art. TOC Notes: "Guild gear, talents, professions and
+    recipes for the Short Royalty guild." TESTING 143.
   - Also in v0.4.3 (owner): the icon is the crest, not `INV_Misc_Bomb_04`:
     TOC `## IconTexture: Interface\AddOns\ShortRoyalty\Media\Textures\crest`,
     `MM.ICON = Theme.TEX.crest`, full texcoords (LibDBIcon `iconCoords`).
@@ -625,10 +644,13 @@ Full post-launch checklist: PLAN.md section 10.
 Done on 5 Nov: interface 16001 confirmed, the addon loads, GUID stable,
 a test send worked. The Mac AddOns path is still not confirmed by name
 (the owner installed successfully).
-1. Install the **v0.2.5** release (the real `-forever.zip`), send `/sr debug`,
-   and work through `TESTING.md` (on their own, then with one guildmate).
-2. ~~The final guild name~~: done, **Short Royalty** (7 Nov). Saved data
-   carries over automatically (v0.3.1).
+1. After v0.4.3 is released: a new `/sr debug` (skill-up colour check,
+   TESTING 140; send errors after the v0.4.2 fix; Tailoring/First Aid stay
+   "scanned yes", TESTING 138), and TESTING 140–144 (levelling, crest icon,
+   no tagline).
+2. The Warband currency `/run` test (TESTING 124): if it lists their own
+   alts, automatic "my alts" can be built on it. Otherwise alts stay as now.
+3. Whether to release v0.4.3 now or after the shopping list.
 4. Onyxia attunement: whether any Horde members exist (Horde chain differs), and
    in-game check that the Drakefire Amulet check works.
 

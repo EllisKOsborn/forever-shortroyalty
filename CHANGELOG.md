@@ -18,9 +18,11 @@
   you've learned it.
 - Recipes you haven't learned aren't in the Levelling list: Forever's data
   doesn't say at what skill a trainer or recipe teaches them.
-- The window's title bar now shows just **SHORT ROYALTY**: the "Height is
-  not a stat." subtitle is gone (it's still in the minimap button's tooltip
-  and the AddOns list).
+- The "Height is not a stat." tagline is gone from the game: the window's
+  title bar now shows just **SHORT ROYALTY**, and the minimap button's
+  tooltip and the AddOns list description no longer have it. The AddOns
+  list description no longer mentions raid sign-ups either (the Raids tab
+  was removed in v0.4.1).
 - The addon's icon is now our **crest** instead of the game's bomb icon, in
   the AddOns list and on the minimap button.
 
