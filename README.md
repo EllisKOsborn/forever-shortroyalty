@@ -354,6 +354,7 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.3.1**: renamed to **Short Royalty** (window, folder, download and `/sr`)
 - [ ] **In-game test round** with guildmates (TESTING.md), then fixes
 - [x] **v0.4.0**: Raids tab (read-only, removed again in v0.4.1), simpler "who has the addon", Alt rank left out of the Overview
+- [ ] **v0.4.3**: character model on the Character tab
 - [x] **v0.4.2**: fixes from the first big in-game report (a Lua error, lost profession recipes, false send errors)
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders
