@@ -11,8 +11,8 @@ then `PLAN.md` section 13 (levelling tools) and the top of `CHANGELOG.md`.
 
 Where we are:
 - v0.4.4 is released (levelling helper, crest icon, tagline removed from
-  the game), on top of v0.4.3 (character model). v0.4.5 (shopping list)
-  is built on the working branch but **not released**.
+  the game), on top of v0.4.3 (character model), and v0.4.5 (shopping
+  list) are released.
 - Next features, in this order:
   1. a **shopping list**: pick recipes and amounts, get the reagents
      needed and what I already have;

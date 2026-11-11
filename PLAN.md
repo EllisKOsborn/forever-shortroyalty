@@ -535,7 +535,7 @@ efficient route on Forever.**
 1. ✅ **Levelling helper** (v0.4.4, released 11 Nov): skill-up colours from Forever's
    SkillLineAbility, learned recipes only, checked against the game's own
    colours.
-2. ✅ **Shopping list** (v0.4.5, built 11 Nov): recipes and crafts → total
+2. ✅ **Shopping list** (v0.4.5, released 11 Nov): recipes and crafts → total
    reagents, have (bags + bank via `C_Item.GetItemCount`) / still to get,
    "you make it" for reagents a learned recipe makes, Copy. Local only.
    Prices moved to step 3 (a vendor's *buy* price isn't readable away from

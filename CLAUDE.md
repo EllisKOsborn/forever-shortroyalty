@@ -29,15 +29,14 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 11 Nov 2026)
-- **Released:** v0.4.4 on `main` (11 Nov: levelling helper, crest icon,
-  tagline removed everywhere in game, links to the renamed repo), on top of
-  v0.4.3 (11 Nov, character model, released from another chat). **Two chats
+- **Released:** v0.4.5 on `main` (11 Nov: shopping list), after v0.4.4
+  (11 Nov: levelling helper, crest icon, tagline removed everywhere in game,
+  links to the renamed repo) and v0.4.3 (11 Nov, character model, released
+  from another chat). **Two chats
   have pushed to `main`:** always `git fetch origin main` and merge before
   pushing to it, and check the newest CHANGELOG version first. Releasing =
   owner says "put it on main": merge `main`, date the CHANGELOG heading,
   bump the README badge, push `main` (automatic release).
-- **Built, not released:** v0.4.5 Shopping list on
-  `claude/short-kings-addon-hlf0t4` (TESTING 150–154).
 - **Next feature work** (owner's order, PLAN.md section 13): 3 profit
   (Auctionator's public API, else vendor prices) → 4 cheapest route planner. **Forever data only** (wago.tools product `wowf`), never
   Retail/Classic. Don't copy Profession Master (All Rights Reserved).
@@ -259,7 +258,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   professions for now"); **v0.4.2** (10 Nov, fixes from the first big
   in-game report: guild-nil error, lost profession scans, false send errors); **v0.4.3** (11 Nov, character model on the
   Character tab; the CI test build now uploads); **v0.4.4** (11 Nov,
-  levelling helper, crest icon, no tagline in game). Tag only when
+  levelling helper, crest icon, no tagline in game); **v0.4.5** (11 Nov,
+  shopping list). Tag only when
   the user asks.
 
 ## Layout
@@ -581,7 +581,7 @@ messages → sender ignored for the session).
     TOC `## IconTexture: Interface\AddOns\ShortRoyalty\Media\Textures\crest`,
     `MM.ICON = Theme.TEX.crest`, full texcoords (LibDBIcon `iconCoords`).
     Unconfirmed in game that the AddOns list shows a custom .tga. TESTING 149.
-- **v0.4.5 (built 11 Nov, not on `main`): Shopping list**, step 2 of the
+- **v0.4.5 (on `main` 11 Nov, released automatically): Shopping list**, step 2 of the
   levelling tools. `Core/Shopping.lua`: `SK.DB.shopping.list = { { id =
   recipeID, n = crafts } }` (local, max 50 recipes, 999 crafts; event
   `SHOPPING_CHANGED`), pure `Shop.Totals(entries, reagentsOf, countOf)`,
@@ -701,7 +701,7 @@ a test send worked. The Mac AddOns path is still not confirmed by name
    send errors after the v0.4.2 fix; Tailoring/First Aid stay "scanned yes",
    TESTING 138), TESTING 140–144 (character model) and 145–149 (levelling,
    crest icon, no tagline).
-2. After v0.4.5 is out: TESTING 150–154, especially whether the bank count
+2. v0.4.5 is out: TESTING 150–154, especially whether the bank count
    works away from the bank (152).
 3. The Warband currency `/run` test (TESTING 124): if it lists their own
    alts, automatic "my alts" can be built on it. Otherwise alts stay as now.

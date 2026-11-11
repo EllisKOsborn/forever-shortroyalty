@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.5 (not released yet): Shopping list
+## v0.4.5 (11 Nov 2026): Shopping list
 
 - **Professions → Shopping list** (new view): pick recipes and how many
   times you'll craft each, and see every reagent they add up to, how many
