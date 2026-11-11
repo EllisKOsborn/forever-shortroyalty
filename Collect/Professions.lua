@@ -96,7 +96,7 @@ local function scanModern()
 		scanning = false
 		result.skillLine, result.name, result.rank, result.max = skillLine, name, rank, max
 		result.complete = complete
-		-- v0.4.3: check our skill-up colours (Forever's data) against the window's.
+		-- v0.4.4: check our skill-up colours (Forever's data) against the window's.
 		if SK.RecipeDB and type(rank) == "number" then
 			for id, d in pairs(result.difficulty) do SK.RecipeDB.CheckColour(id, rank, d) end
 		end

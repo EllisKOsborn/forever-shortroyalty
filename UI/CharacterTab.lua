@@ -193,6 +193,38 @@ function Char:Build(page)
 	self.enchantText:SetWidth(140)
 	self.enchantText:SetJustifyH("CENTER")
 
+	-- Character model (v0.4.3): between the slot columns, above the weapons.
+	-- Blizzard's own dressing-room scene, so drag turns it and the wheel zooms.
+	local side = SP.s + 2 + S.slot + SP.xs
+	self.model = Compat.CreateModelScene(doll)
+	if self.model then
+		self.model:SetPoint("TOPLEFT", side, -(SP.s + S.controlSmall + SP.s))
+		self.model:SetPoint("BOTTOMRIGHT", -side, SP.s + 2 + S.slot + SP.s + 2 * Theme.SIZE.micro + SP.s)
+		self.model:Hide()
+	end
+	self.modelChip = W.Chip(doll, "Model", function()
+		SK.DB.settings.charModel = not SK.DB.settings.charModel
+		Char.modelKey = nil
+		Char:Refresh()
+	end)
+	self.modelChip:SetPoint("TOP", 0, -SP.s)
+	self.modelChip.tooltip = "Their gear on a 3D model. Drag to turn it, scroll to zoom."
+	self.modelChip:SetShown(self.model ~= nil)
+	self.modelNote = Theme.Text(doll, "micro", "dim")
+	self.modelNote:SetPoint("BOTTOMLEFT", side, SP.s + 2 + S.slot + SP.xs)
+	self.modelNote:SetPoint("BOTTOMRIGHT", -side, SP.s + 2 + S.slot + SP.xs)
+	self.modelNote:SetJustifyH("CENTER")
+	self.modelNote:SetWordWrap(true)
+	-- Their real look appears when they become your target or join your group.
+	local function again()
+		if page:IsShown() and SK.DB.settings.charModel then
+			Char.modelKey = nil
+			Char:Refresh()
+		end
+	end
+	SK:RegisterEvent("PLAYER_TARGET_CHANGED", again)
+	SK:RegisterEvent("GROUP_ROSTER_UPDATE", again)
+
 	-- Details: two columns of sections.
 	self.colA = W.Sheet(page, Char.DETAIL_COL_W)
 	self.colA:SetPoint("TOPLEFT", doll, "TOPRIGHT", SP.xl, 0)
@@ -364,6 +396,38 @@ local function altsOf(guild, guid)
 	return list, group.main == guid
 end
 
+-- What the model line says (pure; tested).
+function Char.ModelNote(mode, detail, ilvl)
+	local text
+	if mode == "real" then text = "Their own look"
+	elseif mode == "dressed" then
+		text = detail == "race" and "Their gear and race" or "Their gear on you"
+	else text = "No model here" end
+	if ilvl then text = string.format("Item level %.1f\n%s", ilvl, text) end
+	return text
+end
+
+-- Model on/off and (re)dressing. Rebuilt only when the character, their
+-- gear or whether they're here changes, never in combat.
+function Char:UpdateModel(p, guid, gearHidden)
+	if not self.model then return end
+	local show = SK.DB.settings.charModel and p ~= nil and not gearHidden
+	self.modelChip:SetActive(SK.DB.settings.charModel and true or false)
+	self.model:SetShown(show and true or false)
+	self.modelNote:SetShown(show and true or false)
+	self.ilvl:SetShown(not show)
+	self.ilvlLabel:SetShown(not show)
+	self.specText:SetShown(not show)
+	self.enchantText:SetShown(not show)
+	if not show then return end
+	local here = Compat.UnitForGUID(guid) ~= nil
+	local key = tostring(guid) .. "|" .. tostring(p.hash) .. "|" .. tostring(here)
+	if key == Char.modelKey or Compat.InCombat() then return end
+	Char.modelKey = key
+	local mode, detail = Compat.ShowGearModel(self.model, { guid = guid, raceFile = p.race, gear = p.gear })
+	self.modelNote:SetText(Char.ModelNote(mode, detail, p.ilvl))
+end
+
 function Char:Refresh()
 	if not self.slots then return end
 	local guild = SK.DBM:Guild()
@@ -390,6 +454,7 @@ function Char:Refresh()
 		self.ilvl:SetText(Theme.DASH)
 		self.specText:SetText("")
 		self.enchantText:SetText("")
+		self:UpdateModel(nil, guid, true)
 		self.colA:Hide()
 		self.colB:Hide()
 		self.empty:SetText(Char.EmptyText(m ~= nil))
@@ -424,6 +489,7 @@ function Char:Refresh()
 		local n = SK.Count(missing)
 		self.enchantText:SetText(n > 0 and string.format("%d missing enchant%s", n, n == 1 and "" or "s") or "")
 	end
+	self:UpdateModel(p, guid, hidden.gear)
 
 	local alts, isMain = altsOf(guild, guid)
 	local sections = Char.DetailSections(p, now, {

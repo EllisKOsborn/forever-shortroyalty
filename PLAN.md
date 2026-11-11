@@ -532,7 +532,7 @@ supports Forever) and wants similar tools, built in this order. **Only WoW
 Forever data, never Retail or Classic; aim for the cheapest and most
 efficient route on Forever.**
 
-1. ✅ **Levelling helper** (v0.4.3, built): skill-up colours from Forever's
+1. ✅ **Levelling helper** (v0.4.4, built): skill-up colours from Forever's
    SkillLineAbility, learned recipes only, checked against the game's own
    colours.
 2. **Shopping list:** pick recipes and quantities → total reagents, have

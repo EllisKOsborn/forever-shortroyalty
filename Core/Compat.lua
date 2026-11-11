@@ -456,6 +456,104 @@ function Compat.RecipeSchematic(recipeID)
 	return out
 end
 
+---------------------------------------------------------------------------
+-- Character model (v0.4.3). Forever's own dressing room (Mainline
+-- DressUpFrames.lua) does: ModelScene from "ModelSceneMixinTemplate",
+-- TransitionToModelSceneID(596, ...), scene:GetPlayerActor(nil, nil,
+-- raceFile, gender) for the camera framing, actor:SetModelByUnit(unit,
+-- sheathe, autoDress, hideWeapons, nativeForm, holdBowString, customRaceID),
+-- actor:Undress(), actor:TryOn(itemLink). A model can only come from a unit
+-- that's present (player, target, group); face, hair and gender can't be set
+-- from data (only the barber shop and character select can).
+---------------------------------------------------------------------------
+Compat.DRESS_UP_SCENE = 596 -- DRESS_UP_FRAME_MODEL_SCENE_ID in DressUpFrames.lua
+
+function Compat.CanShowModels()
+	return type(CreateFrame) == "function" and type(ModelSceneMixin) == "table"
+end
+
+function Compat.CreateModelScene(parent)
+	if not Compat.CanShowModels() then return nil end
+	local ok, scene = pcall(CreateFrame, "ModelScene", nil, parent, "ModelSceneMixinTemplate")
+	return ok and scene or nil
+end
+
+-- raceFile ("NightElf") -> raceID for customRaceID, via C_CreatureInfo.GetRaceInfo.
+local raceIDs
+function Compat.RaceID(raceFile)
+	if not raceFile or not has("C_CreatureInfo", "GetRaceInfo") then return nil end
+	if not raceIDs then
+		raceIDs = {}
+		for id = 1, 100 do
+			local ok, info = pcall(C_CreatureInfo.GetRaceInfo, id)
+			if ok and type(info) == "table" and info.clientFileString and not raceIDs[info.clientFileString] then
+				raceIDs[info.clientFileString] = id
+			end
+		end
+	end
+	return raceIDs[raceFile]
+end
+
+-- A unit token for this character if they're here (you, target, focus,
+-- mouseover, group), else nil.
+local UNITS = { "player", "target", "focus", "mouseover" }
+for i = 1, 4 do UNITS[#UNITS + 1] = "party" .. i end
+for i = 1, 40 do UNITS[#UNITS + 1] = "raid" .. i end
+function Compat.UnitForGUID(guid)
+	if not guid or not UnitGUID then return nil end
+	for _, u in ipairs(UNITS) do
+		local ok, g = pcall(UnitGUID, u)
+		if ok and clean(g) == guid then return u end
+	end
+end
+
+local function isObject(v) return type(v) == "table" or type(v) == "userdata" end
+
+-- Shows a character on `scene`. opts = { guid, raceFile, gear = { [slot] = link } }.
+-- Returns "real" (their own model: they're here), "dressed" (your character
+-- in their gear, as their race when the game allows), or nil + reason.
+function Compat.ShowGearModel(scene, opts)
+	if not isObject(scene) then return nil, "no model support" end
+	opts = opts or {}
+	local ok, err = pcall(function()
+		if scene.ReleaseAllActors then scene:ReleaseAllActors() end
+		scene:TransitionToModelSceneID(Compat.DRESS_UP_SCENE, CAMERA_TRANSITION_TYPE_IMMEDIATE or 1,
+			CAMERA_MODIFICATION_TYPE_DISCARD or 1, true)
+	end)
+	if not ok then return nil, "scene: " .. tostring(err) end
+	local unit = Compat.UnitForGUID(opts.guid)
+	local mine = unit ~= nil
+	local raceFile, gender
+	if mine then
+		local okR, _, rf = pcall(UnitRace, unit)
+		raceFile = okR and clean(rf) or opts.raceFile
+		local okS, sx = pcall(UnitSex, unit)
+		gender = okS and clean(sx) or nil
+	else
+		raceFile = opts.raceFile
+		gender = UnitSex and clean(UnitSex("player")) or nil -- the body is yours
+	end
+	local okA, actor = pcall(scene.GetPlayerActor, scene, nil, nil, raceFile, gender)
+	if not okA or not isObject(actor) then return nil, "no actor" end
+	if mine then
+		local okM = pcall(actor.SetModelByUnit, actor, unit, false, true, false, true, false)
+		if okM then return "real" end
+	end
+	local raceID = opts.raceFile and Compat.RaceID(opts.raceFile) or nil
+	local okM, err2 = pcall(actor.SetModelByUnit, actor, "player", false, false, false, true, false, raceID)
+	if not okM then return nil, "model: " .. tostring(err2) end
+	pcall(actor.Undress, actor)
+	-- Weapons need their hand named, or both end up in the main hand.
+	local HANDS = { [16] = "MAINHANDSLOT", [17] = "SECONDARYHANDSLOT" }
+	local slots = {}
+	for slot in pairs(opts.gear or {}) do slots[#slots + 1] = slot end
+	table.sort(slots)
+	for _, slot in ipairs(slots) do
+		pcall(actor.TryOn, actor, opts.gear[slot], HANDS[slot])
+	end
+	return "dressed", raceID and "race" or "own race"
+end
+
 -- Does this spell exist on this client? C_Spell.DoesSpellExist is in
 -- Forever's SpellDocumentation ("regardless of whether the player has
 -- learned it"). nil = can't tell.
@@ -825,6 +923,8 @@ Compat.PROBES = {
 	"C_TradeSkillUI.GetProfessionInfoBySkillLineID", "C_SpellBook.IsSpellKnown", "IsPlayerSpell",
 	-- v0.3.1 recipe list
 	"C_Spell.DoesSpellExist",
+	-- v0.4.3 character model
+	"ModelSceneMixin.GetPlayerActor", "C_CreatureInfo.GetRaceInfo", "UnitSex",
 }
 
 function Compat.ProbeAll()

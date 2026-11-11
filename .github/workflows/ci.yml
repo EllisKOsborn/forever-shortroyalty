@@ -34,14 +34,35 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+      # A release commit already has its version tag (release.yml adds it), and
+      # the packager won't build a tagged branch push ("Found future tag ...,
+      # not packaging"): the Release workflow builds that one. Skip cleanly
+      # instead of failing on "no files".
+      - name: Is this a release commit?
+        id: tag
+        run: |
+          tag=$(git tag --points-at HEAD)
+          if [ -n "$tag" ]; then
+            echo "Release commit ($tag): the Release workflow builds it, no test build here."
+            echo "skip=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=no" >> "$GITHUB_OUTPUT"
+          fi
       - name: Install Subversion (needed to fetch LibDBIcon)
+        if: steps.tag.outputs.skip == 'no'
         run: sudo apt-get update && sudo apt-get install -y subversion
       - uses: BigWigsMods/packager@e50a250f8705041e40f2fa1ddcb280a686d65aa0 # v2
+        if: steps.tag.outputs.skip == 'no'
         with:
           args: -d
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: steps.tag.outputs.skip == 'no'
         with:
           name: ShortRoyalty-test-build
+          # .release starts with a dot: upload-artifact skips "hidden" paths
+          # unless told to (the build was made but nothing was uploaded).
+          include-hidden-files: true
+          if-no-files-found: error
           # Both paths share .release/, so the download contains a ready
           # "ShortRoyalty" folder (plus the zip the packager made).
           path: |

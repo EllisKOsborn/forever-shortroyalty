@@ -68,7 +68,7 @@
 
   .titlebar { position: absolute; left: 0; right: 0; top: 0; height: var(--sz-titleBar); }
   .crest { position: absolute; left: 15px; top: 11px; width: var(--sz-crest); height: var(--sz-crest); background: var(--tex-crest) center/contain no-repeat; image-rendering: auto; }
-  .brand { position: absolute; left: 57px; top: 16px; font-size: 20px; line-height: 20px; } /* centred on the crest since v0.4.3 (no subtitle) */
+  .brand { position: absolute; left: 57px; top: 16px; font-size: 20px; line-height: 20px; } /* centred on the crest since v0.4.4 (no subtitle) */
   .tagline { position: absolute; left: 57px; top: 31px; font-size: var(--fs-small); color: var(--dim); }
   .status { position: absolute; right: 48px; top: 14px; height: 24px; width: 260px; display: flex; justify-content: flex-end; align-items: center; gap: var(--sp-s); font-size: var(--fs-small); color: var(--dim); }
   .status .text { max-width: 240px; }
@@ -469,6 +469,12 @@ function character() {
   let center = `<div class="abs display gold" style="left:0;right:0;top:122px;text-align:center;font-size:24px">${m.hasData ? m.ilvl + ".4" : "-"}</div>
     <div class="abs dim" style="left:0;right:0;top:150px;text-align:center;font-size:11px">average item level</div>`;
   if (m.hasData) center += `<div class="abs" style="left:55px;width:140px;top:180px;text-align:center">${esc(m.spec)}<br><span>31/20/0</span></div><div class="abs spark" style="left:55px;width:140px;top:224px;text-align:center;font-size:12px">2 missing enchants</div>`;
+  // v0.4.3: the 3D model (drawn in game; the preview shows where it sits).
+  if (m.hasData && S.model !== "0") center = `<span class="chip on" style="position:absolute;left:50%;transform:translateX(-50%);top:8px">Model</span>
+    <div class="abs" style="left:56px;right:56px;top:40px;bottom:96px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;text-align:center">
+      <div><div style="width:46px;height:46px;border-radius:50%;background:var(--raised);margin:0 auto 6px"></div><div style="width:84px;height:150px;border-radius:30px 30px 8px 8px;background:var(--raised);margin:0 auto"></div>
+      <div class="dim" style="font-size:11px;margin-top:8px">3D model in game<br>drag to turn, scroll to zoom</div></div></div>
+    <div class="abs dim" style="left:56px;right:56px;bottom:58px;text-align:center;font-size:11px;line-height:1.3">Item level ${m.ilvl}.4<br>Their gear and race</div>`;
   const colW = Math.floor((T.sizes.windowW - 2 * T.space.l - 250 - T.space.xl - (T.space.xl + T.space.m) - T.space.m) / 2);
   const details = !m.hasData ? `<div class="abs dim" style="left:270px;top:96px;right:0;line-height:1.35">No data synced yet. They may not have Short Royalty, or they're on a trial account (trials can't sync). Their profile appears here the next time they log in with it.</div>`
     : `<div class="sheet" style="left:270px;top:96px;bottom:0;width:${colW + 12}px">
@@ -571,7 +577,7 @@ function professions() {
       ${list([{ key: "n", t: "Recipe", w: 330 }, { key: "p", t: "Profession", w: 130 }, { key: "g", t: "Group", w: 266 }, { key: "c", t: "Crafters", w: 110, r: 1 }],
         ALL, cell, { click: true, style: "left:0;top:72px;bottom:0;right:0" })}`;
   }
-  if (S.profView === "levelling") { // v0.4.3: Tailoring at 85, real numbers from Forever's data (build 1.60.1.70888)
+  if (S.profView === "levelling") { // v0.4.4: Tailoring at 85, real numbers from Forever's data (build 1.60.1.70888)
     const SK_C = { orange: "var(--skillOrange)", yellow: "var(--skillYellow)", green: "var(--skillGreen)", grey: "var(--skillGrey)" };
     const c = (col, t) => `<span style="color:${SK_C[col]}">${t}</span>`;
     const range = (r) => [c("yellow", r[0]), c("green", r[1]), c("grey", r[2])].join('<span class="dim"> · </span>');
@@ -781,7 +787,7 @@ function seg(id) {
 try { Object.assign(S, JSON.parse(localStorage.getItem("skPreview") || "{}")); } catch (e) { /* ignore */ }
 // ?screen=roster&data=worst&view=before&raid=ony  (and &shot=1 for the README pictures: window only, no chrome)
 const Q = new URLSearchParams(location.search);
-for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind"]) if (Q.get(k)) S[k] = Q.get(k);
+for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model"]) if (Q.get(k)) S[k] = Q.get(k);
 const SHOT = Q.get("shot");
 if (SHOT) {
   document.body.classList.add("shot"); S.view = SHOT === "compare" ? "before" : "after"; S.reduce = true;

@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="WoW Forever 1.60.1" src="https://img.shields.io/badge/WoW%20Forever-1.60.1%20%C2%B7%2016001-FFC000?labelColor=000000">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.4.2%20alpha-F06BB0?labelColor=000000">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.4.4%20alpha-F06BB0?labelColor=000000">
   <img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-FF6A1A?labelColor=000000">
 </p>
 
@@ -98,6 +98,7 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 - **Ask for latest** asks them (or their online alt) for their newest data. It works while they're online with Short Royalty, at most every 30 seconds; otherwise it's greyed out and says why.
 - **Header:** name in class colour, level, race, class and rank, plus how old the data is and where it came from (*this account*, *from them*, *relayed by a guildmate*). Old data says *may be out of date*.
 - **Paperdoll:** all 19 slots with item-quality borders. Hover for the **real item tooltip**, Shift-click to link it, Ctrl-click for the dressing room. The middle shows **average item level** in gold, the main talent tree, and how many enchants are missing (an orange **!** marks each slot).
+- **Character model** (the **Model** chip, on by default) in the middle of the paperdoll: drag to turn it, scroll to zoom. When they're your **target** or in your **group** it's their real look. Otherwise it's **their gear on your character**, switched to their race where the game allows (face, hair, gender and build stay yours: the game only lets addons show players who are actually there). Shows their item level underneath. Click **Model** again for the item level, talents and missing enchants instead.
 - **Details** in two columns:
   - **Alts** and **notes**; **talents** per tree; **professions** with skill, recipe count or *not scanned yet*; **cooldowns** (transmutes, Mooncloth: time left or *ready*).
   - **Attunements** for the first raid wave (with the amulet warning) and **reputations**: raid and crafting factions first, then everything at Friendly or above.
@@ -358,9 +359,10 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.3.1**: renamed to **Short Royalty** (window, folder, download and `/sr`)
 - [ ] **In-game test round** with guildmates (TESTING.md), then fixes
 - [x] **v0.4.0**: Raids tab (read-only, removed again in v0.4.1), simpler "who has the addon", Alt rank left out of the Overview
-- [ ] **v0.4.3** (built, not released): **Levelling** helper (step 1 of the levelling tools): skill-up colours from Forever's data
-- [ ] Next levelling steps: shopping list, profit (Auctionator prices), cheapest levelling route
 - [x] **v0.4.2**: fixes from the first big in-game report (a Lua error, lost profession recipes, false send errors)
+- [x] **v0.4.3**: character model on the Character tab
+- [x] **v0.4.4**: **Levelling** helper (step 1 of the levelling tools): skill-up colours from Forever's data, crest icon, tagline gone from the game
+- [ ] Next levelling steps: shopping list, profit (Auctionator prices), cheapest levelling route
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders
 - [ ] **v0.5**: craft requests, a short status line, lockout board

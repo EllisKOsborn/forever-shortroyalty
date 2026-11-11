@@ -10,9 +10,8 @@ Read `CLAUDE.md` first, especially **"Start here (handover, 11 Nov 2026)"**,
 then `PLAN.md` section 13 (levelling tools) and the top of `CHANGELOG.md`.
 
 Where we are:
-- v0.4.2 is released. v0.4.3 is built on the working branch but **not
-  released**. It has the levelling helper, the crest icon (the bomb is
-  gone) and the tagline removed from the game.
+- v0.4.4 is released (levelling helper, crest icon, tagline removed from
+  the game), on top of v0.4.3 (character model).
 - Next features, in this order:
   1. a **shopping list**: pick recipes and amounts, get the reagents
      needed and what I already have;

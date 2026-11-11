@@ -19,7 +19,7 @@ local byID, all, byProf
 local catNames = {}
 
 -- Entry: { recipeID, skillLine, itemID, cat, reag = "item:count,...",
---   min, low, high, ups } (skill-up range from Forever's data, v0.4.3)
+--   min, low, high, ups } (skill-up range from Forever's data, v0.4.4)
 local function index()
 	if byID then return end
 	byID, all, byProf = {}, {}, {}
@@ -75,7 +75,7 @@ function DB.CategoryName(cat)
 end
 
 ---------------------------------------------------------------------------
--- Skill-up colours (v0.4.3). From Forever's own data (SkillLineAbility via
+-- Skill-up colours (v0.4.4). From Forever's own data (SkillLineAbility via
 -- tools/recipes.js): yellow from TrivialSkillLineRankLow, grey from
 -- TrivialSkillLineRankHigh, green from halfway between (the profession
 -- window's rule), orange below yellow. Forever's numbers differ from Classic

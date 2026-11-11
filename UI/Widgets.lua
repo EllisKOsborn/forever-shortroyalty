@@ -334,7 +334,7 @@ function W.Menu(parent, opts)
 end
 
 ---------------------------------------------------------------------------
--- Skill-up lines for a recipe tooltip (v0.4.3): the range from Forever's data
+-- Skill-up lines for a recipe tooltip (v0.4.4): the range from Forever's data
 -- and, if you have the profession, its colour for you now.
 ---------------------------------------------------------------------------
 function W.SkillUpText(recipeID, skillLine)

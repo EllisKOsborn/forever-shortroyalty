@@ -73,7 +73,7 @@ local RECIPE_COLUMNS = {
 	{ key = "count", title = "Crafters", width = 90, align = "RIGHT" },
 }
 
--- Levelling (v0.4.3): 836.
+-- Levelling (v0.4.4): 836.
 local LEVEL_COLUMNS = {
 	{ key = "name", title = "Recipe", width = 300 },
 	{ key = "colour", title = "For you", width = 96 },
@@ -336,7 +336,7 @@ function Prof:Build(page)
 	self.allList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
 	self.allList:SetPoint("BOTTOMRIGHT")
 
-	-- Levelling (v0.4.3): one of your professions, the recipes that still
+	-- Levelling (v0.4.4): one of your professions, the recipes that still
 	-- give skill-ups at your skill, best first. Ranges from Forever's data.
 	self.levelMenu = W.Menu(page, {
 		width = 220,
@@ -553,7 +553,7 @@ function Prof:Refresh()
 end
 
 ---------------------------------------------------------------------------
--- Levelling (v0.4.3)
+-- Levelling (v0.4.4)
 ---------------------------------------------------------------------------
 -- Your professions that have recipes in the game's data, for the menu.
 function Prof.LevelItems()

@@ -1,4 +1,4 @@
--- v0.4.3: skill-up colours from Forever's own data, and the Levelling view.
+-- v0.4.4: skill-up colours from Forever's own data, and the Levelling view.
 local H = require("tests.helpers.load")
 
 -- Bolt of Linen Cloth in Forever's SkillLineAbility: orange 1, yellow 25, grey 50.

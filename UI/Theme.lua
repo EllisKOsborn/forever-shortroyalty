@@ -37,7 +37,7 @@ Theme.COLOR = {
 	good      = { 0.298, 0.765, 0.541, 1 },    -- #4CC38A
 	bad       = { 0.898, 0.282, 0.302, 1 },    -- #E5484D
 	shadow    = { 0, 0, 0, 0.9 },              -- text shadow
-	-- Profession skill-up colours (v0.4.3): the game's own, so they read the
+	-- Profession skill-up colours (v0.4.4): the game's own, so they read the
 	-- same as the profession window (DIFFICULT/FAIR/EASY/TRIVIAL_DIFFICULTY_COLOR).
 	skillOrange = { 1.000, 0.502, 0.251, 1 },  -- #FF8040 orange: always a skill-up
 	skillYellow = { 1.000, 1.000, 0.000, 1 },  -- #FFFF00 yellow: usually

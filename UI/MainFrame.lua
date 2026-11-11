@@ -72,7 +72,7 @@ function Main:Build()
 	crest:SetPoint("LEFT", SP.l - 1, 0)
 	crest:SetTexture(Theme.TEX.crest)
 	f.crest = crest
-	-- v0.4.3: just the name, centred on the crest (the owner asked to drop the
+	-- v0.4.4: just the name, centred on the crest (the owner asked to drop the
 	-- "Height is not a stat." subtitle from the window).
 	local title = Theme.Text(bar, "brand", "text")
 	title:SetPoint("LEFT", crest, "RIGHT", SP.m, 0)

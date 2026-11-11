@@ -6,7 +6,7 @@ local MM = SK:NewModule("Minimap")
 local Theme = SK.Theme
 
 -- Our crest (Media/Textures/crest.tga, drawn by tools/textures.js), not a
--- stock game icon (v0.4.3: it was a bomb). The TOC's IconTexture (the AddOns
+-- stock game icon (v0.4.4: it was a bomb). The TOC's IconTexture (the AddOns
 -- list) points at the same file.
 MM.ICON = Theme.TEX.crest
 

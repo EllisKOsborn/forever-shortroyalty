@@ -42,7 +42,7 @@ read_globals = {
 	"GetInventoryItemLink", "GetAverageItemLevel", "GetActiveTalentGroup", "GetNumTalentTabs",
 	"GetTalentTabInfo", "GetNumTalents", "GetTalentInfo", "GetProfessions", "GetProfessionInfo",
 	"GetNumTradeSkills", "GetTradeSkillInfo", "GetTradeSkillLine", "GetTradeSkillRecipeLink",
-	"GetTradeSkillItemLink", "GetNumFactions", "GetFactionInfo", "IsQuestFlaggedCompleted", "IsPlayerSpell", "IsSpellKnown",
+	"GetTradeSkillItemLink", "GetNumFactions", "GetFactionInfo", "IsQuestFlaggedCompleted", "UnitSex", "ModelSceneMixin", "CAMERA_TRANSITION_TYPE_IMMEDIATE", "CAMERA_MODIFICATION_TYPE_DISCARD", "IsPlayerSpell", "IsSpellKnown",
 	"GetItemIcon", "GetSpellInfo", "GetItemInfo", "GetItemQualityColor", "GetInventorySlotInfo",
 	"CanViewOfficerNote", "GetMaxLevelForPlayerExpansion", "GetMaxPlayerLevel", "GetItemInfoInstant", "GetSpellCooldown", "GetItemCount", "GetLocale",
 }

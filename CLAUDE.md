@@ -15,7 +15,7 @@ the status or a convention, update this file in the same commit.
   v0.3.0 were `ShortKings`; v0.3.1 can't talk to them (different prefix).
   Still unchanged: the Lua namespace variable `SK` (invisible). The owner
   renamed the repo to `forever-shortroyalty` (11 Nov; GitHub redirects the
-  old `forever-shortkings` URL; links updated in v0.4.3).
+  old `forever-shortkings` URL; links updated in v0.4.4).
   **From now on** the folder, SavedVariables and prefix are fixed: changing
   them after rollout would wipe saved data or split the guild.
 - Slash commands: `/sr`, `/shortroyalty`, and `/sk` (kept, short).
@@ -29,17 +29,19 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 11 Nov 2026)
-- **Released:** v0.4.2 on `main` (10 Nov). **Built, not released:** v0.4.3
-  on `claude/short-kings-addon-hlf0t4` (levelling helper, crest icon,
-  tagline removed everywhere in game, links to the renamed repo). Releasing
-  = owner says "put it on main": `git fetch origin main`, merge, date the
-  CHANGELOG heading, bump the README badge, push `main` (automatic release).
+- **Released:** v0.4.4 on `main` (11 Nov: levelling helper, crest icon,
+  tagline removed everywhere in game, links to the renamed repo), on top of
+  v0.4.3 (11 Nov, character model, released from another chat). **Two chats
+  have pushed to `main`:** always `git fetch origin main` and merge before
+  pushing to it, and check the newest CHANGELOG version first. Releasing =
+  owner says "put it on main": merge `main`, date the CHANGELOG heading,
+  bump the README badge, push `main` (automatic release).
 - **Next feature work** (owner's order, PLAN.md section 13): 2 shopping
   list → 3 profit (Auctionator's public API, else vendor prices) → 4 cheapest
   route planner. **Forever data only** (wago.tools product `wowf`), never
   Retail/Classic. Don't copy Profession Master (All Rights Reserved).
 - **Before building on the skill-up colours**, get the owner's `/sr debug`
-  line "Skill-up colours vs your profession window" (TESTING 140). If
+  line "Skill-up colours vs your profession window" (TESTING 145). If
   anything differs, fix `RecipeDB.Range`'s green rule first.
 - **Open questions for the owner:** see "Waiting on the user" below.
 - Handover prompt used to start the next chat: `docs/prompts/next-chat.md`.
@@ -254,7 +256,9 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   the addon", Alt rank left out of the Overview, alt guessing removed);
   **v0.4.1** (8 Nov, Raids tab removed again: "keep it as crafting and
   professions for now"); **v0.4.2** (10 Nov, fixes from the first big
-  in-game report: guild-nil error, lost profession scans, false send errors). Tag only when
+  in-game report: guild-nil error, lost profession scans, false send errors); **v0.4.3** (11 Nov, character model on the
+  Character tab; the CI test build now uploads); **v0.4.4** (11 Nov,
+  levelling helper, crest icon, no tagline in game). Tag only when
   the user asks.
 
 ## Layout
@@ -342,6 +346,13 @@ messages → sender ignored for the session).
   mediator_lua needed this).
 - Run `busted --lua=lua5.1` and `luacheck .`. CI (`.github/workflows/ci.yml`)
   runs both and builds a test zip artifact.
+  The artifact (**ShortRoyalty-test-build**, bottom of each Tests run in the
+  Actions tab) needs `include-hidden-files: true` because it's under
+  `.release/`; without it nothing was uploaded (fixed 11 Nov). This is how the
+  owner tests a branch without a release. On a **release commit** (already tagged by
+  release.yml) the packager refuses to build ("Found future tag"), so the
+  test-build job skips itself there (`git tag --points-at HEAD`); with
+  `if-no-files-found: error` it would otherwise fail (it did on v0.4.3).
 - Mockups: Playwright and Chromium are preinstalled. The stand-in font is
   Marcellus from fonts.gstatic.com (don't commit the font).
 
@@ -502,7 +513,31 @@ messages → sender ignored for the session).
   send results (`Sync.SendOutcome(result, dist)` → "offline";
   `stats.targetOffline`). Tests: `tests/v042_spec.lua` (loads the real
   ChatThrottleLib). TESTING 137–139.
-- **v0.4.3 (built 11 Nov, not on `main`): Levelling helper**, step 1 of the
+- **v0.4.3 released 11 Nov** (pushed to `main` at the owner's request after
+  testing the CI test build; the owner said the model "looks good"). **Version
+  clash:** branch `claude/short-kings-addon-hlf0t4` (levelling helper) also
+  called itself v0.4.3; it merged `main` and became **v0.4.4** (TESTING
+  145–149). Character model details:
+  character model on the Character tab (owner asked 11 Nov). Decisions:
+  - Forever has **no API to build a player model from data** (face, hair,
+    skin, gender: only the barber shop and character select can). Models come
+    only from a present unit. So: `Compat.ShowGearModel(scene, {guid, raceFile,
+    gear})` = real model via `SetModelByUnit(unit)` when `Compat.UnitForGUID`
+    finds them (player/target/focus/mouseover/party/raid), else
+    `SetModelByUnit("player", …, autoDress=false, …, customRaceID)` +
+    `Undress` + `TryOn(link, "MAINHANDSLOT"/"SECONDARYHANDSLOT")`. Same setup as
+    Blizzard's dressing room: `CreateFrame("ModelScene", nil, p,
+    "ModelSceneMixinTemplate")`, `TransitionToModelSceneID(596, …)`,
+    `GetPlayerActor(nil, nil, raceFile, gender)`. Race via
+    `C_CreatureInfo.GetRaceInfo` → `Compat.RaceID`. **Nothing new synced**
+    (gender was considered and dropped: it can't change the body).
+  - `settings.charModel` (default on), `CharacterTab:UpdateModel` rebuilds
+    only when guid / profile hash / "is here" changes, never in combat;
+    PLAYER_TARGET_CHANGED and GROUP_ROSTER_UPDATE refresh it. Untested in
+    game: TESTING 140–144 (does customRaceID really swap race?).
+  - The GitHub repo is now **EllisKOsborn/forever-shortroyalty** (old URL
+    redirects).
+- **v0.4.4 (on `main` 11 Nov, released automatically; built as "v0.4.3" before the version clash): Levelling helper**, step 1 of the
   levelling tools the owner wants after seeing Profession Master (CurseForge,
   All Rights Reserved: never copy its code; it already supports Forever).
   Owner's rule: **"take the cheapest and most efficient route for WoW
@@ -533,17 +568,17 @@ messages → sender ignored for the session).
   - Next steps (owner chose to build in order): shopping list, profit via
     Auctionator's public API (or vendor prices), then the cheapest-route
     planner. Trainer costs and recipe sources aren't in Forever's data.
-  - TESTING 140–142. Mock-up `profView=levelling` uses real Forever numbers.
-  - Also in v0.4.3 (owner): the window's title bar no longer shows the
+  - TESTING 145–147. Mock-up `profView=levelling` uses real Forever numbers.
+  - Also in v0.4.4 (owner): the window's title bar no longer shows the
     "Height is not a stat." subtitle; the title is centred on the crest.
     Then (owner) removed from the minimap tooltip and TOC Notes too:
     `SK.TAGLINE` no longer exists; the tagline lives only in the README/
     preview banner art. TOC Notes: "Guild gear, talents, professions and
-    recipes for the Short Royalty guild." TESTING 143.
-  - Also in v0.4.3 (owner): the icon is the crest, not `INV_Misc_Bomb_04`:
+    recipes for the Short Royalty guild." TESTING 148.
+  - Also in v0.4.4 (owner): the icon is the crest, not `INV_Misc_Bomb_04`:
     TOC `## IconTexture: Interface\AddOns\ShortRoyalty\Media\Textures\crest`,
     `MM.ICON = Theme.TEX.crest`, full texcoords (LibDBIcon `iconCoords`).
-    Unconfirmed in game that the AddOns list shows a custom .tga. TESTING 144.
+    Unconfirmed in game that the AddOns list shows a custom .tga. TESTING 149.
 - **v0.3.7 (folded into v0.4.0, never released)**: wording only. The owner asked whether
   to remove alt features; advice was no (removing them wouldn't fix the
   per-character gap and would lose roster grouping and "on alt" whispers).
@@ -644,14 +679,13 @@ Full post-launch checklist: PLAN.md section 10.
 Done on 5 Nov: interface 16001 confirmed, the addon loads, GUID stable,
 a test send worked. The Mac AddOns path is still not confirmed by name
 (the owner installed successfully).
-1. After v0.4.3 is released: a new `/sr debug` (skill-up colour check,
-   TESTING 140; send errors after the v0.4.2 fix; Tailoring/First Aid stay
-   "scanned yes", TESTING 138), and TESTING 140–144 (levelling, crest icon,
-   no tagline).
+1. v0.4.4 is out: a new `/sr debug` (skill-up colour check, TESTING 145;
+   send errors after the v0.4.2 fix; Tailoring/First Aid stay "scanned yes",
+   TESTING 138), TESTING 140–144 (character model) and 145–149 (levelling,
+   crest icon, no tagline).
 2. The Warband currency `/run` test (TESTING 124): if it lists their own
    alts, automatic "my alts" can be built on it. Otherwise alts stay as now.
-3. Whether to release v0.4.3 now or after the shopping list.
-4. Onyxia attunement: whether any Horde members exist (Horde chain differs), and
+3. Onyxia attunement: whether any Horde members exist (Horde chain differs), and
    in-game check that the Drakefire Amulet check works.
 
 ## Answers already given to the guild (stay consistent)
