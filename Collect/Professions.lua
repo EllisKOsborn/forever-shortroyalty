@@ -97,7 +97,9 @@ local function scanModern()
 		result.skillLine, result.name, result.rank, result.max = skillLine, name, rank, max
 		result.complete = complete
 		-- v0.4.4: check our skill-up colours (Forever's data) against the window's.
-		if SK.RecipeDB and type(rank) == "number" then
+		-- Not at skill 0: just after a window opens the game can report 0
+		-- before it knows the real skill, and every recipe looks orange then.
+		if SK.RecipeDB and type(rank) == "number" and rank > 0 then
 			for id, d in pairs(result.difficulty) do SK.RecipeDB.CheckColour(id, rank, d) end
 		end
 		Prof:StoreScan(result)

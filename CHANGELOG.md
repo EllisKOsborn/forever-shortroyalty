@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.4.7 (not released yet): fixes
+
+- **Fixed: the skill-up colour check in `/sr debug` counted false
+  differences.** Just after a profession window opens, the game can report
+  your skill as 0 for a moment; recipes were compared at skill 0 then. Those
+  moments are now skipped and the count starts again.
+
 ## v0.4.6 (11 Nov 2026): Profit
 
 - **Professions → Profit** (new view): every recipe you've learned in one

@@ -480,6 +480,12 @@ in game if anything looks different and send it.
 160. [ ] Shopping list: "About … to buy" on the right; point at a reagent for
         its price.
 
+## v0.4.7 fixes
+
+161. [ ] Open each profession window once, then `/sr debug` → "Skill-up
+        colours vs your profession window". **Send me this line**: it should
+        say 0 differ, and no example "at skill 0".
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

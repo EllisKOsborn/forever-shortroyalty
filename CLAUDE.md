@@ -45,9 +45,9 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
 - **Next feature work** (owner's order, PLAN.md section 13): 4 cheapest
   route planner (needs the skill-up colour check first, see below). **Forever data only** (wago.tools product `wowf`), never
   Retail/Classic. Don't copy Profession Master (All Rights Reserved).
-- **Before building on the skill-up colours**, get the owner's `/sr debug`
-  line "Skill-up colours vs your profession window" (TESTING 145). If
-  anything differs, fix `RecipeDB.Range`'s green rule first.
+- **Skill-up colours checked 11 Nov**: 102 match; the 13 differences were all
+  a skill-0 read (fixed in v0.4.7, built, not released; TESTING 161). The
+  route planner can build on the colours; confirm 0 differ after v0.4.7.
 - **Open questions for the owner:** see "Waiting on the user" below.
 - Handover prompt used to start the next chat: `docs/prompts/next-chat.md`.
 
@@ -198,10 +198,14 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
     `C_Item.GetItemInfo` sell price works (Linen Cloth 13c).
   - Send errors 0 (v0.4.2 fix holds); no Lua errors; all 5 professions
     "scanned yes".
-  - Skill-up colour check still "not checked yet": no profession window
-    opened that session (`Last scan: none`). `relativeDifficulty` is
-    Nilable in the docs; Blizzard's shared RecipeList uses it the same way.
-    If it stays 0/0 after opening a window, the field is nil in Forever.
+  - **Skill-up colours: 102 match, 13 differ**, and every example was
+    "at skill 0" (Cooking recipes 6412, 6416, 7753, 7827, 2538): the scan
+    read the skill as 0 just after the window opened. So the colour rule
+    (yellow at low, green at floor((low+high)/2), grey at high) matched
+    everything compared at a real skill. v0.4.7 skips skill 0 in the check
+    and restarts the count (`RecipeDB.CHECK_VERSION` 2). Saving a scan
+    already ignored rank 0 (`Profile:SetScan`, `SetScanRank`).
+  - `relativeDifficulty` (Nilable in the docs) **is filled in Forever**.
 - **Realmless:** characters have two-part names that are unique per region.
   Key everything by **player GUID**. The `sender` format in addon messages is
   unconfirmed, so `Core/Identity.lua` matches it several ways.

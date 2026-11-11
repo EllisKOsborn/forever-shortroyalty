@@ -88,6 +88,7 @@ end
 ---------------------------------------------------------------------------
 DB.COLOURS = { "orange", "yellow", "green", "grey" }
 -- Blizzard's Enum.TradeskillRelativeDifficulty: Optimal, Medium, Easy, Trivial.
+DB.CHECK_VERSION = 2
 DB.GAME_COLOUR = { [0] = "orange", [1] = "yellow", [2] = "green", [3] = "grey" }
 
 -- { orange, yellow, green, grey, ups } or nil when the data has no range.
@@ -124,10 +125,12 @@ function DB.CheckColour(recipeID, skill, gameDifficulty)
 	local game = DB.GAME_COLOUR[gameDifficulty]
 	local ours = DB.ColourAt(recipeID, skill)
 	if not game or not ours then return nil end
+	if type(skill) ~= "number" or skill < 1 then return nil end
 	local build = tostring(Compat.BuildInfo().build or "?")
 	local c = SK.DB.colourCheck
-	if c.build ~= build then
-		c.build, c.match, c.differ, c.examples = build, 0, 0, {}
+	-- Version 2 (v0.4.7) starts the count again: version 1 also compared at skill 0.
+	if c.build ~= build or c.v ~= DB.CHECK_VERSION then
+		c.build, c.v, c.match, c.differ, c.examples = build, DB.CHECK_VERSION, 0, 0, {}
 	end
 	if game == ours then
 		c.match = c.match + 1

@@ -83,6 +83,24 @@ describe("Checking our colours against the profession window", function()
 		assert.equal(1, c.differ)
 		assert.same({ recipe = 3915, skill = 30, game = "grey", ours = "orange" }, c.examples[1])
 	end)
+
+	-- Owner's /sr debug, 11 Nov: 102 match, 13 differ, every example "at skill 0"
+	-- (a Cooking window read before the game knew the skill).
+	it("doesn't compare at skill 0, and restarts the count from the version that did", function()
+		SK.DB.colourCheck = { build = tostring(SK.Compat.BuildInfo().build), match = 102, differ = 13,
+			examples = { { recipe = 6412, skill = 0, game = "grey", ours = "orange" } } }
+		assert.is_nil(SK.RecipeDB.CheckColour(LINEN, 0, 1))
+		assert.is_nil(SK.RecipeDB.CheckColour(LINEN, nil, 1))
+		W.tradeskill = { skillLine = 197, name = "Tailoring", rank = 0, max = 75, recipes = {
+			[LINEN] = { learned = true, itemID = 2996, difficulty = 1 },
+		} }
+		SK.Professions:Scan()
+		W.advance(1)
+		assert.equal(102, SK.DB.colourCheck.match) -- skill 0: nothing compared, old count untouched
+		assert.is_true(SK.RecipeDB.CheckColour(LINEN, 30, 1))
+		local c = SK.DB.colourCheck
+		assert.same({ 1, 0, 0 }, { c.match, c.differ, #c.examples }) -- the old, wrong count is gone
+	end)
 end)
 
 describe("Professions → Levelling", function()
