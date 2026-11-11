@@ -42,6 +42,10 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ShortRoyalty-test-build
+          # .release starts with a dot: upload-artifact skips "hidden" paths
+          # unless told to (the build was made but nothing was uploaded).
+          include-hidden-files: true
+          if-no-files-found: error
           # Both paths share .release/, so the download contains a ready
           # "ShortRoyalty" folder (plus the zip the packager made).
           path: |

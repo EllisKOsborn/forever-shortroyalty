@@ -325,6 +325,10 @@ messages → sender ignored for the session).
   mediator_lua needed this).
 - Run `busted --lua=lua5.1` and `luacheck .`. CI (`.github/workflows/ci.yml`)
   runs both and builds a test zip artifact.
+  The artifact (**ShortRoyalty-test-build**, bottom of each Tests run in the
+  Actions tab) needs `include-hidden-files: true` because it's under
+  `.release/`; without it nothing was uploaded (fixed 11 Nov). This is how the
+  owner tests a branch without a release.
 - Mockups: Playwright and Chromium are preinstalled. The stand-in font is
   Marcellus from fonts.gstatic.com (don't commit the font).
 
