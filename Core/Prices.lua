@@ -105,7 +105,28 @@ end
 
 -- Cheapest way to get one: a vendor you've visited, the auction house, or
 -- making it yourself. Returns copper, "vendor" | "ah" | "make" (or nil).
+local batch -- itemID -> { copper, via } while a whole list is being priced
+
+-- Run fn with each item's buying price worked out once (Route and Profit
+-- price hundreds of recipes that share reagents).
+function P.Batch(fn, ...)
+	local outer = batch
+	batch = batch or {}
+	local ok, a, b, c = pcall(fn, ...)
+	batch = outer
+	if not ok then error(a, 0) end
+	return a, b, c
+end
+
 function P.Buy(itemID, prices)
+	if batch and not prices then
+		local hit = batch[itemID]
+		if not hit then
+			hit = { P.Buy(itemID, P) }
+			batch[itemID] = hit
+		end
+		return hit[1], hit[2]
+	end
 	prices = prices or P
 	local best, via
 	local function try(v, how) if v and (not best or v < best) then best, via = v, how end end

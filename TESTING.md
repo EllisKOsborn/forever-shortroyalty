@@ -526,6 +526,15 @@ in game if anything looks different and send it.
 174. [ ] **Copy for TSM**, paste the text into a TSM group's "Import items":
         **tell me if TSM takes it** (format `i:2589,i:2592`).
 
+## v0.5.2 Route with recipes to learn
+
+175. [ ] After opening your trainer once: Route shows "learn at trainer" on
+        a step when one of its recipes is the cheapest way; its tooltip says
+        the cost. Does that match the trainer?
+176. [ ] A pattern on the auction house (TSM has a price): Route may say
+        "learn from recipe" with its price. Sensible?
+177. [ ] **Recipes to learn** off: only recipes you know (as before).
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

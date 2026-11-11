@@ -146,3 +146,96 @@ describe("Professions → Route", function()
 		assert.truthy(S("Tailoring", 120, 150, 0, 2, nil):find("no TSM", 1, true))
 	end)
 end)
+
+describe("Route with recipes you haven't learned (v0.5.2)", function()
+	local SK, W
+	before_each(function()
+		SK, W = H.load()
+		W.member("Pocus Hocus", W.player.guid)
+		W.professions = { { name = "Tailoring", rank = 120, max = 150, skillLine = 197 } }
+		SK.Identity:ReadRoster()
+		SK.Profile:BuildSelf()
+	end)
+	after_each(function() _G.TSM_API = nil end)
+
+	it("waits for the skill a recipe needs, and spreads its learning cost over its points", function()
+		local steps, total = SK.Route.Plan({
+			{ recipeID = 1, range = range(200, 220), net = 40 },                         -- known, 40/point
+			{ recipeID = 2, range = range(200, 220), net = 10, learnAt = 105, learnCost = 300,
+				learn = { trainer = true } },                                           -- at 105: 10 + 300/95
+		}, 100, 200)
+		assert.same({ 1, 100, 105 }, { steps[1].recipeID, steps[1].from, steps[1].to }) -- not before 105
+		assert.same({ 2, 105, 200 }, { steps[2].recipeID, steps[2].from, steps[2].to })
+		assert.same({ cost = 300, trainer = true }, steps[2].learn)
+		assert.equal(5 * 40 + 95 * 10 + 300, total) -- learning counted once
+		-- Only 5 points to go after 105: 300 over 5 points is dearer than the known recipe.
+		steps = SK.Route.Plan({
+			{ recipeID = 1, range = range(200, 220), net = 40 },
+			{ recipeID = 2, range = range(200, 220), net = 10, learnAt = 105, learnCost = 300 },
+		}, 100, 110)
+		assert.equal(1, #steps)
+	end)
+
+	it("a learning cost too big for the points it gives loses", function()
+		local steps = SK.Route.Plan({
+			{ recipeID = 1, range = range(200, 220), net = 40 },
+			{ recipeID = 2, range = range(200, 220), net = 10, learnAt = 0, learnCost = 100000 },
+		}, 100, 110)
+		assert.equal(1, #steps)
+		assert.equal(1, steps[1].recipeID)
+	end)
+
+	it("knows how to learn a recipe: a recipe item with a price, or a trainer you've seen", function()
+		-- Pattern: Red Woolen Bag (5772) teaches 6688 at Tailoring 90.
+		assert.is_nil(SK.Route.HowToLearn(6688)) -- no price for the pattern: left out
+		_G.TSM_API = { GetCustomPriceValue = function(_, item) return item == "i:5772" and 2500 or nil end }
+		assert.same({ learnAt = 90, learnCost = 2500, learn = { item = 5772 } }, SK.Route.HowToLearn(6688))
+		SK.DB.trainer[8760] = { at = 145, cost = 2200 } -- Azure Silk Hood, from a trainer visit
+		assert.same({ learnAt = 145, learnCost = 2200, learn = { trainer = true } }, SK.Route.HowToLearn(8760))
+		assert.is_nil(SK.Route.HowToLearn(2963)) -- Bolt of Linen: no item, no trainer seen
+	end)
+
+	it("lists recipes to learn only when asked", function()
+		SK.DB.trainer[8760] = { at = 145, cost = 2200 }
+		local function ids(list)
+			local out = {}
+			for _, r in ipairs(list) do out[r.recipeID] = r.learnAt or "known" end
+			return out
+		end
+		local known = { [3839] = true } -- Bolt of Silk Cloth
+		assert.same({ [3839] = "known" }, ids(SK.Route.Recipes(197, known, false)))
+		assert.same({ [3839] = "known", [8760] = 145 }, ids(SK.Route.Recipes(197, known, true)))
+	end)
+
+	it("prices each item once while a whole list is planned", function()
+		local calls = 0
+		_G.TSM_API = { GetCustomPriceValue = function() calls = calls + 1; return 100 end }
+		SK.Prices.Batch(function()
+			for _ = 1, 5 do SK.Prices.Buy(2589) end
+		end)
+		local inBatch = calls
+		calls = 0
+		for _ = 1, 5 do SK.Prices.Buy(2589) end
+		assert.is_true(inBatch < calls)
+	end)
+
+	it("the Route view has a Recipes to learn button and says what to learn", function()
+		H.loadUI(SK)
+		local own = SK.Profile:Own()
+		own.profs[197].scanned = W.now
+		own.profs[197].primary = true
+		own.recipes[197] = {}
+		SK.DB.trainer[8760] = { at = 120, cost = 2200 } -- Azure Silk Hood: orange until 130
+		_G.TSM_API = { GetCustomPriceValue = function() return 100 end }
+		SK.DB.settings.profView = "route"
+		SK.MainFrame:Show("professions")
+		local tab = SK.ProfessionsTab
+		local first = tab.routeList.items[1]
+		assert.truthy(first.learn)
+		assert.is_true(tab.routeLearnChip:IsShown())
+		tab.routeLearnChip:GetScript("OnClick")(tab.routeLearnChip)
+		assert.is_false(SK.DB.settings.routeLearn)
+		assert.is_true(tab.routeList.items[1].stuck) -- nothing known: stuck at 120
+		assert.equal(0, #SK.errors)
+	end)
+end)

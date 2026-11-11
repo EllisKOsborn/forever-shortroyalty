@@ -356,7 +356,9 @@ local function setRouteCell(fs, s, col)
 	local k = col.key
 	if s.stuck then
 		if k == "skill" then fs:SetText(s.from .. "+")
-		elseif k == "name" then fs:SetText(Theme.Paint("spark", "Nothing you know gives points here: visit your trainer"))
+		elseif k == "name" then
+			fs:SetText(Theme.Paint("spark", "Nothing you know" .. (SK.DB.settings.routeLearn ~= false and " or can learn" or "") ..
+				" gives points here: visit your trainer"))
 		else fs:SetText("") end
 		return
 	end
@@ -365,7 +367,8 @@ local function setRouteCell(fs, s, col)
 	elseif k == "name" then
 		local name = SK.CraftIndex.NameOf({ recipeID = s.recipeID, itemID = s.itemID or 0 }) or "..."
 		local hex = (s.itemID or 0) > 0 and Compat.ItemQualityHex(s.itemID)
-		fs:SetText(recipeIcon({ recipeID = s.recipeID, itemID = s.itemID or 0 }) .. (hex and ("|c" .. hex .. name .. "|r") or name))
+		fs:SetText(recipeIcon({ recipeID = s.recipeID, itemID = s.itemID or 0 }) .. (hex and ("|c" .. hex .. name .. "|r") or name) ..
+			(s.learn and Theme.Paint("good", s.learn.trainer and "  learn at trainer" or "  learn from recipe") or ""))
 	elseif k == "colour" then
 		fs:SetText(Theme.SkillColour(SK.RecipeDB.ColourAt(s.recipeID, s.from)))
 	elseif k == "crafts" then
@@ -652,6 +655,13 @@ function Prof:Build(page)
 	end)
 	self.routeAdd:SetPoint("LEFT", self.routeProf, "RIGHT", SP.s, 0)
 	self.routeAdd.tooltip = "Every craft below, on your shopping list, to see which reagents to buy."
+	self.routeLearnChip = W.Chip(page, "Recipes to learn", function()
+		SK.DB.settings.routeLearn = SK.DB.settings.routeLearn == false
+		Prof:Refresh()
+	end)
+	self.routeLearnChip:SetPoint("LEFT", self.routeAdd, "RIGHT", SP.s, 0)
+	self.routeLearnChip.tooltip = "Also plan with recipes you don't know yet: recipe items with a price (TSM or a " ..
+		"vendor you've visited) and recipes a trainer you've opened teaches. Learning costs are in the total."
 	self.routeList = W.List(page, {
 		columns = ROUTE_COLUMNS, setCell = setRouteCell,
 		onEnter = function(row, s)
@@ -659,6 +669,12 @@ function Prof:Build(page)
 			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
 			if (s.itemID or 0) > 0 and GameTooltip.SetItemByID then GameTooltip:SetItemByID(s.itemID)
 			else GameTooltip:SetText(CI.SpellName(s.recipeID) or ("Recipe " .. s.recipeID)) end
+			if s.learn then
+				local how = s.learn.trainer and "from your trainer" or
+					("from " .. (CI.ItemName(s.learn.item) or "its recipe item"))
+				Theme.TipLine(GameTooltip, "Learn it first " .. how .. (s.learn.cost > 0 and (", " .. money(s.learn.cost)) or "") ..
+					" (in the total)", "good", true)
+			end
 			if s.net then
 				Theme.TipLine(GameTooltip, "Each craft: " .. netMoney(s.net) .. Theme.Paint("dim",
 					"  (reagents, minus what you'd get for selling what it makes)"), "text", true)
@@ -877,6 +893,7 @@ function Prof:Refresh()
 	local route = not one and view == "route"
 	self.routeProf:SetShown(route)
 	self.routeAdd:SetShown(route)
+	self.routeLearnChip:SetShown(route)
 	self.routeList:SetShown(route)
 	local profit = not one and view == "profit"
 	self.profitProf:SetShown(profit)
@@ -1112,11 +1129,16 @@ function Prof:RefreshRoute()
 	for id in pairs(own.recipes and own.recipes[skillLine] or {}) do known[id] = true end
 	local steps, total, unpriced = {}, 0, 0
 	if from < to and prof.scanned then
-		steps, total, unpriced = SK.Route.Plan(SK.Route.Recipes(skillLine, known), from, to)
+		local toLearn = SK.DB.settings.routeLearn ~= false
+		steps, total, unpriced = SK.Prices.Batch(function()
+			return SK.Route.Plan(SK.Route.Recipes(skillLine, known, toLearn), from, to)
+		end)
 	end
+	self.routeLearnChip:SetActive(SK.DB.settings.routeLearn ~= false)
 	SK.CraftIndex.SetBudget(SK.RecipeDB.REQUESTS_PER_SEARCH)
 	for _, s in ipairs(steps) do
 		s.skillLine = skillLine
+		if s.learn and s.learn.item then CI.ItemName(s.learn.item) end
 		if s.recipeID then
 			local r = SK.RecipeDB.Get(s.recipeID)
 			s.itemID = r and r.itemID or 0
@@ -1187,7 +1209,7 @@ function Prof:RefreshProfit()
 	local known = {}
 	for id in pairs(own.recipes and own.recipes[skillLine] or {}) do known[id] = true end
 	SK.CraftIndex.SetBudget(SK.RecipeDB.REQUESTS_PER_SEARCH)
-	local rows = SK.Prices.Rows(skillLine, known)
+	local rows = SK.Prices.Batch(SK.Prices.Rows, skillLine, known)
 	for _, r in ipairs(rows) do
 		SK.CraftIndex.NameOf({ recipeID = r.recipeID, itemID = r.itemID })
 		for _, x in ipairs(SK.Reagents.All(r.recipeID) or {}) do if x.i then CI.ItemName(x.i) end end

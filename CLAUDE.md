@@ -98,7 +98,15 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   them), `Shopping.ItemNeed` (cached, dirty on SHOPPING_CHANGED/BAG/BANK) →
   `Tooltip.ShoppingText` on item tooltips (shown even with crafter lines
   off), `Shopping.TSMList` ("i:1,i:2"; **TSM accepting it is unverified**,
-  TESTING 174). Tests: `tests/shopping2_spec.lua`. Next: v0.5.2.
+  TESTING 174). Tests: `tests/shopping2_spec.lua`.
+- **Built, not released: v0.5.2 route with recipes to learn.**
+  `Route.HowToLearn` (recipe item with a price via `Prices.Buy`, or a
+  remembered trainer; cheaper wins), `Route.Recipes(skillLine, known,
+  toLearn)`, `Route.Plan` honours `learnAt`, adds `learnCost /
+  (min(grey, to) - skill)` per point until paid, puts `learn` on the first
+  step and the cost once in the total. `settings.routeLearn` (default on),
+  chip "Recipes to learn". `Prices.Batch(fn, ...)` caches `Buy` per item
+  during a refresh (Route, Profit). TESTING 175–177. Next: v0.5.3.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from

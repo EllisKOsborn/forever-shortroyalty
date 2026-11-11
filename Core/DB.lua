@@ -23,6 +23,7 @@ local DEFAULTS = {
 		profView = "board",                       -- Professions tab view: board, recipes, cooldowns, levelling, route, shopping, profit
 		levelProf = nil,                          -- Professions → Levelling: which of your professions (skillLine)
 		charModel = true,                         -- Character tab: gear on a 3D model (v0.4.3)
+		routeLearn = true,                        -- Route: also plan with recipes you could learn (v0.5.2)
 		shopRaw = false,                          -- Shopping list: show raw materials for reagents you make (v0.5.1)
 		priceSource = "auto",                     -- auction prices from "auto", "auctionator" or "tsm" (v0.4.6)
 		welcomed = false,                         -- first-load welcome line shown (v0.3.1)

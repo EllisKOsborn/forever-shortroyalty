@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.5.2 (not released yet): Route with recipes you haven't learned
+
+- **Route** can now plan with recipes you don't know yet (on by default;
+  the **Recipes to learn** button turns it off):
+  - recipe items (patterns, plans…) that have a price, from TSM or a vendor
+    you've visited, from the skill they need;
+  - recipes a trainer you've opened teaches, from the skill and cost it
+    showed.
+- A step says "learn at trainer" or "learn from recipe", and its tooltip
+  what it costs. Learning costs are in the total, counted once.
+- A recipe worth learning is judged on all the points it can give you on
+  the way to your target, not only the first one.
+
 ## v0.5.1 (not released yet): Shopping list upgrades
 
 - **Item tooltips** show "Shopping list: need 7, have 3" for anything on

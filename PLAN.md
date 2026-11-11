@@ -605,7 +605,7 @@ small enough to test in game before the next one builds on it.
   shopping search. Check the format in TSM's docs (their API site was down
   on 11 Nov) or test it in game before release.
 
-### v0.5.2 Route with recipes you haven't learned yet
+### v0.5.2 Route with recipes you haven't learned yet (✅ built 11 Nov)
 - The planner may also use recipes you can learn: recipe items (learn skill
   from the data; price from TSM, else the vendor price) and trainer recipes
   you've seen (skill and cost from your visit). Steps can then say "at 135,

@@ -143,7 +143,7 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 
 <p align="center"><img src="docs/images/levelling.png" alt="Professions → Levelling" width="100%"></p>
 
-- **Route:** the cheapest way from your skill to your cap. Pick a profession and it lists which of your learned recipes to craft for each stretch of points, how many times, and what it costs: the recipe that costs least **per skill point** at each point, counting what you'd get for **selling what you make** (prices from TradeSkillMaster if you have it, and the vendor prices Short Royalty remembers). Orange recipes always give a point; yellow and green only sometimes, so their crafts are an average (the original game's chance; not confirmed for Forever). **Add all to shopping list** puts every craft on your shopping list. Only recipes you've learned are used: when nothing you know gives points any more, it tells you to visit your trainer.
+- **Route:** the cheapest way from your skill to your cap. Pick a profession and it lists which of your learned recipes to craft for each stretch of points, how many times, and what it costs: the recipe that costs least **per skill point** at each point, counting what you'd get for **selling what you make** (prices from TradeSkillMaster if you have it, and the vendor prices Short Royalty remembers). Orange recipes always give a point; yellow and green only sometimes, so their crafts are an average (the original game's chance; not confirmed for Forever). **Add all to shopping list** puts every craft on your shopping list. With **Recipes to learn** (on by default) it also plans with recipes you don't know yet: recipe items that have a price (TSM, or a vendor you've visited) and recipes a trainer you've opened teaches, adding what learning them costs. When nothing you know or can learn gives points any more, it tells you to visit your trainer.
 
 <p align="center"><img src="docs/images/route.png" alt="Professions → Route (example prices)" width="100%"></p>
 
@@ -377,7 +377,8 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.4.8**: **cheapest levelling route** (step 4 of the levelling tools)
 - [ ] **v0.5.0** (built, not released): where to learn each recipe (recipe items, trainers, the game's own text)
 - [ ] **v0.5.1** (built, not released): shopping list upgrades (tooltips, make or buy, raw materials, Copy for TSM)
-- [ ] **v0.5.2–v0.5.5**: route with recipes you haven't learned, panel beside the profession window, filters, who has item X ([plan](PLAN.md))
+- [ ] **v0.5.2** (built, not released): Route plans with recipes you haven't learned yet
+- [ ] **v0.5.3–v0.5.5**: panel beside the profession window, filters, who has item X ([plan](PLAN.md))
 - [ ] Next levelling step: cheapest levelling route
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders
