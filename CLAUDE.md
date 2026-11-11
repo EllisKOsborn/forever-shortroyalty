@@ -29,7 +29,8 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 11 Nov 2026)
-- **Released:** v0.4.5 on `main` (11 Nov: shopping list), after v0.4.4
+- **Released:** v0.4.6 on `main` (11 Nov: Profit, menu hover fix), after
+  v0.4.5 (11 Nov: shopping list) and v0.4.4
   (11 Nov: levelling helper, crest icon, tagline removed everywhere in game,
   links to the renamed repo) and v0.4.3 (11 Nov, character model, released
   from another chat). **Two chats
@@ -37,11 +38,10 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   pushing to it, and check the newest CHANGELOG version first. Releasing =
   owner says "put it on main": merge `main`, date the CHANGELOG heading,
   bump the README badge, push `main` (automatic release).
-- **Built, not released:** v0.4.6 on `claude/short-kings-addon-hlf0t4`:
-  **Profit** (step 3) and the menu hover fix (`W.Menu` rows used a solid
-  texture on the HIGHLIGHT layer, which draws over text; now BACKGROUND,
-  shown on enter). TESTING 155–160. **Get the owner's `/sr debug` "Prices:"
-  line** (TESTING 156): the Auctionator/TSM calls are unverified.
+- v0.4.6 = **Profit** (step 3) and the menu hover fix (`W.Menu` rows used a
+  solid texture on the HIGHLIGHT layer, which draws over text; now
+  BACKGROUND, shown on enter). TESTING 155–160. **Get the owner's `/sr debug`
+  "Prices:" line** (TESTING 156): the Auctionator/TSM calls are unverified.
 - **Next feature work** (owner's order, PLAN.md section 13): 4 cheapest
   route planner (needs the skill-up colour check first, see below). **Forever data only** (wago.tools product `wowf`), never
   Retail/Classic. Don't copy Profession Master (All Rights Reserved).
@@ -264,7 +264,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   in-game report: guild-nil error, lost profession scans, false send errors); **v0.4.3** (11 Nov, character model on the
   Character tab; the CI test build now uploads); **v0.4.4** (11 Nov,
   levelling helper, crest icon, no tagline in game); **v0.4.5** (11 Nov,
-  shopping list). Tag only when
+  shopping list); **v0.4.6** (11 Nov, Profit with Auctionator/TSM prices,
+  menu hover fix). Tag only when
   the user asks.
 
 ## Layout
@@ -603,7 +604,7 @@ messages → sender ignored for the session).
   Professions status line now starts after the view chips. Tests:
   `tests/shopping_spec.lua` (set `_G.IsShiftKeyDown`: busted gives spec
   files their own globals).
-- **v0.4.6 (built 11 Nov, not on `main`): Profit**, step 3. Owner: the guild
+- **v0.4.6 (on `main` 11 Nov, released automatically): Profit**, step 3. Owner: the guild
   uses **both Auctionator and TSM**. `Core/Prices.lua`: `P.Source()`
   (`settings.priceSource` auto/auctionator/tsm; auto = Auctionator first),
   `P.Auction` (TSM tries `DBMarket`, then `DBMinBuyout`), `P.Buy` (cheaper of
@@ -738,7 +739,7 @@ a test send worked. The Mac AddOns path is still not confirmed by name
    crest icon, no tagline).
 2. v0.4.5 is out: TESTING 150–154, especially whether the bank count
    works away from the bank (152).
-2b. Once v0.4.6 is out: the `/sr debug` "Prices:" line (TESTING 156) and
+2b. v0.4.6 is out: the `/sr debug` "Prices:" line (TESTING 156) and
    whether Profit's numbers look right against the auction house (157).
 3. The Warband currency `/run` test (TESTING 124): if it lists their own
    alts, automatic "my alts" can be built on it. Otherwise alts stay as now.

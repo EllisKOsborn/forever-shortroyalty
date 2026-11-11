@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="WoW Forever 1.60.1" src="https://img.shields.io/badge/WoW%20Forever-1.60.1%20%C2%B7%2016001-FFC000?labelColor=000000">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.4.5%20alpha-F06BB0?labelColor=000000">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.4.6%20alpha-F06BB0?labelColor=000000">
   <img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-FF6A1A?labelColor=000000">
 </p>
 
@@ -371,7 +371,7 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.4.3**: character model on the Character tab
 - [x] **v0.4.4**: **Levelling** helper (step 1 of the levelling tools): skill-up colours from Forever's data, crest icon, tagline gone from the game
 - [x] **v0.4.5**: **Shopping list** (step 2 of the levelling tools)
-- [ ] **v0.4.6** (built, not released): **Profit** (step 3 of the levelling tools), prices from Auctionator or TSM; drop-down menus readable on hover
+- [x] **v0.4.6**: **Profit** (step 3 of the levelling tools), prices from Auctionator or TSM; drop-down menus readable on hover
 - [ ] Next levelling step: cheapest levelling route
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders

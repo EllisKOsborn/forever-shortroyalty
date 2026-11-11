@@ -540,7 +540,7 @@ efficient route on Forever.**
    "you make it" for reagents a learned recipe makes, Copy. Local only.
    Prices moved to step 3 (a vendor's *buy* price isn't readable away from
    the vendor; the item's sell price is).
-3. ✅ **Profit** (v0.4.6, built 11 Nov): Professions → Profit and a cost
+3. ✅ **Profit** (v0.4.6, released 11 Nov): Professions → Profit and a cost
    line on the Shopping list. Auction prices from Auctionator
    (`Auctionator.API.v1.GetAuctionPriceByItemID`) or TSM
    (`TSM_API.GetCustomPriceValue("DBMarket", "i:<id>")`), owner: the guild

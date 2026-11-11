@@ -11,9 +11,8 @@ then `PLAN.md` section 13 (levelling tools) and the top of `CHANGELOG.md`.
 
 Where we are:
 - Released: v0.4.3 (character model), v0.4.4 (levelling helper, crest
-  icon, no tagline) and v0.4.5 (shopping list). v0.4.6 (**Profit** with
-  Auctionator or TSM prices, vendor prices, menu hover fix) is built on the
-  working branch but **not released**.
+  icon, no tagline), v0.4.5 (shopping list) and v0.4.6 (**Profit** with
+  Auctionator or TSM prices, vendor prices, menu hover fix).
 - The guild uses both Auctionator and TSM. Whether the addon reads their
   prices correctly is checked by the `/sr debug` "Prices:" line.
 - Next feature: the **cheapest levelling route** planner (PLAN.md section

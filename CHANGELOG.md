@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.6 (not released yet): Profit
+## v0.4.6 (11 Nov 2026): Profit
 
 - **Professions → Profit** (new view): every recipe you've learned in one
   profession with what its reagents cost, what it sells for and the
