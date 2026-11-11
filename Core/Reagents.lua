@@ -57,6 +57,12 @@ local function bundled(recipeID)
 	return out
 end
 
+-- Every reagent of a recipe, { { i = itemID | c = currencyID, q = qty } }, or nil.
+function R.All(recipeID)
+	local entry = R.Learn(recipeID) or bundled(recipeID)
+	return entry and entry.r or nil
+end
+
 -- { { itemID, currencyID, qty, name, have, icon } } or nil.
 -- `have` is the count in your bags (nil when the game can't tell).
 function R.Lines(recipeID)

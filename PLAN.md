@@ -532,11 +532,14 @@ supports Forever) and wants similar tools, built in this order. **Only WoW
 Forever data, never Retail or Classic; aim for the cheapest and most
 efficient route on Forever.**
 
-1. ✅ **Levelling helper** (v0.4.4, built): skill-up colours from Forever's
+1. ✅ **Levelling helper** (v0.4.4, released 11 Nov): skill-up colours from Forever's
    SkillLineAbility, learned recipes only, checked against the game's own
    colours.
-2. **Shopping list:** pick recipes and quantities → total reagents, have
-   (bags and bank via `C_Item.GetItemCount`) / need, vendor prices.
+2. ✅ **Shopping list** (v0.4.5, built 11 Nov): recipes and crafts → total
+   reagents, have (bags + bank via `C_Item.GetItemCount`) / still to get,
+   "you make it" for reagents a learned recipe makes, Copy. Local only.
+   Prices moved to step 3 (a vendor's *buy* price isn't readable away from
+   the vendor; the item's sell price is).
 3. **Profit:** crafting cost vs selling price. Prices from Auctionator's
    public API when it's installed (it is allowed to be called), else vendor
    prices only. Our own auction scan only if Auctionator isn't an option.

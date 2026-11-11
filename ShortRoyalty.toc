@@ -24,6 +24,7 @@ Core\ProfBoard.lua
 Core\RecipeDB.lua
 Core\Onboarding.lua
 Core\Export.lua
+Core\Shopping.lua
 Core\Feed.lua
 Core\Overview.lua
 

@@ -145,7 +145,10 @@ function W.reset()
 	W.itemNames, W.itemCached, W.itemQuality = {}, {}, {}
 	W.requestedItems = {}
 	W.bags = {}              -- [itemID] = count in bags
-	_G.C_Item.GetItemCount = function(id, includeBank) return (not includeBank and W.bags[id]) or 0 end
+	W.bank = {}              -- [itemID] = count in the bank (counted only with includeBank)
+	_G.C_Item.GetItemCount = function(id, includeBank)
+		return (W.bags[id] or 0) + (includeBank and W.bank[id] or 0)
+	end
 	_G.C_Item.GetItemNameByID = function(id) return W.itemCached[id] and W.itemNames[id] or nil end
 	_G.C_Item.GetItemQualityByID = function(id) return W.itemCached[id] and (W.itemQuality[id] or 3) or nil end
 	_G.C_Item.GetItemQualityColor = function() return 0, 0.44, 0.87, "ff0070dd" end

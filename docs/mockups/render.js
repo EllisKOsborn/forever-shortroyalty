@@ -27,6 +27,7 @@ const SHOTS = {
   cooldowns: ["shot=1&screen=professions&data=full&profView=cooldowns", W, H],
   "all-recipes": ["shot=1&screen=professions&data=full&profView=recipes", W, H],
   levelling: ["shot=1&screen=professions&data=full&profView=levelling", W, H],
+  shopping: ["shot=1&screen=professions&data=full&profView=shopping", W, H],
   "getting-started": ["shot=1&screen=overview&data=full&start=1", W, H],
   reminder: ["shot=1&screen=overview&data=full&start=1&remind=1", W, H + 52],
   settings: ["shot=1&screen=settings&data=full", W, H],

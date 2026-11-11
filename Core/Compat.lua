@@ -645,6 +645,26 @@ function Compat.ItemCountInBags(itemID)
 	if GetItemCount then return clean(GetItemCount(itemID)) end
 end
 
+-- bags, everything (bags + bank + reagent bank + account bank), or nil when
+-- the game can't tell. Same Forever call, with its includeBank,
+-- includeUses (false), includeReagentBank and includeAccountBank flags.
+function Compat.ItemCounts(itemID)
+	local bags = Compat.ItemCountInBags(itemID)
+	if bags == nil then return nil end
+	local total
+	if has("C_Item", "GetItemCount") then
+		local ok, n = pcall(C_Item.GetItemCount, itemID, true, false, true, true)
+		if ok then total = clean(n) end
+	elseif GetItemCount then
+		total = clean(GetItemCount(itemID, true))
+	end
+	return bags, math.max(total or bags, bags)
+end
+
+function Compat.ShiftDown()
+	return IsShiftKeyDown ~= nil and IsShiftKeyDown() == true
+end
+
 -- Does this quest ID exist in this client's data? (nil = unknown yet)
 function Compat.QuestTitle(questID)
 	if has("C_QuestLog", "GetTitleForQuestID") then

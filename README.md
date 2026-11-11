@@ -43,7 +43,7 @@
 | 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
 | ⚒️ **Crafters** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
-| 🧪 **Professions** | Every profession in the guild, **every recipe in the game** (search by name, group or material), each profession's crafters, everyone's cooldowns, specialisations, favourites, and a **Levelling** helper with skill-up colours from Forever's own data |
+| 🧪 **Professions** | Every profession in the guild, **every recipe in the game** (search by name, group or material), each profession's crafters, everyone's cooldowns, specialisations, favourites, a **Levelling** helper with skill-up colours from Forever's own data, and a **Shopping list** |
 | ⚙️ **Settings** | Sharing and privacy switches, display options, window size, tools and a live status read-out |
 | 🧨 **Everywhere** | `/sr`, a minimap button, "Crafted by" lines on item tooltips, chat reminders and a copyable debug report |
 
@@ -141,6 +141,10 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 - **Skill-up colours in tooltips:** every recipe tooltip (Professions, All recipes, Crafters) says where it turns yellow, green and grey, and, if you've learned it, its colour for you now. The Crafters panel shows the same line under the reagents.
 
 <p align="center"><img src="docs/images/levelling.png" alt="Professions → Levelling" width="100%"></p>
+
+- **Shopping list:** **Shift-click** a recipe (All recipes, Levelling or a profession's list), or press **+ List** on the Crafters tab, then set how many times you'll craft it with **−** and **+** (Shift: 5 at a time). The list adds up every reagent and shows how many you **have in your bags and bank** and how many are **still to get**, and says when you can make a reagent yourself (Bolt of Woolen Cloth, for example). **Copy** gives it as plain text. It's saved on your computer only and never sent to anyone. Reagents come from your game, or from Forever's own data when the profession window hasn't been opened.
+
+<p align="center"><img src="docs/images/shopping.png" alt="Professions → Shopping list" width="100%"></p>
 
 - **Cooldowns:** everyone's profession cooldowns (transmutes, Mooncloth…), ready first, then soonest. Shows who, how long, and **as of** when we last heard from them (orange after a day: a cooldown only updates while its owner is online). **Whisper** when they're on.
 - **Specialisations** (Gnomish/Goblin Engineer, Dragonscale/Elemental/Tribal Leatherworking, Armorsmith/Weaponsmith and the master smiths) are read from your spellbook. A spell only counts when the game's own name for it matches, so a wrong ID can never mislabel anyone.
@@ -362,11 +366,12 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.4.2**: fixes from the first big in-game report (a Lua error, lost profession recipes, false send errors)
 - [x] **v0.4.3**: character model on the Character tab
 - [x] **v0.4.4**: **Levelling** helper (step 1 of the levelling tools): skill-up colours from Forever's data, crest icon, tagline gone from the game
-- [ ] Next levelling steps: shopping list, profit (Auctionator prices), cheapest levelling route
+- [ ] **v0.4.5** (built, not released): **Shopping list** (step 2 of the levelling tools)
+- [ ] Next levelling steps: profit (Auctionator prices), cheapest levelling route
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders
 - [ ] **v0.5**: craft requests, a short status line, lockout board
-- [ ] **Later**: raid attendance, shopping lists, guild bank viewer and more in the [plan](PLAN.md#later-in-rough-priority-order)
+- [ ] **Later**: raid attendance, guild bank viewer and more in the [plan](PLAN.md#later-in-rough-priority-order)
 - [ ] CurseForge release
 
 Testing it in game? Work through [TESTING.md](TESTING.md). The plan for launch

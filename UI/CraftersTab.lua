@@ -11,6 +11,7 @@ local S, SP = Theme.SIZES, Theme.SPACE
 Crafters.RESULTS_W = 476
 Crafters.SIDE_W = S.window[1] - 2 * SP.l - Crafters.RESULTS_W - SP.l
 Crafters.STAR_W = 48 -- the Star chip next to the title
+Crafters.LIST_W = 56 -- the "+ List" chip left of it
 Crafters.REAGENTS_H = 3 * Theme.SIZE.small + 4 * Theme.SPACE.xs -- up to three lines of reagents
 
 local function profName(skillLine) return CI.ProfessionName(CI:Get(true), skillLine) end
@@ -127,7 +128,7 @@ function Crafters:Build(page)
 	self.side = side
 	self.title = Theme.Text(side, "title", "text")
 	self.title:SetPoint("TOPLEFT", SP.m, -SP.m)
-	self.title:SetPoint("TOPRIGHT", -(SP.m + Crafters.STAR_W + SP.s), -SP.m)
+	self.title:SetPoint("TOPRIGHT", -(SP.m + Crafters.STAR_W + SP.xs + Crafters.LIST_W + SP.s), -SP.m)
 	-- Long item names wrap to a second line rather than being cut off.
 	self.title:SetWordWrap(true)
 	if self.title.SetMaxLines then self.title:SetMaxLines(2) end
@@ -181,6 +182,10 @@ function Crafters:Build(page)
 	end)
 	self.favButton:SetPoint("TOPRIGHT", -SP.m, -SP.m)
 	self.favButton.tooltip = "Starred recipes show under Favourites, here and on the Professions tab."
+	self.listButton = W.Chip(side, "+ List", function()
+		if Crafters.selected then SK.Shopping.Add(Crafters.selected, Compat.ShiftDown() and 5 or 1) end
+	end)
+	self.listButton:SetPoint("RIGHT", self.favButton, "LEFT", -SP.xs, 0)
 	self.post = W.Button(side, "Post to guild chat", nil, S.control, function() Crafters:PostToGuild() end, "primary")
 	self.post:SetPoint("BOTTOMLEFT", SP.m, SP.m)
 	self.copy = W.Button(side, "Copy", nil, S.control, function() Crafters:CopyText() end)
@@ -202,6 +207,9 @@ function Crafters:Build(page)
 		if page:IsShown() then Crafters:Refresh() end
 	end)
 	SK:On("FAVOURITES_CHANGED", function()
+		if page:IsShown() then Crafters:Refresh() end
+	end)
+	SK:On("SHOPPING_CHANGED", function()
 		if page:IsShown() then Crafters:Refresh() end
 	end)
 end
@@ -322,6 +330,7 @@ function Crafters:Refresh()
 	end
 	self.reagents:SetShown(r ~= nil)
 	self.favButton:SetShown(r ~= nil)
+	self.listButton:SetShown(r ~= nil)
 	self.empty:SetShown(r == nil)
 	if not r then
 		self.title:SetText("")
@@ -331,6 +340,10 @@ function Crafters:Refresh()
 	local list = CI.Crafters(index, r.recipeID, guild, now)
 	local fav = SK.Favourites.IsRecipe(r.recipeID)
 	self.favButton:SetActive(fav)
+	local crafts = SK.Shopping.Crafts(r.recipeID)
+	self.listButton:SetActive(crafts > 0)
+	self.listButton.tooltip = (crafts > 0 and ("On your shopping list: " .. Theme.Count(crafts, "craft") .. ". ") or "") ..
+		"Add one craft to your shopping list (Shift: 5). The list is under Professions → Shopping list."
 	self.title:SetText(star(fav) .. icon(r) .. coloured(r, CI.NameOf(r) or "..."))
 	self.sub:SetText(profName(r.skillLine) .. "  ·  " .. Crafters.CountText(#list, CI.OnlineCount(list)))
 	self.crafters:SetItems(list)

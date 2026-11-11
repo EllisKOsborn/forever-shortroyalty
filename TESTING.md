@@ -442,6 +442,22 @@ in game if anything looks different and send it.
         menu) and the minimap button show the Short Royalty crest, not a bomb.
         The whole crest is visible (not cut off at the edges).
 
+## v0.4.5 Shopping list
+
+150. [ ] Professions → **Shopping list** with nothing on it: it says how to add
+        recipes. Shift-click a recipe in All recipes: a chat line says it was
+        added, and it's on the list with 1 craft.
+151. [ ] **+** and **−** change the number (Shift: by 5); at 0 it leaves the
+        list. Right-click a recipe takes it off. Crafters tab: **+ List** adds
+        one and lights up.
+152. [ ] Pick something whose reagents you have **in the bank**, away from
+        the bank: does **Have** count them? Then open the bank and check
+        again. **Tell me if the bank count is 0 until you open the bank.**
+153. [ ] Loot or buy a reagent with the list open: Have and Still to get
+        update by themselves.
+154. [ ] A Tailoring recipe that uses bolts: "you make it" next to the bolt
+        if you know the bolt recipe. **Copy** shows the list as text.
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

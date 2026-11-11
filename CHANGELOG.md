@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.4.5 (not released yet): Shopping list
+
+- **Professions → Shopping list** (new view): pick recipes and how many
+  times you'll craft each, and see every reagent they add up to, how many
+  you **have in your bags and bank**, and how many are **still to get**.
+- **Adding recipes:** Shift-click a recipe in All recipes, Levelling or a
+  profession's recipe list, or press **+ List** next to Star on the
+  Crafters tab. Change the number with **−** and **+** (hold Shift for 5),
+  right-click a recipe to take it off, or **Clear list**.
+- Says when **you can make a reagent yourself** (a recipe you've learned
+  makes it, like Bolt of Woolen Cloth for Tailoring).
+- **Copy** gives the list as plain text, for Discord or a note.
+- Saved on your computer only; nothing new is sent to guildmates, so it
+  works whatever version they have.
+- Reagents come from your game, or from WoW Forever's own data when you
+  haven't opened that profession window (never from Classic or Retail).
+
 ## v0.4.4 (11 Nov 2026): Levelling helper
 
 - **Professions → Levelling** (new view): pick one of your professions and

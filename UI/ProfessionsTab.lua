@@ -3,6 +3,7 @@
 -- Core/ProfBoard.lua; clicking a recipe opens it in the Crafters tab.
 -- In one profession, clicking a crafter shows that crafter's recipes on the
 -- right (v0.3.4), with a Character button to open their character sheet.
+-- Shopping list (v0.4.5): recipes to craft and the reagents they add up to.
 local _, SK = ...
 
 local Prof = SK:NewModule("ProfessionsTab")
@@ -14,7 +15,9 @@ Prof.CRAFTERS_W = 440
 Prof.RECIPES_W = S.window[1] - 2 * SP.l - Prof.CRAFTERS_W - SP.l
 
 local VIEWS = { { "board", "Guild" }, { "recipes", "All recipes" }, { "cooldowns", "Cooldowns" },
-	{ "levelling", "Levelling" } }
+	{ "levelling", "Levelling" }, { "shopping", "Shopping list" } }
+local VIEW_OK = { board = true, recipes = true, cooldowns = true, levelling = true, shopping = true }
+Prof.SHOP_W = 400
 local RECIPE_FILTERS = {
 	{ "all", "All" }, { "one", "Only one crafter" }, { "fav", "Favourites" }, { "nobody", "Nobody knows" },
 }
@@ -80,6 +83,21 @@ local LEVEL_COLUMNS = {
 	{ key = "left", title = "Grey in", width = 80, align = "RIGHT" },
 	{ key = "range", title = "Yellow · green · grey at", width = 230 },
 	{ key = "known", title = "", width = 130, align = "RIGHT" },
+}
+
+-- Shopping list, recipes: 400 - 12 = 388.
+local SHOP_RECIPE_COLUMNS = {
+	{ key = "name", title = "Recipe", width = 252 },
+	{ key = "crafts", title = "Crafts", width = 60, align = "RIGHT" },
+	{ key = "btn", title = "", width = 76 },
+}
+
+-- Shopping list, reagents: 848 - 400 - 16 - 12 = 420.
+local SHOP_REAGENT_COLUMNS = {
+	{ key = "name", title = "Reagent", width = 240 },
+	{ key = "need", title = "Need", width = 50, align = "RIGHT" },
+	{ key = "have", title = "Have", width = 50, align = "RIGHT" },
+	{ key = "short", title = "Still to get", width = 80, align = "RIGHT" },
 }
 
 -- All recipes: 836.
@@ -188,6 +206,77 @@ local function setAllCell(fs, r, col)
 	end
 end
 
+local function setShopRecipeCell(fs, r, col)
+	local k = col.key
+	if k == "name" then
+		local name = SK.CraftIndex.NameOf({ recipeID = r.recipeID, itemID = r.itemID }) or "..."
+		local hex = r.itemID > 0 and Compat.ItemQualityHex(r.itemID)
+		fs:SetText(recipeIcon(r) .. (hex and ("|c" .. hex .. name .. "|r") or name))
+	elseif k == "crafts" then
+		fs:SetText(r.n)
+	else
+		fs:SetText("")
+	end
+end
+
+local function setShopReagentCell(fs, r, col)
+	local k = col.key
+	if k == "name" then
+		local icon = r.itemID and Compat.ItemIcon(r.itemID)
+		local name = r.itemID and (CI.ItemName(r.itemID) or "...") or "Currency"
+		local make = r.makeWith and Theme.Paint("dim", "  you make it") or ""
+		fs:SetText((icon and ("|T" .. icon .. ":14:14:0:0:64:64:5:59:5:59|t ") or "") .. name .. make)
+	elseif k == "need" then
+		fs:SetText(r.need)
+	elseif k == "have" then
+		fs:SetText(r.have == nil and Theme.DASH or Theme.Paint(r.have >= r.need and "good" or "text", r.have))
+	else
+		if r.have == nil then fs:SetText(Theme.Paint("dim", "?"))
+		elseif r.short > 0 then fs:SetText(Theme.Paint("spark", r.short))
+		else fs:SetText(Theme.Paint("good", "got it")) end
+	end
+end
+
+local function shopButtons(row)
+	row.minus = W.Button(row, "-", 30, S.controlSmall, function(b)
+		if b.recipeID then SK.Shopping.Add(b.recipeID, -(Compat.ShiftDown() and 5 or 1)) end
+	end, "quiet")
+	row.plus = W.Button(row, "+", 30, S.controlSmall, function(b)
+		if b.recipeID then SK.Shopping.Add(b.recipeID, Compat.ShiftDown() and 5 or 1) end
+	end, "quiet")
+	row.plus:SetPoint("RIGHT", -SP.xxs, 0)
+	row.minus:SetPoint("RIGHT", row.plus, "LEFT", -SP.xxs, 0)
+	row.plus.tooltip = "One more craft (Shift: 5 more)"
+	row.minus.tooltip = "One fewer (Shift: 5 fewer). At 0 it leaves the list."
+	row.widgets[#row.widgets + 1] = row.minus
+	row.widgets[#row.widgets + 1] = row.plus
+end
+
+local function updateShopButtons(row, r)
+	row.minus.recipeID, row.plus.recipeID = r.recipeID, r.recipeID
+end
+
+-- Shift-click on any recipe list: add one craft to the shopping list.
+function Prof.AddToList(recipeID)
+	local ok = SK.Shopping.Add(recipeID, 1)
+	local name = CI.NameOf({ recipeID = recipeID, itemID = (SK.RecipeDB.Get(recipeID) or {}).itemID or 0 })
+		or ("recipe " .. recipeID)
+	if ok then
+		SK:Print("Shopping list: " .. name .. " x" .. SK.Shopping.Crafts(recipeID) .. ".")
+	else
+		SK:Print("Your shopping list is full (" .. SK.Shopping.MAX_RECIPES .. " recipes).")
+	end
+	return ok
+end
+
+local function recipeClick(r, button)
+	if button ~= "RightButton" and Compat.ShiftDown() then return Prof.AddToList(r.recipeID) end
+	if button == "RightButton" then Fav.ToggleRecipe(r.recipeID)
+	else SK.CraftersTab:ShowRecipe(r.recipeID, r.skillLine) end
+end
+
+local SHIFT_TIP = "Shift-click to add it to your shopping list"
+
 local function setCooldownCell(fs, r, col)
 	local k = col.key
 	if k == "name" then
@@ -239,7 +328,7 @@ function Prof:Build(page)
 	self.heading:SetPoint("LEFT", self.back, "RIGHT", SP.m, 0)
 	self.status = Theme.Text(page, "small", "dim")
 	self.status:SetPoint("TOPRIGHT", 0, -SP.xs)
-	self.status:SetPoint("LEFT", page, "LEFT", 240, 0)
+	self.status:SetPoint("LEFT", prev, "RIGHT", SP.m, 0)
 	self.status:SetJustifyH("RIGHT")
 	self.status:SetWordWrap(false)
 
@@ -326,12 +415,10 @@ function Prof:Build(page)
 				"Nobody in the guild knows it yet", r.count > 0 and "good" or "spark")
 			Theme.TipLine(GameTooltip, "Click for crafters, reagents and a Wowhead link  ·  Right-click to " ..
 				(r.fav and "unstar" or "star"), "gold")
+			Theme.TipLine(GameTooltip, SHIFT_TIP, "gold")
 			GameTooltip:Show()
 		end,
-		onClick = function(r, button)
-			if button == "RightButton" then Fav.ToggleRecipe(r.recipeID)
-			else SK.CraftersTab:ShowRecipe(r.recipeID, r.skillLine) end
-		end,
+		onClick = recipeClick,
 	})
 	self.allList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
 	self.allList:SetPoint("BOTTOMRIGHT")
@@ -364,12 +451,67 @@ function Prof:Build(page)
 			Theme.TipLine(GameTooltip, "Only recipes you've learned are listed: when a trainer or recipe teaches " ..
 				"the others isn't in the game's data.", "dim", true)
 			Theme.TipLine(GameTooltip, "Click for crafters, reagents and a Wowhead link", "gold")
+			Theme.TipLine(GameTooltip, SHIFT_TIP, "gold")
 			GameTooltip:Show()
 		end,
-		onClick = function(r) SK.CraftersTab:ShowRecipe(r.recipeID, r.skillLine) end,
+		onClick = function(r, button)
+			if button ~= "RightButton" and Compat.ShiftDown() then return Prof.AddToList(r.recipeID) end
+			if button ~= "RightButton" then SK.CraftersTab:ShowRecipe(r.recipeID, r.skillLine) end
+		end,
 	})
 	self.levelList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
 	self.levelList:SetPoint("BOTTOMRIGHT")
+
+	-- Shopping list (v0.4.5): your recipes on the left, reagents on the right.
+	self.shopCopy = W.Button(page, "Copy", nil, S.control, function() Prof:CopyShopping() end)
+	self.shopCopy:SetPoint("TOPLEFT", 0, top)
+	self.shopCopy.tooltip = "The list as plain text (for Discord or a note)."
+	self.shopClear = W.Button(page, "Clear list", nil, S.control, function() SK.Shopping.Clear() end, "quiet")
+	self.shopClear:SetPoint("LEFT", self.shopCopy, "RIGHT", SP.s, 0)
+	self.shopClear.tooltip = "Take every recipe off the list."
+	self.shopRecipes = W.List(page, {
+		columns = SHOP_RECIPE_COLUMNS, setCell = setShopRecipeCell,
+		decorate = shopButtons, update = updateShopButtons,
+		onEnter = function(row, r)
+			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+			if r.itemID > 0 and GameTooltip.SetItemByID then GameTooltip:SetItemByID(r.itemID)
+			else GameTooltip:SetText(CI.SpellName(r.recipeID) or ("Recipe " .. r.recipeID)) end
+			local reagents = SK.Reagents.Text(SK.Reagents.Lines(r.recipeID), Theme.Code)
+			if reagents then Theme.TipLine(GameTooltip, "Each craft needs: " .. reagents, "dim", true) end
+			W.SkillUpTip(GameTooltip, r.recipeID, r.skillLine)
+			Theme.TipLine(GameTooltip, "Click for crafters  ·  Right-click to take it off the list", "gold")
+			GameTooltip:Show()
+		end,
+		onClick = function(r, button)
+			if button == "RightButton" then SK.Shopping.Set(r.recipeID, 0)
+			else SK.CraftersTab:ShowRecipe(r.recipeID, r.skillLine) end
+		end,
+	})
+	self.shopRecipes:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
+	self.shopRecipes:SetPoint("BOTTOMLEFT")
+	self.shopRecipes:SetWidth(Prof.SHOP_W)
+	self.shopReagents = W.List(page, {
+		columns = SHOP_REAGENT_COLUMNS, setCell = setShopReagentCell,
+		onEnter = function(row, r)
+			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+			if r.itemID and GameTooltip.SetItemByID then GameTooltip:SetItemByID(r.itemID)
+			else GameTooltip:SetText("Currency") end
+			if r.have ~= nil then
+				Theme.TipLine(GameTooltip, "In your bags " .. r.bags .. "  ·  bank " .. r.bank, "dim")
+			end
+			if r.makeWith then
+				Theme.TipLine(GameTooltip, "You can make it: " .. (CI.SpellName(r.makeWith) or "a recipe you know"), "good", true)
+			end
+			local names = {}
+			for _, id in ipairs(r.recipes) do
+				names[#names + 1] = CI.NameOf({ recipeID = id, itemID = (SK.RecipeDB.Get(id) or {}).itemID or 0 }) or "..."
+			end
+			Theme.TipLine(GameTooltip, "For: " .. table.concat(names, ", "), "dim", true)
+			GameTooltip:Show()
+		end,
+	})
+	self.shopReagents:SetPoint("TOPLEFT", self.shopRecipes, "TOPRIGHT", SP.l, 0)
+	self.shopReagents:SetPoint("BOTTOMRIGHT")
 
 	-- One profession: crafters on the left, recipes on the right.
 	self.crafters = W.List(page, {
@@ -459,15 +601,10 @@ function Prof:Build(page)
 			W.SkillUpTip(GameTooltip, r.recipeID, r.skillLine)
 			Theme.TipLine(GameTooltip, "Click to see who can make it  ·  Right-click to " ..
 				(r.fav and "unstar" or "star"), "gold")
+			Theme.TipLine(GameTooltip, SHIFT_TIP, "gold")
 			GameTooltip:Show()
 		end,
-		onClick = function(r, button)
-			if button == "RightButton" then
-				Fav.ToggleRecipe(r.recipeID)
-			else
-				SK.CraftersTab:ShowRecipe(r.recipeID, r.skillLine)
-			end
-		end,
+		onClick = recipeClick,
 	})
 	self.recipes:SetPoint("TOPLEFT", 0, -(S.controlSmall + SP.s + 2)) -- moved down in RefreshOne when a crafter is picked
 	self.recipes:SetPoint("BOTTOMRIGHT")
@@ -476,6 +613,12 @@ function Prof:Build(page)
 	SK:On("NAMES_LOADED", refreshIfShown)
 	SK:On("CRAFT_INDEX_UPDATED", refreshIfShown)
 	SK:On("FAVOURITES_CHANGED", refreshIfShown)
+	SK:On("SHOPPING_CHANGED", refreshIfShown)
+	local function bagsChanged()
+		if page:IsShown() and SK.DB.settings.profView == "shopping" and not Prof.skillLine then Prof:Refresh() end
+	end
+	SK:RegisterEvent("BAG_UPDATE_DELAYED", bagsChanged)
+	SK:RegisterEvent("PLAYERBANKSLOTS_CHANGED", bagsChanged)
 end
 
 function Prof:Open(skillLine)
@@ -500,7 +643,7 @@ function Prof:Refresh()
 	local ctx = PB.Context()
 	self.now, self.ctx = ctx.now, ctx
 	local view = SK.DB.settings.profView
-	if view ~= "cooldowns" and view ~= "recipes" and view ~= "levelling" then view = "board" end
+	if not VIEW_OK[view] then view = "board" end
 	local one = self.skillLine ~= nil
 	for _, c in ipairs(self.viewChips) do
 		c:SetShown(not one)
@@ -515,6 +658,11 @@ function Prof:Refresh()
 	self.allList:SetShown(not one and view == "recipes")
 	self.levelMenu:SetShown(not one and view == "levelling")
 	self.levelList:SetShown(not one and view == "levelling")
+	local shop = not one and view == "shopping"
+	self.shopCopy:SetShown(shop)
+	self.shopClear:SetShown(shop)
+	self.shopRecipes:SetShown(shop)
+	self.shopReagents:SetShown(shop)
 	self.crafters:SetShown(one)
 	self.right:SetShown(one)
 
@@ -530,10 +678,13 @@ function Prof:Refresh()
 	self.allList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
 	self.levelMenu:SetPoint("TOPLEFT", 0, top)
 	self.levelList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
+	self.shopCopy:SetPoint("TOPLEFT", 0, top)
+	self.shopRecipes:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
 
 	if one then return self:RefreshOne(ctx) end
 	if view == "recipes" then return self:RefreshAll(ctx) end
 	if view == "levelling" then return self:RefreshLevelling() end
+	if view == "shopping" then return self:RefreshShopping() end
 	if view == "cooldowns" then
 		local rows = PB.Cooldowns(ctx)
 		local ready = 0
@@ -622,6 +773,53 @@ function Prof:RefreshLevelling()
 	local summary = Prof.LevelSummary(rows)
 	if not scanned then summary = Theme.Paint("spark", "Open your " .. (prof.name or "profession") .. " window once") end
 	self.status:SetText(summary)
+end
+
+---------------------------------------------------------------------------
+-- Shopping list (v0.4.5)
+---------------------------------------------------------------------------
+-- "3 recipes · 7 reagents · 4 still to get". Pure; tested.
+function Prof.ShopSummary(nRecipes, nReagents, nShort, nUnknown)
+	if nRecipes == 0 then return "" end
+	local text = Theme.Count(nRecipes, "recipe") .. "  ·  " .. Theme.Count(nReagents, "reagent") .. "  ·  " ..
+		(nShort > 0 and Theme.Paint("spark", nShort .. " still to get") or Theme.Paint("good", "you have everything"))
+	if nUnknown > 0 then text = text .. "  ·  " .. Theme.Paint("dim", nUnknown .. " without reagent data") end
+	return text
+end
+
+local function shopName(id, isRecipe)
+	if isRecipe then return CI.NameOf({ recipeID = id, itemID = (SK.RecipeDB.Get(id) or {}).itemID or 0 }) end
+	return CI.ItemName(id)
+end
+
+function Prof:CopyShopping()
+	local rows = SK.Shopping.Rows()
+	local text = SK.Shopping.Text(SK.Shopping.Entries(), rows, shopName)
+	SK.DebugWindow:ShowText("Copy as text", text)
+	return text
+end
+
+function Prof:RefreshShopping()
+	local entries = SK.Shopping.Entries()
+	local items = {}
+	for _, e in ipairs(entries) do
+		local db = SK.RecipeDB.Get(e.id)
+		items[#items + 1] = { recipeID = e.id, n = e.n, itemID = db and db.itemID or 0, skillLine = db and db.skillLine }
+	end
+	local rows, unknown = SK.Shopping.Rows()
+	for _, r in ipairs(rows) do
+		if r.itemID then r.makeWith = SK.Shopping.YouMake(r.itemID) end
+	end
+	self.shopRecipes:SetItems(items)
+	self.shopRecipes:SetEmptyText("Your shopping list is empty. Shift-click a recipe (All recipes, Levelling or a " ..
+		"profession's list) to add it, or press + List on the Crafters tab.")
+	self.shopReagents:SetItems(rows)
+	self.shopReagents:SetEmptyText(#items > 0 and "No reagent data for these recipes yet. Open the profession's " ..
+		"window once." or "The reagents show here, with how many you have in your bags and bank.")
+	self.shopClear:SetDisabled(#items == 0)
+	self.shopCopy:SetDisabled(#items == 0)
+	local _, nReagents, nShort = SK.Shopping.Summary(entries, rows)
+	self.status:SetText(Prof.ShopSummary(#items, nReagents, nShort, #unknown))
 end
 
 function Prof:RefreshAll(ctx)
