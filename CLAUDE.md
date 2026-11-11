@@ -136,6 +136,11 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   `tests/gear_index_spec.lua`. TESTING 182–183.
 - **Guild-shared prices: dropped** (owner, 11 Nov: "I don't think price
   sharing is what we should add at all"). Don't propose it again unless asked.
+- **Redesign (owner, 11 Nov: "the interface is now very cluttered"; likes
+  FojjiCore, EllesmereUI and Polestar):** to be done in a separate chat from
+  **`docs/prompts/next-design-v2.md`** (v0.6.0). Licences: Polestar GPL v3
+  (github.com/fitzforge/polestar), EllesmereUI custom all rights reserved,
+  FojjiCore All Rights Reserved: **inspiration only**, never code/art.
 - **Next:** wait for the owner's in-game test of v0.5.5 (TESTING 167–183,
   especially the `/sr debug` "Where to learn" and "Trainers" lines, the panel
   position, and whether TSM accepts Copy for TSM), then ask what's next.
