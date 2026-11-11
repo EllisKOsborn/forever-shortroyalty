@@ -72,7 +72,10 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   Tests: `tests/route_spec.lua`. The README pictures no longer show the
   Profit chip (owner-only); `docs/images/profit.png` was removed.
 - **Next feature work:** the levelling tools (PLAN.md section 13) are all
-  built. Ask the owner what's next. **Forever data only** (wago.tools product `wowf`), never
+  built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
+  Rights Reserved: features only, never code). Top pick: recipe sources from
+  Forever's data (`ItemSparse` RequiredSkill/RequiredSkillRank/BuyPrice for
+  recipe items; probe `C_TradeSkillUI.GetRecipeSourceText`). Owner to pick. **Forever data only** (wago.tools product `wowf`), never
   Retail/Classic. Don't copy Profession Master (All Rights Reserved).
 - **Skill-up colours checked 11 Nov**: 102 match; the 13 differences were all
   a skill-0 read (fixed in v0.4.7, released 11 Nov; TESTING 161). The
