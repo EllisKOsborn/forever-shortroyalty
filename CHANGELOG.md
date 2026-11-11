@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.4.6 (not released yet): fixes
+
+- **Fixed: drop-down menus hid the line under the mouse** (for example the
+  profession menu in Levelling). The hover bar now sits behind the text.
+
 ## v0.4.5 (11 Nov 2026): Shopping list
 
 - **Professions → Shopping list** (new view): pick recipes and how many

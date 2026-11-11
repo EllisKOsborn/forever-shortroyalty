@@ -37,6 +37,10 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   pushing to it, and check the newest CHANGELOG version first. Releasing =
   owner says "put it on main": merge `main`, date the CHANGELOG heading,
   bump the README badge, push `main` (automatic release).
+- **Built, not released:** v0.4.6 on `claude/short-kings-addon-hlf0t4`:
+  menu hover bar no longer hides the text (`W.Menu` rows used a solid
+  texture on the HIGHLIGHT layer, which draws over text; now BACKGROUND,
+  shown on enter). TESTING 155.
 - **Next feature work** (owner's order, PLAN.md section 13): 3 profit
   (Auctionator's public API, else vendor prices) → 4 cheapest route planner. **Forever data only** (wago.tools product `wowf`), never
   Retail/Classic. Don't copy Profession Master (All Rights Reserved).
@@ -697,6 +701,10 @@ Full post-launch checklist: PLAN.md section 10.
 Done on 5 Nov: interface 16001 confirmed, the addon loads, GUID stable,
 a test send worked. The Mac AddOns path is still not confirmed by name
 (the owner installed successfully).
+0. **Owner, 11 Nov (v0.4.5 in game): "All works fine"**, only the menu
+   hover bug (fixed in v0.4.6). Their Levelling menu listed Tailoring
+   120/150, Enchanting 79/150, Cooking 93/150, First Aid 41/75, Fishing
+   91/150. Still not reported: the items below.
 1. v0.4.4 is out: a new `/sr debug` (skill-up colour check, TESTING 145;
    send errors after the v0.4.2 fix; Tailoring/First Aid stay "scanned yes",
    TESTING 138), TESTING 140–144 (character model) and 145–149 (levelling,

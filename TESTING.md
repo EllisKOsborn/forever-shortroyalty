@@ -458,6 +458,12 @@ in game if anything looks different and send it.
 154. [ ] A Tailoring recipe that uses bolts: "you make it" next to the bolt
         if you know the bolt recipe. **Copy** shows the list as text.
 
+## v0.4.6 fixes
+
+155. [ ] Professions → Levelling: open the profession menu and move the mouse
+        over each line. The text stays readable (grey bar behind it). Same
+        for the Roster's raid menu and All recipes' profession menu.
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

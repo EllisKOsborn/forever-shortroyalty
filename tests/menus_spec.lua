@@ -19,4 +19,20 @@ describe("Menus scroll", function()
 		for _ = 1, 20 do m.pop:GetScript("OnMouseWheel")(m.pop, -1) end
 		assert.equal(30 - SK.Widgets.MENU_ROWS + 1, m.pop.entries[1].value) -- stops at the end
 	end)
+
+	it("the hover bar sits behind the row's text and shows only while hovered (v0.4.6)", function()
+		local SK = H.load()
+		H.loadUI(SK)
+		local m = SK.Widgets.Menu(UIParent, { items = function() return { { value = 1, text = "Enchanting" } } end,
+			get = function() return 1 end, set = function() end })
+		m:Open()
+		local e = m.pop.entries[1]
+		assert.is_false(e.hl:IsShown())
+		e:GetScript("OnEnter")(e)
+		assert.is_true(e.hl:IsShown())
+		e:GetScript("OnLeave")(e)
+		assert.is_false(e.hl:IsShown())
+		local src = io.open("UI/Widgets.lua"):read("*a")
+		assert.is_nil(src:find('e:CreateTexture(nil, "HIGHLIGHT")', 1, true))
+	end)
 end)
