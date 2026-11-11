@@ -329,7 +329,10 @@ messages → sender ignored for the session).
   The artifact (**ShortRoyalty-test-build**, bottom of each Tests run in the
   Actions tab) needs `include-hidden-files: true` because it's under
   `.release/`; without it nothing was uploaded (fixed 11 Nov). This is how the
-  owner tests a branch without a release.
+  owner tests a branch without a release. On a **release commit** (already tagged by
+  release.yml) the packager refuses to build ("Found future tag"), so the
+  test-build job skips itself there (`git tag --points-at HEAD`); with
+  `if-no-files-found: error` it would otherwise fail (it did on v0.4.3).
 - Mockups: Playwright and Chromium are preinstalled. The stand-in font is
   Marcellus from fonts.gstatic.com (don't commit the font).
 
