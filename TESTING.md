@@ -406,6 +406,22 @@ in game if anything looks different and send it.
 139. [ ] Open the profession windows the orange bar names. Over the next few
         days they stay "scanned yes" in `/sr debug` (they don't go back to NO).
 
+## v0.4.3 (character model)
+
+140. [ ] Character tab, your own character: the middle of the paperdoll shows
+        **your model in your gear**, "Their own look" under it. Drag to turn,
+        mouse wheel to zoom.
+141. [ ] A guildmate who **isn't** near you: their gear on a model with
+        "Their gear and race" (or "Their gear on you"). Check: are the right
+        items on it, both weapons in the right hands, and is it **their race**?
+        Tell me if it shows your race instead.
+142. [ ] **Target** that guildmate (or group with them) while their page is
+        open: the model switches to their real look ("Their own look").
+143. [ ] The **Model** button turns it off (item level, talents and enchants
+        come back) and on again. `/reload`: it remembers.
+144. [ ] Open a character in combat: no error, the model just doesn't change
+        until combat ends. Someone with gear hidden: no model.
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

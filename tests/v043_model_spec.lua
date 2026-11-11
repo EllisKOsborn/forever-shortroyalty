@@ -123,7 +123,7 @@ describe("v0.4.3 Character tab model", function()
 		assert.equal("player", scene.log.unit)
 		assert.equal(2, #scene.log.tryOn)
 		assert.truthy(tab.modelNote:GetText():find("Item level 51.5", 1, true))
-		assert.truthy(tab.modelNote:GetText():find("your character", 1, true))
+		assert.truthy(tab.modelNote:GetText():find("Their gear", 1, true))
 		scene.log.tryOn = {}
 		tab:Refresh()
 		assert.equal(0, #scene.log.tryOn) -- same gear: not rebuilt
@@ -150,9 +150,9 @@ describe("v0.4.3 Character tab model", function()
 	it("says what you're looking at", function()
 		local N = SK.CharacterTab.ModelNote
 		assert.equal("Their own look", N("real"))
-		assert.equal("Their gear and race, your face and build", N("dressed", "race"))
-		assert.equal("Item level 51.5  ·  Their gear on your character", N("dressed", "own race", 51.5))
-		assert.equal("Model not available here", N(nil))
+		assert.equal("Their gear and race", N("dressed", "race"))
+		assert.equal("Item level 51.5\nTheir gear on you", N("dressed", "own race", 51.5))
+		assert.equal("No model here", N(nil))
 	end)
 
 	it("your own character is your real look", function()

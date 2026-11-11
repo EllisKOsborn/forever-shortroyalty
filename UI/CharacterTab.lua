@@ -199,7 +199,7 @@ function Char:Build(page)
 	self.model = Compat.CreateModelScene(doll)
 	if self.model then
 		self.model:SetPoint("TOPLEFT", side, -(SP.s + S.controlSmall + SP.s))
-		self.model:SetPoint("BOTTOMRIGHT", -side, SP.s + 2 + S.slot + SP.s + Theme.SIZE.micro + SP.xs)
+		self.model:SetPoint("BOTTOMRIGHT", -side, SP.s + 2 + S.slot + SP.s + 2 * Theme.SIZE.micro + SP.s)
 		self.model:Hide()
 	end
 	self.modelChip = W.Chip(doll, "Model", function()
@@ -401,9 +401,9 @@ function Char.ModelNote(mode, detail, ilvl)
 	local text
 	if mode == "real" then text = "Their own look"
 	elseif mode == "dressed" then
-		text = detail == "race" and "Their gear and race, your face and build" or "Their gear on your character"
-	else text = "Model not available here" end
-	if ilvl then text = string.format("Item level %.1f  ·  %s", ilvl, text) end
+		text = detail == "race" and "Their gear and race" or "Their gear on you"
+	else text = "No model here" end
+	if ilvl then text = string.format("Item level %.1f\n%s", ilvl, text) end
 	return text
 end
 

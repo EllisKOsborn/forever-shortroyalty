@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.3 (not released yet): character model
+
+- **A 3D model on the Character tab**, between the gear slots. Drag to turn
+  it, scroll to zoom; the **Model** button switches back to item level,
+  talents and enchants.
+- If the character is **your target or in your group**, it's their real
+  look. Otherwise it's **their gear on your character**, switched to their
+  race where the game allows. Their face, hair and gender can't be shown:
+  the game only lets addons build models of players who are actually there.
+- Nothing new is sent between players, so it works with guildmates on any
+  version that shares gear.
+
 ## v0.4.2 (10 Nov 2026): fixes from the first big in-game report
 
 From a `/sr debug` on v0.4.1 with 39 members and 24 sharing data:

@@ -485,6 +485,26 @@ messages → sender ignored for the session).
   send results (`Sync.SendOutcome(result, dist)` → "offline";
   `stats.targetOffline`). Tests: `tests/v042_spec.lua` (loads the real
   ChatThrottleLib). TESTING 137–139.
+- **v0.4.3 (7→11 Nov, on `claude/affectionate-archimedes-tirbrl`, not released)**:
+  character model on the Character tab (owner asked 11 Nov). Decisions:
+  - Forever has **no API to build a player model from data** (face, hair,
+    skin, gender: only the barber shop and character select can). Models come
+    only from a present unit. So: `Compat.ShowGearModel(scene, {guid, raceFile,
+    gear})` = real model via `SetModelByUnit(unit)` when `Compat.UnitForGUID`
+    finds them (player/target/focus/mouseover/party/raid), else
+    `SetModelByUnit("player", …, autoDress=false, …, customRaceID)` +
+    `Undress` + `TryOn(link, "MAINHANDSLOT"/"SECONDARYHANDSLOT")`. Same setup as
+    Blizzard's dressing room: `CreateFrame("ModelScene", nil, p,
+    "ModelSceneMixinTemplate")`, `TransitionToModelSceneID(596, …)`,
+    `GetPlayerActor(nil, nil, raceFile, gender)`. Race via
+    `C_CreatureInfo.GetRaceInfo` → `Compat.RaceID`. **Nothing new synced**
+    (gender was considered and dropped: it can't change the body).
+  - `settings.charModel` (default on), `CharacterTab:UpdateModel` rebuilds
+    only when guid / profile hash / "is here" changes, never in combat;
+    PLAYER_TARGET_CHANGED and GROUP_ROSTER_UPDATE refresh it. Untested in
+    game: TESTING 140–144 (does customRaceID really swap race?).
+  - The GitHub repo is now **EllisKOsborn/forever-shortroyalty** (old URL
+    redirects).
 - **v0.3.7 (folded into v0.4.0, never released)**: wording only. The owner asked whether
   to remove alt features; advice was no (removing them wouldn't fix the
   per-character gap and would lose roster grouping and "on alt" whispers).
