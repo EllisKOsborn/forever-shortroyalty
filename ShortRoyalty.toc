@@ -28,6 +28,7 @@ Core\Shopping.lua
 Core\Prices.lua
 Core\Route.lua
 Core\Learn.lua
+Core\GearIndex.lua
 Core\Feed.lua
 Core\Overview.lua
 

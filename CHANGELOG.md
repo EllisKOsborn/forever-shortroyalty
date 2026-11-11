@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.5 (not released yet): Who wears it
+
+- **Item tooltips** say which guildmates wear the item ("Guild: worn by
+  Fizzwick, Brambletoe (+2)"), from the gear they share. Anyone who hides
+  their gear is never listed.
+- **`/sr who`** followed by a Shift-clicked item (or part of its name) lists
+  who in the guild wears it.
+- The Settings tick box is now *Show guild crafters and wearers in item
+  tooltips*.
+
 ## v0.5.3 (not released yet): Panel beside the profession window, filters
 
 - **A Short Royalty panel beside your profession window** (your own

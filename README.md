@@ -143,6 +143,7 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 
 <p align="center"><img src="docs/images/panel.png" alt="The panel beside the profession window" width="70%"></p>
 
+- **Who wears it:** item tooltips say which guildmates wear the item (from the gear they share), and `/sr who` followed by a Shift-clicked item or part of its name lists them in chat.
 - **All recipes → Show:** only recipes you can learn now, ones from recipe items or trainers, or ones that still give you points.
 - **Skill-up colours in tooltips:** every recipe tooltip (Professions, All recipes, Crafters) says where it turns yellow, green and grey, and, if you've learned it, its colour for you now. The Crafters panel shows the same line under the reagents.
 
@@ -163,7 +164,7 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 <p align="center"><img src="docs/images/settings.png" alt="Settings tab" width="100%"></p>
 
 - **Sharing:** *Share and receive guild data* (sync on or off), *Share my gear and talents*, *Share my recipes and cooldowns*.
-- **Display:** *Show guild crafters in item tooltips*, *Record guild milestones*, *Remind me to reopen profession windows*, *Show minimap button*, **Reduce motion**, *Debug logging in chat*.
+- **Display:** *Show guild crafters and wearers in item tooltips*, *Record guild milestones*, *Remind me to reopen profession windows*, *Show minimap button*, **Reduce motion**, *Debug logging in chat*.
 - **Window size:** 70% to 130%.
 - **Tools:** *Rescan my character*, *Sync now*, *Reset window position*, *Debug report*.
 - **Status:** version, guild, whether sync is running or paused (and why), whether you may send, message counts, Lua errors caught, when your data last updated, and which profession windows you still need to open.
@@ -384,7 +385,8 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [ ] **v0.5.1** (built, not released): shopping list upgrades (tooltips, make or buy, raw materials, Copy for TSM)
 - [ ] **v0.5.2** (built, not released): Route plans with recipes you haven't learned yet
 - [ ] **v0.5.3** (built, not released): panel beside the profession window, recipe filters
-- [ ] **v0.5.4–v0.5.5**: guild-shared prices (owner to decide), who has item X ([plan](PLAN.md))
+- [ ] **v0.5.5** (built, not released): who in the guild wears an item (tooltips, `/sr who`)
+- [ ] **v0.5.4**: guild-shared prices (waiting on the owner's decisions) ([plan](PLAN.md))
 - [ ] Next levelling step: cheapest levelling route
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders

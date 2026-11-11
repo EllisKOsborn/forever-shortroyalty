@@ -320,6 +320,24 @@ function Commands.BuildReport()
 	return L
 end
 
+-- /sr who <item link | item ID | part of a name> (v0.5.5)
+function Commands.Who(arg)
+	local GI = SK.GearIndex
+	local id = arg and tonumber(arg:match("item:(%d+)") or arg:match("^(%d+)$"))
+	local items = {}
+	if id then items[1] = { itemID = id, name = SK.CraftIndex.ItemName(id) or ("item " .. id) }
+	else items = GI.Search(arg, 5) end
+	if #items == 0 then
+		SK:Print("Nobody in the guild is wearing that (or its name hasn't loaded yet). Try Shift-clicking the item.")
+		return 0
+	end
+	for _, it in ipairs(items) do
+		local text = GI.Text(GI.Wearers(it.itemID), 8)
+		SK:Print("%s: %s", it.name, text or "nobody in the guild wears it")
+	end
+	return #items
+end
+
 local HELP = {
 	"/sr - open or close the window (also /shortroyalty, /sk)",
 	"/sr debug - what the addon sees (copyable)",
@@ -328,6 +346,7 @@ local HELP = {
 	"/sr sync - share your data now",
 	"/sr reset - centre the window",
 	"/sr panel - the panel beside your profession window on or off",
+	"/sr who <item> - who in the guild wears it (Shift-click an item, or type part of its name)",
 }
 Commands.HELP = HELP
 
@@ -353,6 +372,8 @@ function Commands.Run(msg)
 		SK.Sync:SendHello()
 		SK.Sync:SendQuery()
 		SK:Print("Sync requested.")
+	elseif cmd == "who" then
+		Commands.Who(msg:match("^%s*%S+%s*(.-)%s*$"))
 	elseif cmd == "panel" then
 		SK.ProfPanel.Toggle()
 	elseif cmd == "reset" then

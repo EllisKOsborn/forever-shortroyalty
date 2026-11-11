@@ -27,6 +27,11 @@ function Tip.Add(tooltip, itemID)
 	if text then
 		SK.Theme.TipLine(tooltip, SK.Theme.Code("beard") .. "Short Royalty:|r " .. text, "text", true)
 	end
+	-- v0.5.5: guildmates wearing it.
+	local worn = SK.GearIndex and SK.GearIndex.Text(SK.GearIndex.Wearers(itemID), 3)
+	if worn then
+		SK.Theme.TipLine(tooltip, SK.Theme.Code("beard") .. "Guild:|r " .. worn, "text", true)
+	end
 end
 
 function Tip:OnLogin()

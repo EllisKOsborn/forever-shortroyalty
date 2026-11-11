@@ -547,6 +547,13 @@ in game if anything looks different and send it.
 181. [ ] All recipes → pick Tailoring → **Show: can learn now**: only recipes
         your skill allows (from recipe items, or a trainer you've opened).
 
+## v0.5.5 Who wears it
+
+182. [ ] Point at an item a guildmate wears (link it in chat, or look at
+        theirs): "Guild: worn by …".
+183. [ ] `/sr who ` then Shift-click an item: chat lists who wears it.
+        `/sr who silk` lists items with "silk" in the name that someone wears.
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

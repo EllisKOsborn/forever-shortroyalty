@@ -122,7 +122,17 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   `Prof.FilterRecipes`). Mock-up `docs/mockups/panel.html` →
   `docs/images/panel.png` (render.js PAGES). Tests: `tests/panel_spec.lua`.
   TESTING 178–181. **Unverified in game:** the anchor and the EventRegistry
-  event. Next: v0.5.5 (who has item X); v0.5.4 waits for owner decisions.
+  event.
+- **Built, not released: v0.5.5 who wears it.** `Core/GearIndex.lua`: pure
+  `GI.Build(profiles)` (item IDs from shared gear links, once per person),
+  `GI.Wearers` (online first), `GI.Text`, `GI.Search` (loaded names, ≥ 3
+  letters); dirty on PROFILE_UPDATED/SELF_UPDATED/ROSTER_UPDATED. Item
+  tooltips "Guild: worn by …" (same setting as crafters, label renamed);
+  `/sr who <link|id|name>` (`Commands.Who`, in help). Tests:
+  `tests/gear_index_spec.lua`. TESTING 182–183.
+- **v0.5.4 guild-shared prices: NOT built**, waiting for the owner's answers
+  (PLAN.md 14: who shares, whether the owner shares, Profit stays
+  owner-only).
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from

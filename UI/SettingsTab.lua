@@ -49,7 +49,7 @@ function Settings:Build(page)
 
 	y = y + SP.s
 	heading("Display")
-	check("Show guild crafters in item tooltips", function() return s.craftTooltips end, function(v)
+	check("Show guild crafters and wearers in item tooltips", function() return s.craftTooltips end, function(v)
 		s.craftTooltips = v
 	end)
 	check("Record guild milestones (Overview)", function() return s.feed end, function(v)

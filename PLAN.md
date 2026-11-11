@@ -635,7 +635,7 @@ small enough to test in game before the next one builds on it.
   ever feed Profit (Profit stays owner-only either way). Not built until
   the owner answers.
 
-### v0.5.5 Broader
+### v0.5.5 Broader (✅ who wears it: built 11 Nov, tooltips + `/sr who`)
 - **Who has item X:** search the guild's synced gear for an item (BiS hunts,
   raid prep). Data is already synced; a search box on the Roster or Crafters.
 - **Not planned (FojjiCore and others do these):** dungeon journal and maps,
