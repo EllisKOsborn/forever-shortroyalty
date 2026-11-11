@@ -334,6 +334,28 @@ function W.Menu(parent, opts)
 end
 
 ---------------------------------------------------------------------------
+-- Skill-up lines for a recipe tooltip (v0.4.3): the range from Forever's data
+-- and, if you have the profession, its colour for you now.
+---------------------------------------------------------------------------
+function W.SkillUpText(recipeID, skillLine)
+	local DB = SK.RecipeDB
+	local range = DB and DB.Range(recipeID)
+	if not range then return nil end
+	local text = "Yellow · green · grey at " .. Theme.SkillRange(range)
+	local skill = DB.MySkill(skillLine)
+	if skill and DB.IKnow(recipeID, skillLine) then
+		local colour = DB.ColourAt(recipeID, skill)
+		text = text .. Theme.Paint("dim", "  ·  for you (" .. skill .. "): ") .. Theme.SkillColour(colour)
+	end
+	return text
+end
+
+function W.SkillUpTip(tt, recipeID, skillLine)
+	local text = W.SkillUpText(recipeID, skillLine)
+	if text then Theme.TipLine(tt, text, "dim", true) end
+end
+
+---------------------------------------------------------------------------
 -- Search box (with a clear button once something is typed)
 ---------------------------------------------------------------------------
 function W.SearchBox(parent, width, placeholder, onChange)

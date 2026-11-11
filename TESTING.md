@@ -406,6 +406,18 @@ in game if anything looks different and send it.
 139. [ ] Open the profession windows the orange bar names. Over the next few
         days they stay "scanned yes" in `/sr debug` (they don't go back to NO).
 
+## v0.4.3 Levelling helper
+
+140. [ ] Open each profession window once, then `/sr debug` → "Skill-up colours
+        vs your profession window: N match, 0 differ". **Send me this line**,
+        and any "window says … we said …" examples under it.
+141. [ ] Professions → **Levelling**: your main profession is picked; the list
+        shows only recipes you know, with the same colours as your profession
+        window. Pick another profession in the menu.
+142. [ ] Point at a recipe anywhere (Professions, All recipes, Crafters): the
+        tooltip says "Yellow · green · grey at …" and, for one you know, "for
+        you (85): yellow".
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

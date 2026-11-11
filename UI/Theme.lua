@@ -37,6 +37,12 @@ Theme.COLOR = {
 	good      = { 0.298, 0.765, 0.541, 1 },    -- #4CC38A
 	bad       = { 0.898, 0.282, 0.302, 1 },    -- #E5484D
 	shadow    = { 0, 0, 0, 0.9 },              -- text shadow
+	-- Profession skill-up colours (v0.4.3): the game's own, so they read the
+	-- same as the profession window (DIFFICULT/FAIR/EASY/TRIVIAL_DIFFICULTY_COLOR).
+	skillOrange = { 1.000, 0.502, 0.251, 1 },  -- #FF8040 orange: always a skill-up
+	skillYellow = { 1.000, 1.000, 0.000, 1 },  -- #FFFF00 yellow: usually
+	skillGreen  = { 0.251, 0.749, 0.251, 1 },  -- #40BF40 green: sometimes
+	skillGrey   = { 0.502, 0.502, 0.502, 1 },  -- #808080 grey: never
 }
 
 -- Alphas used with a colour (a tint, a selected row).
@@ -305,6 +311,24 @@ function Theme.Rule(parent, color, layer)
 end
 
 -- "1 member", "3 members" (irregular plurals pass `many`).
+-- A skill-up colour word painted in its colour: "orange", "yellow"...
+Theme.SKILL_TONE = { orange = "skillOrange", yellow = "skillYellow", green = "skillGreen", grey = "skillGrey" }
+function Theme.SkillColour(colour, text)
+	local tone = Theme.SKILL_TONE[colour]
+	if not tone then return text or "" end
+	return Theme.Paint(tone, text or colour)
+end
+
+-- "25 · 37 · 50": where it turns yellow, green and grey, each in its colour
+-- (orange is anything below yellow once learned).
+function Theme.SkillRange(range)
+	if not range then return "" end
+	return table.concat({
+		Theme.SkillColour("yellow", tostring(range.yellow)), Theme.SkillColour("green", tostring(range.green)),
+		Theme.SkillColour("grey", tostring(range.grey)),
+	}, Theme.Paint("dim", " · "))
+end
+
 function Theme.Count(n, one, many)
 	n = n or 0
 	return n .. " " .. (n == 1 and one or (many or (one .. "s")))

@@ -564,18 +564,36 @@ function professions() {
       ["Thorium Grenade", "#ffffff", "Engineering", "Explosives", 2, "Thorium Bar"], ["Thorium Widget", "#ffffff", "Engineering", "Parts", 1, ""], ["Thorium Bar", "#ffffff", "Mining", "Smelted Bars", 3, ""]];
     const cell = (r, c) => c.key === "n" ? `<span style="color:${r[1]}">${esc(r[0])}</span>` : c.key === "p" ? `<span class="dim">${r[2]}</span>`
       : c.key === "g" ? `<span class="dim">${r[3]}${r[5] && !r[0].startsWith("Thorium") ? " &nbsp;·&nbsp; uses " + r[5] : ""}</span>` : r[4] === 0 ? `<span class="spark">nobody</span>` : r[4] === 1 ? `<span class="spark">1</span>` : r[4];
-    return `<div class="abs" style="left:0;top:0;display:flex;gap:4px">${chips([["board", "Guild"], ["recipes", "All recipes"], ["cooldowns", "Cooldowns"]], "recipes")}</div>
+    return `<div class="abs" style="left:0;top:0;display:flex;gap:4px">${chips([["board", "Guild"], ["recipes", "All recipes"], ["cooldowns", "Cooldowns"], ["levelling", "Levelling"]], "recipes")}</div>
       <div class="abs dim ell" style="right:0;top:4px;font-size:12px">${ALL.length} recipes</div>
       <div class="search abs" style="left:0;top:36px;width:300px"><input placeholder="Search recipes, groups or materials" value="thorium"></div>
       ${btn("All professions", "", 'style="position:absolute;left:308px;top:36px;width:170px;text-align:left"')}
       ${list([{ key: "n", t: "Recipe", w: 330 }, { key: "p", t: "Profession", w: 130 }, { key: "g", t: "Group", w: 266 }, { key: "c", t: "Crafters", w: 110, r: 1 }],
         ALL, cell, { click: true, style: "left:0;top:72px;bottom:0;right:0" })}`;
   }
+  if (S.profView === "levelling") { // v0.4.3: Tailoring at 85, real numbers from Forever's data (build 1.60.1.70888)
+    const SK_C = { orange: "var(--skillOrange)", yellow: "var(--skillYellow)", green: "var(--skillGreen)", grey: "var(--skillGrey)" };
+    const c = (col, t) => `<span style="color:${SK_C[col]}">${t}</span>`;
+    const range = (r) => [c("yellow", r[0]), c("green", r[1]), c("grey", r[2])].join('<span class="dim"> · </span>');
+    // [name, quality, colour at 85, points until grey, [yellow, green, grey]] — learned recipes only
+    const L = [["Gray Woolen Shirt", "#ffffff", "orange", 25, [90, 100, 110]], ["Woolen Boots", "#1eff00", "orange", 45, [95, 112, 130]],
+      ["Handstitched Linen Britches", "#ffffff", "yellow", 20, [70, 87, 105]], ["Blue Linen Robe", "#1eff00", "yellow", 20, [70, 87, 105]],
+      ["Woolen Bag", "#ffffff", "yellow", 25, [75, 92, 110]], ["Simple Kilt", "#ffffff", "yellow", 25, [75, 92, 110]],
+      ["Woolen Cape", "#1eff00", "yellow", 30, [80, 97, 115]], ["Linen Boots", "#ffffff", "green", 15, [65, 82, 100]],
+      ["Green Linen Shirt", "#ffffff", "green", 15, [65, 82, 100]], ["Reinforced Linen Cape", "#ffffff", "green", 10, [60, 77, 95]]];
+    const cell = (r, col) => col.key === "n" ? `<span style="color:${r[1]}">${esc(r[0])}</span>` : col.key === "c" ? c(r[2], r[2])
+      : col.key === "l" ? `<span class="dim">${r[3]} points</span>` : col.key === "r" ? range(r[4]) : "";
+    return `<div class="abs" style="left:0;top:0;display:flex;gap:4px">${chips([["board", "Guild"], ["recipes", "All recipes"], ["cooldowns", "Cooldowns"], ["levelling", "Levelling"]], "levelling")}</div>
+      <div class="abs dim ell" style="right:0;top:4px;font-size:12px">10 learned recipes still give skill-ups: ${c("orange", "2 orange")} &nbsp;·&nbsp; ${c("yellow", "5 yellow")} &nbsp;·&nbsp; ${c("green", "3 green")}</div>
+      ${btn("Tailoring  85 / 150", "", 'style="position:absolute;left:0;top:36px;width:220px;justify-content:space-between"')}
+      ${list([{ key: "n", t: "Recipe", w: 300 }, { key: "c", t: "For you", w: 96 }, { key: "l", t: "Grey in", w: 80, r: 1 }, { key: "r", t: "Yellow · green · grey at", w: 230 }, { key: "k", t: "", w: 130, r: 1 }],
+        L, cell, { click: true, style: "left:0;top:72px;bottom:0;right:0" })}`;
+  }
   if (S.profView === "cooldowns") {
     const cell = (r, c) => c.key === "n" ? esc(r[0]) : c.key === "w" ? dot(r[3] === "addon" ? "good" : r[3] === "online" ? "text" : "faint") + `<span style="color:${CLASS[r[2]]}">${esc(r[1])}</span>`
       : c.key === "l" ? (r[4] === 0 ? `<span class="good">Ready</span>` : r[4] < 24 ? `${Math.floor(r[4])}h ${Math.round((r[4] % 1) * 60)}m` : `${Math.floor(r[4] / 24)}d ${Math.round(r[4] % 24)}h`)
       : c.key === "a" ? `<span class="${r[6] ? "spark" : "dim"}">${r[5]}</span>` : btn("Whisper", "small" + (r[3] === "offline" ? " disabled" : ""));
-    return `<div class="abs" style="left:0;top:0;display:flex;gap:4px">${chips([["board", "Guild"], ["recipes", "All recipes"], ["cooldowns", "Cooldowns"]], "cooldowns")}</div>
+    return `<div class="abs" style="left:0;top:0;display:flex;gap:4px">${chips([["board", "Guild"], ["recipes", "All recipes"], ["cooldowns", "Cooldowns"], ["levelling", "Levelling"]], "cooldowns")}</div>
       <div class="abs dim ell" style="right:0;top:4px;font-size:12px">2 ready · 5 cooldowns</div>
       ${list([{ key: "n", t: "Cooldown", w: 270 }, { key: "w", t: "Crafter", w: 190 }, { key: "l", t: "Ready in", w: 110, r: 1 }, { key: "a", t: "As of", w: 140, r: 1 }, { key: "b", t: "", w: 126 }],
         none ? [] : PROF_CDS, cell, { click: true, empty: "No profession cooldowns yet.", style: "left:0;top:36px;bottom:0;right:0" })}`;
@@ -592,7 +610,7 @@ function professions() {
       default: return `<span class="dim">${r[6]}</span>`;
     }
   };
-  return `<div class="abs" style="left:0;top:0;display:flex;gap:4px">${chips([["board", "Guild"], ["recipes", "All recipes"], ["cooldowns", "Cooldowns"]], "board")}</div>
+  return `<div class="abs" style="left:0;top:0;display:flex;gap:4px">${chips([["board", "Guild"], ["recipes", "All recipes"], ["cooldowns", "Cooldowns"], ["levelling", "Levelling"]], "board")}</div>
     <div class="abs dim ell" style="right:0;top:4px;font-size:12px">${none ? "" : "1 profession nobody has"}</div>
     ${none ? "" : nudge}
     ${list([{ key: "n", t: "Profession", w: 170 }, { key: "c", t: "Characters", w: 88, r: 1 }, { key: "m", t: "At 300", w: 70, r: 1 }, { key: "o", t: "Online", w: 70, r: 1 },

@@ -225,7 +225,7 @@ function W.reset()
 		end,
 		GetRecipeInfo = function(id)
 			local r = W.tradeskill and W.tradeskill.recipes[id]
-			return r and { recipeID = id, name = "Recipe " .. id, learned = r.learned }
+			return r and { recipeID = id, name = "Recipe " .. id, learned = r.learned, relativeDifficulty = r.difficulty }
 		end,
 		GetRecipeOutputItemData = function(id)
 			local r = W.tradeskill and W.tradeskill.recipes[id]

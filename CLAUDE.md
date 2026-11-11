@@ -485,6 +485,38 @@ messages → sender ignored for the session).
   send results (`Sync.SendOutcome(result, dist)` → "offline";
   `stats.targetOffline`). Tests: `tests/v042_spec.lua` (loads the real
   ChatThrottleLib). TESTING 137–139.
+- **v0.4.3 (built 11 Nov, not on `main`): Levelling helper**, step 1 of the
+  levelling tools the owner wants after seeing Profession Master (CurseForge,
+  All Rights Reserved: never copy its code; it already supports Forever).
+  Owner's rule: **"take the cheapest and most efficient route for WoW
+  Forever. Do not use Retail or Classic data, only from Forever."**
+  - `tools/recipes.js` adds `MinSkillLineRank, TrivialSkillLineRankLow,
+    TrivialSkillLineRankHigh, NumSkillUps` from Forever's SkillLineAbility
+    (product `wowf`), entries `{ id, item, cat, reag, min, low, high, ups }`.
+    Regenerated from build **1.60.1.70888** (recipe list identical otherwise).
+    Fixed: a build number given on the command line was ignored.
+  - Colours (`RecipeDB.Range/ColourAt/PointsLeft/SkillUps/IKnow/MySkill`):
+    yellow at `low`, green at floor((low+high)/2), grey at `high`, orange
+    below yellow. Forever's numbers differ from Classic (Gray Woolen Shirt
+    90/100/110). **`MinSkillLineRank` is 1 for >90% of recipes in Forever,
+    so it isn't the learn level**: the trainer/recipe requirement isn't in
+    the data. So only **learned** recipes get a "for you" colour or appear in
+    Levelling. 38 recipes have no range (placeholders) and 1 has high < low:
+    `Range` returns nil for them.
+  - The green midpoint rule is unverified for Forever: `RecipeDB.CheckColour`
+    compares ours with `GetRecipeInfo().relativeDifficulty` (0 orange …
+    3 grey) for every learned recipe on each scan; `SK.DB.colourCheck`
+    (per build, 5 examples) → `/sr debug` "Skill-up colours vs your
+    profession window". If it differs, fix the rule before building on it.
+  - UI: Professions view **Levelling** (`settings.levelProf`, menu of your
+    professions with recipes; `LEVEL_COLUMNS`), `W.SkillUpText/SkillUpTip`
+    in recipe tooltips and the Crafters panel. Theme colours `skillOrange/
+    skillYellow/skillGreen/skillGrey` (Blizzard's DIFFICULT/FAIR/EASY/
+    TRIVIAL_DIFFICULTY_COLOR), `Theme.SkillColour/SkillRange`.
+  - Next steps (owner chose to build in order): shopping list, profit via
+    Auctionator's public API (or vendor prices), then the cheapest-route
+    planner. Trainer costs and recipe sources aren't in Forever's data.
+  - TESTING 140–142. Mock-up `profView=levelling` uses real Forever numbers.
 - **v0.3.7 (folded into v0.4.0, never released)**: wording only. The owner asked whether
   to remove alt features; advice was no (removing them wouldn't fix the
   per-character gap and would lose roster grouping and "on alt" whispers).
@@ -534,6 +566,8 @@ messages → sender ignored for the session).
   - Clicking a recipe in Professions opens it in Crafters
     (`CraftersTab:ShowRecipe`), including recipes nobody knows.
 - Decisions in v0.3.2 (built as "v0.3.1" before the rename took that number):
+  - (v0.4.3) `node tools/recipes.js` with no build fetches the newest Forever
+    build; `node tools/recipes.js 1.60.1.70888` pins one.
   - Recipe list: `node tools/recipes.js [build]` downloads SkillLineAbility,
     TradeSkillCategory, SpellEffect (Effect 24 = create item) and SpellReagents
     CSVs from wago.tools (product `wowf` = Forever) and writes

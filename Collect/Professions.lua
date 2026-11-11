@@ -44,7 +44,7 @@ local retries = 0
 -- cats = {[categoryID]={total, learned, names}} } (cats: /sr debug only, never stored or sent)
 Prof.CATEGORY_SAMPLES = 3
 function Prof.ProcessRecipes(ids, done, runNow)
-	local result = { learned = {}, universe = {}, cds = {}, cats = {} }
+	local result = { learned = {}, universe = {}, cds = {}, cats = {}, difficulty = {} }
 	local i = 1
 	local function step()
 		local last = math.min(i + Prof.CHUNK - 1, #ids)
@@ -67,6 +67,7 @@ function Prof.ProcessRecipes(ids, done, runNow)
 				else result.sampleUnlearned = result.sampleUnlearned or id end
 				if info.learned then
 					result.learned[id] = itemID
+					if type(info.difficulty) == "number" then result.difficulty[id] = info.difficulty end
 					local cd = Compat.RecipeCooldown(id)
 					if cd then result.cds[id] = cd end
 				end
@@ -95,6 +96,10 @@ local function scanModern()
 		scanning = false
 		result.skillLine, result.name, result.rank, result.max = skillLine, name, rank, max
 		result.complete = complete
+		-- v0.4.3: check our skill-up colours (Forever's data) against the window's.
+		if SK.RecipeDB and type(rank) == "number" then
+			for id, d in pairs(result.difficulty) do SK.RecipeDB.CheckColour(id, rank, d) end
+		end
 		Prof:StoreScan(result)
 	end)
 	return "started"

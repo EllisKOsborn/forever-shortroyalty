@@ -21,6 +21,10 @@
   --good: rgba(76, 195, 138, 1);
   --bad: rgba(229, 72, 77, 1);
   --shadow: rgba(0, 0, 0, 0.9);
+  --skillOrange: rgba(255, 128, 64, 1);
+  --skillYellow: rgba(255, 255, 0, 1);
+  --skillGreen: rgba(64, 191, 64, 1);
+  --skillGrey: rgba(128, 128, 128, 1);
   --beard-selected: rgba(240, 107, 176, 0.16);
   --sp-xxs: 2px;
   --sp-xs: 4px;

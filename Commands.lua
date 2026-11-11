@@ -231,6 +231,17 @@ function Commands.BuildReport()
 	end
 	add("Recipe list: %d recipes from %s build %s (this client: %s); not on this client: %d", SK.RecipeDB.Count(),
 		tostring(src.site), tostring(src.build), tostring(b.version) .. "." .. tostring(b.build), notOnClient)
+	-- v0.4.3: our skill-up colours (Forever's data) vs the profession window's.
+	local cc = SK.DB.colourCheck
+	if cc and (cc.match + cc.differ) > 0 then
+		add("Skill-up colours vs your profession window: %d match, %d differ (build %s)", cc.match, cc.differ,
+			tostring(cc.build))
+		for _, e in ipairs(cc.examples or {}) do
+			add("  recipe %d at skill %d: window says %s, we said %s", e.recipe, e.skill, e.game, e.ours)
+		end
+	else
+		add("Skill-up colours vs your profession window: not checked yet (open a profession window)")
+	end
 	local ls = SK.Professions.lastScan
 	if ls then
 		add("Last scan: %s, %d learned of %d listed, full list API: %s", tostring(ls.name), ls.learned, ls.total, yesno(ls.complete))

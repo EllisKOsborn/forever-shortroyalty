@@ -43,7 +43,7 @@
 | 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
 | ⚒️ **Crafters** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
-| 🧪 **Professions** | Every profession in the guild, **every recipe in the game** (search by name, group or material), each profession's crafters, everyone's cooldowns, specialisations and favourites |
+| 🧪 **Professions** | Every profession in the guild, **every recipe in the game** (search by name, group or material), each profession's crafters, everyone's cooldowns, specialisations, favourites, and a **Levelling** helper with skill-up colours from Forever's own data |
 | ⚙️ **Settings** | Sharing and privacy switches, display options, window size, tools and a live status read-out |
 | 🧨 **Everywhere** | `/sr`, a minimap button, "Crafted by" lines on item tooltips, chat reminders and a copyable debug report |
 
@@ -135,6 +135,11 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 <p align="center"><img src="docs/images/professions-crafter.png" alt="One crafter's recipes" width="100%"></p>
 
 <p align="center"><img src="docs/images/cooldowns.png" alt="Cooldown board" width="100%"></p>
+
+- **Levelling:** pick one of your professions and see every recipe you've learned that still gives skill-ups at your skill: **orange, yellow or green for you**, how many points until it turns grey, and where it turns yellow, green and grey. Best first. The numbers come from **WoW Forever's own game data** (not Classic or Retail; Forever changed many of them), and Short Royalty checks its colours against your profession window each time you open it (`/sr debug` shows the result). Recipes you haven't learned aren't listed, because when a trainer or recipe teaches them isn't in the game's data.
+- **Skill-up colours in tooltips:** every recipe tooltip (Professions, All recipes, Crafters) says where it turns yellow, green and grey, and, if you've learned it, its colour for you now. The Crafters panel shows the same line under the reagents.
+
+<p align="center"><img src="docs/images/levelling.png" alt="Professions → Levelling" width="100%"></p>
 
 - **Cooldowns:** everyone's profession cooldowns (transmutes, Mooncloth…), ready first, then soonest. Shows who, how long, and **as of** when we last heard from them (orange after a day: a cooldown only updates while its owner is online). **Whisper** when they're on.
 - **Specialisations** (Gnomish/Goblin Engineer, Dragonscale/Elemental/Tribal Leatherworking, Armorsmith/Weaponsmith and the master smiths) are read from your spellbook. A spell only counts when the game's own name for it matches, so a wrong ID can never mislabel anyone.
@@ -353,6 +358,8 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.3.1**: renamed to **Short Royalty** (window, folder, download and `/sr`)
 - [ ] **In-game test round** with guildmates (TESTING.md), then fixes
 - [x] **v0.4.0**: Raids tab (read-only, removed again in v0.4.1), simpler "who has the addon", Alt rank left out of the Overview
+- [ ] **v0.4.3** (built, not released): **Levelling** helper (step 1 of the levelling tools): skill-up colours from Forever's data
+- [ ] Next levelling steps: shopping list, profit (Auctionator prices), cheapest levelling route
 - [x] **v0.4.2**: fixes from the first big in-game report (a Lua error, lost profession recipes, false send errors)
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders

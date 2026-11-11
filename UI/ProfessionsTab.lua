@@ -13,7 +13,8 @@ local S, SP = Theme.SIZES, Theme.SPACE
 Prof.CRAFTERS_W = 440
 Prof.RECIPES_W = S.window[1] - 2 * SP.l - Prof.CRAFTERS_W - SP.l
 
-local VIEWS = { { "board", "Guild" }, { "recipes", "All recipes" }, { "cooldowns", "Cooldowns" } }
+local VIEWS = { { "board", "Guild" }, { "recipes", "All recipes" }, { "cooldowns", "Cooldowns" },
+	{ "levelling", "Levelling" } }
 local RECIPE_FILTERS = {
 	{ "all", "All" }, { "one", "Only one crafter" }, { "fav", "Favourites" }, { "nobody", "Nobody knows" },
 }
@@ -70,6 +71,15 @@ local CRAFTER_COLUMNS = {
 local RECIPE_COLUMNS = {
 	{ key = "name", title = "Recipe", width = 290 },
 	{ key = "count", title = "Crafters", width = 90, align = "RIGHT" },
+}
+
+-- Levelling (v0.4.3): 836.
+local LEVEL_COLUMNS = {
+	{ key = "name", title = "Recipe", width = 300 },
+	{ key = "colour", title = "For you", width = 96 },
+	{ key = "left", title = "Grey in", width = 80, align = "RIGHT" },
+	{ key = "range", title = "Yellow · green · grey at", width = 230 },
+	{ key = "known", title = "", width = 130, align = "RIGHT" },
 }
 
 -- All recipes: 836.
@@ -132,6 +142,23 @@ end
 local function recipeIcon(r)
 	local tex = r.itemID > 0 and Compat.ItemIcon(r.itemID) or Compat.SpellIcon(r.recipeID)
 	return tex and ("|T" .. tex .. ":14:14:0:0:64:64:5:59:5:59|t ") or ""
+end
+
+local function setLevelCell(fs, r, col)
+	local k = col.key
+	if k == "name" then
+		local name = SK.CraftIndex.NameOf({ recipeID = r.recipeID, itemID = r.itemID }) or "..."
+		local hex = r.itemID > 0 and Compat.ItemQualityHex(r.itemID)
+		fs:SetText(recipeIcon(r) .. (hex and ("|c" .. hex .. name .. "|r") or name))
+	elseif k == "colour" then
+		fs:SetText(Theme.SkillColour(r.colour))
+	elseif k == "left" then
+		fs:SetText(Theme.Paint("dim", Theme.Count(r.left, "point")))
+	elseif k == "range" then
+		fs:SetText(Theme.SkillRange(r.range))
+	else
+		fs:SetText(r.range.ups > 1 and Theme.Paint("dim", "+" .. r.range.ups .. " per craft") or "")
+	end
 end
 
 local function setRecipeCell(fs, r, col)
@@ -294,6 +321,7 @@ function Prof:Build(page)
 			else GameTooltip:SetText(r.name) end
 			local reagents = SK.Reagents.Text(SK.Reagents.Lines(r.recipeID), Theme.Code)
 			if reagents then Theme.TipLine(GameTooltip, "Needs: " .. reagents, "dim", true) end
+			W.SkillUpTip(GameTooltip, r.recipeID, r.skillLine)
 			Theme.TipLine(GameTooltip, r.count > 0 and Theme.Count(r.count, "crafter") .. " in the guild" or
 				"Nobody in the guild knows it yet", r.count > 0 and "good" or "spark")
 			Theme.TipLine(GameTooltip, "Click for crafters, reagents and a Wowhead link  ·  Right-click to " ..
@@ -307,6 +335,41 @@ function Prof:Build(page)
 	})
 	self.allList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
 	self.allList:SetPoint("BOTTOMRIGHT")
+
+	-- Levelling (v0.4.3): one of your professions, the recipes that still
+	-- give skill-ups at your skill, best first. Ranges from Forever's data.
+	self.levelMenu = W.Menu(page, {
+		width = 220,
+		items = function() return Prof.LevelItems() end,
+		get = function() return Prof.LevelProfession() or "none" end,
+		set = function(v)
+			SK.DB.settings.levelProf = tonumber(v)
+			Prof:Refresh()
+		end,
+	})
+	self.levelMenu:SetPoint("TOPLEFT", 0, top)
+	self.levelMenu.tooltip = "Which of your professions to level"
+	self.levelList = W.List(page, {
+		columns = LEVEL_COLUMNS, setCell = setLevelCell,
+		onEnter = function(row, r)
+			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+			if r.itemID > 0 and GameTooltip.SetItemByID then GameTooltip:SetItemByID(r.itemID)
+			else GameTooltip:SetText(CI.SpellName(r.recipeID) or ("Recipe " .. r.recipeID)) end
+			local reagents = SK.Reagents.Text(SK.Reagents.Lines(r.recipeID), Theme.Code)
+			if reagents then Theme.TipLine(GameTooltip, "Needs: " .. reagents, "dim", true) end
+			W.SkillUpTip(GameTooltip, r.recipeID, r.skillLine)
+			if r.range.ups > 1 then
+				Theme.TipLine(GameTooltip, "Orange gives " .. r.range.ups .. " points per craft", "dim")
+			end
+			Theme.TipLine(GameTooltip, "Only recipes you've learned are listed: when a trainer or recipe teaches " ..
+				"the others isn't in the game's data.", "dim", true)
+			Theme.TipLine(GameTooltip, "Click for crafters, reagents and a Wowhead link", "gold")
+			GameTooltip:Show()
+		end,
+		onClick = function(r) SK.CraftersTab:ShowRecipe(r.recipeID, r.skillLine) end,
+	})
+	self.levelList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
+	self.levelList:SetPoint("BOTTOMRIGHT")
 
 	-- One profession: crafters on the left, recipes on the right.
 	self.crafters = W.List(page, {
@@ -393,6 +456,7 @@ function Prof:Build(page)
 			else GameTooltip:SetText(r.name) end
 			local reagents = SK.Reagents.Text(SK.Reagents.Lines(r.recipeID), Theme.Code)
 			if reagents then Theme.TipLine(GameTooltip, "Needs: " .. reagents, "dim", true) end
+			W.SkillUpTip(GameTooltip, r.recipeID, r.skillLine)
 			Theme.TipLine(GameTooltip, "Click to see who can make it  ·  Right-click to " ..
 				(r.fav and "unstar" or "star"), "gold")
 			GameTooltip:Show()
@@ -436,7 +500,7 @@ function Prof:Refresh()
 	local ctx = PB.Context()
 	self.now, self.ctx = ctx.now, ctx
 	local view = SK.DB.settings.profView
-	if view ~= "cooldowns" and view ~= "recipes" then view = "board" end
+	if view ~= "cooldowns" and view ~= "recipes" and view ~= "levelling" then view = "board" end
 	local one = self.skillLine ~= nil
 	for _, c in ipairs(self.viewChips) do
 		c:SetShown(not one)
@@ -449,6 +513,8 @@ function Prof:Refresh()
 	self.search:SetShown(not one and view == "recipes")
 	self.profMenu:SetShown(not one and view == "recipes")
 	self.allList:SetShown(not one and view == "recipes")
+	self.levelMenu:SetShown(not one and view == "levelling")
+	self.levelList:SetShown(not one and view == "levelling")
 	self.crafters:SetShown(one)
 	self.right:SetShown(one)
 
@@ -462,9 +528,12 @@ function Prof:Refresh()
 	self.cooldowns:SetPoint("TOPLEFT", 0, top)
 	self.search:SetPoint("TOPLEFT", 0, top)
 	self.allList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
+	self.levelMenu:SetPoint("TOPLEFT", 0, top)
+	self.levelList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
 
 	if one then return self:RefreshOne(ctx) end
 	if view == "recipes" then return self:RefreshAll(ctx) end
+	if view == "levelling" then return self:RefreshLevelling() end
 	if view == "cooldowns" then
 		local rows = PB.Cooldowns(ctx)
 		local ready = 0
@@ -481,6 +550,78 @@ function Prof:Refresh()
 		self.status:SetText(missing > 0 and (Theme.Count(missing, "profession") .. " nobody has") or
 			"Every profession is covered")
 	end
+end
+
+---------------------------------------------------------------------------
+-- Levelling (v0.4.3)
+---------------------------------------------------------------------------
+-- Your professions that have recipes in the game's data, for the menu.
+function Prof.LevelItems()
+	local items = {}
+	local own = SK.Profile:Own()
+	for skillLine, p in pairs(own and own.profs or {}) do
+		if #SK.RecipeDB.List(skillLine) > 0 then
+			items[#items + 1] = { value = skillLine, text = (p.name or PB.ProfessionName({}, skillLine)) ..
+				"  " .. (p.rank or 0) .. " / " .. (p.max or 0), primary = p.primary }
+		end
+	end
+	table.sort(items, function(a, b)
+		if a.primary ~= b.primary then return a.primary == true end
+		return a.text < b.text
+	end)
+	if #items == 0 then items[1] = { value = "none", text = "No professions yet" } end
+	return items
+end
+
+-- The profession the Levelling view shows: the saved pick if you still have
+-- it, else your first primary profession.
+function Prof.LevelProfession()
+	local own = SK.Profile:Own()
+	local profs = own and own.profs or {}
+	local pick = SK.DB.settings.levelProf
+	if pick and profs[pick] then return pick end
+	local items = Prof.LevelItems()
+	return type(items[1].value) == "number" and items[1].value or nil
+end
+
+-- "12 recipes still give skill-ups: 3 orange · 5 yellow · 4 green". Pure; tested.
+function Prof.LevelSummary(rows)
+	local n = { orange = 0, yellow = 0, green = 0 }
+	for _, r in ipairs(rows) do if r.known then n[r.colour] = n[r.colour] + 1 end end
+	local known = n.orange + n.yellow + n.green
+	local text = Theme.Count(known, "learned recipe") .. " still give skill-ups"
+	if known > 0 then
+		text = text .. ": " .. table.concat({ Theme.SkillColour("orange", n.orange .. " orange"),
+			Theme.SkillColour("yellow", n.yellow .. " yellow"), Theme.SkillColour("green", n.green .. " green") }, "  ·  ")
+	end
+	return text, n
+end
+
+function Prof:RefreshLevelling()
+	self.levelMenu:Refresh()
+	local skillLine = Prof.LevelProfession()
+	local own = SK.Profile:Own()
+	local prof = skillLine and own and own.profs[skillLine]
+	if not prof then
+		self.levelList:SetItems({})
+		self.levelList:SetEmptyText("You haven't learned a profession on this character yet.")
+		self.status:SetText("")
+		return
+	end
+	local known = {}
+	for id in pairs(own.recipes and own.recipes[skillLine] or {}) do known[id] = true end
+	SK.CraftIndex.SetBudget(SK.RecipeDB.REQUESTS_PER_SEARCH)
+	local rows = SK.RecipeDB.SkillUps(skillLine, prof.rank or 0, known)
+	for _, r in ipairs(rows) do SK.CraftIndex.NameOf({ recipeID = r.recipeID, itemID = r.itemID }) end
+	SK.CraftIndex.SetBudget(nil)
+	self.levelList:SetItems(rows)
+	local scanned = prof.scanned ~= nil
+	self.levelList:SetEmptyText(scanned and ("None of your recipes gives skill-ups at " .. (prof.rank or 0) ..
+		" any more. Learn new ones from a trainer or recipes.") or ("Open your " .. (prof.name or "profession") ..
+		" window once so Short Royalty knows which recipes you've learned."))
+	local summary = Prof.LevelSummary(rows)
+	if not scanned then summary = Theme.Paint("spark", "Open your " .. (prof.name or "profession") .. " window once") end
+	self.status:SetText(summary)
 end
 
 function Prof:RefreshAll(ctx)

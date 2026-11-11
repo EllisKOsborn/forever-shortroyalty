@@ -9,7 +9,10 @@
 //                                                (SkillLineAbility.csv, ...)
 //
 // What goes in: recipe (spell) ID, profession, the window's category, the
-// item it makes and its reagents. Names are NOT stored: the addon reads them
+// item it makes, its reagents, and its skill-up range from Forever's own
+// SkillLineAbility table: MinSkillLineRank (orange from),
+// TrivialSkillLineRankLow (yellow from), TrivialSkillLineRankHigh (grey from)
+// and NumSkillUps. Only Forever data (product "wowf"), never Retail/Classic. Names are NOT stored: the addon reads them
 // from each player's own game (always right, in their language). Categories
 // named "Season of Discovery", "PROTOTYPE" or "[DNT]" are left out: they are
 // in the client files but not part of Forever.
@@ -83,7 +86,9 @@ function build(dir, version) {
   const recipes = new Map(); // spell -> { skillLine, cat }
   for (const r of sla) {
     if (!PROFESSIONS[r.SkillLine] || r.TradeSkillCategoryID === "0" || excluded(r.TradeSkillCategoryID)) continue;
-    if (!recipes.has(r.Spell)) recipes.set(r.Spell, { skillLine: +r.SkillLine, cat: +r.TradeSkillCategoryID });
+    if (!recipes.has(r.Spell)) recipes.set(r.Spell, { skillLine: +r.SkillLine, cat: +r.TradeSkillCategoryID,
+      min: +r.MinSkillLineRank || 0, low: +r.TrivialSkillLineRankLow || 0, high: +r.TrivialSkillLineRankHigh || 0,
+      ups: +r.NumSkillUps || 0 });
   }
 
   const items = {};
@@ -117,7 +122,8 @@ function build(dir, version) {
   L.push("-- Every profession recipe in WoW Forever, from the game's own data tables");
   L.push("-- (SkillLineAbility, TradeSkillCategory, SpellEffect, SpellReagents) as published");
   L.push("-- by wago.tools for build " + version + ". Names come from each player's game at");
-  L.push("-- runtime. Entry: { recipe (spell) ID, item made (0 = none), category, reagents \"item:count,...\" }");
+  L.push("-- runtime. Entry: { recipe (spell) ID, item made (0 = none), category, reagents \"item:count,...\",");
+  L.push("--   orange from, yellow from, grey from, skill-ups per craft } (0 = not in the data)");
   L.push("local _, SK = ...");
   L.push("SK.Data = SK.Data or {}");
   L.push("");
@@ -134,7 +140,7 @@ function build(dir, version) {
   for (const skill of Object.keys(bySkill).sort((a, b) => a - b)) {
     L.push(`\t[${skill}] = { -- ${PROFESSIONS[skill]}: ${bySkill[skill].length}`);
     for (const [spell, r] of bySkill[skill].sort((a, b) => a[0] - b[0])) {
-      L.push(`\t\t{ ${spell}, ${items[spell] || 0}, ${r.cat}, ${luaStr(reagents[spell] || "")} },`);
+      L.push(`\t\t{ ${spell}, ${items[spell] || 0}, ${r.cat}, ${luaStr(reagents[spell] || "")}, ${r.min}, ${r.low}, ${r.high}, ${r.ups} },`);
     }
     L.push("\t},");
   }
@@ -147,7 +153,7 @@ function build(dir, version) {
 const args = process.argv.slice(2);
 const fromIdx = args.indexOf("--from");
 let dir = fromIdx >= 0 ? args[fromIdx + 1] : null;
-const version = args.find((a, i) => /^\d+\.\d+\.\d+\.\d+$/.test(a) && i !== fromIdx + 1) || latestBuild();
+const version = args.find((a, i) => /^\d+\.\d+\.\d+\.\d+$/.test(a) && (fromIdx < 0 || i !== fromIdx + 1)) || latestBuild();
 if (!dir) {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), "sk-recipes-"));
   for (const t of TABLES) {

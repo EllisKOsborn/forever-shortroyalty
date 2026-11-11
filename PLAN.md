@@ -524,3 +524,24 @@ lookups (D7, `SendChatMessage` is restricted).
 Same list as section 7, plus: no automatic alt detection beyond the
 player's own account (addons can't see other players' accounts; confirmed by
 research on 7 Nov).
+
+## 13. Levelling tools (11 Nov 2026)
+
+The owner saw Profession Master (CurseForge, All Rights Reserved, already
+supports Forever) and wants similar tools, built in this order. **Only WoW
+Forever data, never Retail or Classic; aim for the cheapest and most
+efficient route on Forever.**
+
+1. ✅ **Levelling helper** (v0.4.3, built): skill-up colours from Forever's
+   SkillLineAbility, learned recipes only, checked against the game's own
+   colours.
+2. **Shopping list:** pick recipes and quantities → total reagents, have
+   (bags and bank via `C_Item.GetItemCount`) / need, vendor prices.
+3. **Profit:** crafting cost vs selling price. Prices from Auctionator's
+   public API when it's installed (it is allowed to be called), else vendor
+   prices only. Our own auction scan only if Auctionator isn't an option.
+4. **Cheapest route:** from your skill to the next cap, choosing recipes by
+   expected cost per skill-up (orange 1 point; yellow and green by chance),
+   using 1–3. Limits: when trainers teach recipes and what they cost isn't in
+   Forever's data, so the planner works from recipes you've learned (and, if
+   the in-game window lists unlearned recipes with their requirement, those).

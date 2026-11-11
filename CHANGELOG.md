@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.4.3 (not released yet): Levelling helper
+
+- **Professions → Levelling** (new view): pick one of your professions and
+  see every recipe you've learned that still gives skill-ups at your skill,
+  best first: its colour for you (orange, yellow, green), how many points
+  until it turns grey, and where it turns yellow, green and grey.
+- **Only WoW Forever's own data.** The skill-up numbers come from Forever's
+  game files for the current build (1.60.1.70888), not Classic or Retail.
+  Forever changed many of them: Gray Woolen Shirt, for example, turns
+  yellow at 90 and grey at 110.
+- **Checked against your game.** Each time you open a profession window,
+  Short Royalty compares its colours with the window's; `/sr debug` shows
+  how many matched and any that didn't.
+- Recipe tooltips (Professions, All recipes, Crafters) and the Crafters panel
+  show where a recipe turns yellow, green and grey, and its colour for you if
+  you've learned it.
+- Recipes you haven't learned aren't in the Levelling list: Forever's data
+  doesn't say at what skill a trainer or recipe teaches them.
+
 ## v0.4.2 (10 Nov 2026): fixes from the first big in-game report
 
 From a `/sr debug` on v0.4.1 with 39 members and 24 sharing data:

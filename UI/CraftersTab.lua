@@ -108,6 +108,7 @@ function Crafters:Build(page)
 			else
 				GameTooltip:SetText(r.name)
 			end
+			W.SkillUpTip(GameTooltip, r.recipeID, r.skillLine)
 			Theme.TipLine(GameTooltip, "Click to see who can make it  ·  Right-click to " ..
 				(SK.Favourites.IsRecipe(r.recipeID) and "unstar" or "star"), "gold")
 			GameTooltip:Show()
@@ -335,8 +336,10 @@ function Crafters:Refresh()
 	self.crafters:SetItems(list)
 	self.crafters:SetEmptyText("Nobody in the guild knows this recipe yet.")
 	local reagents = SK.Reagents.Text(SK.Reagents.Lines(r.recipeID), Theme.Code)
-	self.reagents:SetText(reagents and ("Needs: " .. reagents) or
-		"Reagents show once you've opened this profession's window (they're read from your game).")
+	local skillUps = W.SkillUpText(r.recipeID, r.skillLine)
+	self.reagents:SetText((reagents and ("Needs: " .. reagents) or
+		"Reagents show once you've opened this profession's window (they're read from your game).") ..
+		(skillUps and ("\n" .. skillUps) or ""))
 end
 
 SK.MainFrame:AddTab("crafters", "Crafters", Crafters)

@@ -406,7 +406,7 @@ function Compat.RecipeInfo(recipeID)
 		if ok and out then itemID = out.itemID end
 	end
 	return { learned = info.learned and true or false, name = info.name, itemID = itemID,
-		categoryID = info.categoryID }
+		categoryID = info.categoryID, difficulty = clean(info.relativeDifficulty) }
 end
 
 -- C_TradeSkillUI.GetShowLearned / GetShowUnlearned (the window's filter

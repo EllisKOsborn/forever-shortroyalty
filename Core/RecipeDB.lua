@@ -18,14 +18,16 @@ DB.REQUESTS_PER_SEARCH = 200 -- name loads asked for per search (the rest follow
 local byID, all, byProf
 local catNames = {}
 
--- Entry: { recipeID, skillLine, itemID, cat, reag = "item:count,..." }
+-- Entry: { recipeID, skillLine, itemID, cat, reag = "item:count,...",
+--   min, low, high, ups } (skill-up range from Forever's data, v0.4.3)
 local function index()
 	if byID then return end
 	byID, all, byProf = {}, {}, {}
 	for skillLine, list in pairs(SK.Data.RECIPE_LIST or {}) do
 		byProf[skillLine] = {}
 		for _, e in ipairs(list) do
-			local r = { recipeID = e[1], skillLine = skillLine, itemID = e[2] or 0, cat = e[3], reag = e[4] or "" }
+			local r = { recipeID = e[1], skillLine = skillLine, itemID = e[2] or 0, cat = e[3], reag = e[4] or "",
+				min = e[5] or 0, low = e[6] or 0, high = e[7] or 0, ups = e[8] or 0 }
 			if not byID[r.recipeID] then
 				byID[r.recipeID] = r
 				all[#all + 1] = r
@@ -70,6 +72,110 @@ function DB.CategoryName(cat)
 	if catNames[cat] then return catNames[cat] end
 	local c = SK.Data.RECIPE_CATS and SK.Data.RECIPE_CATS[cat]
 	return c and c[1] or nil
+end
+
+---------------------------------------------------------------------------
+-- Skill-up colours (v0.4.3). From Forever's own data (SkillLineAbility via
+-- tools/recipes.js): yellow from TrivialSkillLineRankLow, grey from
+-- TrivialSkillLineRankHigh, green from halfway between (the profession
+-- window's rule), orange below yellow. Forever's numbers differ from Classic
+-- (Gray Woolen Shirt: yellow 90, grey 110). MinSkillLineRank is 1 for almost
+-- every recipe in Forever, so it is NOT when you can learn a recipe (the
+-- trainer or recipe decides; not in the data): only learned recipes get a
+-- "for you" colour. Checked against the player's own window during scans
+-- (DB.CheckColour, /sr debug).
+---------------------------------------------------------------------------
+DB.COLOURS = { "orange", "yellow", "green", "grey" }
+-- Blizzard's Enum.TradeskillRelativeDifficulty: Optimal, Medium, Easy, Trivial.
+DB.GAME_COLOUR = { [0] = "orange", [1] = "yellow", [2] = "green", [3] = "grey" }
+
+-- { orange, yellow, green, grey, ups } or nil when the data has no range.
+function DB.Range(recipeID)
+	local r = DB.Get(recipeID)
+	if not r or r.high <= 0 or r.low <= 0 or r.high < r.low then return nil end -- missing or inconsistent data
+	return { orange = r.min, yellow = r.low, green = math.floor((r.low + r.high) / 2), grey = r.high,
+		ups = r.ups > 0 and r.ups or 1 }
+end
+
+-- The colour a recipe is at `skill`: "orange" | "yellow" | "green" | "grey",
+-- or nil if unknown. Below the orange start counts as orange (you can't learn
+-- it yet; the trainer or recipe decides when).
+function DB.ColourAt(recipeID, skill)
+	local g = DB.Range(recipeID)
+	if not g or type(skill) ~= "number" then return nil end
+	if skill >= g.grey then return "grey" end
+	if skill >= g.green then return "green" end
+	if skill >= g.yellow then return "yellow" end
+	return "orange"
+end
+
+-- Skill points until it turns grey (0 when grey).
+function DB.PointsLeft(recipeID, skill)
+	local g = DB.Range(recipeID)
+	if not g or type(skill) ~= "number" then return nil end
+	return math.max(0, g.grey - skill)
+end
+
+-- Compare our colour with the game's (from the open profession window).
+-- Kept per game build in SK.DB.colourCheck; shown in /sr debug.
+DB.CHECK_EXAMPLES = 5
+function DB.CheckColour(recipeID, skill, gameDifficulty)
+	local game = DB.GAME_COLOUR[gameDifficulty]
+	local ours = DB.ColourAt(recipeID, skill)
+	if not game or not ours then return nil end
+	local build = tostring(Compat.BuildInfo().build or "?")
+	local c = SK.DB.colourCheck
+	if c.build ~= build then
+		c.build, c.match, c.differ, c.examples = build, 0, 0, {}
+	end
+	if game == ours then
+		c.match = c.match + 1
+	else
+		c.differ = c.differ + 1
+		if #c.examples < DB.CHECK_EXAMPLES then
+			c.examples[#c.examples + 1] = { recipe = recipeID, skill = skill, game = game, ours = ours }
+		end
+	end
+	return game == ours
+end
+
+-- Levelling helper: the LEARNED recipes of one profession that still give
+-- skill-ups at `skill`, best first (orange, yellow, green), then the soonest
+-- to turn grey. `known` = { [recipeID] = true }. Unlearned recipes are left
+-- out: when a trainer or recipe teaches them isn't in Forever's data.
+-- Returns rows { recipeID, itemID, skillLine, colour, left, range, known }.
+local COLOUR_ORDER = { orange = 1, yellow = 2, green = 3, grey = 4 }
+function DB.SkillUps(skillLine, skill, known)
+	local out = {}
+	known = known or {}
+	for _, r in ipairs(DB.List(skillLine)) do
+		local colour = known[r.recipeID] and DB.ColourAt(r.recipeID, skill)
+		if colour and colour ~= "grey" then
+			out[#out + 1] = { recipeID = r.recipeID, itemID = r.itemID, skillLine = skillLine, colour = colour,
+				left = DB.PointsLeft(r.recipeID, skill), range = DB.Range(r.recipeID), known = known[r.recipeID] == true }
+		end
+	end
+	table.sort(out, function(a, b)
+		if a.known ~= b.known then return a.known end
+		if a.colour ~= b.colour then return COLOUR_ORDER[a.colour] < COLOUR_ORDER[b.colour] end
+		if a.left ~= b.left then return a.left < b.left end
+		return a.recipeID < b.recipeID
+	end)
+	return out
+end
+
+-- The logged-in character's skill in a profession, or nil.
+function DB.MySkill(skillLine)
+	local own = SK.Profile and SK.Profile:Own()
+	local p = own and own.profs and own.profs[skillLine]
+	return p and type(p.rank) == "number" and p.rank or nil
+end
+
+-- Has the logged-in character learned this recipe (as last scanned)?
+function DB.IKnow(recipeID, skillLine)
+	local own = SK.Profile and SK.Profile:Own()
+	local list = own and own.recipes and own.recipes[skillLine]
+	return list ~= nil and list[recipeID] ~= nil
 end
 
 function DB.WowheadURL(recipeID, itemID)

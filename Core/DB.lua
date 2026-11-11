@@ -20,7 +20,8 @@ local DEFAULTS = {
 		feed = true,                              -- record guild milestones for the Overview (v0.2.2)
 		reduceMotion = false,                     -- turn off UI animation (v0.2.3 design refresh)
 		profNudges = true,                        -- "open your Tailoring window" reminders (v0.3)
-		profView = "board",                       -- Professions tab: "board", "recipes" or "cooldowns" (v0.3)
+		profView = "board",                       -- Professions tab: "board", "recipes", "cooldowns" or "levelling" (v0.4.3)
+		levelProf = nil,                          -- Professions → Levelling: which of your professions (skillLine)
 		welcomed = false,                         -- first-load welcome line shown (v0.3.1)
 		seen = {},                                -- tabs looked at, for "Getting started" (v0.3.1)
 		onboarding = { hidden = false },          -- "Getting started" card hidden by the player (v0.3.1)
@@ -32,6 +33,7 @@ local DEFAULTS = {
 	feed = {},      -- recent milestones, newest first, max 50 (local only, never sent)
 	favourites = { recipes = {}, crafters = {} }, -- starred recipes and crafters (v0.3, local only)
 	reagents = { build = nil, list = {} },        -- recipe reagents read from the game (v0.3, local only)
+	colourCheck = { build = nil, match = 0, differ = 0, examples = {} }, -- our skill-up colours vs the window's (v0.4.3, local)
 	scanKeep = {},  -- [guid] = { [skillLine] = { scanned, rank, recipes } } scans of professions missing from the last read (v0.4.2, local)
 	scanRank = {},  -- [guid] = { [skillLine] = skill when the recipes were last scanned } (nudges, local)
 	nudgedAt = nil, -- last "open your profession window" chat reminder
