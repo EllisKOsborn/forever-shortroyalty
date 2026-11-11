@@ -16,7 +16,7 @@ Where we are:
 - The guild uses both Auctionator and TSM. Whether the addon reads their
   prices correctly is checked by the `/sr debug` "Prices:" line.
 - v0.4.7 is released; v0.4.8 (**cheapest levelling route**, open to
-  everyone) is built on the working branch. The levelling tools in PLAN.md
+  everyone) is released too. The levelling tools in PLAN.md
   section 13 are all built. Profit is mine only (`/sr profit`).
 - Rule: use **only WoW Forever data**, never Retail or Classic. Take the
   cheapest and most efficient route for Forever. Don't copy other addons'

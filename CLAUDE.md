@@ -29,7 +29,8 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 11 Nov 2026)
-- **Released:** v0.4.7 on `main` (11 Nov: colour-check fix, Profit hidden
+- **Released:** v0.4.8 on `main` (11 Nov: cheapest levelling route, open to
+  everyone), after v0.4.7 (11 Nov: colour-check fix, Profit hidden
   and owner-only), after v0.4.6 (11 Nov: Profit, menu hover fix), after
   v0.4.5 (11 Nov: shopping list) and v0.4.4
   (11 Nov: levelling helper, crest icon, tagline removed everywhere in game,
@@ -57,7 +58,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   everything"); don't advertise it in README/CHANGELOG until the owner says.
   Prices themselves are local and never synced. The owner has **TSM only**
   (no Auctionator).
-- **Built, not released:** v0.4.8 **cheapest levelling route** (step 4, the
+- v0.4.8 = **cheapest levelling route** (step 4, the
   last of PLAN.md section 13), **open to everyone** (owner, 11 Nov). TESTING
   163–166. `Core/Route.lua`: `Route.Chance(range, skill)` = 1 below yellow,
   else (grey - skill) / (grey - yellow) (the original game's rule, an
@@ -317,7 +318,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   levelling helper, crest icon, no tagline in game); **v0.4.5** (11 Nov,
   shopping list); **v0.4.6** (11 Nov, Profit with Auctionator/TSM prices,
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
-  owner-only). Tag only when
+  owner-only); **v0.4.8** (11 Nov, cheapest levelling route). Tag only when
   the user asks.
 
 ## Layout

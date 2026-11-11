@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.8 (not released yet): Cheapest levelling route
+## v0.4.8 (11 Nov 2026): Cheapest levelling route
 
 - **Professions → Route** (new view): the cheapest way from your skill to
   your cap with the recipes you've learned. For each stretch of points it
