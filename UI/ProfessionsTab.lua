@@ -309,9 +309,7 @@ local function setProfitCell(fs, r, col)
 		if not r.profit then fs:SetText(Theme.DASH)
 		else fs:SetText(Theme.Paint(r.profit > 0 and "good" or "spark", money(r.profit))) end
 	else
-		local src = SK.Prices.Source()
-		fs:SetText(Theme.Paint("dim", r.via == "ah" and ("auction" .. (src and (" (" .. SK.Prices.SOURCE_NAMES[src] .. ")") or ""))
-			or r.via == "vendor" and "vendor" or ""))
+		fs:SetText(Theme.Paint("dim", r.via == "ah" and "auction" or r.via == "vendor" and "vendor" or ""))
 	end
 end
 

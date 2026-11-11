@@ -464,6 +464,22 @@ in game if anything looks different and send it.
         over each line. The text stays readable (grey bar behind it). Same
         for the Roster's raid menu and All recipes' profession menu.
 
+## v0.4.6 Profit
+
+156. [ ] `/sr debug` → the "Prices:" line. **Send me this line.** With
+        Auctionator installed it should say "Auctionator API yes" and a price
+        for Linen Cloth (after you've scanned the auction house at least once);
+        same for TSM.
+157. [ ] Professions → **Profit**: your learned recipes with Reagents cost,
+        Sells for and Profit. Point at one: each reagent's price, and "Makes
+        1, worth …". Do the numbers look like what you see at the auction house?
+158. [ ] The **Prices** menu: pick Auctionator, then TSM (if you have both):
+        the numbers change and the status line names the source.
+159. [ ] Open a vendor that sells thread or dye, then `/sr debug`: "Vendor
+        prices remembered" goes up, and those reagents say "(vendor)".
+160. [ ] Shopping list: "About … to buy" on the right; point at a reagent for
+        its price.
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

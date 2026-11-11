@@ -1,7 +1,21 @@
 # Changelog
 
-## v0.4.6 (not released yet): fixes
+## v0.4.6 (not released yet): Profit
 
+- **Professions → Profit** (new view): every recipe you've learned in one
+  profession with what its reagents cost, what it sells for and the
+  profit, best first.
+- **Auction prices from Auctionator or TradeSkillMaster**, whichever you
+  have (a menu picks one if you have both). Without either you get vendor
+  prices only.
+- **Vendor prices are remembered** each time you open a vendor, and each
+  reagent is priced the cheaper way (vendor or auction house).
+- Auction sales count the 5% auction house cut. Recipes that make several
+  items (ammo makes 200) count them all, from Forever's own data.
+- **Shopping list:** shows roughly what the rest of your reagents cost, and
+  each reagent's price when you point at it.
+- `/sr debug` says whether Auctionator and TSM answered.
+- Everything stays on your computer; nothing new is sent to guildmates.
 - **Fixed: drop-down menus hid the line under the mouse** (for example the
   profession menu in Levelling). The hover bar now sits behind the text.
 

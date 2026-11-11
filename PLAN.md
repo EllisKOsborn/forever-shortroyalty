@@ -540,9 +540,15 @@ efficient route on Forever.**
    "you make it" for reagents a learned recipe makes, Copy. Local only.
    Prices moved to step 3 (a vendor's *buy* price isn't readable away from
    the vendor; the item's sell price is).
-3. **Profit:** crafting cost vs selling price. Prices from Auctionator's
-   public API when it's installed (it is allowed to be called), else vendor
-   prices only. Our own auction scan only if Auctionator isn't an option.
+3. ✅ **Profit** (v0.4.6, built 11 Nov): Professions → Profit and a cost
+   line on the Shopping list. Auction prices from Auctionator
+   (`Auctionator.API.v1.GetAuctionPriceByItemID`) or TSM
+   (`TSM_API.GetCustomPriceValue("DBMarket", "i:<id>")`), owner: the guild
+   uses both. Neither API could be read from its docs on 11 Nov (Auctionator's
+   code isn't on GitHub; TSM's API site returned 503), so the calls are
+   guarded and `/sr debug` reports whether they answer (TESTING 156).
+   Vendor buy prices are learned at merchants; items per craft come from
+   Forever's SpellEffect.EffectBasePointsF.
 4. **Cheapest route:** from your skill to the next cap, choosing recipes by
    expected cost per skill-up (orange 1 point; yellow and green by chance),
    using 1–3. Limits: when trainers teach recipes and what they cost isn't in
