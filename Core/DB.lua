@@ -21,6 +21,7 @@ local DEFAULTS = {
 		reduceMotion = false,                     -- turn off UI animation (v0.2.3 design refresh)
 		profNudges = true,                        -- "open your Tailoring window" reminders (v0.3)
 		profView = "board",                       -- Professions tab: "board", "recipes" or "cooldowns" (v0.3)
+		charModel = true,                         -- Character tab: gear on a 3D model (v0.4.3)
 		welcomed = false,                         -- first-load welcome line shown (v0.3.1)
 		seen = {},                                -- tabs looked at, for "Getting started" (v0.3.1)
 		onboarding = { hidden = false },          -- "Getting started" card hidden by the player (v0.3.1)
