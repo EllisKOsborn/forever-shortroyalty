@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.3 (not released yet): character model
+## v0.4.3 (11 Nov 2026): character model
 
 - **A 3D model on the Character tab**, between the gear slots. Drag to turn
   it, scroll to zoom; the **Model** button switches back to item level,

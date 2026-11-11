@@ -237,7 +237,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   the addon", Alt rank left out of the Overview, alt guessing removed);
   **v0.4.1** (8 Nov, Raids tab removed again: "keep it as crafting and
   professions for now"); **v0.4.2** (10 Nov, fixes from the first big
-  in-game report: guild-nil error, lost profession scans, false send errors). Tag only when
+  in-game report: guild-nil error, lost profession scans, false send errors); **v0.4.3** (11 Nov, character model on the
+  Character tab; the CI test build now uploads). Tag only when
   the user asks.
 
 ## Layout
@@ -489,7 +490,12 @@ messages → sender ignored for the session).
   send results (`Sync.SendOutcome(result, dist)` → "offline";
   `stats.targetOffline`). Tests: `tests/v042_spec.lua` (loads the real
   ChatThrottleLib). TESTING 137–139.
-- **v0.4.3 (7→11 Nov, on `claude/affectionate-archimedes-tirbrl`, not released)**:
+- **v0.4.3 released 11 Nov** (pushed to `main` at the owner's request after
+  testing the CI test build; the owner said the model "looks good"). **Version
+  clash:** branch `claude/short-kings-addon-hlf0t4` (levelling helper) also
+  calls itself v0.4.3; it must merge `main` and become **v0.4.4** (its
+  CHANGELOG heading, TESTING numbers from 145, and the `Core/DB.lua` settings
+  defaults will conflict). Character model details:
   character model on the Character tab (owner asked 11 Nov). Decisions:
   - Forever has **no API to build a player model from data** (face, hair,
     skin, gender: only the barber shop and character select can). Models come
