@@ -421,6 +421,10 @@ in game if anything looks different and send it.
 143. [ ] The window's title bar shows the crest and SHORT ROYALTY, with no
         "Height is not a stat." under it.
 
+144. [ ] The AddOns list (character select → AddOns, and the in-game AddOns
+        menu) and the minimap button show the Short Royalty crest, not a bomb.
+        The whole crest is visible (not cut off at the edges).
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

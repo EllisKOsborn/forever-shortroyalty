@@ -520,6 +520,10 @@ messages → sender ignored for the session).
   - Also in v0.4.3 (owner): the window's title bar no longer shows the
     "Height is not a stat." subtitle; the title is centred on the crest.
     `SK.TAGLINE` stays for the minimap tooltip and the TOC Notes. TESTING 143.
+  - Also in v0.4.3 (owner): the icon is the crest, not `INV_Misc_Bomb_04`:
+    TOC `## IconTexture: Interface\AddOns\ShortRoyalty\Media\Textures\crest`,
+    `MM.ICON = Theme.TEX.crest`, full texcoords (LibDBIcon `iconCoords`).
+    Unconfirmed in game that the AddOns list shows a custom .tga. TESTING 144.
 - **v0.3.7 (folded into v0.4.0, never released)**: wording only. The owner asked whether
   to remove alt features; advice was no (removing them wouldn't fix the
   per-character gap and would lose roster grouping and "on alt" whispers).

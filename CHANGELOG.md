@@ -21,6 +21,8 @@
 - The window's title bar now shows just **SHORT ROYALTY**: the "Height is
   not a stat." subtitle is gone (it's still in the minimap button's tooltip
   and the AddOns list).
+- The addon's icon is now our **crest** instead of the game's bomb icon, in
+  the AddOns list and on the minimap button.
 
 ## v0.4.2 (10 Nov 2026): fixes from the first big in-game report
 

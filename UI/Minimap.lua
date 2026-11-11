@@ -5,7 +5,10 @@ local _, SK = ...
 local MM = SK:NewModule("Minimap")
 local Theme = SK.Theme
 
-MM.ICON = "Interface\\Icons\\INV_Misc_Bomb_04"
+-- Our crest (Media/Textures/crest.tga, drawn by tools/textures.js), not a
+-- stock game icon (v0.4.3: it was a bomb). The TOC's IconTexture (the AddOns
+-- list) points at the same file.
+MM.ICON = Theme.TEX.crest
 
 local function onClick(_, button)
 	if button == "RightButton" then
@@ -34,7 +37,7 @@ local function createFallback(settings)
 	icon:SetSize(20, 20)
 	icon:SetPoint("CENTER")
 	icon:SetTexture(MM.ICON)
-	icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+	icon:SetTexCoord(0, 1, 0, 1) -- our own art: no border to crop, unlike the game's icons
 	local ring = b:CreateTexture(nil, "OVERLAY")
 	ring:SetSize(54, 54)
 	ring:SetPoint("TOPLEFT")
@@ -75,6 +78,7 @@ function MM:OnLogin()
 	if LDB and DBIcon then
 		local obj = LDB:NewDataObject("ShortRoyalty", {
 			type = "launcher", text = "Short Royalty", icon = MM.ICON,
+			iconCoords = { 0, 1, 0, 1 }, -- show the whole crest
 			OnClick = onClick, OnTooltipShow = onTooltip,
 		})
 		DBIcon:Register("ShortRoyalty", obj, settings)

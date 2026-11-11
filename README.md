@@ -155,7 +155,7 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 - **What guildmates see from you:** a read-only list of exactly what you share, what stays private, and what's never shared.
 
 ### 🧨 Everywhere
-- **Open it** with `/sr` (or `/shortroyalty`, `/sk`) or the **minimap button**: left-click opens the window, right-click opens Settings, drag to move it.
+- **Open it** with `/sr` (or `/shortroyalty`, `/sk`) or the **minimap button** (our crest): left-click opens the window, right-click opens Settings, drag to move it.
 - **Profession reminder bar:** until you've opened each of your crafting profession windows once (that's when your recipes are recorded), an orange bar sits under the tabs on **every** tab: "Your guild can't see your recipes yet. Open your Alchemy and Tailoring windows once." Its gold **Open Alchemy** button opens that window for you (not in combat), then the next one, and the bar goes away by itself when all are done. The window grows by the bar's height, so nothing on the tabs moves. No bar if you chose not to share recipes.
 
 <p align="center"><img src="docs/images/reminder.png" alt="Profession reminder bar" width="100%"></p>

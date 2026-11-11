@@ -4,7 +4,7 @@
 ## Author: Short Royalty guild
 ## Version: @project-version@
 ## SavedVariables: ShortRoyaltyDB
-## IconTexture: Interface\Icons\INV_Misc_Bomb_04
+## IconTexture: Interface\AddOns\ShortRoyalty\Media\Textures\crest
 ## X-License: MIT
 ## X-Website: https://github.com/elliskosborn/forever-shortkings
 ## X-Curse-Project-ID: 1788068
