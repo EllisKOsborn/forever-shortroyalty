@@ -10,16 +10,15 @@ Read `CLAUDE.md` first, especially **"Start here (handover, 11 Nov 2026)"**,
 then `PLAN.md` section 13 (levelling tools) and the top of `CHANGELOG.md`.
 
 Where we are:
-- v0.4.4 is released (levelling helper, crest icon, tagline removed from
-  the game), on top of v0.4.3 (character model), and v0.4.5 (shopping
-  list) are released. v0.4.6 (Profit with Auctionator/TSM prices, menu
-  hover fix) is built on the working branch but **not released**.
-- Next features, in this order:
-  1. a **shopping list**: pick recipes and amounts, get the reagents
-     needed and what I already have;
-  2. **profit**: crafting cost vs selling price, from Auctionator if it's
-     installed, otherwise vendor prices;
-  3. a **cheapest levelling route** planner.
+- Released: v0.4.3 (character model), v0.4.4 (levelling helper, crest
+  icon, no tagline) and v0.4.5 (shopping list). v0.4.6 (**Profit** with
+  Auctionator or TSM prices, vendor prices, menu hover fix) is built on the
+  working branch but **not released**.
+- The guild uses both Auctionator and TSM. Whether the addon reads their
+  prices correctly is checked by the `/sr debug` "Prices:" line.
+- Next feature: the **cheapest levelling route** planner (PLAN.md section
+  13 step 4). It depends on the skill-up colours being right, so check my
+  `/sr debug` line "Skill-up colours vs your profession window" first.
 - Rule: use **only WoW Forever data**, never Retail or Classic. Take the
   cheapest and most efficient route for Forever. Don't copy other addons'
   code.
@@ -31,4 +30,4 @@ How I work:
 - Never say something works in game until I've confirmed it.
 
 Start by telling me in a few lines what's waiting on me (from CLAUDE.md),
-then propose a short plan for the shopping list before building it.
+then propose a short plan for the route planner before building it.
