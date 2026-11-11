@@ -567,7 +567,7 @@ from **Forever**: its data tables (wago.tools, product `wowf`) or the
 player's own game (profession window, trainer, vendor). Each release is
 small enough to test in game before the next one builds on it.
 
-### v0.5.0 Where to learn each recipe
+### v0.5.0 Where to learn each recipe (✅ built 11 Nov)
 - **Recipe items from Forever's data.** `tools/recipes.js` also reads
   `ItemSparse` (RequiredSkill, RequiredSkillRank, BuyPrice) and the
   item → spell links (`ItemXItemEffect`/`ItemEffect`, `SpellEffect`

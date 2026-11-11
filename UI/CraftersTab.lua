@@ -350,6 +350,8 @@ function Crafters:Refresh()
 	self.crafters:SetEmptyText("Nobody in the guild knows this recipe yet.")
 	local reagents = SK.Reagents.Text(SK.Reagents.Lines(r.recipeID), Theme.Code)
 	local skillUps = W.SkillUpText(r.recipeID, r.skillLine)
+	local learn = W.LearnLines(r.recipeID, r.skillLine)[1]
+	if learn then skillUps = (skillUps and (skillUps .. "\n") or "") .. learn end
 	self.reagents:SetText((reagents and ("Needs: " .. reagents) or
 		"Reagents show once you've opened this profession's window (they're read from your game).") ..
 		(skillUps and ("\n" .. skillUps) or ""))

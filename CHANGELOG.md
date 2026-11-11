@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.5.0 (not released yet): Where to learn each recipe
+
+- **Recipe tooltips say where to learn a recipe you don't know** (All
+  recipes, a profession's list, Levelling, Route, Crafters):
+  - **Recipe items** (patterns, plans, formulas, schematics…) from WoW
+    Forever's own data, with the skill needed, for example "Learn from
+    Pattern: Red Woolen Bag (Tailoring 90)", plus its price if TSM or a
+    vendor you've visited knows it;
+  - **Trainers:** open a profession trainer once and Short Royalty
+    remembers what it teaches, the skill needed and the cost ("Trainer:
+    Tailoring 145, 22s");
+  - **the game's own "where from" text**, read while your profession window
+    is open.
+- **Levelling** says how many recipes a trainer you've visited would teach
+  you now ("2 to learn at your trainer").
+- `/sr debug` shows what the game gives for this, so we can check it.
+- Everything stays on your computer. No map pins: where trainers and vendors
+  stand isn't in the game's data (the Wowhead button has that).
+
 ## v0.4.8 (11 Nov 2026): Cheapest levelling route
 
 - **Professions → Route** (new view): the cheapest way from your skill to

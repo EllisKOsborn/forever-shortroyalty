@@ -639,7 +639,7 @@ function professions() {
     const cell = (r, col) => col.key === "n" ? `<span style="color:${r[1]}">${esc(r[0])}</span>` : col.key === "c" ? c(r[2], r[2])
       : col.key === "l" ? `<span class="dim">${r[3]} points</span>` : col.key === "r" ? range(r[4]) : "";
     return `<div class="abs" style="left:0;top:0;display:flex;gap:4px">${chips(PROF_VIEWS, "levelling")}</div>
-      <div class="abs dim ell" style="right:0;top:4px;font-size:12px">10 learned recipes still give skill-ups: ${c("orange", "2 orange")} &nbsp;·&nbsp; ${c("yellow", "5 yellow")} &nbsp;·&nbsp; ${c("green", "3 green")}</div>
+      <div class="abs dim ell" style="right:0;top:4px;font-size:12px">10 learned recipes still give skill-ups: ${c("orange", "2 orange")} &nbsp;·&nbsp; ${c("yellow", "5 yellow")} &nbsp;·&nbsp; ${c("green", "3 green")} &nbsp;·&nbsp; <span class="good">2 to learn at your trainer</span></div>
       ${btn("Tailoring  85 / 150", "", 'style="position:absolute;left:0;top:36px;width:220px;justify-content:space-between"')}
       ${list([{ key: "n", t: "Recipe", w: 300 }, { key: "c", t: "For you", w: 96 }, { key: "l", t: "Grey in", w: 80, r: 1 }, { key: "r", t: "Yellow · green · grey at", w: 230 }, { key: "k", t: "", w: 130, r: 1 }],
         L, cell, { click: true, style: "left:0;top:72px;bottom:0;right:0" })}`;

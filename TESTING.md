@@ -501,6 +501,20 @@ in game if anything looks different and send it.
         recipes and crafts, with the reagents to buy.
 166. [ ] A profession at its cap says to train the next rank.
 
+## v0.5.0 Where to learn each recipe
+
+167. [ ] Open each profession window, then `/sr debug` → "Where to learn".
+        **Send me that line**: does the game give "source text" (an example
+        in quotes) and a "reason"?
+168. [ ] Open a profession trainer (Tailoring, Enchanting…), then `/sr debug`
+        → "Trainers: … listed N, matched M". **Send me that line.** Tick the
+        trainer's "unavailable" filter too if it has one.
+169. [ ] Point at a recipe you don't know (All recipes, or a profession's
+        list): "Learn from Pattern: … (Tailoring 90)" for a pattern recipe;
+        "Trainer: Tailoring 145, 22s" for one your trainer listed.
+170. [ ] Levelling: "N to learn at your trainer" when a visited trainer
+        teaches something at your skill.
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

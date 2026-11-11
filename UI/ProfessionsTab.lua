@@ -983,6 +983,11 @@ function Prof:RefreshLevelling()
 		" any more. Learn new ones from a trainer or recipes.") or ("Open your " .. (prof.name or "profession") ..
 		" window once so Short Royalty knows which recipes you've learned."))
 	local summary = Prof.LevelSummary(rows)
+	-- v0.5.0: recipes a trainer you've visited would teach you now.
+	local trainable = SK.Learn.Trainable(skillLine, prof.rank or 0, known)
+	if #trainable > 0 then
+		summary = summary .. "  ·  " .. Theme.Paint("good", #trainable .. " to learn at your trainer")
+	end
 	if not scanned then summary = Theme.Paint("spark", "Open your " .. (prof.name or "profession") .. " window once") end
 	self.status:SetText(summary)
 end

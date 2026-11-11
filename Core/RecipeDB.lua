@@ -40,6 +40,13 @@ end
 
 function DB.Reset() byID, all, byProf, catNames = nil, nil, nil, {} end
 
+-- The recipe item that teaches it (pattern, plan, formula...) and the skill
+-- needed to learn it, from Forever's data (v0.5.0); nil when there's none.
+function DB.RecipeItem(recipeID)
+	local e = SK.Data.RECIPE_ITEMS and SK.Data.RECIPE_ITEMS[recipeID]
+	if e then return e[1], e[2] end
+end
+
 function DB.Count() index(); return #all end
 function DB.Get(recipeID) index(); return byID[recipeID] end
 

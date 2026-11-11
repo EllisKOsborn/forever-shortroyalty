@@ -354,9 +354,23 @@ function W.SkillUpText(recipeID, skillLine)
 	return text
 end
 
+-- Where to learn it (v0.5.0), unless you know it already.
+function W.LearnLines(recipeID, skillLine)
+	local DB = SK.RecipeDB
+	if not SK.Learn or not DB or DB.IKnow(recipeID, skillLine) then return {} end
+	local profName = SK.ProfBoard and SK.ProfBoard.ProfessionName({}, skillLine) or nil
+	return SK.Learn.Lines(SK.Learn.Info(recipeID), {
+		profName = profName,
+		itemName = SK.CraftIndex.ItemName,
+		price = function(itemID) return SK.Prices.Buy(itemID) end,
+		money = SK.Prices.Money,
+	})
+end
+
 function W.SkillUpTip(tt, recipeID, skillLine)
 	local text = W.SkillUpText(recipeID, skillLine)
 	if text then Theme.TipLine(tt, text, "dim", true) end
+	for _, line in ipairs(W.LearnLines(recipeID, skillLine)) do Theme.TipLine(tt, line, "text", true) end
 end
 
 ---------------------------------------------------------------------------

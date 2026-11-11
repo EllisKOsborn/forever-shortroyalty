@@ -44,7 +44,7 @@ local retries = 0
 -- cats = {[categoryID]={total, learned, names}} } (cats: /sr debug only, never stored or sent)
 Prof.CATEGORY_SAMPLES = 3
 function Prof.ProcessRecipes(ids, done, runNow)
-	local result = { learned = {}, universe = {}, cds = {}, cats = {}, difficulty = {} }
+	local result = { learned = {}, universe = {}, cds = {}, cats = {}, difficulty = {}, sources = {}, reasons = {} }
 	local i = 1
 	local function step()
 		local last = math.min(i + Prof.CHUNK - 1, #ids)
@@ -64,7 +64,12 @@ function Prof.ProcessRecipes(ids, done, runNow)
 				if SK.Reagents then SK.Reagents.Learn(id) end
 				if #cat.names < Prof.CATEGORY_SAMPLES and info.name then cat.names[#cat.names + 1] = info.name end
 				if info.learned then result.sampleLearned = result.sampleLearned or id
-				else result.sampleUnlearned = result.sampleUnlearned or id end
+				else
+					result.sampleUnlearned = result.sampleUnlearned or id
+					-- v0.5.0: where the game says it comes from, and why you can't learn it yet.
+					result.sources[id] = Compat.RecipeSourceText(id)
+					result.reasons[id] = info.disabledReason
+				end
 				if info.learned then
 					result.learned[id] = itemID
 					if type(info.difficulty) == "number" then result.difficulty[id] = info.difficulty end
@@ -102,6 +107,7 @@ local function scanModern()
 		if SK.RecipeDB and type(rank) == "number" and rank > 0 then
 			for id, d in pairs(result.difficulty) do SK.RecipeDB.CheckColour(id, rank, d) end
 		end
+		if SK.Learn then SK.Learn.StoreSources(result.sources, result.reasons) end
 		Prof:StoreScan(result)
 	end)
 	return "started"

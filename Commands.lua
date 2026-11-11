@@ -252,6 +252,17 @@ function Commands.BuildReport()
 		P.Source() and P.SOURCE_NAMES[P.Source()] or "vendor prices only")
 	add("Vendor prices remembered: %d; Linen Cloth sells to a vendor for %s", P.VendorKnown(),
 		cash(Compat.VendorSellPrice(LINEN)))
+	-- v0.5.0: where to learn recipes. Does the game answer GetRecipeSourceText / disabledReason?
+	local LN = SK.Learn
+	local items = 0
+	for _ in pairs(SK.Data.RECIPE_ITEMS or {}) do items = items + 1 end
+	add("Where to learn: %d recipe items in Forever's data; game's source text this session: %s; reason: %s",
+		items, LN.lastSources and (LN.lastSources .. " recipes" .. (LN.sample and (', e.g. %d "%s"'):format(LN.sample.id,
+			LN.sample.text) or "")) or "not read yet (open a profession window)",
+		LN.sampleReason and ('%d "%s"'):format(LN.sampleReason.id, LN.sampleReason.text) or "none")
+	local lt = LN.lastTrainer
+	add("Trainers: %d recipes remembered; last trainer this session: %s", LN.TrainerKnown(),
+		lt and ("listed " .. lt.listed .. ", matched " .. lt.matched) or "none opened")
 	local ls = SK.Professions.lastScan
 	if ls then
 		add("Last scan: %s, %d learned of %d listed, full list API: %s", tostring(ls.name), ls.learned, ls.total, yesno(ls.complete))

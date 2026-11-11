@@ -138,6 +138,7 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 <p align="center"><img src="docs/images/cooldowns.png" alt="Cooldown board" width="100%"></p>
 
 - **Levelling:** pick one of your professions and see every recipe you've learned that still gives skill-ups at your skill: **orange, yellow or green for you**, how many points until it turns grey, and where it turns yellow, green and grey. Best first. The numbers come from **WoW Forever's own game data** (not Classic or Retail; Forever changed many of them), and Short Royalty checks its colours against your profession window each time you open it (`/sr debug` shows the result). Recipes you haven't learned aren't listed, because when a trainer or recipe teaches them isn't in the game's data.
+- **Where to learn a recipe:** tooltips for recipes you don't know name the recipe item that teaches it (pattern, plan, formula…, from Forever's own data) and the skill it needs, what a trainer charges (remembered when you open a trainer), and the game's own "where from" text. **Levelling** counts the recipes a trainer you've visited would teach you now.
 - **Skill-up colours in tooltips:** every recipe tooltip (Professions, All recipes, Crafters) says where it turns yellow, green and grey, and, if you've learned it, its colour for you now. The Crafters panel shows the same line under the reagents.
 
 <p align="center"><img src="docs/images/levelling.png" alt="Professions → Levelling" width="100%"></p>
@@ -374,6 +375,8 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.4.6**: shopping list prices (TSM and vendors); drop-down menus readable on hover
 - [x] **v0.4.7**: fix for the skill-up colour check in `/sr debug`
 - [x] **v0.4.8**: **cheapest levelling route** (step 4 of the levelling tools)
+- [ ] **v0.5.0** (built, not released): where to learn each recipe (recipe items, trainers, the game's own text)
+- [ ] **v0.5.1–v0.5.5**: shopping list upgrades, route with recipes you haven't learned, panel beside the profession window, filters, who has item X ([plan](PLAN.md))
 - [ ] Next levelling step: cheapest levelling route
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders

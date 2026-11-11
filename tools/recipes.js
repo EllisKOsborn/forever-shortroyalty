@@ -23,13 +23,17 @@ const { execFileSync } = require("child_process");
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "Data", "Recipes.lua");
-const TABLES = ["SkillLineAbility", "TradeSkillCategory", "SpellReagents", "SpellEffect"];
+const TABLES = ["SkillLineAbility", "TradeSkillCategory", "SpellReagents", "SpellEffect",
+  "ItemEffect", "ItemXItemEffect", "ItemSparse"];
 
 // The professions Short Kings knows (Data/Professions.lua).
 const PROFESSIONS = { 171: "Alchemy", 164: "Blacksmithing", 333: "Enchanting", 202: "Engineering", 182: "Herbalism",
   165: "Leatherworking", 186: "Mining", 393: "Skinning", 197: "Tailoring", 185: "Cooking", 129: "First Aid", 356: "Fishing" };
 const EXCLUDE = /season of discovery|prototype|\[dnt\]/i;
 const CREATE_ITEM = "24"; // SpellEffect.Effect: create an item
+const LEARN_TRIGGER = "6"; // ItemEffect.TriggerType: "learn" (a pattern, plan or formula teaching its recipe)
+// Leftover items still in the files but not real recipe items.
+const BAD_ITEM = /\bOLD\b|DEPRECATED|\bTEST\b|\[PH\]|\(old\)|UNUSED|DNT/i;
 
 function curl(url, file) {
   execFileSync("curl", ["-sSfL", "-m", "300", "-o", file, url], { stdio: ["ignore", "ignore", "inherit"] });
@@ -110,6 +114,38 @@ function build(dir, version) {
     reagents[r.SpellID] = parts.join(",");
   }
 
+  // Recipe items (v0.5.0): an item whose "learn" effect casts the recipe
+  // spell. Kept only when the item is real (in ItemSparse, with a name that
+  // isn't a leftover) and needs the recipe's own profession. learnAt =
+  // RequiredSkillRank (skill needed to learn it). When several items teach
+  // one recipe, the one you can learn soonest (then the lowest ID) wins.
+  // ItemSparse's BuyPrice isn't stored: every item has one, even items no
+  // vendor sells, so it would mislead.
+  const learnEffects = {};
+  for (const e of load(dir, "ItemEffect")) {
+    if (e.TriggerType === LEARN_TRIGGER && recipes.has(e.SpellID)) learnEffects[e.ID] = e.SpellID;
+  }
+  const teachers = {}; // spell -> [itemID]
+  for (const x of load(dir, "ItemXItemEffect")) {
+    const spell = learnEffects[x.ItemEffectID];
+    if (spell) (teachers[spell] = teachers[spell] || []).push(x.ItemID);
+  }
+  const wanted = new Set(Object.values(teachers).flat());
+  const sparse = {};
+  for (const r of load(dir, "ItemSparse")) if (wanted.has(r.ID)) sparse[r.ID] = r;
+  const recipeItems = {};
+  for (const [spell, list] of Object.entries(teachers)) {
+    const ok = [];
+    for (const id of list) {
+      const r = sparse[id];
+      if (!r || !r.Display_lang || BAD_ITEM.test(r.Display_lang)) continue;
+      if (+r.RequiredSkill !== recipes.get(spell).skillLine) continue;
+      ok.push([+r.RequiredSkillRank || 0, +id]);
+    }
+    ok.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    if (ok.length) recipeItems[spell] = { item: ok[0][1], learnAt: ok[0][0] };
+  }
+
   // Categories in use, plus their parents (for "Camping in Herbalism").
   const usedCats = new Set();
   for (const { cat } of recipes.values()) {
@@ -147,8 +183,17 @@ function build(dir, version) {
     L.push("\t},");
   }
   L.push("}");
+  L.push("");
+  L.push("-- [recipe] = { recipe item (pattern, plan, formula...), skill needed to learn it } (v0.5.0).");
+  L.push("-- Recipes not listed have no recipe item: usually a trainer teaches them.");
+  L.push("SK.Data.RECIPE_ITEMS = {");
+  for (const spell of Object.keys(recipeItems).sort((a, b) => a - b)) {
+    L.push(`\t[${spell}] = { ${recipeItems[spell].item}, ${recipeItems[spell].learnAt} },`);
+  }
+  L.push("}");
   fs.writeFileSync(OUT, L.join("\n") + "\n");
-  console.log(`wrote ${path.relative(ROOT, OUT)}: ${recipes.size} recipes, ${usedCats.size} categories (build ${version})`);
+  console.log(`wrote ${path.relative(ROOT, OUT)}: ${recipes.size} recipes, ${usedCats.size} categories, ` +
+    `${Object.keys(recipeItems).length} recipe items (build ${version})`);
   for (const skill of Object.keys(bySkill)) console.log(`  ${PROFESSIONS[skill]}: ${bySkill[skill].length}`);
 }
 

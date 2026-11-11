@@ -406,7 +406,8 @@ function Compat.RecipeInfo(recipeID)
 		if ok and out then itemID = out.itemID end
 	end
 	return { learned = info.learned and true or false, name = info.name, itemID = itemID,
-		categoryID = info.categoryID, difficulty = clean(info.relativeDifficulty) }
+		categoryID = info.categoryID, difficulty = clean(info.relativeDifficulty),
+		disabledReason = clean(info.disabledReason) }
 end
 
 -- C_TradeSkillUI.GetShowLearned / GetShowUnlearned (the window's filter
@@ -715,6 +716,44 @@ function Compat.VendorSellPrice(itemID)
 	if not has("C_Item", "GetItemInfo") or type(itemID) ~= "number" then return nil end
 	local ok, v = pcall(function() return select(11, C_Item.GetItemInfo(itemID)) end)
 	return ok and copper(v) or nil
+end
+
+-- Where an unlearned recipe comes from, as the game words it ("Trainer",
+-- a vendor's name, "Drop"...). Blizzard's profession window calls this for
+-- unlearned recipes; it isn't in the generated docs, so it's probed (v0.5.0).
+function Compat.RecipeSourceText(recipeID)
+	if not has("C_TradeSkillUI", "GetRecipeSourceText") then return nil end
+	local ok, t = pcall(C_TradeSkillUI.GetRecipeSourceText, recipeID)
+	t = ok and clean(t) or nil
+	if type(t) ~= "string" or t == "" then return nil end
+	return t
+end
+
+-- The open trainer's list: { { name, kind = "available"|"unavailable"|"used", skill, rank, cost } }.
+-- Blizzard's Forever trainer window (Blizzard_TrainerUI, Mainline) uses the
+-- same calls. Only what the trainer's filter currently shows is listed.
+function Compat.TrainerServices()
+	if type(GetNumTrainerServices) ~= "function" or type(GetTrainerServiceInfo) ~= "function" then return nil end
+	local okN, n = pcall(GetNumTrainerServices)
+	n = okN and clean(n) or 0
+	local out = {}
+	for i = 1, math.min(n, 500) do
+		local ok, name, kind = pcall(GetTrainerServiceInfo, i)
+		name, kind = ok and clean(name) or nil, ok and clean(kind) or nil
+		if type(name) == "string" and kind ~= "header" then
+			local s = { name = name, kind = kind }
+			if type(GetTrainerServiceSkillReq) == "function" then
+				local okS, skill, rank = pcall(GetTrainerServiceSkillReq, i)
+				if okS then s.skill, s.rank = clean(skill), clean(rank) end
+			end
+			if type(GetTrainerServiceCost) == "function" then
+				local okC, cost = pcall(GetTrainerServiceCost, i)
+				if okC then s.cost = copper(cost) end
+			end
+			out[#out + 1] = s
+		end
+	end
+	return out
 end
 
 -- The open merchant's items for gold: { { itemID, each } } (copper per item).

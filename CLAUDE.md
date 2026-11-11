@@ -72,7 +72,26 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   profession's current max; `ROUTE_COLUMNS`; "earn …" when net < 0).
   Tests: `tests/route_spec.lua`. The README pictures no longer show the
   Profit chip (owner-only); `docs/images/profit.png` was removed.
-- **Next feature work:** the levelling tools (PLAN.md section 13) are all
+- **Built, not released: v0.5.0 where to learn** (PLAN.md 14). Data:
+  `Data/Recipes.lua` `SK.Data.RECIPE_ITEMS[recipe] = { item, learnAt }`
+  (1682; link = `ItemXItemEffect` → `ItemEffect` with **TriggerType 6
+  ("learn") whose SpellID is the recipe itself**; kept only if in
+  `ItemSparse`, named, not "OLD/TEST/…", and `RequiredSkill` = the recipe's
+  profession; learnAt = `RequiredSkillRank`; lowest learnAt wins). Spot
+  check: trainer recipes (Bolt of Linen, Azure Silk Hood…) have none;
+  Pattern: Red Woolen Bag 5772 → 6688 @90. `ItemSparse.BuyPrice` is NOT
+  used (every item has one). `Core/Learn.lua`: trainers remembered on
+  TRAINER_SHOW/UPDATE (`Compat.TrainerServices`: GetNumTrainerServices,
+  GetTrainerServiceInfo, …SkillReq, …Cost; matched by lower-case spell
+  name within the trainer's profession, recipes with a recipe item
+  excluded, ambiguous names skipped) → `SK.DB.trainer`; the game's text
+  (`Compat.RecipeSourceText` = probed `C_TradeSkillUI.GetRecipeSourceText`,
+  plus `disabledReason`) stored during scans → `SK.DB.recipeSource`;
+  `Learn.Lines` (pure wording), `W.LearnLines` in every recipe tooltip
+  (`W.SkillUpTip`) and the Crafters panel; Levelling "N to learn at your
+  trainer" (`Learn.Trainable`). `/sr debug` "Where to learn" and
+  "Trainers" lines (TESTING 167–170). Next: v0.5.1.
+- **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from
   Forever's data (`ItemSparse` RequiredSkill/RequiredSkillRank/BuyPrice for

@@ -38,6 +38,8 @@ local DEFAULTS = {
 	shopping = { list = {} },                     -- shopping list { { id = recipeID, n = crafts } } (v0.4.5, local only)
 	unlocked = {},                                -- [feature] = true: views the owner keeps hidden (v0.4.7: "profit"), whole account
 	vendorBuy = {},                               -- [itemID] = copper a merchant charged (cheapest seen; v0.4.6, local only)
+	trainer = {},      -- [recipeID] = { at = skill needed, cost, seen } from trainers you opened (v0.5.0, local)
+	recipeSource = {}, -- [recipeID] = { text, reason } the game's "where from" for unlearned recipes (v0.5.0, local)
 	colourCheck = { build = nil, match = 0, differ = 0, examples = {} }, -- our skill-up colours vs the window's (v0.4.4, local)
 	scanKeep = {},  -- [guid] = { [skillLine] = { scanned, rank, recipes } } scans of professions missing from the last read (v0.4.2, local)
 	scanRank = {},  -- [guid] = { [skillLine] = skill when the recipes were last scanned } (nudges, local)

@@ -228,7 +228,8 @@ function W.reset()
 		end,
 		GetRecipeInfo = function(id)
 			local r = W.tradeskill and W.tradeskill.recipes[id]
-			return r and { recipeID = id, name = "Recipe " .. id, learned = r.learned, relativeDifficulty = r.difficulty }
+			return r and { recipeID = id, name = "Recipe " .. id, learned = r.learned, relativeDifficulty = r.difficulty,
+				disabledReason = r.reason }
 		end,
 		GetRecipeOutputItemData = function(id)
 			local r = W.tradeskill and W.tradeskill.recipes[id]
@@ -239,6 +240,10 @@ function W.reset()
 			return r and r.cd
 		end,
 		IsTradeSkillLinked = function() return W.tradeskill and W.tradeskill.linked or false end,
+		GetRecipeSourceText = function(id)
+			local r = W.tradeskill and W.tradeskill.recipes[id]
+			return r and r.source or nil
+		end,
 		IsTradeSkillGuild = function() return false end,
 		IsNPCCrafting = function() return false end,
 	}
