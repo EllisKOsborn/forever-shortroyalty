@@ -4,6 +4,7 @@
 -- In one profession, clicking a crafter shows that crafter's recipes on the
 -- right (v0.3.4), with a Character button to open their character sheet.
 -- Shopping list (v0.4.5): recipes to craft and the reagents they add up to.
+-- Profit (v0.4.6): your learned recipes' cost, value and profit.
 local _, SK = ...
 
 local Prof = SK:NewModule("ProfessionsTab")
@@ -15,8 +16,8 @@ Prof.CRAFTERS_W = 440
 Prof.RECIPES_W = S.window[1] - 2 * SP.l - Prof.CRAFTERS_W - SP.l
 
 local VIEWS = { { "board", "Guild" }, { "recipes", "All recipes" }, { "cooldowns", "Cooldowns" },
-	{ "levelling", "Levelling" }, { "shopping", "Shopping list" } }
-local VIEW_OK = { board = true, recipes = true, cooldowns = true, levelling = true, shopping = true }
+	{ "levelling", "Levelling" }, { "shopping", "Shopping list" }, { "profit", "Profit" } }
+local VIEW_OK = { board = true, recipes = true, cooldowns = true, levelling = true, shopping = true, profit = true }
 Prof.SHOP_W = 400
 local RECIPE_FILTERS = {
 	{ "all", "All" }, { "one", "Only one crafter" }, { "fav", "Favourites" }, { "nobody", "Nobody knows" },
@@ -98,6 +99,16 @@ local SHOP_REAGENT_COLUMNS = {
 	{ key = "need", title = "Need", width = 50, align = "RIGHT" },
 	{ key = "have", title = "Have", width = 50, align = "RIGHT" },
 	{ key = "short", title = "Still to get", width = 80, align = "RIGHT" },
+}
+
+-- Profit (v0.4.6): 836.
+local PROFIT_COLUMNS = {
+	{ key = "name", title = "Recipe", width = 286 },
+	{ key = "colour", title = "For you", width = 80 },
+	{ key = "cost", title = "Reagents cost", width = 120, align = "RIGHT" },
+	{ key = "value", title = "Sells for", width = 120, align = "RIGHT" },
+	{ key = "profit", title = "Profit", width = 120, align = "RIGHT" },
+	{ key = "via", title = "Sold at", width = 110, align = "RIGHT" },
 }
 
 -- All recipes: 836.
@@ -276,6 +287,54 @@ local function recipeClick(r, button)
 end
 
 local SHIFT_TIP = "Shift-click to add it to your shopping list"
+
+local function money(c) return SK.Prices.Money(c) end
+local NO_PRICE = "no price"
+
+local function setProfitCell(fs, r, col)
+	local k = col.key
+	if k == "name" then
+		local name = SK.CraftIndex.NameOf({ recipeID = r.recipeID, itemID = r.itemID }) or "..."
+		local hex = r.itemID > 0 and Compat.ItemQualityHex(r.itemID)
+		local made = r.yield > 1 and Theme.Paint("dim", "  x" .. r.yield) or ""
+		fs:SetText(recipeIcon(r) .. (hex and ("|c" .. hex .. name .. "|r") or name) .. made)
+	elseif k == "colour" then
+		local skill = SK.RecipeDB.MySkill(r.skillLine)
+		fs:SetText(skill and Theme.SkillColour(SK.RecipeDB.ColourAt(r.recipeID, skill)) or "")
+	elseif k == "cost" then
+		fs:SetText(r.cost and money(r.cost) or Theme.Paint("dim", NO_PRICE))
+	elseif k == "value" then
+		fs:SetText(r.value and money(r.value) or Theme.Paint("dim", NO_PRICE))
+	elseif k == "profit" then
+		if not r.profit then fs:SetText(Theme.DASH)
+		else fs:SetText(Theme.Paint(r.profit > 0 and "good" or "spark", money(r.profit))) end
+	else
+		local src = SK.Prices.Source()
+		fs:SetText(Theme.Paint("dim", r.via == "ah" and ("auction" .. (src and (" (" .. SK.Prices.SOURCE_NAMES[src] .. ")") or ""))
+			or r.via == "vendor" and "vendor" or ""))
+	end
+end
+
+-- Tooltip lines for one craft: each reagent's price and where it's from.
+function Prof.ProfitTip(tip, r)
+	local P = SK.Prices
+	for _, x in ipairs(SK.Reagents.All(r.recipeID) or {}) do
+		local name = x.i and (CI.ItemName(x.i) or "...") or "currency"
+		local each, via = nil, nil
+		if x.i then each, via = P.Buy(x.i) end
+		Theme.TipLine(tip, x.q .. " " .. name .. ":  " .. (each and (money(each * x.q) ..
+			Theme.Paint("dim", via == "vendor" and "  (vendor)" or "  (auction)")) or Theme.Paint("spark", NO_PRICE)), "text")
+	end
+	if r.value then
+		Theme.TipLine(tip, "Makes " .. r.yield .. ", worth " .. money(r.value) .. (r.via == "ah" and
+			Theme.Paint("dim", "  (auction price after the " .. math.floor(P.AH_CUT * 100) .. "% cut)") or
+			Theme.Paint("dim", "  (what a vendor pays)")), "text", true)
+	end
+	if r.missing > 0 then
+		Theme.TipLine(tip, "Reagents without a price: buy one from a vendor while Short Royalty is on, or scan " ..
+			"the auction house with Auctionator or TSM.", "dim", true)
+	end
+end
 
 local function setCooldownCell(fs, r, col)
 	local k = col.key
@@ -469,6 +528,11 @@ function Prof:Build(page)
 	self.shopClear = W.Button(page, "Clear list", nil, S.control, function() SK.Shopping.Clear() end, "quiet")
 	self.shopClear:SetPoint("LEFT", self.shopCopy, "RIGHT", SP.s, 0)
 	self.shopClear.tooltip = "Take every recipe off the list."
+	self.shopCost = Theme.Text(page, "body", "text")
+	self.shopCost:SetPoint("RIGHT", page, "RIGHT", 0, 0)
+	self.shopCost:SetPoint("TOP", self.shopCopy, "TOP", 0, 0)
+	self.shopCost:SetPoint("BOTTOM", self.shopCopy, "BOTTOM", 0, 0)
+	self.shopCost:SetJustifyH("RIGHT")
 	self.shopRecipes = W.List(page, {
 		columns = SHOP_RECIPE_COLUMNS, setCell = setShopRecipeCell,
 		decorate = shopButtons, update = updateShopButtons,
@@ -502,6 +566,11 @@ function Prof:Build(page)
 			if r.makeWith then
 				Theme.TipLine(GameTooltip, "You can make it: " .. (CI.SpellName(r.makeWith) or "a recipe you know"), "good", true)
 			end
+			if r.itemID then
+				local each, via = SK.Prices.Buy(r.itemID)
+				Theme.TipLine(GameTooltip, each and ("Price: " .. money(each) .. " each" .. Theme.Paint("dim",
+					via == "vendor" and "  (vendor)" or "  (auction)")) or "No price yet", each and "text" or "dim")
+			end
 			local names = {}
 			for _, id in ipairs(r.recipes) do
 				names[#names + 1] = CI.NameOf({ recipeID = id, itemID = (SK.RecipeDB.Get(id) or {}).itemID or 0 }) or "..."
@@ -512,6 +581,48 @@ function Prof:Build(page)
 	})
 	self.shopReagents:SetPoint("TOPLEFT", self.shopRecipes, "TOPRIGHT", SP.l, 0)
 	self.shopReagents:SetPoint("BOTTOMRIGHT")
+
+	-- Profit (v0.4.6): one of your professions, learned recipes, best first.
+	self.profitProf = W.Menu(page, {
+		width = 220,
+		items = function() return Prof.LevelItems() end,
+		get = function() return Prof.LevelProfession() or "none" end,
+		set = function(v)
+			SK.DB.settings.levelProf = tonumber(v)
+			Prof:Refresh()
+		end,
+	})
+	self.profitProf:SetPoint("TOPLEFT", 0, top)
+	self.profitProf.tooltip = "Which of your professions"
+	self.priceMenu = W.Menu(page, {
+		width = 200,
+		items = function() return Prof.PriceItems() end,
+		get = function() return SK.DB.settings.priceSource or "auto" end,
+		set = function(v)
+			SK.DB.settings.priceSource = v
+			Prof:Refresh()
+		end,
+	})
+	self.priceMenu:SetPoint("LEFT", self.profitProf, "RIGHT", SP.s, 0)
+	self.priceMenu.tooltip = "Where auction prices come from"
+	self.profitList = W.List(page, {
+		columns = PROFIT_COLUMNS, setCell = setProfitCell,
+		onEnter = function(row, r)
+			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+			if r.itemID > 0 and GameTooltip.SetItemByID then GameTooltip:SetItemByID(r.itemID)
+			else GameTooltip:SetText(CI.SpellName(r.recipeID) or ("Recipe " .. r.recipeID)) end
+			Prof.ProfitTip(GameTooltip, r)
+			Theme.TipLine(GameTooltip, "Click for crafters and reagents", "gold")
+			Theme.TipLine(GameTooltip, SHIFT_TIP, "gold")
+			GameTooltip:Show()
+		end,
+		onClick = function(r, button)
+			if button ~= "RightButton" and Compat.ShiftDown() then return Prof.AddToList(r.recipeID) end
+			if button ~= "RightButton" then SK.CraftersTab:ShowRecipe(r.recipeID, r.skillLine) end
+		end,
+	})
+	self.profitList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
+	self.profitList:SetPoint("BOTTOMRIGHT")
 
 	-- One profession: crafters on the left, recipes on the right.
 	self.crafters = W.List(page, {
@@ -614,6 +725,7 @@ function Prof:Build(page)
 	SK:On("CRAFT_INDEX_UPDATED", refreshIfShown)
 	SK:On("FAVOURITES_CHANGED", refreshIfShown)
 	SK:On("SHOPPING_CHANGED", refreshIfShown)
+	SK:On("PRICES_CHANGED", refreshIfShown)
 	local function bagsChanged()
 		if page:IsShown() and SK.DB.settings.profView == "shopping" and not Prof.skillLine then Prof:Refresh() end
 	end
@@ -663,6 +775,11 @@ function Prof:Refresh()
 	self.shopClear:SetShown(shop)
 	self.shopRecipes:SetShown(shop)
 	self.shopReagents:SetShown(shop)
+	self.shopCost:SetShown(shop)
+	local profit = not one and view == "profit"
+	self.profitProf:SetShown(profit)
+	self.priceMenu:SetShown(profit)
+	self.profitList:SetShown(profit)
 	self.crafters:SetShown(one)
 	self.right:SetShown(one)
 
@@ -680,11 +797,14 @@ function Prof:Refresh()
 	self.levelList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
 	self.shopCopy:SetPoint("TOPLEFT", 0, top)
 	self.shopRecipes:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
+	self.profitProf:SetPoint("TOPLEFT", 0, top)
+	self.profitList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
 
 	if one then return self:RefreshOne(ctx) end
 	if view == "recipes" then return self:RefreshAll(ctx) end
 	if view == "levelling" then return self:RefreshLevelling() end
 	if view == "shopping" then return self:RefreshShopping() end
+	if view == "profit" then return self:RefreshProfit() end
 	if view == "cooldowns" then
 		local rows = PB.Cooldowns(ctx)
 		local ready = 0
@@ -820,6 +940,72 @@ function Prof:RefreshShopping()
 	self.shopCopy:SetDisabled(#items == 0)
 	local _, nReagents, nShort = SK.Shopping.Summary(entries, rows)
 	self.status:SetText(Prof.ShopSummary(#items, nReagents, nShort, #unknown))
+	self.shopCost:SetText(Prof.ShopCostText(SK.Shopping.Cost(rows, function(id) return (SK.Prices.Buy(id)) end)))
+end
+
+-- "About 1g 20s to buy (2 without a price)". Pure; tested.
+function Prof.ShopCostText(total, missing)
+	if total == 0 and missing == 0 then return "" end
+	local text = total > 0 and ("About " .. money(total) .. " to buy") or ""
+	if missing > 0 then
+		text = text .. (text ~= "" and "  " or "") .. Theme.Paint("dim", "(" .. missing .. " without a price)")
+	end
+	return text
+end
+
+---------------------------------------------------------------------------
+-- Profit (v0.4.6)
+---------------------------------------------------------------------------
+function Prof.PriceItems()
+	local have = Compat.PriceAddons()
+	local function label(name, ok) return "Prices: " .. name .. (ok and "" or " (not installed)") end
+	return {
+		{ value = "auto", text = "Prices: automatic" },
+		{ value = "auctionator", text = label("Auctionator", have.auctionator) },
+		{ value = "tsm", text = label("TSM", have.tsm) },
+	}
+end
+
+-- Status line. Pure; tested.
+function Prof.ProfitSummary(rows, source)
+	local priced, gain = 0, 0
+	for _, r in ipairs(rows) do
+		if r.profit then
+			priced = priced + 1
+			if r.profit > 0 then gain = gain + 1 end
+		end
+	end
+	local head = source and ("Prices from " .. SK.Prices.SOURCE_NAMES[source]) or
+		Theme.Paint("spark", "No Auctionator or TSM: vendor prices only")
+	return head .. "  ·  " .. Theme.Count(priced, "recipe") .. " priced  ·  " ..
+		Theme.Paint(gain > 0 and "good" or "dim", gain .. " make a profit")
+end
+
+function Prof:RefreshProfit()
+	self.profitProf:Refresh()
+	self.priceMenu:Refresh()
+	local skillLine = Prof.LevelProfession()
+	local own = SK.Profile:Own()
+	local prof = skillLine and own and own.profs[skillLine]
+	if not prof then
+		self.profitList:SetItems({})
+		self.profitList:SetEmptyText("You haven't learned a profession on this character yet.")
+		self.status:SetText("")
+		return
+	end
+	local known = {}
+	for id in pairs(own.recipes and own.recipes[skillLine] or {}) do known[id] = true end
+	SK.CraftIndex.SetBudget(SK.RecipeDB.REQUESTS_PER_SEARCH)
+	local rows = SK.Prices.Rows(skillLine, known)
+	for _, r in ipairs(rows) do
+		SK.CraftIndex.NameOf({ recipeID = r.recipeID, itemID = r.itemID })
+		for _, x in ipairs(SK.Reagents.All(r.recipeID) or {}) do if x.i then CI.ItemName(x.i) end end
+	end
+	SK.CraftIndex.SetBudget(nil)
+	self.profitList:SetItems(rows)
+	self.profitList:SetEmptyText(prof.scanned and "No learned recipes in this profession yet." or
+		("Open your " .. (prof.name or "profession") .. " window once so Short Royalty knows which recipes you've learned."))
+	self.status:SetText(Prof.ProfitSummary(rows, SK.Prices.Source()))
 end
 
 function Prof:RefreshAll(ctx)

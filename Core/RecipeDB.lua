@@ -19,7 +19,8 @@ local byID, all, byProf
 local catNames = {}
 
 -- Entry: { recipeID, skillLine, itemID, cat, reag = "item:count,...",
---   min, low, high, ups } (skill-up range from Forever's data, v0.4.4)
+--   min, low, high, ups } (skill-up range from Forever's data, v0.4.4),
+--   yield = items made per craft (v0.4.6, 0 when it makes no item)
 local function index()
 	if byID then return end
 	byID, all, byProf = {}, {}, {}
@@ -27,7 +28,7 @@ local function index()
 		byProf[skillLine] = {}
 		for _, e in ipairs(list) do
 			local r = { recipeID = e[1], skillLine = skillLine, itemID = e[2] or 0, cat = e[3], reag = e[4] or "",
-				min = e[5] or 0, low = e[6] or 0, high = e[7] or 0, ups = e[8] or 0 }
+				min = e[5] or 0, low = e[6] or 0, high = e[7] or 0, ups = e[8] or 0, yield = e[9] or 0 }
 			if not byID[r.recipeID] then
 				byID[r.recipeID] = r
 				all[#all + 1] = r

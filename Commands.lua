@@ -242,6 +242,16 @@ function Commands.BuildReport()
 	else
 		add("Skill-up colours vs your profession window: not checked yet (open a profession window)")
 	end
+	-- v0.4.6: do the price addons answer? (Linen Cloth is sold on every auction house.)
+	local LINEN = 2589
+	local have, P = Compat.PriceAddons(), SK.Prices
+	local function cash(c) return c and P.Money(c) or "none" end
+	add("Prices: Auctionator API %s (Linen Cloth %s); TSM API %s (DBMarket %s, DBMinBuyout %s); using %s",
+		yesno(have.auctionator), cash(Compat.AuctionatorPrice(LINEN)), yesno(have.tsm),
+		cash(Compat.TSMPrice(LINEN, "DBMarket")), cash(Compat.TSMPrice(LINEN, "DBMinBuyout")),
+		P.Source() and P.SOURCE_NAMES[P.Source()] or "vendor prices only")
+	add("Vendor prices remembered: %d; Linen Cloth sells to a vendor for %s", P.VendorKnown(),
+		cash(Compat.VendorSellPrice(LINEN)))
 	local ls = SK.Professions.lastScan
 	if ls then
 		add("Last scan: %s, %d learned of %d listed, full list API: %s", tostring(ls.name), ls.learned, ls.total, yesno(ls.complete))

@@ -32,7 +32,9 @@ read_globals = {
 	-- C_ namespaces
 	"C_Timer", "C_AddOns", "C_ChatInfo", "C_GuildInfo", "C_Club", "C_BattleNet", "C_DateAndTime", "C_CreatureInfo", "C_Traits",
 	"C_SpecializationInfo", "C_ClassTalents", "C_TradeSkillUI", "C_SpellBook", "C_SkillInfo", "C_Reputation",
-	"C_QuestLog", "C_Item", "C_Spell", "C_ClassColor", "C_Calendar", "C_PartyInfo", "Enum",
+	"C_QuestLog", "C_Item", "C_Spell", "C_ClassColor", "C_Calendar", "C_PartyInfo", "C_MerchantFrame", "Enum",
+	-- Other addons' public APIs (optional, always guarded)
+	"Auctionator", "TSM_API",
 	-- Global API
 	"GetAddOnMetadata", "GetServerTime", "GetTime", "GetBuildInfo", "IsTrialAccount",
 	"IsVeteranTrialAccount", "IsRestrictedAccount", "GameLimitedMode_IsActive", "InCombatLockdown",
@@ -45,4 +47,5 @@ read_globals = {
 	"GetTradeSkillItemLink", "GetNumFactions", "GetFactionInfo", "IsQuestFlaggedCompleted", "UnitSex", "ModelSceneMixin", "CAMERA_TRANSITION_TYPE_IMMEDIATE", "CAMERA_MODIFICATION_TYPE_DISCARD", "IsPlayerSpell", "IsSpellKnown",
 	"GetItemIcon", "GetSpellInfo", "GetItemInfo", "GetItemQualityColor", "GetInventorySlotInfo",
 	"CanViewOfficerNote", "GetMaxLevelForPlayerExpansion", "GetMaxPlayerLevel", "GetItemInfoInstant", "GetSpellCooldown", "GetItemCount", "GetLocale",
+	"GetMerchantNumItems", "GetMerchantItemID",
 }

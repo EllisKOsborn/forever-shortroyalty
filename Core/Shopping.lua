@@ -127,6 +127,20 @@ function Shop.Rows()
 	return Shop.Totals(list(), SK.Reagents.All, Compat.ItemCounts)
 end
 
+-- What the still-to-get reagents cost: total copper and how many have no
+-- price. buy(itemID) -> copper per item or nil. Pure.
+function Shop.Cost(rows, buy)
+	local total, missing = 0, 0
+	for _, r in ipairs(rows) do
+		local short = r.have == nil and r.need or r.short
+		if short and short > 0 then
+			local each = r.itemID and buy(r.itemID) or nil
+			if each then total = total + each * short else missing = missing + 1 end
+		end
+	end
+	return total, missing
+end
+
 -- "3 recipes · 2 reagents still to get". Pure.
 function Shop.Summary(entries, rows)
 	local short = 0

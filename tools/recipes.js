@@ -91,10 +91,12 @@ function build(dir, version) {
       ups: +r.NumSkillUps || 0 });
   }
 
-  const items = {};
+  const items = {}, yields = {};
   for (const e of load(dir, "SpellEffect")) {
     if (e.Effect === CREATE_ITEM && recipes.has(e.SpellID) && +e.EffectItemType > 0 && !items[e.SpellID]) {
       items[e.SpellID] = +e.EffectItemType;
+      // How many one craft makes (Crafted Light Shot: 200).
+      yields[e.SpellID] = Math.max(1, Math.round(+e.EffectBasePointsF || 1));
     }
   }
   const reagents = {};
@@ -123,7 +125,7 @@ function build(dir, version) {
   L.push("-- (SkillLineAbility, TradeSkillCategory, SpellEffect, SpellReagents) as published");
   L.push("-- by wago.tools for build " + version + ". Names come from each player's game at");
   L.push("-- runtime. Entry: { recipe (spell) ID, item made (0 = none), category, reagents \"item:count,...\",");
-  L.push("--   orange from, yellow from, grey from, skill-ups per craft } (0 = not in the data)");
+  L.push("--   orange from, yellow from, grey from, skill-ups per craft, items made per craft } (0 = not in the data)");
   L.push("local _, SK = ...");
   L.push("SK.Data = SK.Data or {}");
   L.push("");
@@ -140,7 +142,7 @@ function build(dir, version) {
   for (const skill of Object.keys(bySkill).sort((a, b) => a - b)) {
     L.push(`\t[${skill}] = { -- ${PROFESSIONS[skill]}: ${bySkill[skill].length}`);
     for (const [spell, r] of bySkill[skill].sort((a, b) => a[0] - b[0])) {
-      L.push(`\t\t{ ${spell}, ${items[spell] || 0}, ${r.cat}, ${luaStr(reagents[spell] || "")}, ${r.min}, ${r.low}, ${r.high}, ${r.ups} },`);
+      L.push(`\t\t{ ${spell}, ${items[spell] || 0}, ${r.cat}, ${luaStr(reagents[spell] || "")}, ${r.min}, ${r.low}, ${r.high}, ${r.ups}, ${items[spell] ? yields[spell] : 0} },`);
     }
     L.push("\t},");
   }

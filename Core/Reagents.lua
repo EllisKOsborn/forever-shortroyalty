@@ -20,9 +20,10 @@ local function cache()
 	return db.list
 end
 
--- Compact stored form: { o = outputItemID, r = { { i = itemID | c = currencyID, q = qty } } }
+-- Compact stored form: { o = outputItemID, n = items made per craft,
+--   r = { { i = itemID | c = currencyID, q = qty } } }
 local function pack(s)
-	local out = { o = s.output, r = {} }
+	local out = { o = s.output, n = s.min, r = {} }
 	for _, x in ipairs(s.reagents) do
 		if (x.itemID or x.currencyID) and x.qty and x.qty > 0 then
 			out.r[#out.r + 1] = { i = x.itemID, c = (not x.itemID) and x.currencyID or nil, q = x.qty }
@@ -55,6 +56,16 @@ local function bundled(recipeID)
 	local out = { r = {} }
 	for _, x in ipairs(list) do out.r[#out.r + 1] = { i = x.itemID, q = x.qty } end
 	return out
+end
+
+-- Items one craft makes: the game's number when it has given one, else
+-- Forever's data (v0.4.6), else 1.
+function R.Yield(recipeID)
+	local list = SK.DB.reagents.list
+	local entry = list and list[recipeID]
+	if entry and type(entry.n) == "number" and entry.n > 0 then return entry.n end
+	local r = SK.RecipeDB and SK.RecipeDB.Get(recipeID)
+	return r and r.yield and r.yield > 0 and r.yield or 1
 end
 
 -- Every reagent of a recipe, { { i = itemID | c = currencyID, q = qty } }, or nil.
