@@ -16,8 +16,9 @@ Prof.CRAFTERS_W = 440
 Prof.RECIPES_W = S.window[1] - 2 * SP.l - Prof.CRAFTERS_W - SP.l
 
 local VIEWS = { { "board", "Guild" }, { "recipes", "All recipes" }, { "cooldowns", "Cooldowns" },
-	{ "levelling", "Levelling" }, { "shopping", "Shopping list" }, { "profit", "Profit" } }
-local VIEW_OK = { board = true, recipes = true, cooldowns = true, levelling = true, shopping = true, profit = true }
+	{ "levelling", "Levelling" }, { "route", "Route" }, { "shopping", "Shopping list" }, { "profit", "Profit" } }
+local VIEW_OK = { board = true, recipes = true, cooldowns = true, levelling = true, route = true, shopping = true,
+	profit = true }
 Prof.SHOP_W = 400
 local RECIPE_FILTERS = {
 	{ "all", "All" }, { "one", "Only one crafter" }, { "fav", "Favourites" }, { "nobody", "Nobody knows" },
@@ -99,6 +100,16 @@ local SHOP_REAGENT_COLUMNS = {
 	{ key = "need", title = "Need", width = 50, align = "RIGHT" },
 	{ key = "have", title = "Have", width = 50, align = "RIGHT" },
 	{ key = "short", title = "Still to get", width = 80, align = "RIGHT" },
+}
+
+-- Cheapest route (v0.4.8): 836.
+local ROUTE_COLUMNS = {
+	{ key = "skill", title = "Skill", width = 110 },
+	{ key = "name", title = "Recipe", width = 300 },
+	{ key = "colour", title = "Starts", width = 90 },
+	{ key = "crafts", title = "Crafts", width = 90, align = "RIGHT" },
+	{ key = "cost", title = "Cost", width = 120, align = "RIGHT" },
+	{ key = "per", title = "Per point", width = 126, align = "RIGHT" },
 }
 
 -- Profit (v0.4.6): 836.
@@ -331,6 +342,37 @@ function Prof.ProfitTip(tip, r)
 	if r.missing > 0 then
 		Theme.TipLine(tip, "Reagents without a price: buy one from a vendor while Short Royalty is on, or scan " ..
 			"the auction house with Auctionator or TSM.", "dim", true)
+	end
+end
+
+-- Money after selling what you make: a negative cost is money earned.
+local function netMoney(c)
+	if c < 0 then return Theme.Paint("good", "earn " .. money(-c)) end
+	return money(c)
+end
+
+local function setRouteCell(fs, s, col)
+	local k = col.key
+	if s.stuck then
+		if k == "skill" then fs:SetText(s.from .. "+")
+		elseif k == "name" then fs:SetText(Theme.Paint("spark", "Nothing you know gives points here: visit your trainer"))
+		else fs:SetText("") end
+		return
+	end
+	if k == "skill" then
+		fs:SetText(s.from .. Theme.Paint("dim", " - ") .. s.to)
+	elseif k == "name" then
+		local name = SK.CraftIndex.NameOf({ recipeID = s.recipeID, itemID = s.itemID or 0 }) or "..."
+		local hex = (s.itemID or 0) > 0 and Compat.ItemQualityHex(s.itemID)
+		fs:SetText(recipeIcon({ recipeID = s.recipeID, itemID = s.itemID or 0 }) .. (hex and ("|c" .. hex .. name .. "|r") or name))
+	elseif k == "colour" then
+		fs:SetText(Theme.SkillColour(SK.RecipeDB.ColourAt(s.recipeID, s.from)))
+	elseif k == "crafts" then
+		fs:SetText(s.crafts)
+	elseif k == "cost" then
+		fs:SetText(s.cost and netMoney(s.cost) or Theme.Paint("dim", NO_PRICE))
+	else
+		fs:SetText(s.cost and Theme.Paint("dim", netMoney(math.floor(s.cost / (s.to - s.from) + 0.5))) or "")
 	end
 end
 
@@ -580,6 +622,51 @@ function Prof:Build(page)
 	self.shopReagents:SetPoint("TOPLEFT", self.shopRecipes, "TOPRIGHT", SP.l, 0)
 	self.shopReagents:SetPoint("BOTTOMRIGHT")
 
+	-- Cheapest route (v0.4.8): one of your professions, from your skill to
+	-- your cap, the recipe that costs least per point at each point.
+	self.routeProf = W.Menu(page, {
+		width = 220,
+		items = function() return Prof.LevelItems() end,
+		get = function() return Prof.LevelProfession() or "none" end,
+		set = function(v)
+			SK.DB.settings.levelProf = tonumber(v)
+			Prof:Refresh()
+		end,
+	})
+	self.routeProf:SetPoint("TOPLEFT", 0, top)
+	self.routeProf.tooltip = "Which of your professions"
+	self.routeAdd = W.Button(page, "Add all to shopping list", nil, S.control, function()
+		local n = SK.Route.AddToShopping(Prof.routeSteps or {})
+		if n > 0 then SK:Print("Added " .. Theme.Count(n, "recipe") .. " to your shopping list (Professions, Shopping list).") end
+	end)
+	self.routeAdd:SetPoint("LEFT", self.routeProf, "RIGHT", SP.s, 0)
+	self.routeAdd.tooltip = "Every craft below, on your shopping list, to see which reagents to buy."
+	self.routeList = W.List(page, {
+		columns = ROUTE_COLUMNS, setCell = setRouteCell,
+		onEnter = function(row, s)
+			if s.stuck then return end
+			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+			if (s.itemID or 0) > 0 and GameTooltip.SetItemByID then GameTooltip:SetItemByID(s.itemID)
+			else GameTooltip:SetText(CI.SpellName(s.recipeID) or ("Recipe " .. s.recipeID)) end
+			if s.net then
+				Theme.TipLine(GameTooltip, "Each craft: " .. netMoney(s.net) .. Theme.Paint("dim",
+					"  (reagents, minus what you'd get for selling what it makes)"), "text", true)
+			end
+			Theme.TipLine(GameTooltip, "Yellow and green recipes don't always give a point, so crafts are an " ..
+				"average (the original game's chance; not confirmed for Forever).", "dim", true)
+			Theme.TipLine(GameTooltip, "Click for crafters and reagents", "gold")
+			Theme.TipLine(GameTooltip, SHIFT_TIP, "gold")
+			GameTooltip:Show()
+		end,
+		onClick = function(s, button)
+			if s.stuck then return end
+			if button ~= "RightButton" and Compat.ShiftDown() then return Prof.AddToList(s.recipeID) end
+			if button ~= "RightButton" then SK.CraftersTab:ShowRecipe(s.recipeID, s.skillLine) end
+		end,
+	})
+	self.routeList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
+	self.routeList:SetPoint("BOTTOMRIGHT")
+
 	-- Profit (v0.4.6): one of your professions, learned recipes, best first.
 	self.profitProf = W.Menu(page, {
 		width = 220,
@@ -774,6 +861,10 @@ function Prof:Refresh()
 	self.shopRecipes:SetShown(shop)
 	self.shopReagents:SetShown(shop)
 	self.shopCost:SetShown(shop)
+	local route = not one and view == "route"
+	self.routeProf:SetShown(route)
+	self.routeAdd:SetShown(route)
+	self.routeList:SetShown(route)
 	local profit = not one and view == "profit"
 	self.profitProf:SetShown(profit)
 	self.priceMenu:SetShown(profit)
@@ -797,12 +888,15 @@ function Prof:Refresh()
 	self.shopRecipes:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
 	self.profitProf:SetPoint("TOPLEFT", 0, top)
 	self.profitList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
+	self.routeProf:SetPoint("TOPLEFT", 0, top)
+	self.routeList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
 
 	if one then return self:RefreshOne(ctx) end
 	if view == "recipes" then return self:RefreshAll(ctx) end
 	if view == "levelling" then return self:RefreshLevelling() end
 	if view == "shopping" then return self:RefreshShopping() end
 	if view == "profit" then return self:RefreshProfit() end
+	if view == "route" then return self:RefreshRoute() end
 	if view == "cooldowns" then
 		local rows = PB.Cooldowns(ctx)
 		local ready = 0
@@ -954,6 +1048,68 @@ end
 ---------------------------------------------------------------------------
 -- Profit (v0.4.6)
 ---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+-- Cheapest route (v0.4.8)
+---------------------------------------------------------------------------
+-- "Tailoring 120 → 150 · about 5g 20s". Pure; tested.
+function Prof.RouteSummary(name, from, to, total, unpriced, source)
+	local text = name .. " " .. from .. " to " .. to
+	if total ~= 0 or unpriced == 0 then
+		text = text .. "  ·  " .. (total < 0 and Theme.Paint("good", "earns about " .. money(-total))
+			or ("about " .. money(total)))
+	end
+	if unpriced > 0 then text = text .. "  ·  " .. Theme.Paint("dim", Theme.Count(unpriced, "step") .. " without a price") end
+	if not source then text = text .. "  ·  " .. Theme.Paint("spark", "no TSM: vendor prices only") end
+	return text
+end
+
+function Prof:RefreshRoute()
+	self.routeProf:Refresh()
+	local skillLine = Prof.LevelProfession()
+	local own = SK.Profile:Own()
+	local prof = skillLine and own and own.profs[skillLine]
+	Prof.routeSteps = {}
+	if not prof then
+		self.routeList:SetItems({})
+		self.routeList:SetEmptyText("You haven't learned a profession on this character yet.")
+		self.status:SetText("")
+		self.routeAdd:SetDisabled(true)
+		return
+	end
+	local from, to = prof.rank or 0, prof.max or 0
+	local known = {}
+	for id in pairs(own.recipes and own.recipes[skillLine] or {}) do known[id] = true end
+	local steps, total, unpriced = {}, 0, 0
+	if from < to and prof.scanned then
+		steps, total, unpriced = SK.Route.Plan(SK.Route.Recipes(skillLine, known), from, to)
+	end
+	SK.CraftIndex.SetBudget(SK.RecipeDB.REQUESTS_PER_SEARCH)
+	for _, s in ipairs(steps) do
+		s.skillLine = skillLine
+		if s.recipeID then
+			local r = SK.RecipeDB.Get(s.recipeID)
+			s.itemID = r and r.itemID or 0
+			SK.CraftIndex.NameOf({ recipeID = s.recipeID, itemID = s.itemID })
+		end
+	end
+	SK.CraftIndex.SetBudget(nil)
+	Prof.routeSteps = steps
+	self.routeList:SetItems(steps)
+	local name = prof.name or "profession"
+	if not prof.scanned then
+		self.routeList:SetEmptyText("Open your " .. name .. " window once so Short Royalty knows which recipes you've learned.")
+	elseif from >= to then
+		self.routeList:SetEmptyText("You're at your cap (" .. to .. "). Learn the next rank from your trainer, " ..
+			"then come back for the route.")
+	else
+		self.routeList:SetEmptyText("None of your recipes gives points at " .. from .. ". Learn new ones from your trainer.")
+	end
+	local crafted = 0
+	for _, s in ipairs(steps) do if not s.stuck then crafted = crafted + 1 end end
+	self.routeAdd:SetDisabled(crafted == 0)
+	self.status:SetText(#steps > 0 and Prof.RouteSummary(name, from, to, total, unpriced, SK.Prices.Source()) or "")
+end
+
 -- Profit is hidden until unlocked with /sr profit (the owner's wish, 11 Nov):
 -- once per account, every character.
 function Prof.ProfitUnlocked()

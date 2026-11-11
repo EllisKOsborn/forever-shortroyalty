@@ -26,6 +26,7 @@ Core\Onboarding.lua
 Core\Export.lua
 Core\Shopping.lua
 Core\Prices.lua
+Core\Route.lua
 Core\Feed.lua
 Core\Overview.lua
 
