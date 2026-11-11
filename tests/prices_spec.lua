@@ -161,6 +161,7 @@ describe("Professions → Profit", function()
 			return ({ [LINEN] = 10, [BOLT] = 100 })[id]
 		end } } }
 		SK.DB.unlocked.profit = true
+		SK.Prices.OWNERS[W.player.guid] = true
 	end)
 	after_each(function() _G.Auctionator = nil end)
 
@@ -185,6 +186,18 @@ describe("Professions → Profit", function()
 		assert.is_false(tab.profitList:IsShown())
 		assert.is_true(#SK.Commands.HELP > 0)
 		assert.is_nil(table.concat(SK.Commands.HELP, "\n"):find("profit", 1, true))
+		assert.equal(0, #SK.errors)
+	end)
+
+	it("only the owner's account can unlock it; for anyone else /sr profit is an unknown command", function()
+		SK.Prices.OWNERS[W.player.guid] = nil
+		SK.DB.unlocked.profit = nil
+		SK.Commands.Run("profit")
+		assert.is_nil(SK.DB.unlocked.profit)
+		SK.DB.unlocked.profit = true -- even if someone edits their saved data
+		assert.is_false(SK.ProfessionsTab.ProfitUnlocked())
+		SK.DB.account["Player-6937-001743F0"] = true -- an alt on the owner's account
+		assert.is_true(SK.ProfessionsTab.ProfitUnlocked())
 		assert.equal(0, #SK.errors)
 	end)
 

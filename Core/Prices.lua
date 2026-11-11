@@ -15,6 +15,18 @@ P.TSM_SOURCES = { "DBMarket", "DBMinBuyout" } -- tried in this order
 P.AH_CUT = 0.05
 P.SOURCES = { "auto", "auctionator", "tsm" }
 
+-- Profit is the owner's alone for now (11 Nov: "/sr profit is only for me").
+-- Their main character; the saved account list makes every alt count too.
+P.OWNERS = { ["Player-6937-001743F0"] = true }
+
+function P.IsOwnerAccount()
+	if P.OWNERS[Compat.PlayerGUID() or ""] then return true end
+	for guid in pairs(type(SK.DB.account) == "table" and SK.DB.account or {}) do
+		if P.OWNERS[guid] then return true end
+	end
+	return false
+end
+
 ---------------------------------------------------------------------------
 -- Vendor prices, learned at merchants
 ---------------------------------------------------------------------------

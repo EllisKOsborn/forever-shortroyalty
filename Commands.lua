@@ -327,8 +327,8 @@ function Commands.Run(msg)
 		SK.DebugWindow:Open(false)
 	elseif cmd == "log" then
 		SK.DebugWindow:Open(true)
-	elseif cmd == "profit" then
-		-- Not in the help list: the Profit view stays hidden unless unlocked.
+	elseif cmd == "profit" and SK.Prices.IsOwnerAccount() then
+		-- Not in the help list, and only on the owner's account (else: help, as for any unknown command).
 		SK.DB.unlocked = type(SK.DB.unlocked) == "table" and SK.DB.unlocked or {}
 		SK.DB.unlocked.profit = not SK.DB.unlocked.profit or nil
 		SK:Print(SK.DB.unlocked.profit and "Profit view on (Professions tab), for every character on this account."

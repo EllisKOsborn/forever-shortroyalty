@@ -29,7 +29,8 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 11 Nov 2026)
-- **Released:** v0.4.6 on `main` (11 Nov: Profit, menu hover fix), after
+- **Released:** v0.4.7 on `main` (11 Nov: colour-check fix, Profit hidden
+  and owner-only), after v0.4.6 (11 Nov: Profit, menu hover fix), after
   v0.4.5 (11 Nov: shopping list) and v0.4.4
   (11 Nov: levelling helper, crest icon, tagline removed everywhere in game,
   links to the renamed repo) and v0.4.3 (11 Nov, character model, released
@@ -42,9 +43,16 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   solid texture on the HIGHLIGHT layer, which draws over text; now
   BACKGROUND, shown on enter). TESTING 155–160. **Get the owner's `/sr debug`
   "Prices:" line** (TESTING 156): the Auctionator/TSM calls are unverified.
-- **Profit is hidden (owner, 11 Nov: "I don't want others seeing this just
-  yet whilst I make money")**: the Profit view only shows after `/sr profit`
-  (`SK.DB.unlocked.profit`, account-wide, toggles; not in `/sr` help). The
+- **Profit is hidden and owner-only (owner, 11 Nov: "I don't want others
+  seeing this just yet whilst I make money"; "sr profit is only for me")**:
+  the Profit view only shows after `/sr profit` (`SK.DB.unlocked.profit`,
+  account-wide, toggles; not in `/sr` help), and only on the owner's account
+  (`Prices.OWNERS` = their main's GUID; `Prices.IsOwnerAccount` also accepts
+  any character in `SK.DB.account`, so alts count). For anyone else
+  `/sr profit` prints the help like any unknown command, and a hand-edited
+  `unlocked.profit` does nothing. The code is public, so it's hidden, not
+  secret (the owner was told). Ask whether the route planner goes behind
+  it too (asked 11 Nov, answer unclear). The
   README doesn't list it (an owner-approved exception to "What's inside lists
   everything"); don't advertise it in README/CHANGELOG until the owner says.
   Prices themselves are local and never synced. The owner has **TSM only**
@@ -53,7 +61,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   route planner (needs the skill-up colour check first, see below). **Forever data only** (wago.tools product `wowf`), never
   Retail/Classic. Don't copy Profession Master (All Rights Reserved).
 - **Skill-up colours checked 11 Nov**: 102 match; the 13 differences were all
-  a skill-0 read (fixed in v0.4.7, built, not released; TESTING 161). The
+  a skill-0 read (fixed in v0.4.7, released 11 Nov; TESTING 161). The
   route planner can build on the colours; confirm 0 differ after v0.4.7.
 - **Open questions for the owner:** see "Waiting on the user" below.
 - Handover prompt used to start the next chat: `docs/prompts/next-chat.md`.
@@ -291,7 +299,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   Character tab; the CI test build now uploads); **v0.4.4** (11 Nov,
   levelling helper, crest icon, no tagline in game); **v0.4.5** (11 Nov,
   shopping list); **v0.4.6** (11 Nov, Profit with Auctionator/TSM prices,
-  menu hover fix). Tag only when
+  menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
+  owner-only). Tag only when
   the user asks.
 
 ## Layout

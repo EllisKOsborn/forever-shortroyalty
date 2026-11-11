@@ -957,7 +957,7 @@ end
 -- Profit is hidden until unlocked with /sr profit (the owner's wish, 11 Nov):
 -- once per account, every character.
 function Prof.ProfitUnlocked()
-	return type(SK.DB.unlocked) == "table" and SK.DB.unlocked.profit == true
+	return type(SK.DB.unlocked) == "table" and SK.DB.unlocked.profit == true and SK.Prices.IsOwnerAccount()
 end
 
 function Prof.PriceItems()

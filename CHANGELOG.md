@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.7 (not released yet): fixes
+## v0.4.7 (11 Nov 2026): fixes
 
 - **Fixed: the skill-up colour check in `/sr debug` counted false
   differences.** Just after a profession window opens, the game can report
