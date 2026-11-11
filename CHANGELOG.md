@@ -18,6 +18,9 @@
   you've learned it.
 - Recipes you haven't learned aren't in the Levelling list: Forever's data
   doesn't say at what skill a trainer or recipe teaches them.
+- The window's title bar now shows just **SHORT ROYALTY**: the "Height is
+  not a stat." subtitle is gone (it's still in the minimap button's tooltip
+  and the AddOns list).
 
 ## v0.4.2 (10 Nov 2026): fixes from the first big in-game report
 

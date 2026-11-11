@@ -418,6 +418,9 @@ in game if anything looks different and send it.
         tooltip says "Yellow · green · grey at …" and, for one you know, "for
         you (85): yellow".
 
+143. [ ] The window's title bar shows the crest and SHORT ROYALTY, with no
+        "Height is not a stat." under it.
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

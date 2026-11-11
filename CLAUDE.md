@@ -517,6 +517,9 @@ messages → sender ignored for the session).
     Auctionator's public API (or vendor prices), then the cheapest-route
     planner. Trainer costs and recipe sources aren't in Forever's data.
   - TESTING 140–142. Mock-up `profView=levelling` uses real Forever numbers.
+  - Also in v0.4.3 (owner): the window's title bar no longer shows the
+    "Height is not a stat." subtitle; the title is centred on the crest.
+    `SK.TAGLINE` stays for the minimap tooltip and the TOC Notes. TESTING 143.
 - **v0.3.7 (folded into v0.4.0, never released)**: wording only. The owner asked whether
   to remove alt features; advice was no (removing them wouldn't fix the
   per-character gap and would lose roster grouping and "on alt" whispers).

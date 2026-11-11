@@ -72,12 +72,11 @@ function Main:Build()
 	crest:SetPoint("LEFT", SP.l - 1, 0)
 	crest:SetTexture(Theme.TEX.crest)
 	f.crest = crest
+	-- v0.4.3: just the name, centred on the crest (the owner asked to drop the
+	-- "Height is not a stat." subtitle from the window).
 	local title = Theme.Text(bar, "brand", "text")
-	title:SetPoint("TOPLEFT", crest, "TOPRIGHT", SP.m, 2)
+	title:SetPoint("LEFT", crest, "RIGHT", SP.m, 0)
 	title:SetText("SHORT ROYALTY")
-	local tagline = Theme.Text(bar, "small", "dim")
-	tagline:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -1)
-	tagline:SetText(SK.TAGLINE)
 
 	local close = W.CloseButton(bar, function() Main:Close() end)
 	close:SetPoint("RIGHT", -SP.m, 0)
