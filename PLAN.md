@@ -624,7 +624,7 @@ small enough to test in game before the next one builds on it.
   (orange/yellow/green/grey), source (trainer / recipe item / unknown),
   quality; sort by learn level.
 
-### v0.5.4 Guild-shared prices (needs owner decisions first)
+### v0.5.4 Guild-shared prices: **dropped** (owner, 11 Nov: "I don't think price sharing is what we should add at all")
 - Why: guildmates without TSM only get vendor prices, so their routes are
   rough. TSM users could share market prices of **profession items only**
   (reagents and crafted items) over the guild channel: a small new message,
@@ -641,6 +641,9 @@ small enough to test in game before the next one builds on it.
 - **Not planned (FojjiCore and others do these):** dungeon journal and maps,
   BiS manager, raid timers, quality-of-life automation, games. If raids
   return, keep them guild-specific (attunement, sign-ups).
+
+### Released
+v0.5.0–v0.5.3 and v0.5.5 were never released one by one: they shipped together as **v0.5.5** (11 Nov).
 
 ### Order and testing
 v0.5.0 → v0.5.1 → v0.5.2 → v0.5.3, then v0.5.4/v0.5.5 when the owner wants

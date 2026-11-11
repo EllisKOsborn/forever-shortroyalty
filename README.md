@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="WoW Forever 1.60.1" src="https://img.shields.io/badge/WoW%20Forever-1.60.1%20%C2%B7%2016001-FFC000?labelColor=000000">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.4.8%20alpha-F06BB0?labelColor=000000">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.5.5%20alpha-F06BB0?labelColor=000000">
   <img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-FF6A1A?labelColor=000000">
 </p>
 
@@ -381,16 +381,11 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.4.6**: shopping list prices (TSM and vendors); drop-down menus readable on hover
 - [x] **v0.4.7**: fix for the skill-up colour check in `/sr debug`
 - [x] **v0.4.8**: **cheapest levelling route** (step 4 of the levelling tools)
-- [ ] **v0.5.0** (built, not released): where to learn each recipe (recipe items, trainers, the game's own text)
-- [ ] **v0.5.1** (built, not released): shopping list upgrades (tooltips, make or buy, raw materials, Copy for TSM)
-- [ ] **v0.5.2** (built, not released): Route plans with recipes you haven't learned yet
-- [ ] **v0.5.3** (built, not released): panel beside the profession window, recipe filters
-- [ ] **v0.5.5** (built, not released): who in the guild wears an item (tooltips, `/sr who`)
-- [ ] **v0.5.4**: guild-shared prices (waiting on the owner's decisions) ([plan](PLAN.md))
+- [x] **v0.5.5**: professions upgrade: where to learn each recipe (recipe items, trainers), shopping list upgrades (tooltips, make or buy, raw materials, Copy for TSM), route with recipes to learn, panel beside the profession window, recipe filters, who wears it
 - [ ] Next levelling step: cheapest levelling route
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders
-- [ ] **v0.5**: craft requests, a short status line, lockout board
+- [ ] **Ideas for later**: craft requests, a short status line, lockout board
 - [ ] **Later**: raid attendance, guild bank viewer and more in the [plan](PLAN.md#later-in-rough-priority-order)
 - [ ] CurseForge release
 

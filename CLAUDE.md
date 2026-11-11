@@ -29,8 +29,12 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 11 Nov 2026)
-- **Released:** v0.4.8 on `main` (11 Nov: cheapest levelling route, open to
-  everyone), after v0.4.7 (11 Nov: colour-check fix, Profit hidden
+- **Released:** v0.5.5 on `main` (11 Nov: professions upgrade from PLAN.md
+  section 14: where to learn, shopping upgrades, route with recipes to learn,
+  panel beside the profession window, filters, who wears it; the unreleased
+  steps v0.5.0–v0.5.3 shipped inside it, so code comments say v0.5.0–v0.5.5;
+  next release is v0.5.6), after v0.4.8 (11 Nov: cheapest levelling route,
+  open to everyone), after v0.4.7 (11 Nov: colour-check fix, Profit hidden
   and owner-only), after v0.4.6 (11 Nov: Profit, menu hover fix), after
   v0.4.5 (11 Nov: shopping list) and v0.4.4
   (11 Nov: levelling helper, crest icon, tagline removed everywhere in game,
@@ -72,7 +76,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   profession's current max; `ROUTE_COLUMNS`; "earn …" when net < 0).
   Tests: `tests/route_spec.lua`. The README pictures no longer show the
   Profit chip (owner-only); `docs/images/profit.png` was removed.
-- **Built, not released: v0.5.0 where to learn** (PLAN.md 14). Data:
+- **v0.5.0 (in v0.5.5) where to learn** (PLAN.md 14). Data:
   `Data/Recipes.lua` `SK.Data.RECIPE_ITEMS[recipe] = { item, learnAt }`
   (1682; link = `ItemXItemEffect` → `ItemEffect` with **TriggerType 6
   ("learn") whose SpellID is the recipe itself**; kept only if in
@@ -91,7 +95,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   (`W.SkillUpTip`) and the Crafters panel; Levelling "N to learn at your
   trainer" (`Learn.Trainable`). `/sr debug` "Where to learn" and
   "Trainers" lines (TESTING 167–170).
-- **Built, not released: v0.5.1 shopping upgrades.** `Prices.Make(itemID)`
+- **v0.5.1 (in v0.5.5) shopping upgrades.** `Prices.Make(itemID)`
   (reagent cost per item via a recipe you know, depth ≤ 3) and `Prices.Buy`
   now picks vendor / ah / **make** (`Prof.ViaText`); `Shopping.Expand`
   (raw materials, `settings.shopRaw`, rows get `make`, `Shop.Cost` skips
@@ -99,7 +103,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   `Tooltip.ShoppingText` on item tooltips (shown even with crafter lines
   off), `Shopping.TSMList` ("i:1,i:2"; **TSM accepting it is unverified**,
   TESTING 174). Tests: `tests/shopping2_spec.lua`.
-- **Built, not released: v0.5.2 route with recipes to learn.**
+- **v0.5.2 (in v0.5.5) route with recipes to learn.**
   `Route.HowToLearn` (recipe item with a price via `Prices.Buy`, or a
   remembered trainer; cheaper wins), `Route.Recipes(skillLine, known,
   toLearn)`, `Route.Plan` honours `learnAt`, adds `learnCost /
@@ -107,7 +111,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   step and the cost once in the total. `settings.routeLearn` (default on),
   chip "Recipes to learn". `Prices.Batch(fn, ...)` caches `Buy` per item
   during a refresh (Route, Profit). TESTING 175–177.
-- **Built, not released: v0.5.3 panel + filters.** `UI/ProfPanel.lua`: own
+- **v0.5.3 (in v0.5.5) panel + filters.** `UI/ProfPanel.lua`: own
   frame `ShortRoyaltyProfPanel` (strata HIGH) anchored TOPLEFT to
   `ProfessionsFrame` TOPRIGHT (`Compat.ProfessionsFrame` = rawget global;
   Blizzard_Professions loads on demand) on TRADE_SKILL_SHOW (+0.2 s, own
@@ -123,16 +127,18 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   `docs/images/panel.png` (render.js PAGES). Tests: `tests/panel_spec.lua`.
   TESTING 178–181. **Unverified in game:** the anchor and the EventRegistry
   event.
-- **Built, not released: v0.5.5 who wears it.** `Core/GearIndex.lua`: pure
+- **v0.5.5 who wears it.** `Core/GearIndex.lua`: pure
   `GI.Build(profiles)` (item IDs from shared gear links, once per person),
   `GI.Wearers` (online first), `GI.Text`, `GI.Search` (loaded names, ≥ 3
   letters); dirty on PROFILE_UPDATED/SELF_UPDATED/ROSTER_UPDATED. Item
   tooltips "Guild: worn by …" (same setting as crafters, label renamed);
   `/sr who <link|id|name>` (`Commands.Who`, in help). Tests:
   `tests/gear_index_spec.lua`. TESTING 182–183.
-- **v0.5.4 guild-shared prices: NOT built**, waiting for the owner's answers
-  (PLAN.md 14: who shares, whether the owner shares, Profit stays
-  owner-only).
+- **Guild-shared prices: dropped** (owner, 11 Nov: "I don't think price
+  sharing is what we should add at all"). Don't propose it again unless asked.
+- **Next:** wait for the owner's in-game test of v0.5.5 (TESTING 167–183,
+  especially the `/sr debug` "Where to learn" and "Trainers" lines, the panel
+  position, and whether TSM accepts Copy for TSM), then ask what's next.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from
@@ -384,7 +390,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   levelling helper, crest icon, no tagline in game); **v0.4.5** (11 Nov,
   shopping list); **v0.4.6** (11 Nov, Profit with Auctionator/TSM prices,
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
-  owner-only); **v0.4.8** (11 Nov, cheapest levelling route). Tag only when
+  owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
+  (11 Nov, professions upgrade). Tag only when
   the user asks.
 
 ## Layout
@@ -859,6 +866,9 @@ a test send worked. The Mac AddOns path is still not confirmed by name
    crest icon, no tagline).
 2. v0.4.5 is out: TESTING 150–154, especially whether the bank count
    works away from the bank (152).
+2c. v0.5.5 is out: TESTING 167–183. Most useful: `/sr debug` lines "Where to
+   learn" and "Trainers" (after opening a profession window and a trainer),
+   where the panel sits, and whether TSM accepts "Copy for TSM".
 2b. v0.4.6: "Prices:" line received 11 Nov (TSM works, Auctionator "no").
    Still: is Auctionator installed? Do Profit's numbers look right (157)?
    And the colour-check line after opening a profession window.

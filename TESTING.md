@@ -501,7 +501,7 @@ in game if anything looks different and send it.
         recipes and crafts, with the reagents to buy.
 166. [ ] A profession at its cap says to train the next rank.
 
-## v0.5.0 Where to learn each recipe
+## v0.5.5 (part 1) Where to learn each recipe
 
 167. [ ] Open each profession window, then `/sr debug` → "Where to learn".
         **Send me that line**: does the game give "source text" (an example
@@ -515,7 +515,7 @@ in game if anything looks different and send it.
 170. [ ] Levelling: "N to learn at your trainer" when a visited trainer
         teaches something at your skill.
 
-## v0.5.1 Shopping list upgrades
+## v0.5.5 (part 2) Shopping list upgrades
 
 171. [ ] Put a recipe on the shopping list, then point at one of its
         reagents in your bags: "Short Royalty: Shopping list: need …, have …".
@@ -526,7 +526,7 @@ in game if anything looks different and send it.
 174. [ ] **Copy for TSM**, paste the text into a TSM group's "Import items":
         **tell me if TSM takes it** (format `i:2589,i:2592`).
 
-## v0.5.2 Route with recipes to learn
+## v0.5.5 (part 3) Route with recipes to learn
 
 175. [ ] After opening your trainer once: Route shows "learn at trainer" on
         a step when one of its recipes is the cheapest way; its tooltip says
@@ -535,7 +535,7 @@ in game if anything looks different and send it.
         "learn from recipe" with its price. Sensible?
 177. [ ] **Recipes to learn** off: only recipes you know (as before).
 
-## v0.5.3 Panel and filters
+## v0.5.5 (part 4) Panel and filters
 
 178. [ ] Open your Tailoring window: the Short Royalty panel appears on its
         right. It shows your next route step. Click a recipe in Blizzard's
@@ -547,7 +547,7 @@ in game if anything looks different and send it.
 181. [ ] All recipes → pick Tailoring → **Show: can learn now**: only recipes
         your skill allows (from recipe items, or a trainer you've opened).
 
-## v0.5.5 Who wears it
+## v0.5.5 (part 5) Who wears it
 
 182. [ ] Point at an item a guildmate wears (link it in chat, or look at
         theirs): "Guild: worn by …".

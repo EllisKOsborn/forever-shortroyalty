@@ -1,54 +1,12 @@
 # Changelog
 
-## v0.5.5 (not released yet): Who wears it
+## v0.5.5 (11 Nov 2026): Professions upgrade
 
-- **Item tooltips** say which guildmates wear the item ("Guild: worn by
-  Fizzwick, Brambletoe (+2)"), from the gear they share. Anyone who hides
-  their gear is never listed.
-- **`/sr who`** followed by a Shift-clicked item (or part of its name) lists
-  who in the guild wears it.
-- The Settings tick box is now *Show guild crafters and wearers in item
-  tooltips*.
+Everything from the professions review in one release: where to learn
+recipes, a better shopping list, a smarter route, a panel beside your
+profession window, and who wears what.
 
-## v0.5.3 (not released yet): Panel beside the profession window, filters
-
-- **A Short Royalty panel beside your profession window** (your own
-  professions): the next step of your cheapest route, and for the recipe
-  you pick in the window its colour, where to learn it and who in the guild
-  makes it. **Route** opens the whole plan, **+ List** adds the recipe to
-  your shopping list, **Hide** turns the panel off (`/sr panel` brings it
-  back).
-- **All recipes → Show:** everything, recipes you can learn now, recipes
-  from recipe items, from trainers, or ones that still give you points. The
-  learning ones are sorted by the skill they need.
-
-## v0.5.2 (not released yet): Route with recipes you haven't learned
-
-- **Route** can now plan with recipes you don't know yet (on by default;
-  the **Recipes to learn** button turns it off):
-  - recipe items (patterns, plans…) that have a price, from TSM or a vendor
-    you've visited, from the skill they need;
-  - recipes a trainer you've opened teaches, from the skill and cost it
-    showed.
-- A step says "learn at trainer" or "learn from recipe", and its tooltip
-  what it costs. Learning costs are in the total, counted once.
-- A recipe worth learning is judged on all the points it can give you on
-  the way to your target, not only the first one.
-
-## v0.5.1 (not released yet): Shopping list upgrades
-
-- **Item tooltips** show "Shopping list: need 7, have 3" for anything on
-  your shopping list (in your bags, at the auction house, anywhere).
-- **Make or buy:** a reagent you can make yourself (bolts, bars) is priced
-  at the cheaper of buying it and making it from its own reagents. The
-  shopping list, Route and Profit all use this; prices say "(you make it)".
-- **Raw materials** button on the Shopping list: reagents you make yourself
-  become "make 4" and what they're made from is added (Bolt of Woolen
-  Cloth → Wool Cloth).
-- **Copy for TSM:** what you still need to buy as a TSM item list
-  (`i:2589,i:2592…`) to import into a TSM group and shop it.
-
-## v0.5.0 (not released yet): Where to learn each recipe
+### Where to learn each recipe
 
 - **Recipe tooltips say where to learn a recipe you don't know** (All
   recipes, a profession's list, Levelling, Route, Crafters):
@@ -66,6 +24,54 @@
 - `/sr debug` shows what the game gives for this, so we can check it.
 - Everything stays on your computer. No map pins: where trainers and vendors
   stand isn't in the game's data (the Wowhead button has that).
+
+### Shopping list upgrades
+
+- **Item tooltips** show "Shopping list: need 7, have 3" for anything on
+  your shopping list (in your bags, at the auction house, anywhere).
+- **Make or buy:** a reagent you can make yourself (bolts, bars) is priced
+  at the cheaper of buying it and making it from its own reagents. The
+  shopping list and Route use this; prices say "(you make it)".
+- **Raw materials** button on the Shopping list: reagents you make yourself
+  become "make 4" and what they're made from is added (Bolt of Woolen
+  Cloth → Wool Cloth).
+- **Copy for TSM:** what you still need to buy as a TSM item list
+  (`i:2589,i:2592…`) to import into a TSM group and shop it.
+
+### Route with recipes you haven't learned
+
+- **Route** can now plan with recipes you don't know yet (on by default;
+  the **Recipes to learn** button turns it off):
+  - recipe items (patterns, plans…) that have a price, from TSM or a vendor
+    you've visited, from the skill they need;
+  - recipes a trainer you've opened teaches, from the skill and cost it
+    showed.
+- A step says "learn at trainer" or "learn from recipe", and its tooltip
+  what it costs. Learning costs are in the total, counted once.
+- A recipe worth learning is judged on all the points it can give you on
+  the way to your target, not only the first one.
+
+### Panel beside the profession window, filters
+
+- **A Short Royalty panel beside your profession window** (your own
+  professions): the next step of your cheapest route, and for the recipe
+  you pick in the window its colour, where to learn it and who in the guild
+  makes it. **Route** opens the whole plan, **+ List** adds the recipe to
+  your shopping list, **Hide** turns the panel off (`/sr panel` brings it
+  back).
+- **All recipes → Show:** everything, recipes you can learn now, recipes
+  from recipe items, from trainers, or ones that still give you points. The
+  learning ones are sorted by the skill they need.
+
+### Who wears it
+
+- **Item tooltips** say which guildmates wear the item ("Guild: worn by
+  Fizzwick, Brambletoe (+2)"), from the gear they share. Anyone who hides
+  their gear is never listed.
+- **`/sr who`** followed by a Shift-clicked item (or part of its name) lists
+  who in the guild wears it.
+- The Settings tick box is now *Show guild crafters and wearers in item
+  tooltips*.
 
 ## v0.4.8 (11 Nov 2026): Cheapest levelling route
 
