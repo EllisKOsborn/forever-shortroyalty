@@ -76,7 +76,12 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from
   Forever's data (`ItemSparse` RequiredSkill/RequiredSkillRank/BuyPrice for
-  recipe items; probe `C_TradeSkillUI.GetRecipeSourceText`). Owner to pick. **Forever data only** (wago.tools product `wowf`), never
+  recipe items; probe `C_TradeSkillUI.GetRecipeSourceText`). **Owner: "add
+  all of this in"** → plan in **PLAN.md section 14** (v0.5.0 recipe sources
+  incl. trainers remembered at `TRAINER_SHOW` via `GetTrainerServiceInfo/
+  SkillReq/Cost`, v0.5.1 shopping upgrades, v0.5.2 route with unlearned
+  recipes, v0.5.3 docked panel + filters, v0.5.4 guild prices after owner
+  decisions, v0.5.5 who-has-item). **Forever data only** (wago.tools product `wowf`), never
   Retail/Classic. Don't copy Profession Master (All Rights Reserved).
 - **Skill-up colours checked 11 Nov**: 102 match; the 13 differences were all
   a skill-0 read (fixed in v0.4.7, released 11 Nov; TESTING 161). The

@@ -558,3 +558,92 @@ efficient route on Forever.**
    using 1–3. Limits: when trainers teach recipes and what they cost isn't in
    Forever's data, so the planner works from recipes you've learned (and, if
    the in-game window lists unlearned recipes with their requirement, those).
+
+## 14. Professions upgrade, from the FojjiCore review (11 Nov 2026, owner: "add all of this in")
+
+Review: `docs/FOJJICORE-REVIEW.md`. FojjiCore is All Rights Reserved: we
+take **ideas from its feature list only**, never code. Every number comes
+from **Forever**: its data tables (wago.tools, product `wowf`) or the
+player's own game (profession window, trainer, vendor). Each release is
+small enough to test in game before the next one builds on it.
+
+### v0.5.0 Where to learn each recipe
+- **Recipe items from Forever's data.** `tools/recipes.js` also reads
+  `ItemSparse` (RequiredSkill, RequiredSkillRank, BuyPrice) and the
+  item → spell links (`ItemXItemEffect`/`ItemEffect`, `SpellEffect`
+  "learn spell") so each recipe knows the pattern/plan/formula that teaches
+  it, the skill needed and the vendor price. Checked on 11 Nov: "Pattern:
+  Red Woolen Bag" = Tailoring 90, 5s. Verify the item → recipe link against
+  a second source (the game's own tooltip or `GetRecipeSourceText`) before
+  trusting it.
+- **Trainers, remembered from your own visits.** On `TRAINER_SHOW` /
+  `TRAINER_UPDATE`, read each recipe the trainer offers
+  (`GetTrainerServiceInfo`, `GetTrainerServiceSkillReq`,
+  `GetTrainerServiceCost`; Blizzard's Forever trainer window uses these
+  calls), match it to its recipe by name, and remember skill needed and
+  cost (local, like vendor prices). Recipes with no recipe item and no
+  trainer seen yet say "trainer (visit one to see the skill and cost)".
+- **The game's own answer:** probe `C_TradeSkillUI.GetRecipeSourceText` and
+  `recipeInfo.disabledReason` for unlearned recipes (Blizzard's profession
+  window uses them; not in the generated docs) and show the result in
+  `/sr debug` first. If it works, use it as the text.
+- **Shown in:** recipe tooltips, the Crafters panel, All recipes and a
+  profession's recipe list: "Learn: Pattern: Red Woolen Bag, Tailoring 90,
+  5s at a vendor" / "Learn: trainer, Tailoring 125, 45s" / "Wowhead" link for
+  map locations (NPC locations aren't in the game's data, so no map pins).
+- **Train reminder:** "You can learn 3 new recipes at your trainer" on the
+  Levelling view once trainer data is known.
+- In-game check needed: the `/sr debug` probe lines and one trainer visit.
+
+### v0.5.1 Shopping list upgrades
+- **Item tooltips:** "Shopping list: need 7, have 3" on any reagent
+  (we already add crafter lines to item tooltips).
+- **Make or buy:** a reagent you can make yourself (bolts, bars) is priced
+  at the cheaper of buying it and making it, and "Show raw materials"
+  expands it into what it's made from (Bolt of Woolen Cloth → Wool Cloth).
+- **Copy for TSM:** the list in TSM's import format, to paste into a TSM
+  shopping search. Check the format in TSM's docs (their API site was down
+  on 11 Nov) or test it in game before release.
+
+### v0.5.2 Route with recipes you haven't learned yet
+- The planner may also use recipes you can learn: recipe items (learn skill
+  from the data; price from TSM, else the vendor price) and trainer recipes
+  you've seen (skill and cost from your visit). Steps can then say "at 135,
+  learn Azure Silk Cloak (pattern, 15s), then craft 8".
+- Learning costs are counted once; a recipe that's cheaper per point only
+  after paying for it wins only if it really is cheaper over the stretch.
+- Still Forever-only data; no copied guides.
+
+### v0.5.3 Beside the profession window, and filters
+- **Docked panel:** our own small frame anchored to the right of Blizzard's
+  profession window (we don't touch Blizzard's frames, so no taint): your
+  next route step, the selected recipe's colour and points left, its
+  cost/sale (Profit lines only when Profit is unlocked), where else to learn
+  it, and who in the guild also makes it. Setting to turn it off.
+- **Filters** on All recipes and a profession's list: colour for you
+  (orange/yellow/green/grey), source (trainer / recipe item / unknown),
+  quality; sort by learn level.
+
+### v0.5.4 Guild-shared prices (needs owner decisions first)
+- Why: guildmates without TSM only get vendor prices, so their routes are
+  rough. TSM users could share market prices of **profession items only**
+  (reagents and crafted items) over the guild channel: a small new message,
+  sent rarely (once per session, only changes), every value validated like
+  any received field (`Merge` limits; numbers only; per-sender caps).
+- Decide with the owner: who may share (everyone with TSM, or officers
+  only), whether the owner shares theirs, and whether received prices may
+  ever feed Profit (Profit stays owner-only either way). Not built until
+  the owner answers.
+
+### v0.5.5 Broader
+- **Who has item X:** search the guild's synced gear for an item (BiS hunts,
+  raid prep). Data is already synced; a search box on the Roster or Crafters.
+- **Not planned (FojjiCore and others do these):** dungeon journal and maps,
+  BiS manager, raid timers, quality-of-life automation, games. If raids
+  return, keep them guild-specific (attunement, sign-ups).
+
+### Order and testing
+v0.5.0 → v0.5.1 → v0.5.2 → v0.5.3, then v0.5.4/v0.5.5 when the owner wants
+them. Each one: busted tests, luacheck, README/CHANGELOG/TESTING, mock-ups,
+and the owner's `/sr debug` and in-game check before the next release
+builds on it.
