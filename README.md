@@ -43,7 +43,7 @@
 | 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
 | ⚒️ **Crafters** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
-| 🧪 **Professions** | Every profession in the guild, **every recipe in the game** (search by name, group or material), each profession's crafters, everyone's cooldowns, specialisations, favourites, a **Levelling** helper with skill-up colours from Forever's own data, and a **Shopping list** |
+| 🧪 **Professions** | Every profession in the guild, **every recipe in the game** (search by name, group or material), each profession's crafters, everyone's cooldowns, specialisations, favourites, a **Levelling** helper with skill-up colours from Forever's own data, the **cheapest levelling route**, and a **Shopping list** |
 | ⚙️ **Settings** | Sharing and privacy switches, display options, window size, tools and a live status read-out |
 | 🧨 **Everywhere** | `/sr`, a minimap button, "Crafted by" lines on item tooltips, chat reminders and a copyable debug report |
 
@@ -141,6 +141,10 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 - **Skill-up colours in tooltips:** every recipe tooltip (Professions, All recipes, Crafters) says where it turns yellow, green and grey, and, if you've learned it, its colour for you now. The Crafters panel shows the same line under the reagents.
 
 <p align="center"><img src="docs/images/levelling.png" alt="Professions → Levelling" width="100%"></p>
+
+- **Route:** the cheapest way from your skill to your cap. Pick a profession and it lists which of your learned recipes to craft for each stretch of points, how many times, and what it costs: the recipe that costs least **per skill point** at each point, counting what you'd get for **selling what you make** (prices from TradeSkillMaster if you have it, and the vendor prices Short Royalty remembers). Orange recipes always give a point; yellow and green only sometimes, so their crafts are an average (the original game's chance; not confirmed for Forever). **Add all to shopping list** puts every craft on your shopping list. Only recipes you've learned are used: when nothing you know gives points any more, it tells you to visit your trainer.
+
+<p align="center"><img src="docs/images/route.png" alt="Professions → Route (example prices)" width="100%"></p>
 
 - **Shopping list:** **Shift-click** a recipe (All recipes, Levelling or a profession's list), or press **+ List** on the Crafters tab, then set how many times you'll craft it with **−** and **+** (Shift: 5 at a time). The list adds up every reagent and shows how many you **have in your bags and bank** and how many are **still to get**, and says when you can make a reagent yourself (Bolt of Woolen Cloth, for example). **Copy** gives it as plain text, and with TradeSkillMaster installed it shows roughly what the rest will cost (vendor prices are remembered each time you visit a vendor). It's saved on your computer only and never sent to anyone. Reagents come from your game, or from Forever's own data when the profession window hasn't been opened.
 
@@ -369,6 +373,7 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.4.5**: **Shopping list** (step 2 of the levelling tools)
 - [x] **v0.4.6**: shopping list prices (TSM and vendors); drop-down menus readable on hover
 - [x] **v0.4.7**: fix for the skill-up colour check in `/sr debug`
+- [ ] **v0.4.8** (built, not released): **cheapest levelling route** (step 4 of the levelling tools)
 - [ ] Next levelling step: cheapest levelling route
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders

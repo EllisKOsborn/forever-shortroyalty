@@ -57,8 +57,22 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   everything"); don't advertise it in README/CHANGELOG until the owner says.
   Prices themselves are local and never synced. The owner has **TSM only**
   (no Auctionator).
-- **Next feature work** (owner's order, PLAN.md section 13): 4 cheapest
-  route planner (needs the skill-up colour check first, see below). **Forever data only** (wago.tools product `wowf`), never
+- **Built, not released:** v0.4.8 **cheapest levelling route** (step 4, the
+  last of PLAN.md section 13), **open to everyone** (owner, 11 Nov). TESTING
+  163–166. `Core/Route.lua`: `Route.Chance(range, skill)` = 1 below yellow,
+  else (grey - skill) / (grey - yellow) (the original game's rule, an
+  estimate for Forever), `Route.Gain` (orange gives `ups`), pure
+  `Route.Plan(recipes, from, to)` (per point the lowest net cost per
+  expected point; priced before unpriced; consecutive points merge into
+  steps; crafts rounded up per step; a last `{ stuck, from }` step when
+  nothing gives points), `Route.Recipes` (learned recipes with a range;
+  net = cost minus resale from `Prices.Recipe`), `Route.AddToShopping`.
+  UI: Professions view `route` (shares `settings.levelProf`; target = the
+  profession's current max; `ROUTE_COLUMNS`; "earn …" when net < 0).
+  Tests: `tests/route_spec.lua`. The README pictures no longer show the
+  Profit chip (owner-only); `docs/images/profit.png` was removed.
+- **Next feature work:** the levelling tools (PLAN.md section 13) are all
+  built. Ask the owner what's next. **Forever data only** (wago.tools product `wowf`), never
   Retail/Classic. Don't copy Profession Master (All Rights Reserved).
 - **Skill-up colours checked 11 Nov**: 102 match; the 13 differences were all
   a skill-0 read (fixed in v0.4.7, released 11 Nov; TESTING 161). The
@@ -314,6 +328,7 @@ Core/     Init (events, timers, modules), Log (+ error capture: SK:Safe,
           cache, local), ProfBoard (numbers for the Professions tab),
           RecipeDB (every recipe + search), Shopping (shopping list,
           local), Prices (Auctionator/TSM/vendor prices, profit; local),
+          Route (cheapest levelling route; pure planning),
           Onboarding (Getting started),
           Export (plain text for Copy), Feed (local milestones,
           never synced), Overview (numbers for the Overview tab)

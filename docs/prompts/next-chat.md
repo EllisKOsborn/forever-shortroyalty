@@ -15,9 +15,9 @@ Where we are:
   Auctionator or TSM prices, vendor prices, menu hover fix).
 - The guild uses both Auctionator and TSM. Whether the addon reads their
   prices correctly is checked by the `/sr debug` "Prices:" line.
-- Next feature: the **cheapest levelling route** planner (PLAN.md section
-  13 step 4). It depends on the skill-up colours being right, so check my
-  `/sr debug` line "Skill-up colours vs your profession window" first.
+- v0.4.7 is released; v0.4.8 (**cheapest levelling route**, open to
+  everyone) is built on the working branch. The levelling tools in PLAN.md
+  section 13 are all built. Profit is mine only (`/sr profit`).
 - Rule: use **only WoW Forever data**, never Retail or Classic. Take the
   cheapest and most efficient route for Forever. Don't copy other addons'
   code.
@@ -29,4 +29,4 @@ How I work:
 - Never say something works in game until I've confirmed it.
 
 Start by telling me in a few lines what's waiting on me (from CLAUDE.md),
-then propose a short plan for the route planner before building it.
+then ask me what to build next.

@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.4.8 (not released yet): Cheapest levelling route
+
+- **Professions → Route** (new view): the cheapest way from your skill to
+  your cap with the recipes you've learned. For each stretch of points it
+  says which recipe to craft, how many times, and what it costs.
+- At each point it picks the recipe that costs least **per skill point**,
+  counting what you'd get for **selling what you make**. Prices come from
+  TradeSkillMaster if you have it, and from the vendor prices Short Royalty
+  remembers when you visit a vendor.
+- Orange recipes always give a point; yellow and green only sometimes, so
+  their number of crafts is an average (the original game's chance; not
+  confirmed for Forever yet).
+- **Add all to shopping list** puts every craft on your shopping list.
+- When none of your recipes gives points any more, it tells you to visit
+  your trainer (Forever's data doesn't say what trainers teach).
+
 ## v0.4.7 (11 Nov 2026): fixes
 
 - **Fixed: the skill-up colour check in `/sr debug` counted false

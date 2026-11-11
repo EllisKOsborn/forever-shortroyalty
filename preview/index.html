@@ -307,7 +307,7 @@ function kvRows(rows) {
 function block(title, rows, action, style) {
   return `<div class="block" style="${style || ""}"><div class="bhead"><span class="h display">${esc(title)}</span>${action ? `<span class="btn quiet" data-go="${action[1]}">${esc(action[0])}</span>` : ""}</div>${kvRows(rows)}</div>`;
 }
-const PROF_VIEWS = [["board", "Guild"], ["recipes", "All recipes"], ["cooldowns", "Cooldowns"], ["levelling", "Levelling"], ["shopping", "Shopping list"], ["profit", "Profit"]];
+const PROF_VIEWS = [["board", "Guild"], ["recipes", "All recipes"], ["cooldowns", "Cooldowns"], ["levelling", "Levelling"], ["route", "Route"], ["shopping", "Shopping list"]]; // Profit is owner-only (/sr profit): not shown
 function list(cols, items, cell, opts = {}) {
   const head = opts.header === false ? "" : `<div class="lhead">${cols.map((c) => {
     const sorted = opts.sort && opts.sort.key === c.key;
@@ -595,6 +595,20 @@ function professions() {
         R, rcell, { click: true, style: "left:0;top:72px;bottom:0;width:400px" })}
       ${list([{ key: "n", t: "Reagent", w: 240 }, { key: "d", t: "Need", w: 50, r: 1 }, { key: "h", t: "Have", w: 50, r: 1 }, { key: "s", t: "Still to get", w: 80, r: 1 }],
         G, gcell, { style: "left:416px;top:72px;bottom:0;right:0" })}`;
+  }
+  if (S.profView === "route") { // v0.4.8: Tailoring 120 to 150; recipes and their ranges are Forever's, prices are examples
+    const SK_C = { orange: "var(--skillOrange)", yellow: "var(--skillYellow)" };
+    // [from, to, recipe, quality, starts, crafts, cost, per point]
+    const R = [[120, 130, "Azure Silk Hood", "#1eff00", "orange", 10, "2g 10s", "21s"], [130, 135, "Azure Silk Pants", "#1eff00", "orange", 5, "1g 45s", "29s"],
+      [135, 150, "Small Silk Pack", "#ffffff", "orange", 16, "3g 84s", "25s 60c"]];
+    const cell = (r, c) => c.key === "k" ? `${r[0]}<span class="dim"> - </span>${r[1]}` : c.key === "n" ? `<span style="color:${r[3]}">${esc(r[2])}</span>`
+      : c.key === "f" ? `<span style="color:${SK_C[r[4]]}">${r[4]}</span>` : c.key === "c" ? r[5] : c.key === "m" ? r[6] : `<span class="dim">${r[7]}</span>`;
+    return `<div class="abs" style="left:0;top:0;display:flex;gap:4px">${chips(PROF_VIEWS, "route")}</div>
+      <div class="abs dim ell" style="right:0;top:4px;font-size:12px">Tailoring 120 to 150 &nbsp;·&nbsp; about 7g 39s</div>
+      ${btn("Tailoring  120 / 150", "", 'style="position:absolute;left:0;top:36px;width:220px;justify-content:space-between"')}
+      ${btn("Add all to shopping list", "", 'style="position:absolute;left:228px;top:36px"')}
+      ${list([{ key: "k", t: "Skill", w: 110 }, { key: "n", t: "Recipe", w: 300 }, { key: "f", t: "Starts", w: 90 }, { key: "c", t: "Crafts", w: 90, r: 1 }, { key: "m", t: "Cost", w: 120, r: 1 }, { key: "p", t: "Per point", w: 126, r: 1 }],
+        R, cell, { click: true, style: "left:0;top:72px;bottom:0;right:0" })}`;
   }
   if (S.profView === "profit") { // v0.4.6: Tailoring at 120; prices are made-up examples, recipes and yields are Forever's
     const SK_C = { orange: "var(--skillOrange)", yellow: "var(--skillYellow)", green: "var(--skillGreen)", grey: "var(--skillGrey)" };

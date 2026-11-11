@@ -490,6 +490,17 @@ in game if anything looks different and send it.
         `/sr profit`; then it's back on every character of your account.
         `/sr profit` again hides it.
 
+## v0.4.8 Cheapest levelling route
+
+163. [ ] Professions → **Route**: pick Tailoring (or another profession under
+        its cap). Steps from your skill up to your cap, each with a recipe you
+        know, crafts, cost and cost per point; the total is in the top right.
+164. [ ] Do the picks make sense? Orange first while there is one; the
+        numbers of crafts look about right for yellow ones.
+165. [ ] **Add all to shopping list**: the Shopping list now has those
+        recipes and crafts, with the reagents to buy.
+166. [ ] A profession at its cap says to train the next rank.
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).
