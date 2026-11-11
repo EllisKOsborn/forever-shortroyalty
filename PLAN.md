@@ -614,7 +614,7 @@ small enough to test in game before the next one builds on it.
   after paying for it wins only if it really is cheaper over the stretch.
 - Still Forever-only data; no copied guides.
 
-### v0.5.3 Beside the profession window, and filters
+### v0.5.3 Beside the profession window, and filters (✅ built 11 Nov; filters on All recipes only)
 - **Docked panel:** our own small frame anchored to the right of Blizzard's
   profession window (we don't touch Blizzard's frames, so no taint): your
   next route step, the selected recipe's colour and points left, its

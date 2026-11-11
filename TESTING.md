@@ -535,6 +535,18 @@ in game if anything looks different and send it.
         "learn from recipe" with its price. Sensible?
 177. [ ] **Recipes to learn** off: only recipes you know (as before).
 
+## v0.5.3 Panel and filters
+
+178. [ ] Open your Tailoring window: the Short Royalty panel appears on its
+        right. It shows your next route step. Click a recipe in Blizzard's
+        list: the panel shows its colour, where to learn it and guild crafters.
+179. [ ] **+ List** adds it to the shopping list; **Route** opens Short
+        Royalty on the Route view.
+180. [ ] **Hide**, then reopen the window: no panel. `/sr panel`: it's back.
+        Does it ever cover something you need, or sit in the wrong place?
+181. [ ] All recipes → pick Tailoring → **Show: can learn now**: only recipes
+        your skill allows (from recipe items, or a trainer you've opened).
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

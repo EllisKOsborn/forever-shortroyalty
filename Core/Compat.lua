@@ -963,6 +963,24 @@ end
 -- TooltipDataHandler.lua) with Enum.TooltipDataType.Item (= 0 in
 -- TooltipInfoSharedDocumentation). fn(tooltip, itemID).
 ---------------------------------------------------------------------------
+-- Blizzard's profession window (Blizzard_Professions, loaded on demand), or nil.
+function Compat.ProfessionsFrame()
+	local f = rawget(_G, "ProfessionsFrame")
+	return type(f) == "table" and f.IsShown and f or nil
+end
+
+-- fn(recipeID) when a recipe is picked in Blizzard's profession window.
+-- Blizzard_ProfessionsRecipeList.lua fires this EventRegistry event.
+function Compat.OnRecipeSelected(owner, fn)
+	if type(EventRegistry) ~= "table" or type(EventRegistry.RegisterCallback) ~= "function" then return false end
+	local ok = pcall(EventRegistry.RegisterCallback, EventRegistry, "ProfessionsRecipeListMixin.Event.OnRecipeSelected",
+		function(_, recipeInfo)
+			local id = type(recipeInfo) == "table" and clean(recipeInfo.recipeID)
+			if type(id) == "number" then fn(id) end
+		end, owner)
+	return ok
+end
+
 function Compat.HookItemTooltips(fn)
 	local kind = Enum and Enum.TooltipDataType and Enum.TooltipDataType.Item
 	if not (kind and TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall) then return false end

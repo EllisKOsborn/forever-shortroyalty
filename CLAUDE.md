@@ -106,7 +106,23 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   (min(grey, to) - skill)` per point until paid, puts `learn` on the first
   step and the cost once in the total. `settings.routeLearn` (default on),
   chip "Recipes to learn". `Prices.Batch(fn, ...)` caches `Buy` per item
-  during a refresh (Route, Profit). TESTING 175–177. Next: v0.5.3.
+  during a refresh (Route, Profit). TESTING 175–177.
+- **Built, not released: v0.5.3 panel + filters.** `UI/ProfPanel.lua`: own
+  frame `ShortRoyaltyProfPanel` (strata HIGH) anchored TOPLEFT to
+  `ProfessionsFrame` TOPRIGHT (`Compat.ProfessionsFrame` = rawget global;
+  Blizzard_Professions loads on demand) on TRADE_SKILL_SHOW (+0.2 s, own
+  trade skill only), hidden on TRADE_SKILL_CLOSE; selected recipe via
+  `Compat.OnRecipeSelected` = `EventRegistry:RegisterCallback(
+  "ProfessionsRecipeListMixin.Event.OnRecipeSelected")` (fired in
+  Blizzard_ProfessionsRecipeList.lua with recipeInfo). Content: next step
+  from `Route.ForProfession` (new; also used by RefreshRoute), `W.SkillUpText`,
+  `W.LearnLines`, guild crafters, profit line only when unlocked; pure
+  `ProfPanel.Lines`. `settings.profPanel`, `/sr panel` (in help), Hide
+  button. Filters: All recipes "Show" menu (`Prof.SHOW_ITEMS`, pure
+  `Prof.FilterRecipes`). Mock-up `docs/mockups/panel.html` →
+  `docs/images/panel.png` (render.js PAGES). Tests: `tests/panel_spec.lua`.
+  TESTING 178–181. **Unverified in game:** the anchor and the EventRegistry
+  event. Next: v0.5.5 (who has item X); v0.5.4 waits for owner decisions.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from

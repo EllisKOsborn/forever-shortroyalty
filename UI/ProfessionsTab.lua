@@ -505,6 +505,20 @@ function Prof:Build(page)
 	})
 	self.profMenu:SetPoint("LEFT", self.search, "RIGHT", SP.s, 0)
 	self.profMenu.tooltip = "Pick a profession to list all its recipes"
+	-- v0.5.3: show only some recipes, for you.
+	self.allFilter = "all"
+	self.showMenu = W.Menu(page, {
+		width = 180,
+		items = function() return Prof.SHOW_ITEMS end,
+		get = function() return Prof.allFilter or "all" end,
+		set = function(v)
+			Prof.allFilter = v
+			Prof:Refresh()
+		end,
+	})
+	self.showMenu:SetPoint("LEFT", self.profMenu, "RIGHT", SP.s, 0)
+	self.showMenu.tooltip = "Show only some recipes: ones you can learn now, by where they're learnt, or ones that " ..
+		"still give you points"
 	self.allList = W.List(page, {
 		columns = ALL_COLUMNS, setCell = setAllCell,
 		onEnter = function(row, r)
@@ -879,6 +893,7 @@ function Prof:Refresh()
 	self.cooldowns:SetShown(not one and view == "cooldowns")
 	self.search:SetShown(not one and view == "recipes")
 	self.profMenu:SetShown(not one and view == "recipes")
+	self.showMenu:SetShown(not one and view == "recipes")
 	self.allList:SetShown(not one and view == "recipes")
 	self.levelMenu:SetShown(not one and view == "levelling")
 	self.levelList:SetShown(not one and view == "levelling")
@@ -1125,15 +1140,8 @@ function Prof:RefreshRoute()
 		return
 	end
 	local from, to = prof.rank or 0, prof.max or 0
-	local known = {}
-	for id in pairs(own.recipes and own.recipes[skillLine] or {}) do known[id] = true end
-	local steps, total, unpriced = {}, 0, 0
-	if from < to and prof.scanned then
-		local toLearn = SK.DB.settings.routeLearn ~= false
-		steps, total, unpriced = SK.Prices.Batch(function()
-			return SK.Route.Plan(SK.Route.Recipes(skillLine, known, toLearn), from, to)
-		end)
-	end
+	local steps, total, unpriced = SK.Route.ForProfession(skillLine)
+	if not steps then steps, total, unpriced = {}, 0, 0 end
 	self.routeLearnChip:SetActive(SK.DB.settings.routeLearn ~= false)
 	SK.CraftIndex.SetBudget(SK.RecipeDB.REQUESTS_PER_SEARCH)
 	for _, s in ipairs(steps) do
@@ -1221,9 +1229,67 @@ function Prof:RefreshProfit()
 	self.status:SetText(Prof.ProfitSummary(rows, SK.Prices.Source()))
 end
 
+Prof.SHOW_ITEMS = {
+	{ value = "all", text = "Show: everything" },
+	{ value = "learnable", text = "Show: can learn now" },
+	{ value = "item", text = "Show: recipe items" },
+	{ value = "trainer", text = "Show: trainers" },
+	{ value = "points", text = "Show: give you points" },
+}
+
+-- Pure (v0.5.3): rows of RecipeDB.Search, kept by `filter`. you(skillLine)
+-- -> { skill, known = { [recipeID] } } for your professions (nil if you
+-- don't have it); learnAt(recipeID) -> skill a recipe item or a trainer
+-- you've seen needs (nil if unknown); colourAt(recipeID, skill).
+-- The learning filters sort by that skill.
+function Prof.FilterRecipes(rows, filter, you, learnAt, hasItem, colourAt)
+	if filter == nil or filter == "all" then return rows end
+	local out = {}
+	for _, r in ipairs(rows) do
+		local me = you(r.skillLine)
+		local known = me and me.known[r.recipeID]
+		local keep
+		if filter == "learnable" then
+			local at = learnAt(r.recipeID)
+			keep = me and not known and at and at <= me.skill
+		elseif filter == "item" then keep = hasItem(r.recipeID)
+		elseif filter == "trainer" then keep = not hasItem(r.recipeID)
+		elseif filter == "points" then
+			local c = me and known and colourAt(r.recipeID, me.skill)
+			keep = c ~= nil and c ~= "grey"
+		end
+		if keep then out[#out + 1] = r end
+	end
+	if filter ~= "points" then
+		table.sort(out, function(a, b)
+			local x, y = learnAt(a.recipeID) or 9999, learnAt(b.recipeID) or 9999
+			if x ~= y then return x < y end
+			return (a.name or "") < (b.name or "")
+		end)
+	end
+	return out
+end
+
+local function you(skillLine)
+	local own = SK.Profile:Own()
+	local p = own and own.profs[skillLine]
+	if not p then return nil end
+	return { skill = p.rank or 0, known = own.recipes and own.recipes[skillLine] or {} }
+end
+
+local function learnAt(recipeID)
+	local how = SK.Learn.Info(recipeID)
+	if how.itemAt and how.trainerAt then return math.min(how.itemAt, how.trainerAt) end
+	return how.itemAt or how.trainerAt
+end
+
+local function hasItem(recipeID) return SK.RecipeDB.RecipeItem(recipeID) ~= nil end
+
 function Prof:RefreshAll(ctx)
 	self.profMenu:Refresh()
+	self.showMenu:Refresh()
 	local rows, state, loading = SK.RecipeDB.Search(self.query, self.allProf, ctx.index)
+	rows = Prof.FilterRecipes(rows, Prof.allFilter, you, learnAt, hasItem, SK.RecipeDB.ColourAt)
 	self.allList:SetItems(rows)
 	self.allList:SetLoading(state == "ok" and #rows == 0 and loading > 0)
 	if state == "short" then

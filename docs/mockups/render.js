@@ -38,8 +38,18 @@ const SHOTS = {
 
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
+// Pages of their own (not the preview window): name -> [file, width, height]
+const PAGES = { panel: ["docs/mockups/panel.html", 676, 362] };
+
 async function withPlaywright(chromium) {
   const browser = await chromium.launch();
+  for (const [name, [file, w, h]] of Object.entries(PAGES)) {
+    const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 2 });
+    await page.goto("file://" + path.join(ROOT, file));
+    await page.evaluate(() => document.fonts.ready);
+    await page.screenshot({ path: path.join(OUT, name + ".png") });
+    console.log("wrote", name + ".png");
+  }
   for (const [name, [q, w, h]] of Object.entries(SHOTS)) {
     const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 2 });
     await page.goto(PAGE + "?" + q);

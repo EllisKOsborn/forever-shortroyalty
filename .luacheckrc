@@ -48,5 +48,5 @@ read_globals = {
 	"GetItemIcon", "GetSpellInfo", "GetItemInfo", "GetItemQualityColor", "GetInventorySlotInfo",
 	"CanViewOfficerNote", "GetMaxLevelForPlayerExpansion", "GetMaxPlayerLevel", "GetItemInfoInstant", "GetSpellCooldown", "GetItemCount", "GetLocale",
 	"GetMerchantNumItems", "GetMerchantItemID",
-	"GetNumTrainerServices", "GetTrainerServiceInfo", "GetTrainerServiceSkillReq", "GetTrainerServiceCost",
+	"EventRegistry", "GetNumTrainerServices", "GetTrainerServiceInfo", "GetTrainerServiceSkillReq", "GetTrainerServiceCost",
 }

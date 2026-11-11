@@ -59,6 +59,7 @@ UI\RosterTab.lua
 UI\CharacterTab.lua
 UI\CraftersTab.lua
 UI\ProfessionsTab.lua
+UI\ProfPanel.lua
 UI\SettingsTab.lua
 UI\DebugWindow.lua
 UI\Minimap.lua

@@ -575,6 +575,7 @@ function professions() {
       <div class="abs dim ell" style="right:0;top:4px;font-size:12px">${ALL.length} recipes</div>
       <div class="search abs" style="left:0;top:36px;width:300px"><input placeholder="Search recipes, groups or materials" value="thorium"></div>
       ${btn("All professions", "", 'style="position:absolute;left:308px;top:36px;width:170px;text-align:left"')}
+      ${btn("Show: everything", "", 'style="position:absolute;left:486px;top:36px;width:180px;text-align:left"')}
       ${list([{ key: "n", t: "Recipe", w: 330 }, { key: "p", t: "Profession", w: 130 }, { key: "g", t: "Group", w: 266 }, { key: "c", t: "Crafters", w: 110, r: 1 }],
         ALL, cell, { click: true, style: "left:0;top:72px;bottom:0;right:0" })}`;
   }

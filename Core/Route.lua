@@ -130,6 +130,23 @@ function Route.Recipes(skillLine, known, toLearn)
 	return out
 end
 
+-- The whole plan for one of your professions, from your skill to its cap:
+-- steps, total, unpriced, from, to (or nil when there's nothing to plan).
+function Route.ForProfession(skillLine)
+	local own = SK.Profile and SK.Profile:Own()
+	local prof = own and skillLine and own.profs[skillLine]
+	if not prof or not prof.scanned then return nil end
+	local from, to = prof.rank or 0, prof.max or 0
+	if from >= to then return {}, 0, 0, from, to end
+	local known = {}
+	for id in pairs(own.recipes and own.recipes[skillLine] or {}) do known[id] = true end
+	local toLearn = SK.DB.settings.routeLearn ~= false
+	local steps, total, unpriced = SK.Prices.Batch(function()
+		return Route.Plan(Route.Recipes(skillLine, known, toLearn), from, to)
+	end)
+	return steps, total, unpriced, from, to
+end
+
 -- Every crafted step onto the shopping list.
 function Route.AddToShopping(steps)
 	local n = 0

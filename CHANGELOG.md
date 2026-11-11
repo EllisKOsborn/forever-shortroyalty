@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.5.3 (not released yet): Panel beside the profession window, filters
+
+- **A Short Royalty panel beside your profession window** (your own
+  professions): the next step of your cheapest route, and for the recipe
+  you pick in the window its colour, where to learn it and who in the guild
+  makes it. **Route** opens the whole plan, **+ List** adds the recipe to
+  your shopping list, **Hide** turns the panel off (`/sr panel` brings it
+  back).
+- **All recipes → Show:** everything, recipes you can learn now, recipes
+  from recipe items, from trainers, or ones that still give you points. The
+  learning ones are sorted by the skill they need.
+
 ## v0.5.2 (not released yet): Route with recipes you haven't learned
 
 - **Route** can now plan with recipes you don't know yet (on by default;

@@ -327,6 +327,7 @@ local HELP = {
 	"/sr scan - rescan your character",
 	"/sr sync - share your data now",
 	"/sr reset - centre the window",
+	"/sr panel - the panel beside your profession window on or off",
 }
 Commands.HELP = HELP
 
@@ -352,6 +353,8 @@ function Commands.Run(msg)
 		SK.Sync:SendHello()
 		SK.Sync:SendQuery()
 		SK:Print("Sync requested.")
+	elseif cmd == "panel" then
+		SK.ProfPanel.Toggle()
 	elseif cmd == "reset" then
 		SK.MainFrame:ResetPosition()
 	else
