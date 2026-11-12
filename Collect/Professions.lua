@@ -100,6 +100,11 @@ local function scanModern()
 	Prof.ProcessRecipes(ids, function(result)
 		scanning = false
 		result.skillLine, result.name, result.rank, result.max = skillLine, name, rank, max
+		if type(name) ~= "string" or name == "" then -- Forever leaves professionName empty (12 Nov report)
+			local own = SK.Profile:Own()
+			local p = own and own.profs and own.profs[skillLine]
+			result.name = p and p.name or nil
+		end
 		result.complete = complete
 		-- v0.4.4: check our skill-up colours (Forever's data) against the window's.
 		-- Not at skill 0: just after a window opens the game can report 0

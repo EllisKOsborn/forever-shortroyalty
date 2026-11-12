@@ -10,6 +10,8 @@
   price from TSM's own vendor price list, so the shopping list cost and the
   levelling route no longer skip recipes that need them. Lists that still
   can't price a recipe now name the material that has no price.
+- `/sr debug` names the profession of the last scan again (the game leaves
+  it blank).
 
 ## v0.5.5 (11 Nov 2026): Professions upgrade
 

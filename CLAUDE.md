@@ -329,6 +329,17 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
     and restarts the count (`RecipeDB.CHECK_VERSION` 2). Saving a scan
     already ignored rank 0 (`Profile:SetScan`, `SetScanRank`).
   - `relativeDifficulty` (Nilable in the docs) **is filled in Forever**.
+- **Confirmed in game 12 Nov (owner's v0.5.5 `/sr debug`, build 70888,
+  Tailoring 124/150, 49 of 471 learned):**
+  - **Skill-up colours: 245 match, 0 differ**: the colour rule holds.
+  - **`C_TradeSkillUI.GetRecipeSourceText` gives nothing** (0 of 422
+    unlearned recipes after a Tailoring scan) and `disabledReason` is empty
+    too. "Where to learn" relies on Forever's data and remembered trainers.
+  - `GetBaseProfessionInfo().professionName` is **empty** ("Last scan: ,");
+    the scan now falls back to the profile's profession name (v0.5.6).
+  - The window also lists the "SEASON OF DISCOVERY" category (54 recipes),
+    which our data leaves out on purpose.
+  - 50 vendor prices remembered; TSM works; no Lua errors; send errors 0.
 - **Realmless:** characters have two-part names that are unique per region.
   Key everything by **player GUID**. The `sender` format in addon messages is
   unconfirmed, so `Core/Identity.lua` matches it several ways.
