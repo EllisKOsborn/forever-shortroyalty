@@ -43,7 +43,7 @@ data are unchanged.
 - **Character:** thinner gear-slot edges; *Ask for latest* is a quiet link.
   **Whisper** buttons in lists are quiet links too.
 
-## v0.5.7 (not released yet): fixes
+## v0.5.7 (12 Nov 2026): fixes
 
 - **Cooldowns** listed recipes that never have a cooldown (Linen Boots,
   Woolen Cape…). Opening your profession window just after crafting made the
