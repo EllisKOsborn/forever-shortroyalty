@@ -37,9 +37,9 @@ end
 
 -- Results: 404 - 12 (scroll bar) = 392.
 local RESULT_COLUMNS = {
-	{ key = "name", title = "Item or recipe", width = 200 },
-	{ key = "prof", title = "Profession", width = 86 },
-	{ key = "count", title = "Crafters", width = 106, align = "RIGHT" },
+	{ key = "name", title = "Item or recipe", width = 190 },
+	{ key = "prof", title = "Profession", width = 100 },
+	{ key = "count", title = "Crafters", width = 102, align = "RIGHT" },
 }
 
 -- Side panel list: 324 - 2 x 12 padding - 12 (scroll bar) = 288.

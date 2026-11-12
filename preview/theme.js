@@ -7,6 +7,12 @@ window.SK_THEME = {
       0,
       0.96
     ],
+    "side": [
+      0.047,
+      0.047,
+      0.055,
+      0.98
+    ],
     "surface": [
       0.067,
       0.067,
@@ -61,7 +67,25 @@ window.SK_THEME = {
       0.439,
       1
     ],
-    "onGold": [
+    "accent": [
+      0.941,
+      0.42,
+      0.69,
+      1
+    ],
+    "accentLit": [
+      0.969,
+      0.553,
+      0.773,
+      1
+    ],
+    "accentDeep": [
+      0.608,
+      0.239,
+      0.431,
+      1
+    ],
+    "onAccent": [
       0,
       0,
       0,
@@ -89,6 +113,18 @@ window.SK_THEME = {
       0.941,
       0.42,
       0.69,
+      1
+    ],
+    "beardLit": [
+      0.969,
+      0.553,
+      0.773,
+      1
+    ],
+    "beardDeep": [
+      0.608,
+      0.239,
+      0.431,
       1
     ],
     "spark": [
@@ -157,6 +193,13 @@ window.SK_THEME = {
     "figure": 24
   },
   "sizes": {
+    "sidebar": 184,
+    "navRow": 30,
+    "pageHead": 60,
+    "subTabs": 30,
+    "statH": 58,
+    "cardRow": 28,
+    "settingRow": 42,
     "titleBar": 52,
     "tabBar": 32,
     "pad": 16,
@@ -172,8 +215,9 @@ window.SK_THEME = {
     "crest": 30,
     "slot": 38,
     "underline": 2,
-    "windowW": 880,
-    "windowH": 580
+    "windowW": 960,
+    "windowH": 600,
+    "contentW": 744
   },
   "motion": {
     "open": 0.18,
@@ -194,10 +238,18 @@ window.SK_THEME = {
   "type": {
     "brand": [
       "display",
+      15
+    ],
+    "page": [
+      "display",
       20
     ],
-    "tab": [
+    "label": [
       "display",
+      11
+    ],
+    "tab": [
+      "body",
       13
     ],
     "heading": [

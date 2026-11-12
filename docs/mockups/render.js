@@ -11,7 +11,7 @@ const { execFileSync } = require("child_process");
 const ROOT = path.join(__dirname, "..", "..");
 const OUT = path.join(ROOT, "docs", "images");
 const PAGE = "file://" + path.join(ROOT, "preview", "index.html");
-const W = 880, H = 580;
+const W = 960, H = 600; // Theme.SIZES.window (v0.6.0)
 
 // name -> [query, width, height]
 const SHOTS = {
@@ -29,7 +29,12 @@ const SHOTS = {
   "getting-started": ["shot=1&screen=overview&data=full&start=1", W, H],
   reminder: ["shot=1&screen=overview&data=full&start=1&remind=1", W, H + 52],
   settings: ["shot=1&screen=settings&data=full", W, H],
-  "before-after": ["shot=compare&screen=overview&data=full", 2 * W + 72, H + 84],
+  "settings-advanced": ["shot=1&screen=settings&data=full&setView=advanced", W, H],
+  "accent-gold": ["shot=1&screen=roster&data=full&accent=gold", W, H],
+  "accent-class": ["shot=1&screen=overview&data=full&accent=class", W, H],
+  tooltips: ["shot=tooltip", W, 440],
+  "before-after": ["shot=compare&screen=overview&data=full", 880 + W + 72, H + 84],
+  "before-after-professions": ["shot=compare&screen=professions&data=full", 880 + W + 72, H + 84],
   palette: ["shot=palette", 1200, 484],
 };
 
