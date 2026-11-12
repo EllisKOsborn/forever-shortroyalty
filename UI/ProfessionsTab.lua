@@ -1214,8 +1214,7 @@ function Prof:RefreshProfit()
 		self.status:SetText("")
 		return
 	end
-	local known = {}
-	for id in pairs(own.recipes and own.recipes[skillLine] or {}) do known[id] = true end
+	local known = own.recipes and own.recipes[skillLine] or {}
 	SK.CraftIndex.SetBudget(SK.RecipeDB.REQUESTS_PER_SEARCH)
 	local rows = SK.Prices.Batch(SK.Prices.Rows, skillLine, known)
 	for _, r in ipairs(rows) do

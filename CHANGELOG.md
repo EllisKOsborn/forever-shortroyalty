@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.6 (not released yet): fixes
+
+- `/sr debug` now lists, per profession, any recipe you know that isn't in
+  Forever's bundled recipe list (it helps us keep that list complete).
+- Lists built from your recipes now start from what your game recorded, so
+  a recipe missing from the bundled list still shows up.
+
 ## v0.5.5 (11 Nov 2026): Professions upgrade
 
 Everything from the professions review in one release: where to learn

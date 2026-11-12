@@ -134,6 +134,13 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   tooltips "Guild: worn by …" (same setting as crafters, label renamed);
   `/sr who <link|id|name>` (`Commands.Who`, in help). Tests:
   `tests/gear_index_spec.lua`. TESTING 182–183.
+- **v0.5.6 (not released yet) Profit fix** (owner, 12 Nov: "it's not even
+  looking at my own recipes as it's missing them"): `Prices.Rows(skillLine,
+  known)` now iterates the player's recorded recipes (`own.recipes[line]`,
+  id → itemID) instead of the bundled `RecipeDB.List`, with the scan's itemID
+  as fallback (`Prices.Recipe(id, itemID)`). `/sr debug` adds "not in
+  Forever's recipe list: N (ids)" per profession (TESTING 184). Cause not
+  confirmed yet: ask which recipes were missing and get that line.
 - **Guild-shared prices: dropped** (owner, 11 Nov: "I don't think price
   sharing is what we should add at all"). Don't propose it again unless asked.
 - **Redesign (owner, 11 Nov: "the interface is now very cluttered"; likes

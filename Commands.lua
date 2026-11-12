@@ -210,6 +210,18 @@ function Commands.BuildReport()
 		for skillLine, p in pairs(own.profs or {}) do
 			add("Profession %s (%d): %d/%d, scanned %s, %d recipes", tostring(p.name), skillLine, p.rank or 0,
 				p.max or 0, p.scanned and "yes" or "NO", SK.Count(own.recipes and own.recipes[skillLine]))
+			-- v0.5.6: recipes you know that Forever's bundled list doesn't have (or files elsewhere).
+			local missing = {}
+			for id in pairs(own.recipes and own.recipes[skillLine] or {}) do
+				local r = SK.RecipeDB.Get(id)
+				if not r or r.skillLine ~= skillLine then missing[#missing + 1] = id end
+			end
+			if #missing > 0 then
+				table.sort(missing)
+				local show = {}
+				for i = 1, math.min(8, #missing) do show[i] = tostring(missing[i]) end
+				add("  not in Forever's recipe list: %d (%s%s)", #missing, table.concat(show, ", "), #missing > 8 and ", ..." or "")
+			end
 		end
 		add("Cooldowns: %d (%d tracked recipes)  Reputations: %d", SK.Count(own.cds),
 			SK.Count(SK.DB.cooldownSpells[own.guid]), SK.Count(own.reps))

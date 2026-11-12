@@ -169,9 +169,11 @@ function P.Craft(reagents, outputID, yield, prices)
 	return out
 end
 
-function P.Recipe(recipeID)
+-- itemID: what your game says the recipe makes (from your scan), used when
+-- Forever's bundled data doesn't have the recipe.
+function P.Recipe(recipeID, itemID)
 	local r = SK.RecipeDB.Get(recipeID)
-	local outputID = r and r.itemID or 0
+	local outputID = r and r.itemID or (type(itemID) == "number" and itemID) or 0
 	local learned = SK.DB.reagents.list and SK.DB.reagents.list[recipeID]
 	if learned and learned.o and learned.o > 0 then outputID = learned.o end
 	return P.Craft(SK.Reagents.All(recipeID), outputID, SK.Reagents.Yield(recipeID), P)
@@ -179,13 +181,18 @@ end
 
 -- Your learned recipes in one profession, best profit first; recipes whose
 -- profit can't be worked out go last. Pure apart from P.Recipe.
+-- known = your recorded recipes { [recipeID] = itemID it makes | true }:
+-- every one gets a row, even one missing from the bundled data (v0.5.6:
+-- before, rows came from the bundled list and such recipes were dropped).
 function P.Rows(skillLine, known, craft)
 	craft = craft or P.Recipe
 	local rows = {}
-	for _, r in ipairs(SK.RecipeDB.List(skillLine)) do
-		if known[r.recipeID] then
-			local c = craft(r.recipeID)
-			c.recipeID, c.itemID, c.skillLine = r.recipeID, r.itemID, skillLine
+	for id, item in pairs(known or {}) do
+		if type(id) == "number" then
+			local r = SK.RecipeDB.Get(id)
+			local itemID = (r and r.itemID ~= 0 and r.itemID) or (type(item) == "number" and item) or 0
+			local c = craft(id, itemID)
+			c.recipeID, c.itemID, c.skillLine = id, itemID, skillLine
 			rows[#rows + 1] = c
 		end
 	end

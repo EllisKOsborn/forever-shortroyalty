@@ -554,6 +554,12 @@ in game if anything looks different and send it.
 183. [ ] `/sr who ` then Shift-click an item: chat lists who wears it.
         `/sr who silk` lists items with "silk" in the name that someone wears.
 
+## v0.5.6 Fixes
+
+184. [ ] Open each profession window once, then `/sr debug`: under each
+   "Profession …" line, is there a "not in Forever's recipe list" line?
+   Send it (and the names of any recipes you noticed missing).
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

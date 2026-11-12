@@ -218,6 +218,27 @@ describe("Professions → Profit", function()
 		assert.equal(0, #SK.errors)
 	end)
 
+	it("lists every recipe you know, even one missing from the bundled data (v0.5.6)", function()
+		local UNKNOWN, ITS_ITEM = 99000001, 99000002 -- not in Data/Recipes.lua
+		local own = SK.Profile:Own()
+		own.recipes[197][UNKNOWN] = ITS_ITEM
+		SK.DB.reagents.build = SK.Compat.BuildInfo().build
+		SK.DB.reagents.list = { [UNKNOWN] = { o = ITS_ITEM, n = 1, r = { { i = LINEN, q = 1 } } } }
+		_G.Auctionator.API.v1.GetAuctionPriceByItemID = function(_, id)
+			return ({ [LINEN] = 10, [BOLT] = 100, [ITS_ITEM] = 50 })[id]
+		end
+		SK.DB.settings.profView = "profit"
+		SK.MainFrame:Show("professions")
+		local found
+		for _, r in ipairs(SK.ProfessionsTab.profitList.items) do if r.recipeID == UNKNOWN then found = r end end
+		assert.truthy(found)
+		assert.same({ ITS_ITEM, 10 }, { found.itemID, found.cost })
+		assert.equal(2, #SK.ProfessionsTab.profitList.items)
+		local report = table.concat(SK.Commands.BuildReport(), "\n")
+		assert.truthy(report:find("not in Forever's recipe list: 1 (" .. UNKNOWN .. ")", 1, true))
+		assert.equal(0, #SK.errors)
+	end)
+
 	it("without a price addon it says so and still uses vendor prices", function()
 		_G.Auctionator = nil
 		SK.Prices.LearnMerchant({ { itemID = LINEN, each = 15 } })
