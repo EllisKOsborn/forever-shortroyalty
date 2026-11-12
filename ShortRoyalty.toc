@@ -24,9 +24,6 @@ Core\ProfBoard.lua
 Core\RecipeDB.lua
 Core\Onboarding.lua
 Core\Export.lua
-Core\Shopping.lua
-Core\Prices.lua
-Core\Route.lua
 Core\Learn.lua
 Core\GearIndex.lua
 Core\Feed.lua
@@ -60,7 +57,6 @@ UI\RosterTab.lua
 UI\CharacterTab.lua
 UI\CraftersTab.lua
 UI\ProfessionsTab.lua
-UI\ProfPanel.lua
 UI\SettingsTab.lua
 UI\DebugWindow.lua
 UI\Minimap.lua

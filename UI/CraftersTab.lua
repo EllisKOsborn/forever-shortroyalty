@@ -182,10 +182,6 @@ function Crafters:Build(page)
 	end)
 	self.favButton:SetPoint("TOPRIGHT", -SP.m, -SP.m)
 	self.favButton.tooltip = "Starred recipes show under Favourites, here and on the Professions tab."
-	self.listButton = W.Chip(side, "+ List", function()
-		if Crafters.selected then SK.Shopping.Add(Crafters.selected, Compat.ShiftDown() and 5 or 1) end
-	end)
-	self.listButton:SetPoint("RIGHT", self.favButton, "LEFT", -SP.xs, 0)
 	self.post = W.Button(side, "Post to guild chat", nil, S.control, function() Crafters:PostToGuild() end, "primary")
 	self.post:SetPoint("BOTTOMLEFT", SP.m, SP.m)
 	self.copy = W.Button(side, "Copy", nil, S.control, function() Crafters:CopyText() end)
@@ -207,9 +203,6 @@ function Crafters:Build(page)
 		if page:IsShown() then Crafters:Refresh() end
 	end)
 	SK:On("FAVOURITES_CHANGED", function()
-		if page:IsShown() then Crafters:Refresh() end
-	end)
-	SK:On("SHOPPING_CHANGED", function()
 		if page:IsShown() then Crafters:Refresh() end
 	end)
 end
@@ -330,7 +323,6 @@ function Crafters:Refresh()
 	end
 	self.reagents:SetShown(r ~= nil)
 	self.favButton:SetShown(r ~= nil)
-	self.listButton:SetShown(r ~= nil)
 	self.empty:SetShown(r == nil)
 	if not r then
 		self.title:SetText("")
@@ -340,10 +332,6 @@ function Crafters:Refresh()
 	local list = CI.Crafters(index, r.recipeID, guild, now)
 	local fav = SK.Favourites.IsRecipe(r.recipeID)
 	self.favButton:SetActive(fav)
-	local crafts = SK.Shopping.Crafts(r.recipeID)
-	self.listButton:SetActive(crafts > 0)
-	self.listButton.tooltip = (crafts > 0 and ("On your shopping list: " .. Theme.Count(crafts, "craft") .. ". ") or "") ..
-		"Add one craft to your shopping list (Shift: 5). The list is under Professions → Shopping list."
 	self.title:SetText(star(fav) .. icon(r) .. coloured(r, CI.NameOf(r) or "..."))
 	self.sub:SetText(profName(r.skillLine) .. "  ·  " .. Crafters.CountText(#list, CI.OnlineCount(list)))
 	self.crafters:SetItems(list)

@@ -43,7 +43,7 @@
 | 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
 | ⚒️ **Crafters** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
-| 🧪 **Professions** | Every profession in the guild, **every recipe in the game** (search by name, group or material), each profession's crafters, everyone's cooldowns, specialisations, favourites, a **Levelling** helper with skill-up colours from Forever's own data, the **cheapest levelling route**, and a **Shopping list** |
+| 🧪 **Professions** | Every profession in the guild, **every recipe in the game** (search by name, group or material), each profession's crafters, everyone's cooldowns, specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
 | ⚙️ **Settings** | Sharing and privacy switches, display options, window size, tools and a live status read-out |
 | 🧨 **Everywhere** | `/sr`, a minimap button, "Crafted by" lines on item tooltips, chat reminders and a copyable debug report |
 
@@ -137,25 +137,10 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 
 <p align="center"><img src="docs/images/cooldowns.png" alt="Cooldown board" width="100%"></p>
 
-- **Levelling:** pick one of your professions and see every recipe you've learned that still gives skill-ups at your skill: **orange, yellow or green for you**, how many points until it turns grey, and where it turns yellow, green and grey. Best first. The numbers come from **WoW Forever's own game data** (not Classic or Retail; Forever changed many of them), and Short Royalty checks its colours against your profession window each time you open it (`/sr debug` shows the result). Recipes you haven't learned aren't listed, because when a trainer or recipe teaches them isn't in the game's data.
-- **Where to learn a recipe:** tooltips for recipes you don't know name the recipe item that teaches it (pattern, plan, formula…, from Forever's own data) and the skill it needs, what a trainer charges (remembered when you open a trainer), and the game's own "where from" text. **Levelling** counts the recipes a trainer you've visited would teach you now.
-- **Panel beside your profession window:** the next step of your cheapest route, and for the recipe you pick there its colour, where to learn it and who in the guild makes it, with **Route** and **+ List** buttons. **Hide** it, or type `/sr panel`, to turn it off and on.
-
-<p align="center"><img src="docs/images/panel.png" alt="The panel beside the profession window" width="70%"></p>
-
+- **Where to learn a recipe:** tooltips for recipes you don't know name the recipe item that teaches it (pattern, plan, formula…, from Forever's own data) and the skill it needs, what a trainer charges (remembered when you open a trainer),.
 - **Who wears it:** item tooltips say which guildmates wear the item (from the gear they share), and `/sr who` followed by a Shift-clicked item or part of its name lists them in chat.
 - **All recipes → Show:** only recipes you can learn now, ones from recipe items or trainers, or ones that still give you points.
-- **Skill-up colours in tooltips:** every recipe tooltip (Professions, All recipes, Crafters) says where it turns yellow, green and grey, and, if you've learned it, its colour for you now. The Crafters panel shows the same line under the reagents.
-
-<p align="center"><img src="docs/images/levelling.png" alt="Professions → Levelling" width="100%"></p>
-
-- **Route:** the cheapest way from your skill to your cap. Pick a profession and it lists which of your learned recipes to craft for each stretch of points, how many times, and what it costs: the recipe that costs least **per skill point** at each point, counting what you'd get for **selling what you make** (prices from TradeSkillMaster if you have it, and the vendor prices Short Royalty remembers). Orange recipes always give a point; yellow and green only sometimes, so their crafts are an average (the original game's chance; not confirmed for Forever). **Add all to shopping list** puts every craft on your shopping list. With **Recipes to learn** (on by default) it also plans with recipes you don't know yet: recipe items that have a price (TSM, or a vendor you've visited) and recipes a trainer you've opened teaches, adding what learning them costs. When nothing you know or can learn gives points any more, it tells you to visit your trainer.
-
-<p align="center"><img src="docs/images/route.png" alt="Professions → Route (example prices)" width="100%"></p>
-
-- **Shopping list:** **Shift-click** a recipe (All recipes, Levelling or a profession's list), or press **+ List** on the Crafters tab, then set how many times you'll craft it with **−** and **+** (Shift: 5 at a time). The list adds up every reagent and shows how many you **have in your bags and bank** and how many are **still to get**, and says when you can make a reagent yourself (Bolt of Woolen Cloth, for example). **Copy** gives it as plain text and **Copy for TSM** as a TSM item list; **Raw materials** turns reagents you make yourself (bolts, bars) into what they're made from; items on the list say "need 7, have 3" in their tooltips; and with TradeSkillMaster installed it shows roughly what the rest will cost, pricing anything you can make at the cheaper of buying or making it (vendor prices are remembered each time you visit a vendor). It's saved on your computer only and never sent to anyone. Reagents come from your game, or from Forever's own data when the profession window hasn't been opened.
-
-<p align="center"><img src="docs/images/shopping.png" alt="Professions → Shopping list" width="100%"></p>
+- **Skill-up colours in tooltips:** every recipe tooltip (Professions, All recipes, Crafters) says where it turns yellow, green and grey, and, if you've learned it, its colour for you now. The numbers come from **WoW Forever's own game data** (not Classic or Retail), and Short Royalty checks them against your profession window each time you open it (`/sr debug` shows the result). The Crafters panel shows the same line under the reagents.
 
 - **Cooldowns:** everyone's profession cooldowns (transmutes, Mooncloth…), ready first, then soonest. Shows who, how long, and **as of** when we last heard from them (orange after a day: a cooldown only updates while its owner is online). **Whisper** when they're on.
 - **Specialisations** (Gnomish/Goblin Engineer, Dragonscale/Elemental/Tribal Leatherworking, Armorsmith/Weaponsmith and the master smiths) are read from your spellbook. A spell only counts when the game's own name for it matches, so a wrong ID can never mislabel anyone.
@@ -247,6 +232,7 @@ recipes are recorded (the addon reminds you), and log in on each **alt** once.
 | `/sr log` | the same report plus the recent log |
 | `/sr scan` | re-read your character now |
 | `/sr sync` | share your data now and ask for anything missing |
+| `/sr who <item>` | list the guildmates who wear an item (Shift-click it, or type part of its name) |
 | `/sr reset` | put the window back in the middle of the screen |
 
 `/shortroyalty` and `/sk` work too, if another addon already uses `/sr`.
@@ -382,7 +368,7 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.4.7**: fix for the skill-up colour check in `/sr debug`
 - [x] **v0.4.8**: **cheapest levelling route** (step 4 of the levelling tools)
 - [x] **v0.5.5**: professions upgrade: where to learn each recipe (recipe items, trainers), shopping list upgrades (tooltips, make or buy, raw materials, Copy for TSM), route with recipes to learn, panel beside the profession window, recipe filters, who wears it
-- [ ] Next levelling step: cheapest levelling route
+- [x] **v0.5.6**: Levelling, Route, Shopping list, Profit and the panel beside the profession window removed for now (to be reworked)
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders
 - [ ] **Ideas for later**: craft requests, a short status line, lockout board

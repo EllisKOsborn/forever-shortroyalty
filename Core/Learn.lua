@@ -155,7 +155,7 @@ function Learn.Info(recipeID)
 	return info
 end
 
--- Pure. ctx = { profName, itemName(id), price(itemID) -> copper, via, money(c) }.
+-- Pure. ctx = { profName, itemName(id), money(c) }.
 -- Returns tooltip lines (plain strings; colours are added by the caller).
 function Learn.Lines(info, ctx)
 	local lines = {}
@@ -163,8 +163,6 @@ function Learn.Lines(info, ctx)
 	if info.item then
 		local line = "Learn from " .. (ctx.itemName(info.item) or "a recipe item") ..
 			(info.itemAt and info.itemAt > 0 and (" (" .. prof .. " " .. info.itemAt .. ")") or "")
-		local each, via = ctx.price(info.item)
-		if each then line = line .. ", " .. ctx.money(each) .. (via == "vendor" and " at a vendor" or " at auction") end
 		lines[#lines + 1] = line
 	end
 	if info.trainerAt then

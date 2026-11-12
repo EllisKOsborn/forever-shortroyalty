@@ -136,6 +136,19 @@ function SK.Count(t)
 	return n
 end
 
+-- Money as text: 12g 3s 40c (no colour codes; pure). Trainer costs.
+function SK.Money(c)
+	if type(c) ~= "number" then return nil end
+	local neg = c < 0
+	c = math.floor(math.abs(c) + 0.5)
+	local g, s, cp = math.floor(c / 10000), math.floor(c / 100) % 100, c % 100
+	local parts = {}
+	if g > 0 then parts[#parts + 1] = g .. "g" end
+	if s > 0 then parts[#parts + 1] = s .. "s" end
+	if cp > 0 or #parts == 0 then parts[#parts + 1] = cp .. "c" end
+	return (neg and "-" or "") .. table.concat(parts, " ")
+end
+
 function SK.CopyTable(t)
 	if type(t) ~= "table" then return t end
 	local out = {}

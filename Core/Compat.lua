@@ -646,78 +646,6 @@ function Compat.ItemCountInBags(itemID)
 	if GetItemCount then return clean(GetItemCount(itemID)) end
 end
 
--- bags, everything (bags + bank + reagent bank + account bank), or nil when
--- the game can't tell. Same Forever call, with its includeBank,
--- includeUses (false), includeReagentBank and includeAccountBank flags.
-function Compat.ItemCounts(itemID)
-	local bags = Compat.ItemCountInBags(itemID)
-	if bags == nil then return nil end
-	local total
-	if has("C_Item", "GetItemCount") then
-		local ok, n = pcall(C_Item.GetItemCount, itemID, true, false, true, true)
-		if ok then total = clean(n) end
-	elseif GetItemCount then
-		total = clean(GetItemCount(itemID, true))
-	end
-	return bags, math.max(total or bags, bags)
-end
-
-function Compat.ShiftDown()
-	return IsShiftKeyDown ~= nil and IsShiftKeyDown() == true
-end
-
----------------------------------------------------------------------------
--- Prices (v0.4.6). Auction prices come from other addons' public APIs when
--- they're installed: Auctionator (Auctionator.API.v1) and TradeSkillMaster
--- (TSM_API). Neither is required and every call is guarded, so a missing
--- or changed API just means "no price". /sr debug shows whether each works.
----------------------------------------------------------------------------
-Compat.PRICE_CALLER = "ShortRoyalty" -- the name Auctionator asks callers to pass
-
-local function copper(v)
-	v = clean(v)
-	if type(v) == "number" and v == v and v >= 0 and v < 1e12 then return math.floor(v) end
-end
-
-local function auctionatorV1()
-	local a = type(Auctionator) == "table" and Auctionator
-	local api = a and type(a.API) == "table" and a.API
-	local v1 = api and type(api.v1) == "table" and api.v1
-	return v1 and type(v1.GetAuctionPriceByItemID) == "function" and v1 or nil
-end
-
-local function tsmAPI()
-	return type(TSM_API) == "table" and type(TSM_API.GetCustomPriceValue) == "function" and TSM_API or nil
-end
-
-function Compat.PriceAddons()
-	return { auctionator = auctionatorV1() ~= nil, tsm = tsmAPI() ~= nil }
-end
-
--- Copper per item at the auction house, or nil.
-function Compat.AuctionatorPrice(itemID)
-	local v1 = auctionatorV1()
-	if not v1 or type(itemID) ~= "number" then return nil end
-	local ok, v = pcall(v1.GetAuctionPriceByItemID, Compat.PRICE_CALLER, itemID)
-	return ok and copper(v) or nil
-end
-
--- source is a TSM price source such as "DBMarket"; items are "i:<id>".
-function Compat.TSMPrice(itemID, source)
-	local api = tsmAPI()
-	if not api or type(itemID) ~= "number" then return nil end
-	local ok, v = pcall(api.GetCustomPriceValue, source, "i:" .. itemID)
-	return ok and copper(v) or nil
-end
-
--- What a vendor pays you for one (C_Item.GetItemInfo's sellPrice), or nil
--- while the item isn't loaded.
-function Compat.VendorSellPrice(itemID)
-	if not has("C_Item", "GetItemInfo") or type(itemID) ~= "number" then return nil end
-	local ok, v = pcall(function() return select(11, C_Item.GetItemInfo(itemID)) end)
-	return ok and copper(v) or nil
-end
-
 -- Where an unlearned recipe comes from, as the game words it ("Trainer",
 -- a vendor's name, "Drop"...). Blizzard's profession window calls this for
 -- unlearned recipes; it isn't in the generated docs, so it's probed (v0.5.0).
@@ -727,6 +655,12 @@ function Compat.RecipeSourceText(recipeID)
 	t = ok and clean(t) or nil
 	if type(t) ~= "string" or t == "" then return nil end
 	return t
+end
+
+-- A copper amount we can trust (a number, 0..1e12), else nil.
+local function copper(v)
+	v = clean(v)
+	if type(v) == "number" and v == v and v >= 0 and v < 1e12 then return math.floor(v) end
 end
 
 -- The open trainer's list: { { name, kind = "available"|"unavailable"|"used", skill, rank, cost } }.
@@ -751,28 +685,6 @@ function Compat.TrainerServices()
 				if okC then s.cost = copper(cost) end
 			end
 			out[#out + 1] = s
-		end
-	end
-	return out
-end
-
--- The open merchant's items for gold: { { itemID, each } } (copper per item).
--- Blizzard's Forever MerchantFrame (Mainline) uses the same three calls.
-function Compat.MerchantItems()
-	if type(GetMerchantNumItems) ~= "function" or type(GetMerchantItemID) ~= "function"
-		or not has("C_MerchantFrame", "GetItemInfo") then return nil end
-	local okN, n = pcall(GetMerchantNumItems)
-	n = okN and clean(n) or 0
-	local out = {}
-	for i = 1, math.min(n, 300) do
-		local okI, id = pcall(GetMerchantItemID, i)
-		local okF, info = pcall(C_MerchantFrame.GetItemInfo, i)
-		id = okI and clean(id) or nil
-		if type(id) == "number" and okF and type(info) == "table" and not info.hasExtendedCost and not info.currencyID then
-			local price, stack = copper(info.price), clean(info.stackCount)
-			if price and price > 0 and type(stack) == "number" and stack > 0 then
-				out[#out + 1] = { itemID = id, each = price / stack }
-			end
 		end
 	end
 	return out
@@ -963,24 +875,6 @@ end
 -- TooltipDataHandler.lua) with Enum.TooltipDataType.Item (= 0 in
 -- TooltipInfoSharedDocumentation). fn(tooltip, itemID).
 ---------------------------------------------------------------------------
--- Blizzard's profession window (Blizzard_Professions, loaded on demand), or nil.
-function Compat.ProfessionsFrame()
-	local f = rawget(_G, "ProfessionsFrame")
-	return type(f) == "table" and f.IsShown and f or nil
-end
-
--- fn(recipeID) when a recipe is picked in Blizzard's profession window.
--- Blizzard_ProfessionsRecipeList.lua fires this EventRegistry event.
-function Compat.OnRecipeSelected(owner, fn)
-	if type(EventRegistry) ~= "table" or type(EventRegistry.RegisterCallback) ~= "function" then return false end
-	local ok = pcall(EventRegistry.RegisterCallback, EventRegistry, "ProfessionsRecipeListMixin.Event.OnRecipeSelected",
-		function(_, recipeInfo)
-			local id = type(recipeInfo) == "table" and clean(recipeInfo.recipeID)
-			if type(id) == "number" then fn(id) end
-		end, owner)
-	return ok
-end
-
 function Compat.HookItemTooltips(fn)
 	local kind = Enum and Enum.TooltipDataType and Enum.TooltipDataType.Item
 	if not (kind and TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall) then return false end

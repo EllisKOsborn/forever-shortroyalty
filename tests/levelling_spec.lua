@@ -103,7 +103,7 @@ describe("Checking our colours against the profession window", function()
 	end)
 end)
 
-describe("Professions → Levelling", function()
+describe("Skill-up colours in the UI", function()
 	local SK, W
 	before_each(function()
 		SK, W = H.load()
@@ -120,25 +120,16 @@ describe("Professions → Levelling", function()
 		own.profs[185].primary = false -- Cooking is a secondary profession
 	end)
 
-	it("shows your first primary profession's skill-ups, learned first", function()
-		SK.DB.settings.profView = "levelling"
-		SK.MainFrame:Show("professions")
-		local tab = SK.ProfessionsTab
-		assert.is_true(tab.levelList:IsShown())
-		assert.equal(197, SK.ProfessionsTab.LevelProfession())
-		assert.equal(LINEN, tab.levelList.items[1].recipeID)
-		assert.is_true(tab.levelList.items[1].known)
-		assert.truthy(tab.status:GetText():find("1 learned recipe still give skill-ups", 1, true))
-		assert.equal(0, #SK.errors)
-	end)
-
-	it("switches profession and asks you to open a window it hasn't seen", function()
-		SK.DB.settings.profView = "levelling"
-		SK.MainFrame:Show("professions")
-		local tab = SK.ProfessionsTab
-		tab.levelMenu:Choose(185)
-		assert.equal(185, SK.DB.settings.levelProf)
-		assert.truthy(tab.status:GetText():find("Open your Cooking window once", 1, true))
+	it("a saved Levelling, Route, Shopping list or Profit view opens the Guild board (removed in v0.5.6)", function()
+		for _, v in ipairs({ "levelling", "route", "shopping", "profit" }) do
+			SK.DB.settings.profView = v
+			SK.MainFrame:Show("professions")
+			assert.is_true(SK.ProfessionsTab.board:IsShown())
+			assert.equal(3, #SK.ProfessionsTab.viewChips)
+		end
+		assert.is_nil(SK.Shopping)
+		assert.is_nil(SK.Prices)
+		assert.is_nil(SK.Route)
 		assert.equal(0, #SK.errors)
 	end)
 
@@ -149,14 +140,5 @@ describe("Professions → Levelling", function()
 		assert.truthy(text:find("yellow", 1, true))
 		assert.is_nil(SK.Widgets.SkillUpText(2406, 197):find("for you", 1, true)) -- not learned: no colour for you
 		assert.is_nil(SK.Widgets.SkillUpText(1, 197))
-	end)
-
-	it("no professions: says so", function()
-		local own = SK.Profile:Own()
-		own.profs = {}
-		SK.DB.settings.profView = "levelling"
-		SK.MainFrame:Show("professions")
-		assert.truthy(SK.ProfessionsTab.levelList.emptyText:find("haven't learned a profession", 1, true))
-		assert.equal(0, #SK.errors)
 	end)
 end)

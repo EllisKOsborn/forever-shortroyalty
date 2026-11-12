@@ -527,6 +527,16 @@ research on 7 Nov).
 
 ## 13. Levelling tools (11 Nov 2026)
 
+> **Removed in v0.5.6 (owner, 12 Nov 2026):** "They're just not working as
+> intended and require more work from you to get right. So, remove for now."
+> Levelling, Route, Shopping list, Profit and the panel beside the profession
+> window are gone; skill-up colours, where to learn, the Show filter and who
+> wears it stay. The code is in git history (v0.4.4–v0.5.5). Lessons for the
+> rework: Profit hid recipes it couldn't price (Green Woolen Bag at the
+> bottom because Green Dye / Coarse Thread had no price); vendor-only
+> materials need a price source before anything is ranked by cost; plan the
+> rework with the owner first and test in game before building on it.
+
 The owner saw Profession Master (CurseForge, All Rights Reserved, already
 supports Forever) and wants similar tools, built in this order. **Only WoW
 Forever data, never Retail or Classic; aim for the cheapest and most

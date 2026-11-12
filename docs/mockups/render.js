@@ -26,9 +26,6 @@ const SHOTS = {
   "professions-crafter": ["shot=1&screen=professions&data=full&prof=171&crafter=Brambletoe", W, H],
   cooldowns: ["shot=1&screen=professions&data=full&profView=cooldowns", W, H],
   "all-recipes": ["shot=1&screen=professions&data=full&profView=recipes", W, H],
-  levelling: ["shot=1&screen=professions&data=full&profView=levelling", W, H],
-  shopping: ["shot=1&screen=professions&data=full&profView=shopping", W, H],
-  route: ["shot=1&screen=professions&data=full&profView=route", W, H],
   "getting-started": ["shot=1&screen=overview&data=full&start=1", W, H],
   reminder: ["shot=1&screen=overview&data=full&start=1&remind=1", W, H + 52],
   settings: ["shot=1&screen=settings&data=full", W, H],
@@ -39,7 +36,7 @@ const SHOTS = {
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 // Pages of their own (not the preview window): name -> [file, width, height]
-const PAGES = { panel: ["docs/mockups/panel.html", 676, 362] };
+const PAGES = {};
 
 async function withPlaywright(chromium) {
   const browser = await chromium.launch();

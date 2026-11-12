@@ -1,17 +1,21 @@
 # Changelog
 
-## v0.5.6 (not released yet): fixes
+## v0.5.6 (not released yet): back to the basics of professions
 
+The levelling tools weren't working as intended, so they're **removed for
+now** and will come back reworked:
+
+- Gone from the Professions tab: **Levelling**, **Route** and **Shopping
+  list** (and the "+ List" button, Shift-click to add, and shopping lines in
+  item tooltips).
+- Gone: the **panel beside your profession window** and `/sr panel`.
+- Kept: skill-up colours and "where to learn" in recipe tooltips, the All
+  recipes **Show** filter, and **who wears it** (`/sr who`).
+- If you had a Levelling, Route or Shopping list view open, the tab opens on
+  Guild instead. Your saved shopping list stays in your saved data, unused.
 - `/sr debug` now lists, per profession, any recipe you know that isn't in
-  Forever's bundled recipe list (it helps us keep that list complete).
-- Lists built from your recipes now start from what your game recorded, so
-  a recipe missing from the bundled list still shows up.
-- With TSM installed, thread, dyes and other vendor items now get their
-  price from TSM's own vendor price list, so the shopping list cost and the
-  levelling route no longer skip recipes that need them. Lists that still
-  can't price a recipe now name the material that has no price.
-- `/sr debug` names the profession of the last scan again (the game leaves
-  it blank).
+  Forever's bundled recipe list, and names the profession of the last scan
+  again (the game leaves it blank).
 
 ## v0.5.5 (11 Nov 2026): Professions upgrade
 

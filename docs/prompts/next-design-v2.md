@@ -13,8 +13,9 @@ working with" and "Rules"), then `DESIGN.md`, `UI/Theme.lua`,
 
 ## Why
 The interface has become **cluttered**. Since v0.4.4 a lot was added to
-the Professions tab (Levelling, Route, Shopping list, Profit, filters,
-toggles, a panel beside the profession window) and to tooltips. I really
+the Professions tab and to tooltips. (Levelling, Route, Shopping list,
+Profit and the panel beside the profession window were removed again in
+v0.5.6, to be reworked later: design so they can come back without clutter.) I really
 like the look of three addons: **FojjiCore**, **EllesmereUI** and
 **Polestar**. I want Short Royalty to feel like them: clean, calm,
 modern, and easy to use.
@@ -53,8 +54,7 @@ modern, and easy to use.
 - Every visual value lives in `UI/Theme.lua` (`tests/design_spec.lua`
   enforces colours); update `DESIGN.md` with the new rules and why.
 - Keep everything that works: features, saved data, sync (no wire
-  changes), `/sr` commands, and the owner-only Profit (`/sr profit`;
-  never shown or advertised to others).
+  changes), `/sr` commands.
 - Forever is the Mainline (12.x) UI with "secret values": no taint, don't
   restyle Blizzard's frames, `Core/Compat.lua` is the only place for
   client calls.
@@ -65,14 +65,12 @@ modern, and easy to use.
 ## What I'd like out of it
 1. **An audit of the clutter** (short, with pictures): every screen, what
    competes for attention, what could hide until needed. Known hot spots:
-   - Professions tab: seven view buttons in a row, extra toolbars and
-     toggles per view, long status lines.
-   - Recipe tooltips: skill-up range, where to learn, crafters, prices can
+   - Professions tab: view buttons, toolbars and long status lines.
+   - Recipe tooltips: skill-up range, where to learn and crafters can
      stack into many lines.
-   - The panel beside the profession window.
    - Overview density, the Settings tab (its column is full).
 2. **Two or three directions** to choose from, each as mock-ups of the
-   Overview, Roster, Professions (Route and Shopping list) and Settings, for
+   Overview, Roster, Professions and Settings, for
    example:
    - **Minimal dark** (EllesmereUI-like): flat panels, hairline borders, one
      accent colour, generous spacing, fewer boxes.
@@ -83,11 +81,11 @@ modern, and easy to use.
    colour, picked in Settings (and maybe EllesmereUI's accent when it's
    installed, like Polestar does; only if its public API allows it).
 4. **Fewer, clearer controls:** a two-level navigation for Professions
-   (e.g. Guild / Recipes / Levelling (Route, Shopping list) / Cooldowns),
+   (e.g. Guild / Recipes / Cooldowns, with room for levelling tools later),
    toggles moved into a small options menu, status lines shortened, and
    tooltips trimmed to the 2–3 lines that matter with the rest on Shift.
-5. **A tidy Settings page** in sections (Sharing, Display, Professions,
-   Panel), like Polestar's single options page.
+5. **A tidy Settings page** in sections (Sharing, Display, Professions),
+   like Polestar's single options page.
 6. Then build the direction I pick, screen by screen, with before/after
    pictures, keeping every feature working.
 

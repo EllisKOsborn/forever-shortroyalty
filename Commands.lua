@@ -254,20 +254,6 @@ function Commands.BuildReport()
 	else
 		add("Skill-up colours vs your profession window: not checked yet (open a profession window)")
 	end
-	-- v0.4.6: do the price addons answer? (Linen Cloth is sold on every auction house.)
-	local LINEN = 2589
-	local have, P = Compat.PriceAddons(), SK.Prices
-	local function cash(c) return c and P.Money(c) or "none" end
-	add("Prices: Auctionator API %s (Linen Cloth %s); TSM API %s (DBMarket %s, DBMinBuyout %s); using %s",
-		yesno(have.auctionator), cash(Compat.AuctionatorPrice(LINEN)), yesno(have.tsm),
-		cash(Compat.TSMPrice(LINEN, "DBMarket")), cash(Compat.TSMPrice(LINEN, "DBMinBuyout")),
-		P.Source() and P.SOURCE_NAMES[P.Source()] or "vendor prices only")
-	add("Vendor prices remembered: %d; Linen Cloth sells to a vendor for %s", P.VendorKnown(),
-		cash(Compat.VendorSellPrice(LINEN)))
-	-- v0.5.6: TSM's vendor price list (Coarse Thread 2321, Green Dye 2605)
-	add("TSM VendorBuy: Coarse Thread %s, Green Dye %s; used: Coarse Thread %s, Green Dye %s",
-		cash(Compat.TSMPrice(2321, "VendorBuy")), cash(Compat.TSMPrice(2605, "VendorBuy")),
-		cash(P.VendorBuy(2321)), cash(P.VendorBuy(2605)))
 	-- v0.5.0: where to learn recipes. Does the game answer GetRecipeSourceText / disabledReason?
 	local LN = SK.Learn
 	local items = 0
@@ -361,7 +347,6 @@ local HELP = {
 	"/sr scan - rescan your character",
 	"/sr sync - share your data now",
 	"/sr reset - centre the window",
-	"/sr panel - the panel beside your profession window on or off",
 	"/sr who <item> - who in the guild wears it (Shift-click an item, or type part of its name)",
 }
 Commands.HELP = HELP
@@ -374,13 +359,6 @@ function Commands.Run(msg)
 		SK.DebugWindow:Open(false)
 	elseif cmd == "log" then
 		SK.DebugWindow:Open(true)
-	elseif cmd == "profit" and SK.Prices.IsOwnerAccount() then
-		-- Not in the help list, and only on the owner's account (else: help, as for any unknown command).
-		SK.DB.unlocked = type(SK.DB.unlocked) == "table" and SK.DB.unlocked or {}
-		SK.DB.unlocked.profit = not SK.DB.unlocked.profit or nil
-		SK:Print(SK.DB.unlocked.profit and "Profit view on (Professions tab), for every character on this account."
-			or "Profit view hidden.")
-		if SK.ProfessionsTab then SK.ProfessionsTab:Refresh() end
 	elseif cmd == "scan" then
 		SK.Profile:BuildSelf()
 		SK:Print("Character rescanned.")
@@ -390,8 +368,6 @@ function Commands.Run(msg)
 		SK:Print("Sync requested.")
 	elseif cmd == "who" then
 		Commands.Who(msg:match("^%s*%S+%s*(.-)%s*$"))
-	elseif cmd == "panel" then
-		SK.ProfPanel.Toggle()
 	elseif cmd == "reset" then
 		SK.MainFrame:ResetPosition()
 	else

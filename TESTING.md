@@ -554,15 +554,19 @@ in game if anything looks different and send it.
 183. [ ] `/sr who ` then Shift-click an item: chat lists who wears it.
         `/sr who silk` lists items with "silk" in the name that someone wears.
 
-## v0.5.6 Fixes
+## v0.5.6 Levelling tools removed
+
+Items 150–160, 162–166, 170–180 and the shopping list part of 172–174 test
+features removed in v0.5.6 (Levelling, Route, Shopping list, Profit, the
+panel): skip them.
 
 184. [ ] Open each profession window once, then `/sr debug`: under each
    "Profession …" line, is there a "not in Forever's recipe list" line?
-   Send it (and the names of any recipes you noticed missing).
-185. [ ] `/sr debug` line "TSM VendorBuy": do Coarse Thread and Green Dye have
-   prices (not "none")? In Profit, Green Woolen Bag should now have a cost
-   and sit near the top; rows still without a price say "needs <material>",
-   and the status line names the materials with no price yet.
+   Send it. The "Last scan" line names the profession.
+185. [ ] Professions shows three buttons (Guild, All recipes, Cooldowns); no
+   panel beside the profession window; `/sr profit` and `/sr panel` print
+   the help. Recipe tooltips still show the skill-up colours and where to
+   learn.
 
 ## Known gaps in v0.1
 

@@ -28,7 +28,27 @@ A World of Warcraft: **Forever** addon for the guild **Short Royalty**
 talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
-## Start here (handover, 11 Nov 2026)
+## Start here (handover, 12 Nov 2026)
+- **v0.5.6 (not released yet, on `claude/short-kings-addon-hlf0t4`):
+  levelling tools REMOVED** (owner, 12 Nov: "I want to rollback the changes
+  for levelling, route, shopping list and profit. They're just not working
+  as intended and requires more work from you to get right. So, remove for
+  now."). Gone: `Core/Shopping.lua`, `Core/Prices.lua`, `Core/Route.lua`,
+  `UI/ProfPanel.lua` (owner chose to remove the panel too), the Professions
+  views levelling/route/shopping/profit (`VIEWS` = board, recipes,
+  cooldowns; a saved removed view falls back to board), Crafters "+ List",
+  Shift-click to add, the item-tooltip shopping line, `/sr profit`,
+  `/sr panel`, the Prices/TSM debug lines, Compat price/merchant/item-count/
+  ShiftDown/ProfessionsFrame/OnRecipeSelected, their tests and pictures, DB
+  defaults (saved `shopping`/`vendorBuy`/`unlocked` are left alone, unused).
+  **Kept (owner chose):** skill-up colours (`W.SkillUpText/SkillUpTip`,
+  `RecipeDB` ranges, colour check), where to learn (`Core/Learn.lua`,
+  `W.LearnLines`, now without a recipe-item price; `SK.Money` in Init for
+  trainer costs), the All recipes Show filter, who wears it. `RecipeDB.SkillUps`
+  and `Learn.Trainable` stay (tested, unused) for the rework. The notes on
+  v0.4.4–v0.5.5 below describe the removed code (git history has it). Lessons
+  in PLAN.md section 13. **Don't rebuild them unless the owner asks**; plan
+  the rework with them first.
 - **Released:** v0.5.5 on `main` (11 Nov: professions upgrade from PLAN.md
   section 14: where to learn, shopping upgrades, route with recipes to learn,
   panel beside the profession window, filters, who wears it; the unreleased
@@ -48,7 +68,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   solid texture on the HIGHLIGHT layer, which draws over text; now
   BACKGROUND, shown on enter). TESTING 155–160. **Get the owner's `/sr debug`
   "Prices:" line** (TESTING 156): the Auctionator/TSM calls are unverified.
-- **Profit is hidden and owner-only (owner, 11 Nov: "I don't want others
+- (Removed in v0.5.6, history:) **Profit was hidden and owner-only (owner, 11 Nov: "I don't want others
   seeing this just yet whilst I make money"; "sr profit is only for me")**:
   the Profit view only shows after `/sr profit` (`SK.DB.unlocked.profit`,
   account-wide, toggles; not in `/sr` help), and only on the owner's account
@@ -134,19 +154,6 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   tooltips "Guild: worn by …" (same setting as crafters, label renamed);
   `/sr who <link|id|name>` (`Commands.Who`, in help). Tests:
   `tests/gear_index_spec.lua`. TESTING 182–183.
-- **v0.5.6 (not released yet) Profit fix** (owner, 12 Nov: "it's not even
-  looking at my own recipes as it's missing them"): `Prices.Rows(skillLine,
-  known)` now iterates the player's recorded recipes (`own.recipes[line]`,
-  id → itemID) instead of the bundled `RecipeDB.List`, with the scan's itemID
-  as fallback (`Prices.Recipe(id, itemID)`). `/sr debug` adds "not in
-  Forever's recipe list: N (ids)" per profession (TESTING 184). **Real
-  cause (owner, 12 Nov):** Green Woolen Bag (3758) was known but sat at the
-  bottom as unpriced: Green Dye 2605 / Coarse Thread 2321 are vendor-only,
-  so TSM had no auction price and no vendor had been visited. Fix:
-  `Prices.VendorBuy` = cheaper of remembered and TSM's `VendorBuy` price
-  source (**unverified in Forever**; `/sr debug` "TSM VendorBuy" line,
-  TESTING 185); `Prices.Craft` returns `missingIDs`, `Prices.MissingTop`;
-  Profit cost cell "needs <item>", status "no price yet: …".
 - **Guild-shared prices: dropped** (owner, 11 Nov: "I don't think price
   sharing is what we should add at all"). Don't propose it again unless asked.
 - **Redesign (owner, 11 Nov: "the interface is now very cluttered"; likes
@@ -154,9 +161,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   **`docs/prompts/next-design-v2.md`** (v0.6.0). Licences: Polestar GPL v3
   (github.com/fitzforge/polestar), EllesmereUI custom all rights reserved,
   FojjiCore All Rights Reserved: **inspiration only**, never code/art.
-- **Next:** wait for the owner's in-game test of v0.5.5 (TESTING 167–183,
-  especially the `/sr debug` "Where to learn" and "Trainers" lines, the panel
-  position, and whether TSM accepts Copy for TSM), then ask what's next.
+- **Next:** the owner says "put it on main" to release v0.5.6; then ask
+  what's next. Still useful from v0.5.5: TESTING 167–169, 181–185.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from
@@ -432,10 +438,9 @@ Core/     Init (events, timers, modules), Log (+ error capture: SK:Safe,
           (mutual-link groups), CraftIndex (recipe/item → crafters, async
           names), Favourites (local stars), Reagents (GetRecipeSchematic
           cache, local), ProfBoard (numbers for the Professions tab),
-          RecipeDB (every recipe + search), Shopping (shopping list,
-          local), Prices (Auctionator/TSM/vendor prices, profit; local),
-          Route (cheapest levelling route; pure planning),
-          Onboarding (Getting started),
+          RecipeDB (every recipe + search, skill-up colours), Learn
+          (where to learn: recipe items, trainers), GearIndex (who wears
+          it), Onboarding (Getting started),
           Export (plain text for Copy), Feed (local milestones,
           never synced), Overview (numbers for the Overview tab)
 Data/     Professions, Recipes (GENERATED by tools/recipes.js), Attunements

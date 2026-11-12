@@ -20,13 +20,8 @@ local DEFAULTS = {
 		feed = true,                              -- record guild milestones for the Overview (v0.2.2)
 		reduceMotion = false,                     -- turn off UI animation (v0.2.3 design refresh)
 		profNudges = true,                        -- "open your Tailoring window" reminders (v0.3)
-		profView = "board",                       -- Professions tab view: board, recipes, cooldowns, levelling, route, shopping, profit
-		levelProf = nil,                          -- Professions → Levelling: which of your professions (skillLine)
+		profView = "board",                       -- Professions tab view: board, recipes, cooldowns
 		charModel = true,                         -- Character tab: gear on a 3D model (v0.4.3)
-		profPanel = true,                         -- the panel beside Blizzard's profession window (v0.5.3)
-		routeLearn = true,                        -- Route: also plan with recipes you could learn (v0.5.2)
-		shopRaw = false,                          -- Shopping list: show raw materials for reagents you make (v0.5.1)
-		priceSource = "auto",                     -- auction prices from "auto", "auctionator" or "tsm" (v0.4.6)
 		welcomed = false,                         -- first-load welcome line shown (v0.3.1)
 		seen = {},                                -- tabs looked at, for "Getting started" (v0.3.1)
 		onboarding = { hidden = false },          -- "Getting started" card hidden by the player (v0.3.1)
@@ -38,9 +33,8 @@ local DEFAULTS = {
 	feed = {},      -- recent milestones, newest first, max 50 (local only, never sent)
 	favourites = { recipes = {}, crafters = {} }, -- starred recipes and crafters (v0.3, local only)
 	reagents = { build = nil, list = {} },        -- recipe reagents read from the game (v0.3, local only)
-	shopping = { list = {} },                     -- shopping list { { id = recipeID, n = crafts } } (v0.4.5, local only)
-	unlocked = {},                                -- [feature] = true: views the owner keeps hidden (v0.4.7: "profit"), whole account
-	vendorBuy = {},                               -- [itemID] = copper a merchant charged (cheapest seen; v0.4.6, local only)
+	-- v0.5.6: shopping, unlocked and vendorBuy (Shopping list, Profit) were
+	-- removed with those features; saved copies are left alone, unused.
 	trainer = {},      -- [recipeID] = { at = skill needed, cost, seen } from trainers you opened (v0.5.0, local)
 	recipeSource = {}, -- [recipeID] = { text, reason } the game's "where from" for unlearned recipes (v0.5.0, local)
 	colourCheck = { build = nil, match = 0, differ = 0, examples = {} }, -- our skill-up colours vs the window's (v0.4.4, local)

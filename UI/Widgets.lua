@@ -362,8 +362,7 @@ function W.LearnLines(recipeID, skillLine)
 	return SK.Learn.Lines(SK.Learn.Info(recipeID), {
 		profName = profName,
 		itemName = SK.CraftIndex.ItemName,
-		price = function(itemID) return SK.Prices.Buy(itemID) end,
-		money = SK.Prices.Money,
+		money = SK.Money,
 	})
 end
 

@@ -41,12 +41,12 @@ describe("Learn", function()
 
 	local function ctx()
 		return { profName = "Tailoring", itemName = function(id) return ({ [5772] = "Pattern: Red Woolen Bag" })[id] end,
-			price = function(id) if id == 5772 then return 500, "vendor" end end, money = SK.Prices.Money }
+			money = SK.Money }
 	end
 
 	it("words a recipe item, a trainer and the game's own text", function()
 		local L = SK.Learn
-		assert.same({ "Learn from Pattern: Red Woolen Bag (Tailoring 90), 5s at a vendor" },
+		assert.same({ "Learn from Pattern: Red Woolen Bag (Tailoring 90)" },
 			L.Lines({ item = 5772, itemAt = 90 }, ctx()))
 		assert.same({ "Trainer: Tailoring 125, 45s" }, L.Lines({ trainerAt = 125, trainerCost = 4500 }, ctx()))
 		assert.same({ "Source: Trainer" }, L.Lines({ text = "Trainer" }, ctx()))
@@ -133,13 +133,5 @@ describe("Where to learn, in the UI", function()
 		assert.truthy(lines[1]:find("Learn from", 1, true))
 		assert.truthy(lines[1]:find("Tailoring 90", 1, true))
 		assert.same({}, SK.Widgets.LearnLines(LINEN_BOLT, 197)) -- known
-	end)
-
-	it("Levelling counts recipes your trainer would teach you now", function()
-		SK.DB.trainer[HOOD] = { at = 145, cost = 2200 }
-		SK.DB.settings.profView = "levelling"
-		SK.MainFrame:Show("professions")
-		assert.truthy(SK.ProfessionsTab.status:GetText():find("1 to learn at your trainer", 1, true))
-		assert.equal(0, #SK.errors)
 	end)
 end)
