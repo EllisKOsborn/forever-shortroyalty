@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.7 (not released yet): fixes
+## v0.5.7 (12 Nov 2026): fixes
 
 - **Cooldowns** listed recipes that never have a cooldown (Linen Boots,
   Woolen Cape…). Opening your profession window just after crafting made the
