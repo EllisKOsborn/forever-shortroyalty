@@ -141,6 +141,28 @@ function Compat.PlayerBasics()
 	}
 end
 
+-- The player's class colour as { r, g, b } (the "class colour" accent, v0.6.0).
+function Compat.PlayerClassRGB()
+	if not UnitClass then return nil end
+	local _, classFile = UnitClass("player")
+	if not classFile then return nil end
+	local r, g, b = Compat.ClassColor(classFile)
+	return { r, g, b }
+end
+
+-- Shift held (tooltips show their details while it is, v0.6.0).
+function Compat.ShiftDown()
+	return IsShiftKeyDown and IsShiftKeyDown() and true or false
+end
+
+-- Reload the interface (the body font only changes on a reload, v0.6.0).
+-- Not protected; called only from a button click.
+function Compat.ReloadUI()
+	local reload = (C_UI and C_UI.Reload) or ReloadUI
+	if reload then reload() return true end
+	return false
+end
+
 ---------------------------------------------------------------------------
 -- Guild
 ---------------------------------------------------------------------------

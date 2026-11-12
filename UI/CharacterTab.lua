@@ -67,7 +67,7 @@ local function slotButton(parent, slot)
 	b.warn:SetPoint("TOPRIGHT", 3, 3)
 	b.warn:SetTexture(Theme.TEX.dot)
 	b.warn:SetVertexColor(Theme.RGB("spark"))
-	b.warnText = Theme.Text(b, "micro", "onGold", "OVERLAY")
+	b.warnText = Theme.Text(b, "micro", "void", "OVERLAY")
 	b.warnText:SetPoint("CENTER", b.warn, "CENTER", 0, 0)
 	b.warnText:SetText("!")
 	b.warnText:SetShadowOffset(0, 0)
@@ -112,12 +112,13 @@ local function slotButton(parent, slot)
 end
 
 -- The details area: two scrolling columns of sections.
-Char.DOLL_W = 250
+Char.DOLL_W = 236
 -- content width = doll + gap + column + (gap + scroll bar) + column + scroll bar
-Char.DETAIL_COL_W = math.floor((S.window[1] - 2 * SP.l - Char.DOLL_W - SP.xl - (SP.xl + SP.m) - SP.m) / 2)
+Char.DETAIL_COL_W = math.floor((S.contentW - Char.DOLL_W - SP.xl - (SP.xl + SP.m) - SP.m) / 2)
 
 function Char:Build(page)
-	-- Header: back link, then actions on the right (the primary one in gold).
+	-- Header: back link, then actions on the right (Whisper, and a quiet
+	-- "Ask for latest").
 	self.back = W.Button(page, "Back to roster", nil, S.control, function() SK.MainFrame:Select("roster") end, "quiet")
 	self.back:SetPoint("TOPLEFT", -SP.s, 0)
 	self.mine = W.Button(page, "My character", nil, S.control, function() Char:ShowCharacter(nil) end, "quiet")
@@ -133,7 +134,7 @@ function Char:Build(page)
 			SK:Print("Already asked. Give it a few seconds.")
 		end
 		Char:Refresh()
-	end, "primary")
+	end, "quiet")
 	self.askLatest.tooltip = "Ask them (or their online alt) for their newest data"
 	self.askLatest.disabledTooltip = "Offline: showing their last known data"
 	self.askLatest:SetPoint("TOPRIGHT", 0, 0)
@@ -178,7 +179,7 @@ function Char:Build(page)
 		b:SetPoint("BOTTOM", (i - 2) * (S.slot + SP.s), SP.s + 2)
 		self.slots[slot] = b
 	end
-	self.ilvl = Theme.Text(doll, "figure", "gold")
+	self.ilvl = Theme.Text(doll, "figure", "accent")
 	self.ilvl:SetPoint("CENTER", 0, 56)
 	self.ilvl:SetJustifyH("CENTER")
 	self.ilvlLabel = Theme.Text(doll, "micro", "dim")
@@ -279,7 +280,7 @@ function Char.DetailSections(p, now, extra)
 	if extra.alts and #extra.alts > 0 then
 		local rows = section(extra.isMain and "Alts" or "Same player", 1)
 		for _, a in ipairs(extra.alts) do
-			rows[#rows + 1] = { label = Theme.ClassText(a.name, a.class), value = a.isMain and "main" or "", tone = "beard" }
+			rows[#rows + 1] = { label = Theme.ClassText(a.name, a.class), value = a.isMain and "main" or "", tone = "accent" }
 		end
 	end
 	if (extra.note and extra.note ~= "") or (extra.officerNote and extra.officerNote ~= "") then
@@ -515,4 +516,5 @@ function Char.EmptyText(isMember)
 		.. " Their profile appears here the next time they log in with it."
 end
 
-SK.MainFrame:AddTab("character", "Character", Char)
+SK.MainFrame:AddTab("character", "Character", Char, { group = "guild",
+	desc = "Gear, talents, professions, cooldowns, reputations and attunements." })

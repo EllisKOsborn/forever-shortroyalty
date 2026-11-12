@@ -20,6 +20,25 @@ describe("Theme", function()
 		end
 		assert.equal("FFC000", SK.Theme.HEX.gold)
 		assert.equal("000000", SK.Theme.HEX.void)
+		assert.equal("F06BB0", SK.Theme.HEX.accent) -- v0.6.0: pink by default
+	end)
+
+	it("v0.6.0: one accent colour, pink, gold or the class colour, with readable text on it", function()
+		local T = SK.Theme
+		T.SetAccent("gold")
+		assert.equal("FFC000", T.HEX.accent)
+		assert.same({ 0, 0, 0, 1 }, T.COLOR.onAccent)
+		T.SetAccent("class", { 0, 0.44, 0.87 }) -- a dark blue class: white text on it
+		assert.equal("0070DE", T.HEX.accent)
+		assert.same({ 1, 1, 1, 1 }, T.COLOR.onAccent)
+		T.SetAccent("class", nil)                -- class not known yet: pink
+		assert.equal("F06BB0", T.HEX.accent)
+		-- textures painted with the accent follow a new choice at once
+		local tex = { SetColorTexture = function(self, r, g, b) self.rgb = { r, g, b } end }
+		T.Solid(tex, "accent")
+		T.SetAccent("gold")
+		assert.equal(1, tex.rgb[1]); assert.equal(0.753, tex.rgb[2])
+		T.SetAccent("pink")
 	end)
 
 	it("has a font, size and colour for every text role", function()
@@ -51,12 +70,26 @@ describe("Theme", function()
 
 	it("uses the body font family (with CJK fallbacks) when the client has loaded it", function()
 		local used
-		_G.ShortRoyaltyBody13 = {}
+		_G.ShortRoyaltyBody13, _G.ShortRoyaltyInter13 = {}, {}
 		local fs = { SetFontObject = function(_, f) used = f end, SetFont = function() error("raw font used") end,
 			SetTextColor = function() end, SetShadowOffset = function() end, SetShadowColor = function() end }
 		SK.Theme.Font(fs, "body")
-		assert.equal(_G.ShortRoyaltyBody13, used)
-		_G.ShortRoyaltyBody13 = nil
+		assert.equal(_G.ShortRoyaltyInter13, used)  -- v0.6.0: Inter by default
+		SK.Theme.body = "narrow"
+		SK.Theme.Font(fs, "body")
+		assert.equal(_G.ShortRoyaltyBody13, used)   -- the game's Arial Narrow when picked
+		SK.Theme.body = "inter"
+		_G.ShortRoyaltyBody13, _G.ShortRoyaltyInter13 = nil, nil
+	end)
+
+	it("v0.6.0: the font choice is read from Settings when saved data loads", function()
+		SK.DB.settings.font = "narrow"
+		SK.MainFrame.ApplyLook()
+		assert.equal("narrow", SK.Theme.body)
+		SK.DB.settings.font = "inter"
+		SK.MainFrame.ApplyLook()
+		assert.equal("inter", SK.Theme.body)
+		assert.truthy(SK.Theme.FONT.inter:find("Inter%-Regular.ttf$"))
 	end)
 
 	it("falls back to the game font if the bundled font can't load", function()
@@ -107,6 +140,9 @@ describe("Nothing visual is hard-coded outside the theme", function()
 					file .. " sets a literal visible colour")
 				assert.is_nil(src:find("AddLine%([^\n]-,%s*[%d%.]+%s*,%s*[%d%.]+"), file .. " has a literal tooltip colour")
 				assert.is_nil(src:find("UIPanelCloseButton", 1, true), file .. " uses the Blizzard close button")
+				-- v0.6.0: one accent; gold and the beard pink are only the accent's choices.
+				assert.is_nil(src:find('"gold"', 1, true), file .. " uses gold directly (use \"accent\")")
+				assert.is_nil(src:find('"beard"', 1, true), file .. " uses the beard pink directly (use \"accent\")")
 			end
 		end
 	end)
@@ -132,9 +168,28 @@ describe("Main window", function()
 	end)
 
 	it("says what sync is doing and counts errors", function()
-		assert.equal("Short Royalty  ·  Sync on", SK.MainFrame.StatusText("Short Royalty", false))
-		assert.equal("No guild  ·  Sync paused: combat", SK.MainFrame.StatusText(nil, true, "combat"))
-		assert.truthy(SK.MainFrame.StatusText("G", false, nil, 2):find("2 errors", 1, true))
+		assert.equal("Synced", SK.MainFrame.StatusText(false))
+		assert.equal("Sync paused: combat", SK.MainFrame.StatusText(true, "combat"))
+		assert.truthy(SK.MainFrame.StatusText(false, nil, 2):find("2 errors", 1, true))
+		assert.equal("No guild", SK.MainFrame.GuildLine(nil))
+		assert.equal("Short Royalty  ·  1 online", SK.MainFrame.GuildLine("Short Royalty", SK.DBM:Guild()))
+	end)
+
+	it("v0.6.0: a sidebar with Guild and Crafting sections, and a title and sentence per page", function()
+		SK.MainFrame:Open("roster")
+		local f = SK.MainFrame.frame
+		local groups = {}
+		for _, tab in ipairs(SK.MainFrame.tabs) do groups[#groups + 1] = tab.key .. ":" .. tab.group end
+		assert.same({ "overview:guild", "roster:guild", "character:guild", "crafters:crafting", "professions:crafting",
+			"settings:settings" }, groups)
+		assert.equal("ROSTER", f.pageTitle:GetText())
+		assert.truthy(f.desc:GetText():find("Everyone in the guild", 1, true))
+		assert.is_true(f.navButtons[2].active)
+		f.navButtons[4]:GetScript("OnClick")(f.navButtons[4])
+		assert.equal("crafters", SK.MainFrame.current)
+		assert.equal("FIND A CRAFTER", f.pageTitle:GetText())
+		assert.is_false(f.navButtons[2].active)
+		assert.equal(SK.Theme.SIZES.window[1] - SK.Theme.SIZES.sidebar - 2 * SK.Theme.SPACE.l, SK.Theme.SIZES.contentW)
 	end)
 
 	it("opens in combat without errors (nothing protected is touched)", function()
@@ -187,7 +242,7 @@ describe("States", function()
 	it("the Overview works with no guild at all", function()
 		W.guild = nil
 		SK.MainFrame:Show("overview")
-		assert.truthy(SK.OverviewTab.header:GetText():find("No guild", 1, true))
+		assert.truthy(SK.MainFrame.frame.desc:GetText():find("No guild", 1, true))
 	end)
 
 	it("sheet text keeps labels, values and colours", function()

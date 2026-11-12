@@ -14,12 +14,12 @@ function Tip.Add(tooltip, itemID)
 	if not guild then return end
 	local text = SK.CraftIndex.TooltipText(SK.CraftIndex:Get(true), itemID, guild, SK.Compat.Now(), 3)
 	if text then
-		SK.Theme.TipLine(tooltip, SK.Theme.Code("beard") .. "Short Royalty:|r " .. text, "text", true)
+		SK.Theme.TipLine(tooltip, SK.Theme.Code("accent") .. "Short Royalty:|r " .. text, "text", true)
 	end
 	-- v0.5.5: guildmates wearing it.
 	local worn = SK.GearIndex and SK.GearIndex.Text(SK.GearIndex.Wearers(itemID), 3)
 	if worn then
-		SK.Theme.TipLine(tooltip, SK.Theme.Code("beard") .. "Guild:|r " .. worn, "text", true)
+		SK.Theme.TipLine(tooltip, SK.Theme.Code("accent") .. "Guild:|r " .. worn, "text", true)
 	end
 end
 

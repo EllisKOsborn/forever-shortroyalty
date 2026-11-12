@@ -319,16 +319,18 @@ describe("v0.2.1 Copy as text", function()
 end)
 
 describe("v0.2.1 update available", function()
-	it("says so in the Roster counter when a guildmate runs a newer version", function()
+	it("says so at the bottom of the sidebar when a guildmate runs a newer version", function()
 		local SK, W = H.load()
 		H.loadUI(SK)
 		W.member("Pip", W.player.guid)
 		W.member("Bob", "Player-1-B")
 		SK.Identity:ReadRoster()
 		SK.MainFrame:Show("roster")
-		assert.is_nil(SK.RosterTab.count:GetText():find("is out", 1, true))
+		local line = SK.MainFrame.frame.guildLine
+		assert.is_nil(line:GetText():find("is out", 1, true))
 		SK.Identity:Member("Player-1-B").addon = "0.9.0"
-		SK.RosterTab:Refresh()
-		assert.truthy(SK.RosterTab.count:GetText():find("Short Royalty 0.9.0 is out (you have 0.1.0)", 1, true))
+		SK.MainFrame:Refresh()
+		-- v0.6.0: at the bottom of the sidebar, on every page
+		assert.truthy(line:GetText():find("Update: 0.9.0 is out", 1, true))
 	end)
 end)

@@ -41,13 +41,27 @@ describe("v0.3.5 full list of who doesn't have the addon", function()
 		assert.truthy(all:find("and 5 more", 1, true))
 	end)
 
-	it("the short line says you can point at it, and both rows carry the tooltip", function()
-		assert.truthy(SK.OverviewTab.WithoutText(people(14)):find("and 4 more (point here to see all)", 1, true))
-		local o = { members = 14, players = 14, online = 1, withAddon = 0, hasAddon = 0, without = people(14), levels = {} }
-		local rows = SK.OverviewTab.GuildRows(o)
-		assert.equal("function", type(rows[5].tip)) -- "Don't have it yet"
-		assert.equal("function", type(rows[6].tip)) -- the names
-		assert.is_nil(rows[4].tip)
+	it("the number and the Needs a look row both carry the full list", function()
+		local o = { members = 14, players = 14, online = 1, withAddon = 0, hasAddon = 0, without = people(14), levels = {},
+			raids = {}, outdated = 0, addonNoData = 0, unscanned = 0, stale = 0 }
+		local stats = SK.OverviewTab.Stats(o)
+		assert.equal("function", type(stats[3].tip))
+		assert.equal("function", type(SK.OverviewTab.NeedsRows(o)[1].tip))
+		assert.is_nil(stats[2].onClick)
+	end)
+
+	it("a Card row with a tip shows it on hover, and a clickable row has a chevron", function()
+		local c = SK.Widgets.Card(UIParent, 200, "Test")
+		local shown, clicked
+		c:SetRows({ { label = "x", value = "1" }, { label = "y", value = "2", tip = function() shown = true end,
+			onClick = function() clicked = true end } })
+		local r = c.pool[2]
+		r:GetScript("OnEnter")(r)
+		r:GetScript("OnClick")(r)
+		assert.is_true(shown)
+		assert.is_true(clicked)
+		assert.is_true(r.chev:IsShown())
+		assert.is_false(c.pool[1].chev:IsShown())
 	end)
 
 	it("a Block row with a tip shows it on hover", function()

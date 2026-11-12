@@ -25,6 +25,9 @@ local DEFAULTS = {
 		welcomed = false,                         -- first-load welcome line shown (v0.3.1)
 		seen = {},                                -- tabs looked at, for "Getting started" (v0.3.1)
 		onboarding = { hidden = false },          -- "Getting started" card hidden by the player (v0.3.1)
+		accent = "pink",                          -- v0.6.0 accent colour: pink, gold or class
+		font = "inter",                           -- v0.6.0 body font: inter or narrow (after a reload)
+		settingsView = "general",                 -- v0.6.0 Settings page tab: general or advanced
 	},
 	own = {},             -- [guid] = full profile of our own characters (never sent)
 	cooldownSpells = {},  -- [guid] = { [recipeID] = true } recipes with cooldowns

@@ -2,9 +2,10 @@
 -- the UI uses. Nothing visual is hard-coded anywhere else: other files ask
 -- for a role ("dim", "heading", SPACE.m) and get the value from here.
 --
--- The look: true black and gold (after the Lamborghini DESIGN.md reference
--- in docs/design/), the gnome's pink beard for selections and the crest,
--- and dynamite-spark orange only for alerts and sync status. See DESIGN.md.
+-- The look (v0.6.0): true black with a sidebar, ONE accent colour (the
+-- crest's pink by default; gold or your class colour in Settings) for where
+-- you are, what you picked and the one primary action, and dynamite-spark
+-- orange only for alerts. See DESIGN.md.
 local _, SK = ...
 
 local Theme = {}
@@ -16,6 +17,7 @@ SK.Theme = Theme
 Theme.COLOR = {
 	-- Surfaces: depth comes from tone steps, not shadows or gradients.
 	void      = { 0.000, 0.000, 0.000, 0.96 }, -- window ground
+	side      = { 0.047, 0.047, 0.055, 0.98 }, -- #0C0C0E the sidebar (v0.6.0)
 	surface   = { 0.067, 0.067, 0.067, 1 },    -- #111111 panels inside the window
 	raised    = { 0.110, 0.110, 0.110, 1 },    -- #1C1C1C hover, controls
 	pressed   = { 0.039, 0.039, 0.039, 1 },    -- #0A0A0A pressed controls
@@ -26,12 +28,20 @@ Theme.COLOR = {
 	text      = { 0.961, 0.961, 0.961, 1 },    -- #F5F5F5 names, key numbers
 	dim       = { 0.651, 0.651, 0.651, 1 },    -- #A6A6A6 labels, metadata (8.6:1 on black)
 	faint     = { 0.439, 0.439, 0.439, 1 },    -- #707070 disabled only
-	onGold    = { 0.000, 0.000, 0.000, 1 },    -- text on a gold button
-	-- Accents
-	gold      = { 1.000, 0.753, 0.000, 1 },    -- #FFC000 where you are, the one primary action, key figures
-	goldLit   = { 1.000, 0.808, 0.243, 1 },    -- #FFCE3E gold hover
-	goldDeep  = { 0.569, 0.451, 0.000, 1 },    -- #917300 gold pressed
-	beard     = { 0.941, 0.420, 0.690, 1 },    -- #F06BB0 what you picked: selections, checks, the crest
+	-- The accent (v0.6.0): one colour for where you are, what you picked,
+	-- the one primary action and the key figure. Set from Theme.ACCENTS by
+	-- Theme.SetAccent (Settings → Display → Accent colour); pink by default.
+	accent     = { 0.941, 0.420, 0.690, 1 },
+	accentLit  = { 0.969, 0.553, 0.773, 1 },
+	accentDeep = { 0.608, 0.239, 0.431, 1 },
+	onAccent   = { 0.000, 0.000, 0.000, 1 },   -- text on an accent button
+	-- The choices behind the accent (and the crest's own colours)
+	gold      = { 1.000, 0.753, 0.000, 1 },    -- #FFC000
+	goldLit   = { 1.000, 0.808, 0.243, 1 },    -- #FFCE3E
+	goldDeep  = { 0.569, 0.451, 0.000, 1 },    -- #917300
+	beard     = { 0.941, 0.420, 0.690, 1 },    -- #F06BB0 the crest's beard
+	beardLit  = { 0.969, 0.553, 0.773, 1 },    -- #F78DC5
+	beardDeep = { 0.608, 0.239, 0.431, 1 },    -- #9B3D6E
 	spark     = { 1.000, 0.416, 0.102, 1 },    -- #FF6A1A alerts and sync status only
 	-- Meaning
 	good      = { 0.298, 0.765, 0.541, 1 },    -- #4CC38A
@@ -47,7 +57,7 @@ Theme.COLOR = {
 
 -- Alphas used with a colour (a tint, a selected row).
 Theme.ALPHA = {
-	selected = 0.16, -- beard tint behind a selected row or chip
+	selected = 0.16, -- accent tint behind a selected row or chip
 	alert = 0.14,    -- spark tint behind the reminder bar
 	hover = 1,
 	disabledIcon = 0.35,
@@ -55,9 +65,65 @@ Theme.ALPHA = {
 
 -- "RRGGBB" for |c escapes, derived from COLOR so the two never drift.
 Theme.HEX = {}
-for name, c in pairs(Theme.COLOR) do
-	Theme.HEX[name] = string.format("%02X%02X%02X", math.floor(c[1] * 255 + 0.5), math.floor(c[2] * 255 + 0.5),
+local function hexOf(c)
+	return string.format("%02X%02X%02X", math.floor(c[1] * 255 + 0.5), math.floor(c[2] * 255 + 0.5),
 		math.floor(c[3] * 255 + 0.5))
+end
+for name, c in pairs(Theme.COLOR) do Theme.HEX[name] = hexOf(c) end
+
+---------------------------------------------------------------------------
+-- Accent (v0.6.0). Textures painted with an accent role are remembered so
+-- a new choice repaints them at once; text is repainted by each tab's
+-- Refresh (it reads Theme.HEX/COLOR when it draws).
+---------------------------------------------------------------------------
+Theme.ACCENT_CHOICES = { "pink", "gold", "class" }
+Theme.ACCENT_NAMES = { pink = "Pink (the crest)", gold = "Gold", class = "Your class colour" }
+local ACCENT_ROLES = { accent = true, accentLit = true, accentDeep = true }
+local painted = setmetatable({}, { __mode = "k" }) -- texture -> { role, alpha }
+local tinted = setmetatable({}, { __mode = "k" })  -- glyph texture -> role
+
+-- Lighter and darker steps of a colour (hover and press).
+local function mix(c, toward, k)
+	return { c[1] + (toward - c[1]) * k, c[2] + (toward - c[2]) * k, c[3] + (toward - c[3]) * k, 1 }
+end
+
+-- Black or white text on an accent fill, whichever has more contrast
+-- (WCAG relative luminance).
+local function linear(v) return v <= 0.03928 and v / 12.92 or ((v + 0.055) / 1.055) ^ 2.4 end
+function Theme.InkOn(c)
+	local lum = 0.2126 * linear(c[1]) + 0.7152 * linear(c[2]) + 0.0722 * linear(c[3])
+	return (lum + 0.05) / 0.05 >= 1.05 / (lum + 0.05) and { 0, 0, 0, 1 } or { 1, 1, 1, 1 }
+end
+
+-- The accent's base colour for a choice. Pure; tested.
+-- classRGB = { r, g, b } of the player's class (for "class").
+function Theme.AccentBase(choice, classRGB)
+	if choice == "gold" then return Theme.COLOR.gold end
+	if choice == "class" and classRGB then return { classRGB[1], classRGB[2], classRGB[3], 1 } end
+	return Theme.COLOR.beard
+end
+
+function Theme.SetAccent(choice, classRGB)
+	local base = Theme.AccentBase(choice, classRGB)
+	local set = {
+		accent = { base[1], base[2], base[3], 1 },
+		accentLit = (choice == "gold" and Theme.COLOR.goldLit) or (choice ~= "class" and Theme.COLOR.beardLit)
+			or mix(base, 1, 0.25),
+		accentDeep = (choice == "gold" and Theme.COLOR.goldDeep) or (choice ~= "class" and Theme.COLOR.beardDeep)
+			or mix(base, 0, 0.4),
+	}
+	set.onAccent = Theme.InkOn(set.accent)
+	for role, c in pairs(set) do
+		Theme.COLOR[role] = c
+		Theme.HEX[role] = hexOf(c)
+	end
+	Theme.accentChoice = choice
+	for tex, p in pairs(painted) do
+		if tex.SetColorTexture then tex:SetColorTexture(Theme.RGBA(p[1], p[2])) end
+	end
+	for tex, name in pairs(tinted) do
+		if tex.SetVertexColor then tex:SetVertexColor(Theme.RGB(name)) end
+	end
 end
 
 function Theme.RGB(name)
@@ -95,6 +161,14 @@ end
 
 function Theme.Solid(tex, name, alpha)
 	tex:SetColorTexture(Theme.RGBA(name, alpha))
+	if ACCENT_ROLES[name] then painted[tex] = { name, alpha } else painted[tex] = nil end
+end
+
+-- Glyph textures (icons, the nav marker) tinted with a role; accent tints
+-- follow a new accent choice like Theme.Solid.
+function Theme.Tint(tex, name)
+	tex:SetVertexColor(Theme.RGB(name))
+	if ACCENT_ROLES[name] then tinted[tex] = name else tinted[tex] = nil end
 end
 
 ---------------------------------------------------------------------------
@@ -111,13 +185,28 @@ Theme.MEDIA = MEDIA
 Theme.FONT = {
 	display = MEDIA .. "Fonts\\ChakraPetch-SemiBold.ttf",
 	body = "Fonts\\ARIALN.TTF",
+	inter = MEDIA .. "Fonts\\Inter-Regular.ttf", -- v0.6.0 default body (SIL OFL, bundled)
 }
+-- Body font choice (Settings → Display → Font): "inter" (default) or
+-- "narrow" (the game's Arial Narrow). Takes effect after a reload, because
+-- text keeps the font it was created with.
+Theme.BODY_CHOICES = { "inter", "narrow" }
+Theme.BODY_NAMES = { inter = "Inter", narrow = "Arial Narrow (game)" }
+Theme.body = "inter"
+-- Inter is wider than Arial Narrow: one point smaller (11 stays 11).
+Theme.INTER_SIZE = { [11] = 11, [12] = 11, [13] = 12, [15] = 14, [20] = 18 }
 local LATIN = { enUS = true, enGB = true, deDE = true, frFR = true, esES = true, esMX = true, itIT = true,
 	ptBR = true, ruRU = true }
 
 function Theme.BodyFont()
-	if LATIN[SK.Compat.Locale()] then return Theme.FONT.body end
+	if LATIN[SK.Compat.Locale()] then return Theme.body == "inter" and Theme.FONT.inter or Theme.FONT.body end
 	return STANDARD_TEXT_FONT or Theme.FONT.body
+end
+
+-- The font family object for a body size (Media/Fonts.xml), if loaded.
+function Theme.BodyFamily(size)
+	if Theme.body == "inter" then return _G["ShortRoyaltyInter" .. size] end
+	return _G["ShortRoyaltyBody" .. size]
 end
 
 -- Type scale. Five sizes do the work; nothing under 11.
@@ -125,10 +214,12 @@ Theme.SIZE = { micro = 11, small = 12, body = 13, title = 15, figure = 24 }
 
 -- Roles: which face and size each kind of text uses.
 Theme.TYPE = {
-	brand   = { "display", 20 },            -- SHORT ROYALTY in the title bar
-	tab     = { "display", 13 },            -- main navigation
+	brand   = { "display", 15 },            -- SHORT ROYALTY at the top of the sidebar
+	page    = { "display", 20 },            -- the page title (OVERVIEW, ROSTER...)
+	label   = { "display", 11 },            -- quiet uppercase labels above panels
+	tab     = { "body", 13 },               -- sidebar items and page tabs
 	heading = { "display", 13 },            -- section headings (uppercase)
-	figure  = { "display", 24 },            -- one key number per screen
+	figure  = { "display", 24 },            -- big numbers (the stat strip)
 	name    = { "body", 20 },               -- a character's name
 	title   = { "body", 15 },               -- an item's name in the Crafters panel
 	body    = { "body", 13 },
@@ -162,7 +253,7 @@ function Theme.Font(fs, role, color)
 	local t = Theme.TYPE[role] or Theme.TYPE.body
 	-- Body text uses the font families in Media/Fonts.xml (they fall back
 	-- to Korean/Chinese fonts for names in those alphabets).
-	local family = t[1] == "body" and _G["ShortRoyaltyBody" .. t[2]]
+	local family = t[1] == "body" and Theme.BodyFamily(t[2])
 	if family and fs.SetFontObject then
 		fs:SetFontObject(family)
 	elseif t[1] == "display" then
@@ -174,7 +265,7 @@ function Theme.Font(fs, role, color)
 			Theme.displayStats.failed = Theme.displayStats.failed + 1
 			fs:SetFont(STANDARD_TEXT_FONT or Theme.FONT.body, t[2], "")
 		end
-	elseif fs:SetFont(Theme.BodyFont(), t[2], "") == false then
+	elseif fs:SetFont(Theme.BodyFont(), Theme.body == "inter" and Theme.INTER_SIZE[t[2]] or t[2], "") == false then
 		fs:SetFont(STANDARD_TEXT_FONT or Theme.FONT.body, t[2], "")
 	end
 	if color then fs:SetTextColor(Theme.RGB(color)) end
@@ -197,8 +288,16 @@ end
 Theme.SPACE = { xxs = 2, xs = 4, s = 8, m = 12, l = 16, xl = 20, xxl = 32 }
 
 Theme.SIZES = {
-	window = { 880, 580 },
-	titleBar = 52,
+	window = { 960, 600 },  -- v0.6.0: wider for the sidebar
+	sidebar = 184,          -- the left column (crest, sections, sync status)
+	navRow = 30,            -- one sidebar item
+	pageHead = 60,          -- page title and its one sentence
+	subTabs = 30,           -- a page's own tabs (Professions, Settings)
+	statH = 58,             -- the Overview's number strip
+	cardRow = 28,           -- a row in a panel (Overview, Settings)
+	settingRow = 42,        -- a setting with a sentence under its name
+	switch = { 28, 16 },    -- on/off switch
+	titleBar = 52,          -- (v0.5) kept for older callers
 	tabBar = 32,
 	pad = 16,           -- window inner margin
 	control = 24,       -- buttons, search box, menu
@@ -215,7 +314,10 @@ Theme.SIZES = {
 	underline = 2,      -- active tab marker
 }
 
-Theme.BORDER = { hairline = 1, slot = 2 }
+Theme.BORDER = { hairline = 1, slot = 1 }
+
+-- The width a tab's page gets: the window minus the sidebar and margins.
+Theme.SIZES.contentW = Theme.SIZES.window[1] - Theme.SIZES.sidebar - 2 * Theme.SPACE.l
 
 ---------------------------------------------------------------------------
 -- Textures (all power-of-two .tga, drawn by tools/textures.js)
@@ -228,6 +330,15 @@ Theme.TEX = {
 	dot = MEDIA .. "Textures\\dot",
 	ring = MEDIA .. "Textures\\ring",
 	star = MEDIA .. "Textures\\star",
+	pill = MEDIA .. "Textures\\pill",       -- switch track (texcoords 0.25-0.75 vertically)
+	chevron = MEDIA .. "Textures\\chevron", -- "opens something" on a row
+	-- Sidebar icons (v0.6.0), drawn by tools/textures.js
+	overview = MEDIA .. "Textures\\icon-overview",
+	roster = MEDIA .. "Textures\\icon-roster",
+	character = MEDIA .. "Textures\\icon-character",
+	crafters = MEDIA .. "Textures\\icon-crafters",
+	professions = MEDIA .. "Textures\\icon-professions",
+	settings = MEDIA .. "Textures\\icon-settings",
 }
 
 -- Inline round dot ("|T...|t") in a theme colour, for text.
@@ -240,7 +351,7 @@ end
 
 -- Inline star (favourites) in a theme colour.
 function Theme.Star(name, size)
-	local r, g, b = Theme.RGB(name or "beard")
+	local r, g, b = Theme.RGB(name or "accent")
 	size = size or 12
 	return string.format("|T%s:%d:%d:0:0:16:16:0:16:0:16:%d:%d:%d|t", Theme.TEX.star, size, size,
 		math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))

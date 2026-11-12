@@ -14,6 +14,24 @@ Overview.GATHERING = { 182, 186, 393, 356 }
 
 local function newer(a, b) return SK.Sync and SK.Sync.versionNewer(a, b) end
 
+-- Recipes: totals and recipes only one character knows (shown on the
+-- Professions page's Guild view since v0.6.0).
+function Overview.Recipes(index)
+	local out = { total = index.recipeCount or 0, crafters = index.crafterCount or 0, single = 0, singleExamples = {} }
+	local singles = {}
+	for id, r in pairs(index.recipes or {}) do
+		if #r.crafters == 1 then singles[#singles + 1] = id end
+	end
+	table.sort(singles)
+	out.single = #singles
+	for _, id in ipairs(singles) do
+		if #out.singleExamples >= 3 then break end
+		local name = SK.CraftIndex.NameOf(index.recipes[id])
+		if name then out.singleExamples[#out.singleExamples + 1] = name end
+	end
+	return out
+end
+
 function Overview.Build(guild, now)
 	now = now or SK.Compat.Now()
 	local o = {
@@ -134,19 +152,6 @@ function Overview.Build(guild, now)
 	o.raidsOpenAt = SK.Data.RAIDS_OPEN_AT
 	o.raidDays = SK.Data.RAIDS_OPEN_AT and math.ceil((SK.Data.RAIDS_OPEN_AT - now) / 86400) or nil
 
-	-- Recipes: totals and recipes only one character knows.
-	local index = SK.CraftIndex:Get(true)
-	o.recipes.total, o.recipes.crafters = index.recipeCount, index.crafterCount
-	local singles = {}
-	for id, r in pairs(index.recipes) do
-		if #r.crafters == 1 then singles[#singles + 1] = id end
-	end
-	table.sort(singles)
-	o.recipes.single = #singles
-	for _, id in ipairs(singles) do
-		if #o.recipes.singleExamples >= 3 then break end
-		local name = SK.CraftIndex.NameOf(index.recipes[id])
-		if name then o.recipes.singleExamples[#o.recipes.singleExamples + 1] = name end
-	end
+	o.recipes = Overview.Recipes(SK.CraftIndex:Get(true))
 	return o
 end

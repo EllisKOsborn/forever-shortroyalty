@@ -1,38 +1,18 @@
--- Overview tab: the guild at a glance, set like a spec sheet in three
--- columns. Each section has a link to the tab where you can act on it.
--- Everything comes from data the addon already has (Core/Overview.lua,
--- Core/Feed.lua).
+-- Overview tab (v0.6.0): the guild at a glance. A strip of four numbers,
+-- then "Needs a look" (what's missing or out of date, each row opens the
+-- Roster), Raids, and Milestones (or Getting started while it's not done).
+-- Names and details live in tooltips. Numbers come from Core/Overview.lua
+-- and Core/Feed.lua.
 local _, SK = ...
 
 local Ov = SK:NewModule("OverviewTab")
 local Theme, W, Compat = SK.Theme, SK.Widgets, SK.Compat
 local S, SP = Theme.SIZES, Theme.SPACE
 
-local CONTENT_W = S.window[1] - 2 * SP.l
-Ov.COL_W = math.floor((CONTENT_W - 2 * SP.xl) / 3)
-Ov.TOP = 28           -- below the one-line summary
-Ov.FEED_H = 196       -- milestones list height
+Ov.COL_W = math.floor((S.contentW - SP.l) / 2)
+Ov.FEED_ROWS = 8      -- milestones shown
 
 local function n(v) return tostring(v or 0) end
-
----------------------------------------------------------------------------
--- Section rows (pure; tested). See W.Block for the row format.
----------------------------------------------------------------------------
-Ov.NAMES_SHOWN = 10 -- names listed under "Not seen with the addon yet"; the rest go to the Roster
-
--- "Bob, Cat, Dan and 12 more": first names, class colours, a dot for online.
-function Ov.WithoutText(without, max)
-	max = max or Ov.NAMES_SHOWN
-	local names = {}
-	for i = 1, math.min(#without, max) do
-		local w = without[i]
-		local first = w.name:match("^(%S+)") or w.name
-		names[i] = (w.online and (SK.RosterTab.DOT.online .. " ") or "") .. Theme.ClassText(first, w.class)
-	end
-	local text = table.concat(names, ", ")
-	if #without > max then text = text .. Theme.Paint("dim", " and " .. (#without - max) .. " more (point here to see all)") end
-	return text
-end
 
 Ov.TIP_NAMES = 60 -- names in the hover list (two per line); the Roster has the rest
 
@@ -50,119 +30,130 @@ function Ov.WithoutTip(tt, without)
 	if #without > shown then Theme.TipLine(tt, "and " .. (#without - shown) .. " more: Not seen yet lists everyone", "dim") end
 	Theme.TipLine(tt, "Characters that haven't logged in with Short Royalty yet (the Alt rank isn't counted). " ..
 		"Online first (white dot).", "dim", true)
-	Theme.TipLine(tt, "Not seen yet (top right) opens them in the Roster", "gold")
+	Theme.TipLine(tt, "Click to see them in the Roster", "accent")
 end
 
-function Ov.GuildRows(o)
-	local rows = {
-		{ label = "Members", value = n(o.members), tip = (o.altRank or 0) > 0 and function(tt)
-			Theme.TipLine(tt, "Members")
-			Theme.TipLine(tt, "Not counting the " .. Theme.Count(o.altRank, "character") .. " in the Alt rank. " ..
-				"The Overview leaves the Alt rank out, except in Professions.", "dim", true)
-		end or nil },
-		{ label = "Players (alts counted once)", value = n(o.players) },
-		{ label = "Online now", value = Theme.Paint("dim", n(o.withAddon) .. " with addon   ") .. n(o.online) },
-		{ label = "Have Short Royalty", value = n(o.hasAddon), tone = o.hasAddon > 0 and "good" or "dim" },
-		{ label = "Not seen with the addon yet", value = n(#o.without), tone = #o.without > 0 and "spark" or "good" },
+---------------------------------------------------------------------------
+-- Rows (pure; tested). See W.Card / W.StatStrip for the formats.
+---------------------------------------------------------------------------
+function Ov.LevelsTip(tt, o)
+	Theme.TipLine(tt, "Members")
+	Theme.TipDouble(tt, "Players (alts counted once)", n(o.players), "dim", "text")
+	for i, b in ipairs(SK.Overview.LEVEL_BANDS) do Theme.TipDouble(tt, "Level " .. b[3], n(o.levels[i]), "dim", "text") end
+	if (o.altRank or 0) > 0 then
+		Theme.TipLine(tt, "Not counting the " .. Theme.Count(o.altRank, "character") .. " in the Alt rank.", "faint", true)
+	end
+end
+
+-- The number strip: members, online, have Short Royalty, raids.
+function Ov.Stats(o)
+	local stats = {
+		{ figure = n(o.members), caption = "members", tip = function(tt) Ov.LevelsTip(tt, o) end },
+		{ figure = n(o.online), caption = "online now", tip = function(tt)
+			Theme.TipLine(tt, "Online now")
+			Theme.TipLine(tt, n(o.withAddon) .. " of them with Short Royalty", "dim")
+		end },
+		{ figure = n(o.hasAddon), suffix = "/ " .. n(o.members), caption = "have Short Royalty",
+			tip = #o.without > 0 and function(tt) Ov.WithoutTip(tt, o.without) end or nil,
+			onClick = #o.without > 0 and function() SK.RosterTab:ShowWithoutAddon() end or nil },
 	}
-	if #o.without > 0 then
-		local tip = function(tt) Ov.WithoutTip(tt, o.without) end
-		rows[#rows].tip = tip
-		rows[#rows + 1] = { text = Ov.WithoutText(o.without), indent = true, tip = tip }
+	if o.raidDays and o.raidDays > 0 then
+		stats[4] = { figure = n(o.raidDays), tone = "accent",
+			caption = (o.raidDays == 1 and "day" or "days") .. " until raids, 9 Dec" }
+	elseif o.raidDays then
+		stats[4] = { figure = "Open", tone = "accent", caption = "raids are open" }
+	else
+		stats[4] = { figure = Theme.DASH, caption = "raids" }
 	end
-	rows[#rows + 1] = { sub = "Levels" }
-	for i, b in ipairs(SK.Overview.LEVEL_BANDS) do
-		rows[#rows + 1] = { label = b[3], value = n(o.levels[i]), indent = true }
-	end
-	return rows
+	return stats
 end
 
-function Ov.RaidRows(o)
+-- "Needs a look": only what's actually missing; each row opens the Roster.
+function Ov.NeedsRows(o)
 	local rows = {}
-	if o.raidDays and o.raidDays > 0 then
-		rows[#rows + 1] = { figure = n(o.raidDays), caption = (o.raidDays == 1 and "day" or "days") .. " until raids open, 9 Dec" }
-	elseif o.raidDays then
-		rows[#rows + 1] = { text = "Raids are open.", tone = "good" }
-	end
-	for _, r in ipairs(o.raids) do
-		local name = string.format("%s (%s)", r.name, n(r.size))
-		if r.status == "none" then
-			rows[#rows + 1] = { label = name, labelTone = "text", value = "no attunement needed", tone = "dim" }
-			rows[#rows + 1] = { label = "Level " .. n(o.maxLevel) .. " and ready", value = n(r.eligible), indent = true }
-		else
-			rows[#rows + 1] = { label = name, labelTone = "text", value = n(r.yes) .. " attuned", tone = r.yes > 0 and "good" or "dim" }
-			rows[#rows + 1] = { label = "Not attuned", value = n(r.no), indent = true, tone = r.no > 0 and "bad" or "dim" }
-			rows[#rows + 1] = { label = "Unknown", value = n(r.unknown), indent = true, tone = "dim" }
-			if r.noItem > 0 then
-				rows[#rows + 1] = { text = string.format("%d without the amulet in their bags", r.noItem), tone = "spark", indent = true }
-			end
+	local function add(count, one, many, onClick, tip)
+		if count > 0 then
+			rows[#rows + 1] = { label = count == 1 and one or many, value = n(count), tone = "spark", onClick = onClick, tip = tip }
 		end
 	end
-	return rows
-end
-
-function Ov.HealthRows(o)
-	local rows = {}
-	local function item(count, one, many, tone)
-		if count > 0 then rows[#rows + 1] = { label = count == 1 and one or many, value = n(count), tone = tone or "spark" } end
-	end
-	item(o.addonNoData, "Has the addon, no data here yet", "Have the addon, no data here yet")
-	item(o.stale, "Profile older than a week", "Profiles older than a week")
-	item(o.unscanned, "Profession window never opened", "Profession windows never opened")
-	item(o.outdated, "Running an old Short Royalty", "Running an old Short Royalty")
+	local oldest = function() SK.RosterTab:ShowOldestFirst() end
+	add(#o.without, "Not seen with the addon yet", "Not seen with the addon yet",
+		function() SK.RosterTab:ShowWithoutAddon() end, function(tt) Ov.WithoutTip(tt, o.without) end)
+	add(o.outdated, "Running an old version", "Running an old version", function() SK.RosterTab:ShowOldVersions() end,
+		function(tt)
+			Theme.TipLine(tt, "Running an old Short Royalty")
+			Theme.TipLine(tt, "Newest seen: " .. tostring(o.newest or "?") .. ". Click to see who, oldest first.", "dim", true)
+		end)
+	add(o.addonNoData, "Has the addon, no data here yet", "Have the addon, no data here yet", oldest)
+	add(o.unscanned, "Profession window not opened", "Profession windows not opened", oldest, function(tt)
+		Theme.TipLine(tt, "Profession windows not opened")
+		Theme.TipLine(tt, "They have a crafting profession but haven't opened its window with Short Royalty, " ..
+			"so their recipes aren't known yet.", "dim", true)
+	end)
+	add(o.stale, "Profile older than a week", "Profiles older than a week", oldest)
 	if o.selfOutdated then
 		rows[#rows + 1] = { text = string.format("Short Royalty %s is out (you have %s).", tostring(o.newest), SK.VERSION),
 			tone = "spark" }
 	end
-	if #rows == 0 then
-		rows[1] = { text = "All good: everyone's data is current.", tone = "good" }
-	else
-		rows[#rows + 1] = { text = "Trial accounts can't share, so they show as not seen with the addon." }
-	end
+	if #rows == 0 then rows[1] = { text = "All good: everyone's data is current.", tone = "good" } end
 	return rows
 end
 
-function Ov.ProfessionRows(o)
-	local rows = {}
-	for _, id in ipairs(SK.Overview.CRAFTS) do
-		local s = o.profs[id] or { count = 0, maxed = 0, best = 0 }
-		local name = SK.Data.PROFESSIONS[id].key
-		if s.count == 0 then
-			rows[#rows + 1] = { label = name, labelTone = "text", value = "nobody", tone = "bad" }
+-- Raids: one row per raid that needs an attunement (with a bar), one row
+-- for the raids that don't.
+function Ov.RaidRows(o)
+	local rows, open = {}, {}
+	local function toRoster(key) return function()
+		SK.DB.settings.roster.raid = key
+		SK.DB.settings.roster.attFilter = "all"
+		SK.MainFrame:Select("roster")
+	end end
+	for _, r in ipairs(o.raids) do
+		local name = string.format("%s (%s)", r.name, n(r.size))
+		if r.status == "none" then
+			open[#open + 1] = r
 		else
-			local note = s.maxed > 0 and (s.maxed .. " at 300") or ("best " .. s.best)
-			rows[#rows + 1] = { label = name, labelTone = "text", value = Theme.Paint("dim", note .. "   ") .. s.count }
+			rows[#rows + 1] = { label = name, value = n(r.yes) .. " attuned", tone = r.yes > 0 and "good" or "dim",
+				onClick = toRoster(r.key), tip = function(tt)
+					Theme.TipLine(tt, name)
+					Theme.TipDouble(tt, "Attuned", n(r.yes), "dim", "good")
+					Theme.TipDouble(tt, "Not attuned", n(r.no), "dim", "bad")
+					Theme.TipDouble(tt, "Unknown (gear or talents hidden, or no data)", n(r.unknown), "dim", "text")
+					Theme.TipLine(tt, "Characters at level " .. n(o.maxLevel) .. ". Click for the list.", "faint")
+				end }
+			rows[#rows + 1] = { bar = { { r.yes, "good" }, { r.no, "lineStrong" }, { r.unknown, "raised" } } }
+			rows[#rows + 1] = { text = string.format("%d attuned  ·  %d not yet  ·  %d unknown", r.yes, r.no, r.unknown) ..
+				(r.noItem > 0 and Theme.Paint("spark", string.format("  ·  %d without the amulet in their bags", r.noItem)) or "") }
 		end
 	end
-	local g = {}
-	for _, id in ipairs(SK.Overview.GATHERING) do
-		g[#g + 1] = SK.Data.PROFESSIONS[id].short .. " " .. (o.profs[id] and o.profs[id].count or 0)
+	if #open > 0 then
+		local names = {}
+		for _, r in ipairs(open) do names[#names + 1] = r.name end
+		rows[#rows + 1] = { label = table.concat(names, ", "), value = n(open[1].eligible) .. " ready", tone = "dim",
+			onClick = toRoster(open[1].key), tip = function(tt)
+				Theme.TipLine(tt, table.concat(names, ", "))
+				Theme.TipLine(tt, "No attunement needed: " .. n(open[1].eligible) .. " characters at level " ..
+					n(o.maxLevel) .. ".", "dim", true)
+			end }
 	end
-	rows[#rows + 1] = { text = "Gathering: " .. table.concat(g, "  ·  ") }
+	if #rows == 0 then rows[1] = { text = "No raids to show yet." } end
 	return rows
 end
 
-function Ov.RecipeRows(o)
-	local r = o.recipes
-	if r.total == 0 then
-		return { { text = "Recipes appear after crafters open their profession window once." } }
-	end
-	local rows = {
-		{ label = "Recipes known in the guild", value = n(r.total) },
-		{ label = "Crafters who shared them", value = n(r.crafters) },
-		{ label = "Known by only one character", value = n(r.single), tone = r.single > 0 and "spark" or "good" },
-	}
-	for _, name in ipairs(r.singleExamples) do rows[#rows + 1] = { text = name, indent = true } end
-	return rows
+-- Plain text (tests, Copy).
+function Ov.NeedsText(o) return W.CardText(Ov.NeedsRows(o)) end
+function Ov.RaidText(o) return W.CardText(Ov.RaidRows(o)) end
+
+-- Page sentence under the title.
+function Ov.DescriptionText(guildName, o, hasGuild)
+	if not hasGuild then return "No guild  ·  join a guild to see guildmates here" end
+	return table.concat({ guildName or "Your guild", Theme.Count(o.members, "member"),
+		Theme.Count(o.players, "player"), o.online .. " online" }, "  ·  ")
 end
 
--- Plain text of a section (tests, Copy).
-local function text(rows) return W.SheetText({ { rows = rows } }) end
-function Ov.GuildText(o) return text(Ov.GuildRows(o)) end
-function Ov.RaidText(o) return text(Ov.RaidRows(o)) end
-function Ov.HealthText(o) return text(Ov.HealthRows(o)) end
-function Ov.ProfessionText(o) return text(Ov.ProfessionRows(o)) end
-function Ov.RecipeText(o) return text(Ov.RecipeRows(o)) end
+function Ov:Description()
+	return self.data and Ov.DescriptionText(SK.guildName, self.data, SK.DBM:Guild() ~= nil) or ""
+end
 
 ---------------------------------------------------------------------------
 -- Building
@@ -178,57 +169,38 @@ local function setFeedCell(fs, e, col)
 	end
 end
 
-local function column(i)
-	return (i - 1) * (Ov.COL_W + SP.xl)
-end
-
 function Ov:Build(page)
-	-- One line that answers "what's going on?" before anything else.
-	self.header = Theme.Text(page, "body", "dim")
-	self.header:SetPoint("TOPLEFT", 0, -2)
-	self.header:SetPoint("RIGHT", 0, 0)
-	self.header:SetWordWrap(false)
+	self.page = page
+	self.stats = W.StatStrip(page, S.contentW, 4)
+	self.stats:SetPoint("TOPLEFT", 0, 0)
+	local top = -(S.statH + SP.l)
 
-	local function block(col, title, action)
-		local b = W.Block(page, Ov.COL_W, title, action)
-		b:SetPoint("TOPLEFT", column(col), -Ov.TOP)
-		return b
-	end
-	local function below(b, above)
-		b:ClearAllPoints()
-		b:SetPoint("TOPLEFT", above, "BOTTOMLEFT", 0, -SP.xl)
-	end
+	self.needs = W.Card(page, Ov.COL_W, "Needs a look")
+	self.needs:SetPoint("TOPLEFT", 0, top)
+	self.raids = W.Card(page, Ov.COL_W, "Raids", { text = "Attunement list", tooltip = "Roster with Onyxia's Lair attunement",
+		onClick = function()
+			SK.DB.settings.roster.raid = "ony"
+			SK.DB.settings.roster.attFilter = "all"
+			SK.MainFrame:Select("roster")
+		end })
+	self.raids:SetPoint("TOPLEFT", self.needs, "BOTTOMLEFT", 0, -SP.l)
 
-	self.guild = block(1, "Guild", { text = "Not seen yet", onClick = function() SK.RosterTab:ShowWithoutAddon() end,
-		tooltip = "Roster with everyone not seen with Short Royalty yet first" })
-	self.health = block(1, "Data health", { text = "Oldest first", onClick = function() SK.RosterTab:ShowOldestFirst() end,
-		tooltip = "Roster sorted so missing and oldest data come first" })
-	below(self.health, self.guild)
-
-	self.raids = block(2, "Raids", { text = "Onyxia list", tooltip = "Roster with Onyxia's Lair attunement", onClick = function()
-		SK.DB.settings.roster.raid = "ony"
-		SK.DB.settings.roster.attFilter = "all"
-		SK.MainFrame:Select("roster")
-	end })
-	self.profs = block(2, "Professions", { text = "Find a crafter", onClick = function() SK.MainFrame:Select("crafters") end,
-		tooltip = "Find who can make an item" })
-	below(self.profs, self.raids)
-
-	-- Recent milestones: a list with a Grats button per row.
-	local feed = block(3, "Recent milestones")
-	feed:SetRows({})
-	feed:SetHeight(Ov.FEED_H)
+	-- Milestones: a list with a quiet Grats link per row.
+	local feed = W.Card(page, Ov.COL_W, "Milestones")
+	feed:SetPoint("TOPLEFT", Ov.COL_W + SP.l, top)
+	feed:SetBody(Ov.FEED_ROWS * S.cardRow)
 	self.feed = feed
-	local gratsW = 52
-	feed.list = W.List(feed, {
-		header = false,
-		columns = { { key = "when", title = "", width = 36 }, { key = "what", title = "", width = Ov.COL_W - 36 - gratsW - SP.m },
+	local gratsW = 48
+	local inner = Ov.COL_W - 2 * SP.s
+	feed.list = W.List(feed.panel, {
+		header = false, rowHeight = S.cardRow,
+		columns = { { key = "when", title = "", width = 34 }, { key = "what", title = "", width = inner - 34 - gratsW - SP.m },
 			{ key = "btn", title = "", width = gratsW } },
 		setCell = setFeedCell,
 		decorate = function(row)
 			row.grats = W.Button(row, "Grats", gratsW - SP.xs, S.controlSmall, function(b)
 				if b.entry then Compat.OpenChat("/g " .. SK.Feed.GratsText(b.entry)) end
-			end)
+			end, "quiet")
 			row.grats:SetPoint("RIGHT", -SP.xxs, 0)
 			row.widgets[#row.widgets + 1] = row.grats
 			row.grats.tooltip = "Types a congratulation into guild chat. Press Enter to send it."
@@ -241,26 +213,21 @@ function Ov:Build(page)
 			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
 			GameTooltip:AddLine(Theme.ClassText(e.name, e.class) .. " " .. e.text, Theme.RGB("text"))
 			GameTooltip:AddLine(Theme.Ago(e.at) .. " ago (seen by your addon)", Theme.RGB("dim"))
-			GameTooltip:AddLine("Click to view character", Theme.RGB("gold"))
+			GameTooltip:AddLine("Click to view character", Theme.RGB("accent"))
 			GameTooltip:Show()
 		end,
 		onClick = function(e) SK.CharacterTab:ShowCharacter(e.guid) end,
 	})
-	feed.list:SetPoint("TOPLEFT", 0, -feed.headH)
-	feed.list:SetPoint("BOTTOMRIGHT")
+	feed.list:SetPoint("TOPLEFT", SP.xs, 0)
+	feed.list:SetPoint("BOTTOMRIGHT", -SP.xs, 0)
 	feed.list:SetEmptyText("Level-ups, profession milestones, attunements and new recipes show here as your addon sees them.")
 	feed.empty = feed.list.message
 
 	-- Getting started (v0.3.1): takes the milestones' place until it's done
 	-- or hidden (a new player has no milestones yet anyway).
-	self.start = block(3, "Getting started", { text = "Hide", onClick = function() SK.Onboarding.Hide() end,
+	self.start = W.Card(page, Ov.COL_W, "Getting started", { text = "Hide", onClick = function() SK.Onboarding.Hide() end,
 		tooltip = "Hide this list (it also goes away by itself once everything's done)" })
-
-	self.recipes = block(3, "Recipes", { text = "Search recipes", onClick = function()
-		SK.DB.settings.profView = "recipes"
-		SK.MainFrame:Select("professions")
-	end, tooltip = "Search every recipe in the game (Professions tab)" })
-	below(self.recipes, feed)
+	self.start:SetPoint("TOPLEFT", Ov.COL_W + SP.l, top)
 
 	SK:On("ONBOARDING_CHANGED", function()
 		if page:IsShown() then Ov:Refresh() end
@@ -271,20 +238,14 @@ function Ov:Build(page)
 end
 
 function Ov:Refresh()
-	if not self.guild then return end
+	if not self.needs then return end
 	local guild = SK.DBM:Guild()
 	local o = SK.Overview.Build(guild, Compat.Now())
 	self.data = o
-	local parts = { Theme.Paint("text", SK.guildName or "No guild"), Theme.Count(o.members, "member"), o.online .. " online" }
-	if not guild then parts[#parts + 1] = "join a guild to see guildmates here" end
-	self.header:SetText(table.concat(parts, "  ·  "))
-	self.guild:SetRows(Ov.GuildRows(o))
-	self.health:SetRows(Ov.HealthRows(o))
+	self.stats:SetStats(Ov.Stats(o))
+	self.needs:SetRows(Ov.NeedsRows(o))
 	self.raids:SetRows(Ov.RaidRows(o))
-	self.profs:SetRows(Ov.ProfessionRows(o))
-	self.recipes:SetRows(Ov.RecipeRows(o))
-	local entries = SK.Feed.Entries(guild, SK.Feed.MAX)
-	self.feed.list:SetItems(entries)
+	self.feed.list:SetItems(SK.Feed.Entries(guild, SK.Feed.MAX))
 
 	local steps, allDone = SK.Onboarding.Steps(SK.Profile:Own(), SK.DB.settings.seen, nil,
 		o.hasAddon, o.members)
@@ -292,8 +253,7 @@ function Ov:Refresh()
 	self.start:SetShown(showStart)
 	self.feed:SetShown(not showStart)
 	if showStart then self.start:SetRows(Ov.StartRows(steps)) end
-	self.recipes:ClearAllPoints()
-	self.recipes:SetPoint("TOPLEFT", showStart and self.start or self.feed, "BOTTOMLEFT", 0, -SP.xl)
+	if SK.MainFrame.current == "overview" then SK.MainFrame:UpdateHeader() end
 end
 
 -- Getting started rows (pure; tested).
@@ -303,9 +263,9 @@ function Ov.StartRows(steps)
 		rows[#rows + 1] = { label = s.text, labelTone = s.done and "dim" or "text",
 			value = s.done and "done" or (s.optional and "optional" or "to do"),
 			tone = s.done and "good" or (s.optional and "dim" or "spark") }
-		if s.detail and not s.done then rows[#rows + 1] = { text = s.detail, tone = "dim", indent = true } end
+		if s.detail and not s.done then rows[#rows + 1] = { text = s.detail, tone = "dim" } end
 	end
 	return rows
 end
 
-SK.MainFrame:AddTab("overview", "Overview", Ov)
+SK.MainFrame:AddTab("overview", "Overview", Ov, { group = "guild" })

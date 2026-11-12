@@ -147,21 +147,19 @@ describe("v0.3.4 who has Short Royalty", function()
 		local names = {}
 		for _, w in ipairs(o.without) do names[#names + 1] = w.name end
 		assert.same({ "Zed Last", "Abe", "Cat" }, names)
-		local text = SK.OverviewTab.GuildText(o)
-		assert.truthy(text:find("Have Short Royalty", 1, true))
+		local stats = SK.OverviewTab.Stats(o)
+		assert.equal("3", stats[3].figure)            -- have Short Royalty
+		assert.equal("have Short Royalty", stats[3].caption)
+		local text = SK.OverviewTab.NeedsText(o)
 		assert.truthy(text:find("Not seen with the addon yet  " .. SK.Theme.Code("spark") .. "3|r", 1, true))
-		local list = SK.OverviewTab.WithoutText(o.without)
-		assert.truthy(list:find("Zed", 1, true) and not list:find("Last", 1, true)) -- first names
-		assert.truthy(list:find(SK.RosterTab.DOT.online, 1, true))                -- Zed is online
-	end)
-
-	it("lists ten names, then says how many more", function()
-		local many = {}
-		for i = 1, 14 do many[i] = { name = "N" .. i, online = false } end
-		local text = SK.OverviewTab.WithoutText(many)
-		assert.truthy(text:find("N10", 1, true))
-		assert.is_nil(text:find("N11", 1, true))
-		assert.truthy(text:find("and 4 more", 1, true))
+		-- the names are in the tooltip, online first
+		local lines = {}
+		local tt = { AddLine = function(_, t) lines[#lines + 1] = t end,
+			AddDoubleLine = function(_, a, b) lines[#lines + 1] = a .. " | " .. b end }
+		stats[3].tip(tt)
+		local all = table.concat(lines, "\n")
+		assert.truthy(all:find("Zed Last", 1, true))
+		assert.truthy(all:find(SK.RosterTab.DOT.online, 1, true))                -- Zed is online
 	end)
 
 	it("Getting started counts everyone who has it, not just who's online", function()
@@ -175,7 +173,7 @@ describe("v0.3.4 who has Short Royalty", function()
 
 	it("Without addon opens the roster with those members first", function()
 		SK.MainFrame:Show("overview")
-		SK.OverviewTab.guild.button:GetScript("OnClick")(SK.OverviewTab.guild.button)
+		SK.OverviewTab.stats.stats[3].onClick()      -- "have Short Royalty": who doesn't
 		assert.equal("roster", SK.MainFrame.current)
 		local items = SK.RosterTab.list.items
 		assert.equal("Abe", items[1].name)

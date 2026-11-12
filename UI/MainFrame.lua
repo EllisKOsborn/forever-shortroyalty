@@ -1,19 +1,28 @@
--- The main window: title bar (crest, name, sync status, close), tabs with
--- a gliding gold underline, and the content area. Built lazily the first
--- time it is opened, so nothing is created at login.
+-- The main window (v0.6.0): a sidebar on the left (crest, the sections,
+-- sync status at the bottom) and the page on the right (its title, one
+-- sentence saying what it's for, the reminder bar when there is one, and
+-- the page itself). Built lazily the first time it is opened.
 local _, SK = ...
 
 local Main = SK:NewModule("MainFrame")
 local Theme, W, Motion = SK.Theme, SK.Widgets, SK.Motion
 local S, SP, M = Theme.SIZES, Theme.SPACE, Theme.MOTION
 
-Main.tabs = {}        -- ordered { key, title, module }
+Main.tabs = {}        -- ordered { key, title, module, group, desc, icon }
 Main.FRAME_NAME = "ShortRoyaltyMainFrame"
 
--- Tab modules call this at load time. module:Build(content) once,
+-- Sidebar sections, in order. The settings group has no label.
+Main.GROUPS = { { key = "guild", title = "Guild" }, { key = "crafting", title = "Crafting" }, { key = "settings" } }
+
+-- Tab modules call this at load time. module:Build(page) once,
 -- module:Refresh() whenever data changes while the tab is visible.
-function Main:AddTab(key, title, module)
-	self.tabs[#self.tabs + 1] = { key = key, title = title, module = module }
+-- opts = { group = "guild" | "crafting" | "settings", desc = "one sentence",
+--          icon = Theme.TEX.x, nav = "sidebar label" (defaults to title) }.
+-- A module may have Description() for a sentence that changes (Overview).
+function Main:AddTab(key, title, module, opts)
+	opts = opts or {}
+	self.tabs[#self.tabs + 1] = { key = key, title = title, module = module, group = opts.group or "guild",
+		desc = opts.desc, icon = opts.icon or Theme.TEX[key], nav = opts.nav or title }
 end
 
 local function savePosition(f)
@@ -39,6 +48,26 @@ function Main:ApplyScale()
 	self.frame:SetScale(Main.FitScale(chosen, UIParent:GetWidth(), UIParent:GetHeight(), self.bannerH))
 end
 
+-- Accent and body font from Settings (v0.6.0). The font must be set before
+-- any text is created, so this runs when saved settings load.
+function Main.ApplyLook()
+	local s = SK.DB and SK.DB.settings
+	if not s then return end
+	Theme.body = (s.font == "narrow") and "narrow" or "inter"
+	Theme.SetAccent(s.accent or "pink", SK.Compat.PlayerClassRGB())
+end
+
+function Main:OnInit() Main.ApplyLook() end
+-- The class colour is only known once the player is in the world.
+function Main:OnLogin() Theme.SetAccent(SK.DB.settings.accent or "pink", SK.Compat.PlayerClassRGB()) end
+
+local function dragHandle(frame, f)
+	frame:EnableMouse(true)
+	frame:RegisterForDrag("LeftButton")
+	frame:SetScript("OnDragStart", function() f:StartMoving() end)
+	frame:SetScript("OnDragStop", function() f:StopMovingOrSizing(); savePosition(f) end)
+end
+
 function Main:Build()
 	if self.frame then return self.frame end
 	local s = SK.DB.settings.window
@@ -56,87 +85,122 @@ function Main:Build()
 	self.frame = f
 	self:ApplyScale()
 
-	-- Title bar (drag handle)
-	local bar = CreateFrame("Frame", nil, f)
-	bar:SetPoint("TOPLEFT", 1, -1)
-	bar:SetPoint("TOPRIGHT", -1, -1)
-	bar:SetHeight(S.titleBar)
-	bar:EnableMouse(true)
-	bar:RegisterForDrag("LeftButton")
-	bar:SetScript("OnDragStart", function() f:StartMoving() end)
-	bar:SetScript("OnDragStop", function() f:StopMovingOrSizing(); savePosition(f) end)
-	f.titleBar = bar
+	-------------------------------------------------------------------------
+	-- Sidebar
+	-------------------------------------------------------------------------
+	local side = CreateFrame("Frame", nil, f)
+	side:SetPoint("TOPLEFT", 1, -1)
+	side:SetPoint("BOTTOMLEFT", 1, 1)
+	side:SetWidth(S.sidebar - 1)
+	side.bg = side:CreateTexture(nil, "BACKGROUND")
+	side.bg:SetAllPoints()
+	Theme.Solid(side.bg, "side")
+	local edge = side:CreateTexture(nil, "BORDER")
+	edge:SetPoint("TOPRIGHT")
+	edge:SetPoint("BOTTOMRIGHT")
+	edge:SetWidth(Theme.BORDER.hairline)
+	Theme.Solid(edge, "line")
+	f.side = side
 
-	local crest = bar:CreateTexture(nil, "ARTWORK")
+	-- Crest and name (a drag handle).
+	local brand = CreateFrame("Frame", nil, side)
+	brand:SetPoint("TOPLEFT")
+	brand:SetPoint("TOPRIGHT")
+	brand:SetHeight(S.pageHead)
+	dragHandle(brand, f)
+	f.titleBar = brand
+	local crest = brand:CreateTexture(nil, "ARTWORK")
 	crest:SetSize(S.crest, S.crest)
-	crest:SetPoint("LEFT", SP.l - 1, 0)
+	crest:SetPoint("TOPLEFT", SP.l - 1, -SP.l)
 	crest:SetTexture(Theme.TEX.crest)
 	f.crest = crest
-	-- v0.4.4: just the name, centred on the crest (the owner asked to drop the
-	-- "Height is not a stat." subtitle from the window).
-	local title = Theme.Text(bar, "brand", "text")
-	title:SetPoint("LEFT", crest, "RIGHT", SP.m, 0)
-	title:SetText("SHORT ROYALTY")
+	local title = Theme.Text(brand, "brand", "text")
+	title:SetPoint("LEFT", crest, "RIGHT", SP.s + SP.xxs, 0)
+	title:SetText("SHORT\nROYALTY")
+	title:SetSpacing(1)
+	f.title = title
 
-	local close = W.CloseButton(bar, function() Main:Close() end)
-	close:SetPoint("RIGHT", -SP.m, 0)
-	f.close = close
+	-- Sections
+	f.navButtons = {}
+	local y = S.pageHead + SP.xs
+	for _, g in ipairs(Main.GROUPS) do
+		if g.title then
+			local label = Theme.Text(side, "label", "faint")
+			label:SetPoint("TOPLEFT", SP.l, -y - SP.s)
+			label:SetText(g.title:upper())
+			y = y + SP.l + SP.s + SP.xs
+		else
+			y = y + SP.m
+		end
+		for i, tab in ipairs(self.tabs) do
+			if tab.group == g.key then
+				local b = W.NavItem(side, S.sidebar - 1, tab.icon, tab.nav, function() Main:Select(tab.key) end)
+				b:SetPoint("TOPLEFT", 0, -y)
+				b.key = tab.key
+				f.navButtons[i] = b
+				y = y + S.navRow
+			end
+		end
+	end
 
-	-- Sync status: a spark dot (the lit fuse) + words. Grey dot when paused.
-	local status = CreateFrame("Frame", nil, bar)
-	status:SetPoint("RIGHT", close, "LEFT", -SP.m, 0)
-	status:SetSize(260, S.control)
+	-- Sync status at the bottom: a dot, what sync is doing, and the guild.
+	local status = CreateFrame("Frame", nil, side)
+	status:SetPoint("BOTTOMLEFT", 0, 0)
+	status:SetPoint("BOTTOMRIGHT", 0, 0)
+	status:SetHeight(S.pageHead - SP.xs)
 	status:EnableMouse(true)
-	f.status = Theme.Text(status, "small", "dim")
-	f.status:SetPoint("RIGHT")
-	f.status:SetJustifyH("RIGHT")
-	f.status:SetWordWrap(false)
-	f.status:SetWidth(240)
+	local rule = Theme.Rule(status, "rule")
+	rule:SetPoint("TOPLEFT")
+	rule:SetPoint("TOPRIGHT")
 	local dot = status:CreateTexture(nil, "ARTWORK")
 	dot:SetSize(8, 8)
+	dot:SetPoint("TOPLEFT", SP.l, -SP.m - 3)
 	dot:SetTexture(Theme.TEX.dot)
 	f.dot = dot
 	local ring = status:CreateTexture(nil, "OVERLAY")
 	ring:SetSize(16, 16)
 	ring:SetPoint("CENTER", dot, "CENTER")
 	ring:SetTexture(Theme.TEX.ring)
-	ring:SetVertexColor(Theme.RGB("spark"))
+	Theme.Tint(ring, "good")
 	ring:SetAlpha(0)
 	f.ring = ring
+	f.status = Theme.Text(status, "small", "dim")
+	f.status:SetPoint("LEFT", dot, "RIGHT", SP.s - 1, 0)
+	f.status:SetPoint("RIGHT", -SP.s, 0)
+	f.status:SetWordWrap(false)
+	f.guildLine = Theme.Text(status, "small", "faint")
+	f.guildLine:SetPoint("TOPLEFT", SP.l, -(SP.m + SP.l + SP.xs))
+	f.guildLine:SetPoint("RIGHT", -SP.s, 0)
+	f.guildLine:SetWordWrap(false)
 	status:SetScript("OnEnter", function() Main:StatusTooltip(status) end)
 	status:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	f.statusFrame = status
 
-	-- Tabs
-	local tabBar = CreateFrame("Frame", nil, f)
-	tabBar:SetPoint("TOPLEFT", 1, -1 - S.titleBar)
-	tabBar:SetPoint("TOPRIGHT", -1, -1 - S.titleBar)
-	tabBar:SetHeight(S.tabBar)
-	local tabRule = Theme.Rule(tabBar, "line")
-	tabRule:SetPoint("BOTTOMLEFT")
-	tabRule:SetPoint("BOTTOMRIGHT")
-	f.tabButtons = {}
-	local prev
-	for i, tab in ipairs(self.tabs) do
-		local b = W.Tab(tabBar, tab.title, function() Main:Select(tab.key) end)
-		-- Tabs carry SP.l padding, so the first label lines up with the content.
-		if prev then b:SetPoint("LEFT", prev, "RIGHT", 0, 0) else b:SetPoint("LEFT", 0, 0) end
-		f.tabButtons[i] = b
-		prev = b
-	end
-	-- One underline, moved between tabs.
-	local underline = tabBar:CreateTexture(nil, "OVERLAY")
-	underline:SetHeight(S.underline)
-	Theme.Solid(underline, "gold")
-	underline:Hide()
-	f.underline = underline
+	-------------------------------------------------------------------------
+	-- Page header: title, one sentence, close (a drag handle too)
+	-------------------------------------------------------------------------
+	local head = CreateFrame("Frame", nil, f)
+	head:SetPoint("TOPLEFT", S.sidebar, 0)
+	head:SetPoint("TOPRIGHT", -1, -1)
+	head:SetHeight(S.pageHead)
+	dragHandle(head, f)
+	f.head = head
+	f.pageTitle = Theme.Text(head, "page", "text")
+	f.pageTitle:SetPoint("TOPLEFT", SP.l, -SP.l + 1)
+	f.desc = Theme.Text(head, "small", "dim")
+	f.desc:SetPoint("TOPLEFT", f.pageTitle, "BOTTOMLEFT", 0, -SP.xs)
+	f.desc:SetPoint("RIGHT", -(S.control + SP.l + SP.s), 0)
+	f.desc:SetWordWrap(false)
+	local close = W.CloseButton(head, function() Main:Close() end)
+	close:SetPoint("TOPRIGHT", -SP.m, -SP.m)
+	f.close = close
 
-	-- Reminder bar (v0.3.4): orange, under the tabs, on every tab, while your
-	-- profession windows haven't been opened. The window grows by its height
-	-- so no tab's layout moves.
+	-- Reminder bar (v0.3.4): orange, under the page header, on every page,
+	-- while your profession windows haven't been opened. The window grows
+	-- by its height so no page's layout moves.
 	local banner = CreateFrame("Frame", nil, f)
-	banner:SetPoint("TOPLEFT", SP.l, -(S.titleBar + S.tabBar + SP.m))
-	banner:SetPoint("TOPRIGHT", -SP.l, -(S.titleBar + S.tabBar + SP.m))
+	banner:SetPoint("TOPLEFT", S.sidebar + SP.l, -(S.pageHead + SP.xs))
+	banner:SetPoint("TOPRIGHT", -SP.l, -(S.pageHead + SP.xs))
 	banner:SetHeight(S.banner)
 	banner.bg = banner:CreateTexture(nil, "BACKGROUND")
 	banner.bg:SetAllPoints()
@@ -159,7 +223,7 @@ function Main:Build()
 
 	-- Content area
 	local content = CreateFrame("Frame", nil, f)
-	content:SetPoint("TOPLEFT", SP.l, -(S.titleBar + S.tabBar + SP.l))
+	content:SetPoint("TOPLEFT", S.sidebar + SP.l, -(S.pageHead + SP.xs))
 	content:SetPoint("BOTTOMRIGHT", -SP.l, SP.l)
 	f.content = content
 	for _, tab in ipairs(self.tabs) do
@@ -187,18 +251,17 @@ function Main:Build()
 	return f
 end
 
--- Move the underline under the active tab (gliding from the old one).
-function Main:PlaceUnderline(button)
-	local u = self.frame.underline
-	local oldLeft, oldWidth = u:IsShown() and u:GetLeft(), u:GetWidth()
-	u:ClearAllPoints()
-	u:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", SP.l, 0)
-	u:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -SP.l, 0)
-	u:Show()
-	local newLeft, newWidth = button:GetLeft(), button:GetWidth() - SP.l * 2
-	if oldLeft and newLeft and newWidth and newWidth > 0 and oldWidth and oldWidth > 0 then
-		Motion.Glide(u, oldLeft - (newLeft + SP.l), oldWidth / newWidth, M.slide)
-	end
+function Main:Tab(key)
+	for _, tab in ipairs(self.tabs) do if tab.key == key then return tab end end
+end
+
+-- The page's title and sentence.
+function Main:UpdateHeader()
+	local tab = self.current and self:Tab(self.current)
+	if not tab or not self.frame then return end
+	self.frame.pageTitle:SetText(tab.title:upper())
+	local desc = tab.module.Description and tab.module:Description() or tab.desc or ""
+	self.frame.desc:SetText(desc)
 end
 
 function Main:Select(key)
@@ -210,10 +273,7 @@ function Main:Select(key)
 			tab.built = true
 		end
 		tab.page:SetShown(active)
-		self.frame.tabButtons[i]:SetActive(active)
-		if active then
-			self:PlaceUnderline(self.frame.tabButtons[i])
-		end
+		if self.frame.navButtons[i] then self.frame.navButtons[i]:SetActive(active) end
 	end
 	self.current = key
 	SK.DB.settings.window.tab = key
@@ -245,7 +305,7 @@ function Main:UpdateBanner()
 	if extra ~= self.bannerH then
 		self.bannerH = extra
 		f:SetHeight(S.window[2] + extra)
-		f.content:SetPoint("TOPLEFT", SP.l, -(S.titleBar + S.tabBar + SP.l + extra))
+		f.content:SetPoint("TOPLEFT", S.sidebar + SP.l, -(S.pageHead + SP.xs + extra))
 		self:ApplyScale()
 	end
 end
@@ -261,23 +321,45 @@ function Main:OpenNextProfession(skillLine, name)
 	return false
 end
 
--- Words for the title-bar status. Pure; tested.
-function Main.StatusText(guildName, paused, why, errors)
-	local text
-	if paused then text = "Sync paused: " .. why else text = "Sync on" end
-	text = (guildName or "No guild") .. "  ·  " .. text
+-- Words for the sync status at the bottom of the sidebar. Pure; tested.
+function Main.StatusText(paused, why, errors)
+	local text = paused and ("Sync paused: " .. why) or "Synced"
 	if errors and errors > 0 then
 		text = text .. "  ·  " .. Theme.Paint("spark", errors .. (errors == 1 and " error" or " errors"))
 	end
 	return text
 end
 
+-- "Update: 0.9.0 is out" when a guildmate runs a newer version than
+-- ours (shown instead of the guild line). Pure; tested.
+function Main.UpdateText(newest, mine)
+	if not newest or mine == "dev" or not SK.Sync.versionNewer(newest, mine) then return nil end
+	return Theme.Paint("spark", "Update: " .. newest .. " is out")
+end
+
+-- "Short Royalty · 10 online" (or "No guild"). Pure; tested.
+function Main.GuildLine(guildName, guild)
+	if not guildName then return "No guild" end
+	local online = 0
+	for _, m in pairs(guild and guild.members or {}) do
+		if not m.leftAt and m.online then online = online + 1 end
+	end
+	return guildName .. "  ·  " .. online .. " online"
+end
+
 function Main:StatusTooltip(owner)
 	local paused, why = SK.Sync:IsPaused()
 	GameTooltip:SetOwner(owner, "ANCHOR_BOTTOMRIGHT")
-	GameTooltip:AddLine(paused and ("Sync paused: " .. why) or "Sync on", Theme.RGB(paused and "dim" or "spark"))
+	GameTooltip:AddLine(paused and ("Sync paused: " .. why) or "Sync on", Theme.RGB(paused and "dim" or "good"))
 	GameTooltip:AddLine(paused and "Your guildmates' data stays as it was. It starts again on its own."
 		or "Changes reach guildmates in about a minute. The dot flashes when new data arrives.", Theme.RGB("text"))
+	local guild = SK.DBM:Guild()
+	local newest = guild and SK.RosterTab.NewestVersion(guild)
+	if Main.UpdateText(newest, SK.VERSION) then
+		GameTooltip:AddLine(" ")
+		GameTooltip:AddLine("Short Royalty " .. newest .. " is out (you have " .. SK.VERSION .. "). " ..
+			"Update it from CurseForge or GitHub.", Theme.RGB("spark"))
+	end
 	if #SK.errors > 0 then
 		GameTooltip:AddLine(" ")
 		GameTooltip:AddLine(#SK.errors .. " Lua error(s) caught. Type /sr debug and send the text to the addon author.",
@@ -300,14 +382,14 @@ function Main:Refresh()
 		if tab.key == self.current and tab.built and tab.module.Refresh then tab.module:Refresh() end
 	end
 	self:UpdateBanner()
+	self:UpdateHeader()
 	local paused, why = SK.Sync:IsPaused()
 	local f = self.frame
-	f.status:SetText(Main.StatusText(SK.guildName, paused, why, #SK.errors))
-	f.dot:ClearAllPoints()
-	-- (a cut-off status still reports its full width: keep the dot inside)
-	local w = math.min(f.status:GetStringWidth() or 0, f.status:GetWidth() or 0)
-	f.dot:SetPoint("RIGHT", f.status, "RIGHT", -w - SP.s, 0)
-	f.dot:SetVertexColor(Theme.RGB(paused and "faint" or "spark"))
+	f.status:SetText(Main.StatusText(paused, why, #SK.errors))
+	local guild = SK.DBM:Guild()
+	local newer = Main.UpdateText(guild and SK.RosterTab.NewestVersion(guild), SK.VERSION)
+	f.guildLine:SetText(newer or Main.GuildLine(SK.guildName, guild))
+	Theme.Tint(f.dot, paused and "faint" or "good")
 end
 
 -- instant = true when opened from the keyboard (/sk): no animation.

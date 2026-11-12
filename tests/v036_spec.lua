@@ -148,7 +148,7 @@ describe("v0.4.0 alt rank", function()
 
 	it("Not seen yet in the Roster lists real gaps before the alt rank", function()
 		SK.MainFrame:Show("overview")
-		SK.OverviewTab.guild.button:GetScript("OnClick")(SK.OverviewTab.guild.button)
+		SK.OverviewTab.stats.stats[3].onClick()      -- "have Short Royalty": who doesn't
 		local items = SK.RosterTab.list.items
 		assert.equal("Ann", items[1].name)    -- not seen, not alt rank
 		assert.equal("Bobalt", items[2].name) -- not seen, alt rank: after the real gaps

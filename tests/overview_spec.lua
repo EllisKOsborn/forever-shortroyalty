@@ -126,11 +126,15 @@ describe("v0.2.2 Overview numbers", function()
 		assert.equal(1, o.stale)       -- Ben, 10 days old
 		assert.equal(2, o.unscanned)   -- Pip's Tailoring (we never opened it) and Ann Alt's Alchemy
 		assert.equal(1, o.outdated)    -- Ben runs 0.0.1
-		assert.is_nil(SK.OverviewTab.HealthText(o):find("no data here yet", 1, true)) -- Cid has no addon at all
+		assert.is_nil(SK.OverviewTab.NeedsText(o):find("no data here yet", 1, true)) -- Cid has no addon at all
 		SK.Identity:Member("C").addon = "0.3.4" -- now he has it, but nothing arrived yet
 		o = SK.Overview.Build(guild, W.now)
 		assert.equal(1, o.addonNoData)
-		assert.truthy(SK.OverviewTab.HealthText(o):find("Has the addon, no data here yet  " .. SK.Theme.Code("spark") .. "1|r", 1, true))
+		assert.truthy(SK.OverviewTab.NeedsText(o):find("Has the addon, no data here yet  " .. SK.Theme.Code("spark") .. "1|r", 1, true))
+		-- v0.6.0: only what's missing is listed, each row opens the Roster
+		for _, row in ipairs(SK.OverviewTab.NeedsRows(o)) do
+			if row.label then assert.is_function(row.onClick, row.label) end
+		end
 	end)
 
 	it("summarises professions and recipes", function()
@@ -139,9 +143,13 @@ describe("v0.2.2 Overview numbers", function()
 		assert.equal(1, o.profs[171].maxed)
 		assert.equal(1, o.profs[197].count)
 		assert.equal(0, o.profs[202].count)
-		assert.truthy(SK.OverviewTab.ProfessionText(o):find("Engineering  " .. SK.Theme.Code("bad") .. "nobody", 1, true))
 		assert.equal(2, o.recipes.total)
 		assert.equal(1, o.recipes.single) -- recipe 101: only Ann
+		-- v0.6.0: the recipe numbers moved to the Professions page's Guild view
+		local text = SK.ProfessionsTab.BoardStatus(o.recipes, 1)
+		assert.truthy(text:find("2 recipes known", 1, true))
+		assert.truthy(text:find("1 by only one character", 1, true))
+		assert.truthy(text:find("1 profession nobody has", 1, true))
 	end)
 
 	it("counts raid attunement among max-level characters", function()
@@ -157,13 +165,15 @@ describe("v0.2.2 Overview numbers", function()
 		assert.equal(math.ceil((1796774400 - W.now) / 86400), o.raidDays)
 		local text = SK.OverviewTab.RaidText(o)
 		assert.truthy(text:find("1 without the amulet in their bags", 1, true))
-		assert.truthy(text:find("no attunement needed", 1, true))
+		assert.truthy(text:find("1 attuned", 1, true))
+		assert.truthy(text:find("3 ready", 1, true)) -- the raids that need no attunement, on one row
 	end)
 
 	it("handles no guild at all", function()
 		local o = SK.Overview.Build(nil, W.now)
 		assert.equal(0, o.members)
-		assert.truthy(SK.OverviewTab.RecipeText(o):find("Recipes appear", 1, true))
+		assert.truthy(SK.ProfessionsTab.BoardStatus(o.recipes, 0):find("Recipes appear", 1, true))
+		assert.truthy(SK.OverviewTab.NeedsText(o):find("All good", 1, true))
 	end)
 end)
 
@@ -182,27 +192,28 @@ describe("v0.2.2 Overview tab", function()
 		assert.equal("overview", SK.MainFrame.tabs[1].key)
 		SK.MainFrame:Toggle()
 		assert.equal("overview", SK.MainFrame.current)
-		assert.truthy(SK.OverviewTab.header:GetText():find("2 members", 1, true))
+		assert.truthy(SK.MainFrame.frame.desc:GetText():find("2 members", 1, true))
 		SK.MainFrame:Select("crafters")
 		SK.MainFrame.current = nil
 		SK.MainFrame:Refresh()
 		assert.equal("crafters", SK.MainFrame.current)
 	end)
 
-	it("card buttons jump to the right place", function()
+	it("cards and rows jump to the right place", function()
 		SK.MainFrame:Show("overview")
 		SK.OverviewTab.raids.button:GetScript("OnClick")(SK.OverviewTab.raids.button)
 		assert.equal("roster", SK.MainFrame.current)
 		assert.equal("ony", SK.DB.settings.roster.raid)
 		SK.MainFrame:Select("overview")
-		SK.OverviewTab.health.button:GetScript("OnClick")(SK.OverviewTab.health.button)
+		SK.RosterTab:ShowOldestFirst()                 -- what the "Profiles older than a week" row does
 		assert.is_nil(SK.DB.settings.roster.raid)
-		assert.equal(9, SK.RosterTab.list.sortCol)
+		assert.is_false(SK.RosterTab.list.sortCol)
 		assert.equal("Player-1-B", SK.RosterTab.list.items[1].guid) -- no data comes first
-		SK.MainFrame:Select("overview")
-		SK.OverviewTab.recipes.button:GetScript("OnClick")(SK.OverviewTab.recipes.button)
-		assert.equal("professions", SK.MainFrame.current) -- v0.3.1: the all-recipes search
-		assert.equal("recipes", SK.DB.settings.profView)
+		-- the number strip: members, online, have Short Royalty, raids
+		local stats = SK.OverviewTab.stats.stats
+		assert.equal(4, #stats)
+		assert.equal("2", stats[1].figure)
+		assert.equal("/ 2", stats[3].suffix)
 	end)
 
 	it("lists milestones with a Grats button that only pre-fills guild chat", function()

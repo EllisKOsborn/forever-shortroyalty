@@ -1,6 +1,7 @@
--- Professions tab (v0.3): the guild's coverage board, one profession at a
--- time (crafters and recipes), and the cooldown board. Numbers come from
--- Core/ProfBoard.lua; clicking a recipe opens it in the Crafters tab.
+-- Professions tab (v0.3, page tabs since v0.6.0): Guild (the coverage
+-- board, then one profession at a time: crafters and recipes), Recipes
+-- (every recipe in the game) and Cooldowns. Numbers come from
+-- Core/ProfBoard.lua; clicking a recipe opens it in Find a crafter.
 -- In one profession, clicking a crafter shows that crafter's recipes on the
 -- right (v0.3.4), with a Character button to open their character sheet.
 local _, SK = ...
@@ -10,12 +11,13 @@ local Theme, W, Compat = SK.Theme, SK.Widgets, SK.Compat
 local PB, CI, Fav = SK.ProfBoard, SK.CraftIndex, SK.Favourites
 local S, SP = Theme.SIZES, Theme.SPACE
 
-Prof.CRAFTERS_W = 440
-Prof.RECIPES_W = S.window[1] - 2 * SP.l - Prof.CRAFTERS_W - SP.l
+Prof.CRAFTERS_W = 380
+Prof.RECIPES_W = S.contentW - Prof.CRAFTERS_W - SP.l
 
 -- Levelling, Route, Shopping list and Profit were removed in v0.5.6 (owner,
 -- 12 Nov: "not working as intended"); git history has them (v0.4.4-v0.5.5).
-local VIEWS = { { "board", "Guild" }, { "recipes", "All recipes" }, { "cooldowns", "Cooldowns" } }
+local VIEWS = { { "board", "Guild" }, { "recipes", "Recipes" }, { "cooldowns", "Cooldowns" } }
+Prof.VIEWS = VIEWS
 local VIEW_OK = { board = true, recipes = true, cooldowns = true }
 local RECIPE_FILTERS = {
 	{ "all", "All" }, { "one", "Only one crafter" }, { "fav", "Favourites" }, { "nobody", "Nobody knows" },
@@ -34,7 +36,7 @@ end
 local function whisperButton(row)
 	row.whisper = W.Button(row, "Whisper", 60, S.controlSmall, function(b)
 		if b.target then Compat.SendTell(SK.Identity:WhisperTarget(b.target)) end
-	end)
+	end, "quiet")
 	row.whisper:SetPoint("RIGHT", -SP.xxs, 0)
 	row.whisper.disabledTooltip = "Offline"
 	row.widgets[#row.widgets + 1] = row.whisper
@@ -49,47 +51,45 @@ end
 ---------------------------------------------------------------------------
 -- Columns (each list: its width minus the 12 px scroll bar)
 ---------------------------------------------------------------------------
--- Board: 848 - 12 = 836.
+-- Board: 744 - 12 = 732. Specialisations are in the row's tooltip.
 local BOARD_COLUMNS = {
-	{ key = "name", title = "Profession", width = 170 },
-	{ key = "chars", title = "Characters", width = 88, align = "RIGHT" },
-	{ key = "atMax", title = "At " .. SK.Data.SKILL_CAP, width = 70, align = "RIGHT" },
-	{ key = "online", title = "Online", width = 70, align = "RIGHT" },
-	{ key = "top", title = "Top skill", width = 80, align = "RIGHT" },
-	{ key = "scan", title = "Latest recipes", width = 112, align = "RIGHT" },
-	{ key = "specs", title = "Specialisations", width = 246 },
+	{ key = "name", title = "Profession", width = 232 },
+	{ key = "chars", title = "Crafters", width = 100, align = "RIGHT" },
+	{ key = "atMax", title = "At " .. SK.Data.SKILL_CAP, width = 100, align = "RIGHT" },
+	{ key = "online", title = "Online", width = 100, align = "RIGHT" },
+	{ key = "top", title = "Top skill", width = 100, align = "RIGHT" },
+	{ key = "scan", title = "Updated", width = 100, align = "RIGHT" },
 }
 
--- Crafters: 440 - 12 = 428.
+-- Crafters: 380 - 12 = 368. Specialisations are in the tooltip.
 local CRAFTER_COLUMNS = {
-	{ key = "name", title = "Character", width = 152 },
+	{ key = "name", title = "Character", width = 176 },
 	{ key = "skill", title = "Skill", width = 50, align = "RIGHT" },
-	{ key = "spec", title = "Speciality", width = 92 },
-	{ key = "scan", title = "Recipes", width = 70, align = "RIGHT" },
-	{ key = "btn", title = "", width = 64 },
+	{ key = "scan", title = "Recipes", width = 76, align = "RIGHT" },
+	{ key = "btn", title = "", width = 66 },
 }
 
--- Recipes: 392 - 12 = 380.
+-- Recipes: 348 - 12 = 336.
 local RECIPE_COLUMNS = {
-	{ key = "name", title = "Recipe", width = 290 },
-	{ key = "count", title = "Crafters", width = 90, align = "RIGHT" },
+	{ key = "name", title = "Recipe", width = 256 },
+	{ key = "count", title = "Crafters", width = 80, align = "RIGHT" },
 }
 
--- All recipes: 836.
+-- Recipes (every recipe in the game): 732.
 local ALL_COLUMNS = {
-	{ key = "name", title = "Recipe", width = 330 },
-	{ key = "prof", title = "Profession", width = 130 },
-	{ key = "group", title = "Group", width = 266 },
-	{ key = "count", title = "Crafters", width = 110, align = "RIGHT" },
+	{ key = "name", title = "Recipe", width = 290 },
+	{ key = "prof", title = "Profession", width = 120 },
+	{ key = "group", title = "Group", width = 222 },
+	{ key = "count", title = "Crafters", width = 100, align = "RIGHT" },
 }
 
--- Cooldowns: 836.
+-- Cooldowns: 732.
 local COOLDOWN_COLUMNS = {
-	{ key = "name", title = "Cooldown", width = 270 },
-	{ key = "who", title = "Crafter", width = 190 },
-	{ key = "left", title = "Ready in", width = 110, align = "RIGHT" },
-	{ key = "asof", title = "As of", width = 140, align = "RIGHT" },
-	{ key = "btn", title = "", width = 126 },
+	{ key = "name", title = "Cooldown", width = 246 },
+	{ key = "who", title = "Crafter", width = 180 },
+	{ key = "left", title = "Ready in", width = 100, align = "RIGHT" },
+	{ key = "asof", title = "As of", width = 120, align = "RIGHT" },
+	{ key = "btn", title = "", width = 86 },
 }
 
 local function setBoardCell(fs, r, col)
@@ -115,7 +115,7 @@ end
 local function setCrafterCell(fs, c, col)
 	local k = col.key
 	if k == "name" then
-		local star = c.fav and (Theme.Star("beard") .. " ") or ""
+		local star = c.fav and (Theme.Star("accent") .. " ") or ""
 		local extra = c.via and Theme.Paint("good", "  on " .. (c.viaName or "alt"))
 			or (c.altOf and Theme.Paint("dim", "  alt of " .. c.altOf)) or ""
 		fs:SetText(dot(c.status) .. " " .. star .. Theme.ClassText(c.name, c.class) .. extra)
@@ -141,7 +141,7 @@ local function setRecipeCell(fs, r, col)
 	if col.key == "name" then
 		local hex = r.itemID > 0 and Compat.ItemQualityHex(r.itemID)
 		local name = hex and ("|c" .. hex .. r.name .. "|r") or r.name
-		fs:SetText((r.fav and (Theme.Star("beard") .. " ") or "") .. recipeIcon(r) .. name)
+		fs:SetText((r.fav and (Theme.Star("accent") .. " ") or "") .. recipeIcon(r) .. name)
 	else
 		if r.count == 0 then fs:SetText(Theme.Paint("spark", "nobody"))
 		elseif r.count == 1 then fs:SetText(Theme.Paint("spark", "1"))
@@ -167,6 +167,23 @@ end
 local function recipeClick(r, button)
 	if button == "RightButton" then Fav.ToggleRecipe(r.recipeID)
 	else SK.CraftersTab:ShowRecipe(r.recipeID, r.skillLine) end
+end
+
+-- The short recipe tooltip (W.RecipeTip): one crafter is named.
+local function recipeTip(row, r)
+	GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+	local tip = { recipeID = r.recipeID, itemID = r.itemID, skillLine = r.skillLine, name = r.name, count = r.count,
+		fav = r.fav }
+	if r.count == 1 then
+		local index = Prof.ctx and Prof.ctx.index
+		local entry = index and index.recipes and index.recipes[r.recipeID]
+		local c = entry and entry.crafters and entry.crafters[1] -- a GUID
+		local guild = SK.DBM:Guild()
+		local m = c and guild and guild.members[c]
+		if m then tip.crafterName, tip.crafterOnline = Theme.ClassText(m.name, m.class), m.online end
+	end
+	W.RecipeTip(GameTooltip, tip, "Click: crafters, reagents, Wowhead")
+	GameTooltip:Show()
 end
 
 local function setCooldownCell(fs, r, col)
@@ -197,39 +214,54 @@ function Prof:Build(page)
 	self.filter = "all"
 	local settings = SK.DB.settings
 
-	-- Toolbar: Guild / Cooldowns, or a back button in the profession view.
-	self.viewChips = {}
-	local prev
-	for _, v in ipairs(VIEWS) do
-		local c = W.Chip(page, v[2], function()
-			settings.profView = v[1]
-			Prof.skillLine = nil
-			Prof:Refresh()
-		end)
-		c.value = v[1]
-		if prev then c:SetPoint("LEFT", prev, "RIGHT", SP.xs, 0) else c:SetPoint("TOPLEFT", 0, -1) end
-		self.viewChips[#self.viewChips + 1] = c
-		prev = c
-	end
-	self.back = W.Button(page, "All professions", nil, S.control, function()
+	-- Page tabs: Guild / Recipes / Cooldowns, with the count on the right.
+	self.views = W.SubTabs(page, VIEWS, function(key)
+		settings.profView = key
 		Prof.skillLine = nil
 		Prof:Refresh()
 	end)
-	self.back:SetPoint("TOPLEFT", 0, 0)
-	self.heading = Theme.Text(page, "title", "text")
-	self.heading:SetPoint("LEFT", self.back, "RIGHT", SP.m, 0)
+	self.views:SetPoint("TOPLEFT", 0, 0)
+	self.views:SetPoint("TOPRIGHT", 0, 0)
+	self.viewChips = self.views.tabs
 	self.status = Theme.Text(page, "small", "dim")
-	self.status:SetPoint("TOPRIGHT", 0, -SP.xs)
-	self.status:SetPoint("LEFT", prev, "RIGHT", SP.m, 0)
+	self.status:SetPoint("RIGHT", self.views, "RIGHT", 0, SP.xxs)
+	self.status:SetPoint("LEFT", self.views, "LEFT", 300, 0)
 	self.status:SetJustifyH("RIGHT")
 	self.status:SetWordWrap(false)
 
-	local top = -(S.control + SP.m)
-	-- The reminder line ("your Tailoring went up"), only when there is one.
-	self.nudge = Theme.Text(page, "small", "spark")
-	self.nudge:SetPoint("TOPLEFT", 0, top)
-	self.nudge:SetPoint("RIGHT", page, "RIGHT", 0, 0)
-	self.nudge:SetWordWrap(true)
+	local top = -(S.subTabs + SP.m)
+	-- One profession: a back link and its name.
+	self.back = W.Button(page, "All professions", nil, S.control, function()
+		Prof.skillLine = nil
+		Prof:Refresh()
+	end, "quiet")
+	self.back:SetPoint("TOPLEFT", -SP.s, top)
+	self.heading = Theme.Text(page, "title", "text")
+	self.heading:SetPoint("LEFT", self.back, "RIGHT", SP.xs, 0)
+
+	-- The reminder ("your Tailoring went up"): a slim bar with an Open button.
+	local nudgeBar = CreateFrame("Frame", nil, page)
+	nudgeBar:SetPoint("TOPLEFT", 0, top)
+	nudgeBar:SetPoint("TOPRIGHT", 0, top)
+	nudgeBar:SetHeight(S.control + SP.s)
+	nudgeBar.bg = nudgeBar:CreateTexture(nil, "BACKGROUND")
+	nudgeBar.bg:SetAllPoints()
+	Theme.Solid(nudgeBar.bg, "spark", Theme.ALPHA.alert)
+	nudgeBar.edge = nudgeBar:CreateTexture(nil, "ARTWORK")
+	nudgeBar.edge:SetPoint("TOPLEFT")
+	nudgeBar.edge:SetPoint("BOTTOMLEFT")
+	nudgeBar.edge:SetWidth(SP.xxs)
+	Theme.Solid(nudgeBar.edge, "spark")
+	nudgeBar.open = W.Button(nudgeBar, "Open", nil, S.controlSmall, function(b)
+		if b.skillLine then SK.MainFrame:OpenNextProfession(b.skillLine, b.profName) end
+	end)
+	nudgeBar.open:SetPoint("RIGHT", -SP.s, 0)
+	nudgeBar.open.tooltip = "Opens your profession window so guildmates see your new recipes."
+	self.nudgeBar = nudgeBar
+	self.nudge = Theme.Text(nudgeBar, "small", "text")
+	self.nudge:SetPoint("LEFT", SP.m, 0)
+	self.nudge:SetPoint("RIGHT", nudgeBar.open, "LEFT", -SP.m, 0)
+	self.nudge:SetWordWrap(false)
 
 	self.board = W.List(page, {
 		columns = BOARD_COLUMNS, setCell = setBoardCell,
@@ -241,8 +273,10 @@ function Prof:Build(page)
 				Theme.TipLine(GameTooltip, "Nobody in the guild has this profession yet.", "spark")
 			else
 				Theme.TipLine(GameTooltip, Theme.Count(r.chars, "character") .. ", " .. r.online .. " online", "dim")
+				local specs = PB.SpecText(r.specs)
+				if specs ~= "" then Theme.TipLine(GameTooltip, specs, "text", true) end
 			end
-			Theme.TipLine(GameTooltip, "Click to see crafters and recipes", "gold")
+			Theme.TipLine(GameTooltip, "Click to see crafters and recipes", "accent")
 			GameTooltip:Show()
 		end,
 	})
@@ -310,19 +344,7 @@ function Prof:Build(page)
 		"still give you points"
 	self.allList = W.List(page, {
 		columns = ALL_COLUMNS, setCell = setAllCell,
-		onEnter = function(row, r)
-			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
-			if r.itemID > 0 and GameTooltip.SetItemByID then GameTooltip:SetItemByID(r.itemID)
-			else GameTooltip:SetText(r.name) end
-			local reagents = SK.Reagents.Text(SK.Reagents.Lines(r.recipeID), Theme.Code)
-			if reagents then Theme.TipLine(GameTooltip, "Needs: " .. reagents, "dim", true) end
-			W.SkillUpTip(GameTooltip, r.recipeID, r.skillLine)
-			Theme.TipLine(GameTooltip, r.count > 0 and Theme.Count(r.count, "crafter") .. " in the guild" or
-				"Nobody in the guild knows it yet", r.count > 0 and "good" or "spark")
-			Theme.TipLine(GameTooltip, "Click for crafters, reagents and a Wowhead link  ·  Right-click to " ..
-				(r.fav and "unstar" or "star"), "gold")
-			GameTooltip:Show()
-		end,
+		onEnter = recipeTip,
 		onClick = recipeClick,
 	})
 	self.allList:SetPoint("TOPLEFT", 0, top - S.control - SP.m)
@@ -350,7 +372,7 @@ function Prof:Build(page)
 			end
 			local picked = Prof.crafter == c.guid
 			Theme.TipLine(GameTooltip, (picked and "Click to show everyone's recipes" or "Click to see their recipes") ..
-				"  ·  Right-click to " .. (c.fav and "unstar" or "star"), "gold")
+				"  ·  Right-click to " .. (c.fav and "unstar" or "star"), "accent")
 			GameTooltip:Show()
 		end,
 		onClick = function(c, button)
@@ -362,7 +384,7 @@ function Prof:Build(page)
 		end,
 	})
 	self.crafters:SetSelected(function(c) return c.guid == Prof.crafter end)
-	self.crafters:SetPoint("TOPLEFT", 0, top)
+	self.crafters:SetPoint("TOPLEFT", 0, top - S.control - SP.s)
 	self.crafters:SetPoint("BOTTOMLEFT")
 	self.crafters:SetWidth(Prof.CRAFTERS_W)
 
@@ -392,7 +414,7 @@ function Prof:Build(page)
 	self.pickedName:SetWordWrap(false)
 
 	self.filterChips = {}
-	prev = nil
+	local prev
 	for _, f in ipairs(RECIPE_FILTERS) do
 		local c = W.Chip(right, f[2], function()
 			Prof.filter = f[1]
@@ -407,17 +429,7 @@ function Prof:Build(page)
 	self.filterChips[4].tooltip = "Recipes the profession window lists that nobody in the guild has learned."
 	self.recipes = W.List(right, {
 		columns = RECIPE_COLUMNS, setCell = setRecipeCell,
-		onEnter = function(row, r)
-			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
-			if r.itemID > 0 and GameTooltip.SetItemByID then GameTooltip:SetItemByID(r.itemID)
-			else GameTooltip:SetText(r.name) end
-			local reagents = SK.Reagents.Text(SK.Reagents.Lines(r.recipeID), Theme.Code)
-			if reagents then Theme.TipLine(GameTooltip, "Needs: " .. reagents, "dim", true) end
-			W.SkillUpTip(GameTooltip, r.recipeID, r.skillLine)
-			Theme.TipLine(GameTooltip, "Click to see who can make it  ·  Right-click to " ..
-				(r.fav and "unstar" or "star"), "gold")
-			GameTooltip:Show()
-		end,
+		onEnter = recipeTip,
 		onClick = recipeClick,
 	})
 	self.recipes:SetPoint("TOPLEFT", 0, -(S.controlSmall + SP.s + 2)) -- moved down in RefreshOne when a crafter is picked
@@ -453,10 +465,8 @@ function Prof:Refresh()
 	local view = SK.DB.settings.profView
 	if not VIEW_OK[view] then view = "board" end
 	local one = self.skillLine ~= nil
-	for _, c in ipairs(self.viewChips) do
-		c:SetShown(not one)
-		c:SetActive(c.value == view)
-	end
+	if one then view = "board" end
+	self.views:SetActive(view)
 	self.back:SetShown(one)
 	self.heading:SetShown(one)
 	self.board:SetShown(not one and view == "board")
@@ -468,12 +478,24 @@ function Prof:Refresh()
 	self.crafters:SetShown(one)
 	self.right:SetShown(one)
 
-	-- Reminder line (shown even when chat reminders are off).
-	local nudge = SK.Professions.NudgeText(SK.Professions.CurrentNudges())
+	-- Reminder bar (shown even when chat reminders are off).
+	local nudges = SK.Professions.CurrentNudges()
+	local nudge = SK.Professions.NudgeText(nudges)
 	self.nudge:SetText(nudge or "")
-	self.nudge:SetShown(nudge ~= nil and not one)
-	local shift = nudge and not one and (self.nudge:GetStringHeight() or 0) + SP.s or 0
-	local top = -(S.control + SP.m) - shift
+	local showNudge = nudge ~= nil and not one
+	self.nudgeBar:SetShown(showNudge)
+	if showNudge then
+		local first = nudges[1]
+		local open = self.nudgeBar.open
+		open.skillLine, open.profName = first.skillLine, first.name
+		open:SetText("Open " .. first.name)
+		open:SetWidth(math.max(S.minHit * 2, (open.label:GetStringWidth() or 0) + SP.l * 2))
+		open:SetShown(SK.Compat.CanShowProfession())
+		open:SetDisabled(SK.Compat.InCombat())
+		open.disabledTooltip = "Not in combat"
+	end
+	local shift = showNudge and (S.control + SP.s + SP.m) or 0
+	local top = -(S.subTabs + SP.m) - shift
 	self.board:SetPoint("TOPLEFT", 0, top)
 	self.cooldowns:SetPoint("TOPLEFT", 0, top)
 	self.search:SetPoint("TOPLEFT", 0, top)
@@ -494,9 +516,22 @@ function Prof:Refresh()
 		local missing = 0
 		for _, r in ipairs(rows) do if r.chars == 0 then missing = missing + 1 end end
 		self.board:SetItems(rows)
-		self.status:SetText(missing > 0 and (Theme.Count(missing, "profession") .. " nobody has") or
-			"Every profession is covered")
+		self.status:SetText(Prof.BoardStatus(SK.Overview.Recipes(ctx.index), missing))
 	end
+end
+
+-- The Guild view's line on the right (v0.6.0: the Overview's Recipes card
+-- moved here). Pure; tested.
+function Prof.BoardStatus(recipes, missing)
+	local parts = {}
+	if recipes.total > 0 then
+		parts[#parts + 1] = Theme.Count(recipes.total, "recipe") .. " known"
+		if recipes.single > 0 then parts[#parts + 1] = Theme.Paint("spark", recipes.single .. " by only one character") end
+	else
+		parts[#parts + 1] = "Recipes appear after crafters open their profession window once"
+	end
+	parts[#parts + 1] = missing > 0 and (Theme.Count(missing, "profession") .. " nobody has") or "every profession covered"
+	return table.concat(parts, "  ·  ")
 end
 
 Prof.SHOW_ITEMS = {
@@ -593,9 +628,7 @@ function Prof:RefreshOne(ctx)
 		self.pickedName:SetText(Theme.ClassText(picked.name, picked.class) .. skill)
 	end
 	local chipsY = picked and -(S.control + SP.s) or -1
-	for i, c in ipairs(self.filterChips) do
-		if i == 1 then c:SetPoint("TOPLEFT", 0, chipsY) end
-	end
+	self.filterChips[1]:SetPoint("TOPLEFT", 0, chipsY)
 	self.recipes:SetPoint("TOPLEFT", 0, chipsY - (S.controlSmall + SP.s + 1))
 
 	local unknown = not picked and #PB.Unknown(ctx, skillLine) > 0
@@ -637,4 +670,5 @@ function Prof:RefreshOne(ctx)
 		(picked and ((picked.name:match("^(%S+)") or picked.name) .. " knows ") or "") .. Theme.Count(#rows, "recipe"))
 end
 
-SK.MainFrame:AddTab("professions", "Professions", Prof)
+SK.MainFrame:AddTab("professions", "Professions", Prof, { group = "crafting",
+	desc = "Who crafts what in the guild, every recipe in the game, and cooldowns." })

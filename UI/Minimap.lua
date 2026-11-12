@@ -19,7 +19,7 @@ local function onClick(_, button)
 end
 
 local function onTooltip(tt)
-	Theme.TipLine(tt, "Short Royalty", "gold")
+	Theme.TipLine(tt, "Short Royalty", "accent")
 	Theme.TipLine(tt, "Left-click: open / close", "text")
 	Theme.TipLine(tt, "Right-click: settings", "text")
 end

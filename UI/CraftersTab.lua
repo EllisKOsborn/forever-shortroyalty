@@ -8,8 +8,8 @@ local Theme, W, Compat = SK.Theme, SK.Widgets, SK.Compat
 local CI = SK.CraftIndex
 local S, SP = Theme.SIZES, Theme.SPACE
 
-Crafters.RESULTS_W = 476
-Crafters.SIDE_W = S.window[1] - 2 * SP.l - Crafters.RESULTS_W - SP.l
+Crafters.RESULTS_W = 404
+Crafters.SIDE_W = S.contentW - Crafters.RESULTS_W - SP.l
 Crafters.STAR_W = 48 -- the Star chip next to the title
 Crafters.LIST_W = 56 -- the "+ List" chip left of it
 Crafters.REAGENTS_H = 3 * Theme.SIZE.small + 4 * Theme.SPACE.xs -- up to three lines of reagents
@@ -35,22 +35,22 @@ function Crafters.CountText(total, online)
 	return text
 end
 
--- Results: 476 - 12 (scroll bar) = 464.
+-- Results: 404 - 12 (scroll bar) = 392.
 local RESULT_COLUMNS = {
-	{ key = "name", title = "Item or recipe", width = 250 },
-	{ key = "prof", title = "Profession", width = 100 },
-	{ key = "count", title = "Crafters", width = 114, align = "RIGHT" },
+	{ key = "name", title = "Item or recipe", width = 200 },
+	{ key = "prof", title = "Profession", width = 86 },
+	{ key = "count", title = "Crafters", width = 106, align = "RIGHT" },
 }
 
--- Side panel list: 356 - 2 x 12 padding - 12 (scroll bar) = 320.
+-- Side panel list: 324 - 2 x 12 padding - 12 (scroll bar) = 288.
 local CRAFTER_COLUMNS = {
-	{ key = "name", title = "Crafter", width = 138 },
-	{ key = "skill", title = "Skill", width = 44, align = "RIGHT" },
-	{ key = "info", title = "", width = 74 },
-	{ key = "btn", title = "", width = 64 },
+	{ key = "name", title = "Crafter", width = 124 },
+	{ key = "skill", title = "Skill", width = 40, align = "RIGHT" },
+	{ key = "info", title = "", width = 66 },
+	{ key = "btn", title = "", width = 58 },
 }
 
-local function star(on) return on and (Theme.Star("beard") .. " ") or "" end
+local function star(on) return on and (Theme.Star("accent") .. " ") or "" end
 
 local function setResultCell(fs, r, col)
 	if col.key == "name" then
@@ -58,7 +58,7 @@ local function setResultCell(fs, r, col)
 	elseif col.key == "prof" then
 		fs:SetText(Theme.Paint("dim", profName(r.skillLine)))
 	elseif col.key == "count" then
-		fs:SetText(r.online > 0 and (r.total .. Theme.Paint("dim", "  (" .. r.online .. " online)")) or tostring(r.total))
+		fs:SetText(r.online > 0 and (r.total .. Theme.Paint("good", "  ·  " .. r.online .. " online")) or tostring(r.total))
 	end
 end
 
@@ -79,7 +79,7 @@ end
 
 function Crafters:Build(page)
 	self.query = ""
-	self.search = W.SearchBox(page, 260, "Search an item or recipe", function(text)
+	self.search = W.SearchBox(page, 240, "Search an item or recipe", function(text)
 		Crafters.query = text
 		Crafters:Refresh()
 	end)
@@ -104,14 +104,8 @@ function Crafters:Build(page)
 		end,
 		onEnter = function(row, r)
 			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
-			if r.itemID > 0 and GameTooltip.SetItemByID then
-				GameTooltip:SetItemByID(r.itemID)
-			else
-				GameTooltip:SetText(r.name)
-			end
-			W.SkillUpTip(GameTooltip, r.recipeID, r.skillLine)
-			Theme.TipLine(GameTooltip, "Click to see who can make it  ·  Right-click to " ..
-				(SK.Favourites.IsRecipe(r.recipeID) and "unstar" or "star"), "gold")
+			W.RecipeTip(GameTooltip, { recipeID = r.recipeID, itemID = r.itemID, skillLine = r.skillLine, name = r.name,
+				count = r.total, online = r.online, fav = SK.Favourites.IsRecipe(r.recipeID) }, "Click: who can make it")
 			GameTooltip:Show()
 		end,
 	})
@@ -137,9 +131,9 @@ function Crafters:Build(page)
 	self.crafters = W.List(side, {
 		columns = CRAFTER_COLUMNS, setCell = setCrafterCell,
 		decorate = function(row)
-			row.whisper = W.Button(row, "Whisper", 60, S.controlSmall, function(b)
+			row.whisper = W.Button(row, "Whisper", 54, S.controlSmall, function(b)
 				if b.target then Compat.SendTell(SK.Identity:WhisperTarget(b.target)) end
-			end)
+			end, "quiet")
 			row.whisper:SetPoint("RIGHT", -SP.xxs, 0)
 			row.widgets[#row.widgets + 1] = row.whisper
 			row.whisper.disabledTooltip = "Offline"
@@ -160,7 +154,7 @@ function Crafters:Build(page)
 					(stale and " (may be out of date)" or ""), stale and "spark" or "dim")
 			end
 			Theme.TipLine(GameTooltip, "Click to view character  ·  Right-click to " ..
-				(c.fav and "unstar" or "star"), "gold")
+				(c.fav and "unstar" or "star"), "accent")
 			GameTooltip:Show()
 		end,
 		onClick = function(c, button)
@@ -345,4 +339,5 @@ function Crafters:Refresh()
 		(skillUps and ("\n" .. skillUps) or ""))
 end
 
-SK.MainFrame:AddTab("crafters", "Crafters", Crafters)
+SK.MainFrame:AddTab("crafters", "Find a crafter", Crafters, { group = "crafting",
+	desc = "Search an item or recipe to see who in the guild can make it, and whisper them." })

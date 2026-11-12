@@ -123,7 +123,37 @@ for (let i = 0; i < 10; i++) {
   starPts.push([8 + r * Math.cos(a), 8.6 + r * Math.sin(a)]);
 }
 
+// v0.6.0 sidebar icons: white outlines on a 32 box (stroke 2.5), tinted in game.
+const W2 = 2.5;
+const box = (x0, y0, x1, y1) => [line([x0, y0], [x1, y0], W2, WHITE), line([x1, y0], [x1, y1], W2, WHITE),
+  line([x1, y1], [x0, y1], W2, WHITE), line([x0, y1], [x0, y0], W2, WHITE)];
+const arc = (cx, cy, r, from, to, w) => {
+  const out = [];
+  const n = 16;
+  for (let i = 0; i < n; i++) {
+    const a = from + ((to - from) * i) / n, b = from + ((to - from) * (i + 1)) / n;
+    out.push(line([cx + r * Math.cos(a), cy + r * Math.sin(a)], [cx + r * Math.cos(b), cy + r * Math.sin(b)], w, WHITE));
+  }
+  return out;
+};
+const ICONS = {
+  "icon-overview": [...box(5, 5, 14, 14), ...box(18, 5, 27, 14), ...box(5, 18, 14, 27), ...box(18, 18, 27, 27)],
+  "icon-roster": [ring(12, 11, 4.5, W2, WHITE), ...arc(12, 27, 8.5, Math.PI, 2 * Math.PI, W2),
+    ring(23, 12, 3.5, W2, WHITE), ...arc(23, 26, 6.5, 1.25 * Math.PI, 2 * Math.PI, W2)],
+  "icon-character": [ring(16, 10, 5, W2, WHITE), ...arc(16, 28, 10, Math.PI, 2 * Math.PI, W2)],
+  "icon-crafters": [ring(14, 14, 8, W2, WHITE), line([20, 20], [27, 27], 3, WHITE)],
+  "icon-professions": [line([12, 5], [20, 5], W2, WHITE), line([13, 5], [13, 13], W2, WHITE), line([19, 5], [19, 13], W2, WHITE),
+    line([13, 13], [6, 25], W2, WHITE), line([19, 13], [26, 25], W2, WHITE), line([6, 25], [8, 27], W2, WHITE),
+    line([26, 25], [24, 27], W2, WHITE), line([8, 27], [24, 27], W2, WHITE), line([10, 20], [22, 20], W2, WHITE)],
+  "icon-settings": [line([5, 10], [17, 10], W2, WHITE), line([24, 10], [27, 10], W2, WHITE), ring(20.5, 10, 3.2, W2, WHITE),
+    line([5, 22], [8, 22], W2, WHITE), line([15, 22], [27, 22], W2, WHITE), ring(11.5, 22, 3.2, W2, WHITE)],
+};
+
 const TEXTURES = {
+  ...Object.fromEntries(Object.entries(ICONS).map(([k, v]) => [k, [32, v]])),
+  // A switch track: a pill across the middle of a 32 box (shown with texcoords 0.25-0.75 vertically).
+  pill: [32, [circle(8, 16, 7.5, WHITE), circle(24, 16, 7.5, WHITE), poly([[8, 8.5], [24, 8.5], [24, 23.5], [8, 23.5]], WHITE)]],
+  chevron: [16, [line([6, 4], [10.5, 8], 1.8, WHITE), line([10.5, 8], [6, 12], 1.8, WHITE)]],
   crest: [64, crest],
   // White glyphs, tinted in game with SetVertexColor.
   arrow: [16, [poly([[8, 4], [14, 12], [2, 12]], WHITE)]],

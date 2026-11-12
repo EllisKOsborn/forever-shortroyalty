@@ -1,118 +1,159 @@
--- Settings tab: sharing and sync, display options (including Reduce
--- motion), window size, maintenance buttons, and a live status read-out
--- with a preview of exactly what guildmates see.
+-- Settings tab (v0.6.0): two page tabs. General: what you share, how the
+-- window looks (accent colour, font, size), and reminders, as rows of
+-- switches. Advanced: tools, debug logging and a live status read-out with
+-- exactly what guildmates see.
 local _, SK = ...
 
 local Settings = SK:NewModule("SettingsTab")
 local Theme, W = SK.Theme, SK.Widgets
 local S, SP = Theme.SIZES, Theme.SPACE
 
-local SCALES = { 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3 }
-Settings.LEFT_W = 380
-Settings.RIGHT_W = S.window[1] - 2 * SP.l - Settings.LEFT_W - SP.xxl - SP.m
+Settings.COL_W = math.floor((S.contentW - SP.l) / 2)
+Settings.VIEWS = { { "general", "General" }, { "advanced", "Advanced" } }
+
+-- Swatch colours for the accent choices (class = the player's own).
+function Settings.AccentItems()
+	local items = {}
+	for _, choice in ipairs(Theme.ACCENT_CHOICES) do
+		local c = Theme.AccentBase(choice, SK.Compat.PlayerClassRGB())
+		items[#items + 1] = { choice, c[1], c[2], c[3], Theme.ACCENT_NAMES[choice] }
+	end
+	return items
+end
+
+function Settings:SetAccent(choice)
+	SK.DB.settings.accent = choice
+	Theme.SetAccent(choice, SK.Compat.PlayerClassRGB())
+	SK.MainFrame:Refresh()
+end
 
 function Settings:Build(page)
 	local s = SK.DB.settings
-	self.checks = {}
-	local y = 0
-	local function heading(text)
-		local b = W.Block(page, Settings.LEFT_W, text)
-		b:SetRows({})
-		b:SetPoint("TOPLEFT", 0, -y)
-		y = y + b.headH
-	end
-	local function check(label, get, set, tip)
-		local c = W.Check(page, label, get, set)
-		c:SetPoint("TOPLEFT", 0, -y - SP.xs)
-		c.tooltip = tip
-		self.checks[#self.checks + 1] = c
-		y = y + S.check + SP.m
-		return c
-	end
+	self.page = page
+	self.views = W.SubTabs(page, Settings.VIEWS, function(key)
+		s.settingsView = key
+		Settings:Refresh()
+	end)
+	self.views:SetPoint("TOPLEFT", 0, 0)
+	self.views:SetPoint("TOPRIGHT", 0, 0)
+	local top = -(S.subTabs + SP.l)
+	local colB = Settings.COL_W + SP.l
 
-	heading("Sharing")
-	check("Share and receive guild data (sync)", function() return s.sync end, function(v)
-		s.sync = v
-		SK:Print(v and "Sync turned on." or "Sync turned off. Nothing will be sent or received.")
-		SK.MainFrame:Refresh()
-	end)
-	check("Share my gear and talents", function() return s.share.gear end, function(v)
-		s.share.gear = v
-		SK.Profile:BuildSelf()
-		SK:Print(v and "Your gear and talents will be shared." or "Your gear and talents are now private.")
-	end)
-	check("Share my recipes and cooldowns", function() return s.share.recipes end, function(v)
-		s.share.recipes = v
-		SK.Profile:BuildSelf()
-		SK:Print(v and "Your recipes will be shared." or "Your recipes are now private.")
-	end)
+	-------------------------------------------------------------------------
+	-- General
+	-------------------------------------------------------------------------
+	local general = CreateFrame("Frame", nil, page)
+	general:SetPoint("TOPLEFT", 0, top)
+	general:SetPoint("BOTTOMRIGHT")
+	self.general = general
 
-	y = y + SP.s
-	heading("Display")
-	check("Show guild crafters and wearers in item tooltips", function() return s.craftTooltips end, function(v)
-		s.craftTooltips = v
-	end)
-	check("Record guild milestones (Overview)", function() return s.feed end, function(v)
-		s.feed = v
-	end)
-	check("Remind me to reopen profession windows", function() return s.profNudges end, function(v)
-		s.profNudges = v
-	end, "A chat line at most every few days, only after your skill has gone up by "
-		.. SK.Professions.NUDGE_POINTS .. " or more since you last opened that profession's window.")
-	check("Show minimap button", function() return not s.minimap.hide end, function(v)
-		SK.Minimap:SetShown(v)
-	end)
-	check("Reduce motion", function() return s.reduceMotion end, function(v)
-		s.reduceMotion = v
-	end, "Turns off the window, tab and sync animations.")
-	check("Debug logging in chat", function() return s.debug end, function(v) s.debug = v end)
-
-	-- Window size: a label, then a row of chips under it (seven chips are
-	-- too wide to share a line with the label in this column).
-	local scaleLabel = Theme.Text(page, "body", "text")
-	scaleLabel:SetPoint("TOPLEFT", 0, -y - SP.xs)
-	scaleLabel:SetText("Window size")
-	y = y + S.specRow + SP.xs
-	self.scaleButtons = {}
-	local prev
-	for _, v in ipairs(SCALES) do
-		local b = W.Chip(page, string.format("%d%%", v * 100), function()
-			SK.MainFrame:SetScale(v)
-			Settings:Refresh()
+	local sharing = W.SettingsCard(general, Settings.COL_W, "Sharing")
+	sharing:SetPoint("TOPLEFT", 0, 0)
+	sharing:AddSwitch("Share and receive guild data", "Off: nothing is sent or received.", function() return s.sync end,
+		function(v)
+			s.sync = v
+			SK:Print(v and "Sync turned on." or "Sync turned off. Nothing will be sent or received.")
+			SK.MainFrame:Refresh()
 		end)
-		if prev then b:SetPoint("LEFT", prev, "RIGHT", SP.xs, 0) else b:SetPoint("TOPLEFT", 0, -y) end
-		b.value = v
-		self.scaleButtons[#self.scaleButtons + 1] = b
-		prev = b
-	end
-	y = y + S.control + SP.m
+	sharing:AddSwitch("Share my gear and talents", "Gear, item level and talents.", function() return s.share.gear end,
+		function(v)
+			s.share.gear = v
+			SK.Profile:BuildSelf()
+			SK:Print(v and "Your gear and talents will be shared." or "Your gear and talents are now private.")
+		end)
+	sharing:AddSwitch("Share my recipes", "Recipes, skill levels and cooldowns.", function() return s.share.recipes end,
+		function(v)
+			s.share.recipes = v
+			SK.Profile:BuildSelf()
+			SK:Print(v and "Your recipes will be shared." or "Your recipes are now private.")
+		end)
+	sharing:Finish()
+	sharing:SetNote("Notes and officer notes are never shared.")
+	self.sharing = sharing
 
-	-- Actions, two per row
-	heading("Tools")
-	local actions = {
-		{ "Rescan my character", "Re-read gear, talents, professions and reputation now.", function()
-			SK.Profile:BuildSelf(); SK:Print("Character rescanned.")
-		end },
-		{ "Sync now", "Announce your data and ask guildmates for anything missing.", function()
-			SK.Sync:SendHello(); SK.Sync:SendQuery(); SK:Print("Sync requested.")
-		end },
-		{ "Reset window position", nil, function() SK.MainFrame:ResetPosition() end },
-		{ "Debug report", "Same as /sr debug: what the addon can see on this client.", function()
-			SK.DebugWindow:Open()
-		end },
-	}
-	local bw = (Settings.LEFT_W - SP.s) / 2
-	for i, a in ipairs(actions) do
-		local b = W.Button(page, a[1], bw, S.control, a[3])
-		b.tooltip = a[2]
-		b:SetPoint("TOPLEFT", ((i - 1) % 2) * (bw + SP.s), -y - math.floor((i - 1) / 2) * (S.control + SP.s))
-	end
+	local profs = W.SettingsCard(general, Settings.COL_W, "Professions and tooltips")
+	profs:SetPoint("TOPLEFT", sharing, "BOTTOMLEFT", 0, -SP.l)
+	profs:AddSwitch("Guild lines in item tooltips", "Who can make an item, and who wears it.",
+		function() return s.craftTooltips end, function(v) s.craftTooltips = v end)
+	profs:AddSwitch("Remind me to reopen profession windows", "In chat, at most every few days.",
+		function() return s.profNudges end, function(v) s.profNudges = v end,
+		"Only after your skill has gone up by " .. SK.Professions.NUDGE_POINTS ..
+		" or more since you last opened that profession's window.")
+	profs:AddSwitch("Record guild milestones", "For the Overview; kept on this computer.",
+		function() return s.feed end, function(v) s.feed = v end)
+	profs:Finish()
+	self.profs = profs
 
-	-- Status and sharing preview (scrolls)
-	self.status = W.Sheet(page, Settings.RIGHT_W)
-	self.status:SetPoint("TOPLEFT", Settings.LEFT_W + SP.xxl, 0)
+	local display = W.SettingsCard(general, Settings.COL_W, "Display")
+	display:SetPoint("TOPLEFT", colB, 0)
+	self.swatches = display:AddControl("Accent colour", "Pink like the crest, gold, or your class.", function(r)
+		return W.Swatches(r, Settings.AccentItems(), function() return s.accent or "pink" end,
+			function(v) Settings:SetAccent(v) end)
+	end)
+	self.fontMenu = display:AddControl("Font", "Changes after a reload.", function(r)
+		local menu = W.Menu(r, {
+			width = 150,
+			items = function()
+				local out = {}
+				for _, k in ipairs(Theme.BODY_CHOICES) do out[#out + 1] = { value = k, text = Theme.BODY_NAMES[k] } end
+				return out
+			end,
+			get = function() return s.font or "inter" end,
+			set = function(v)
+				s.font = v
+				Settings:Refresh()
+			end,
+		})
+		return menu
+	end)
+	self.scale = display:AddControl("Window size", nil, function(r)
+		return W.Slider(r, { width = 110, min = 0.7, max = 1.3, step = 0.1,
+			get = function() return s.window.scale or 1 end,
+			set = function(v) SK.MainFrame:SetScale(v) end,
+			format = function(v) return string.format("%d%%", v * 100 + 0.5) end })
+	end)
+	display:AddSwitch("Minimap button", nil, function() return not s.minimap.hide end,
+		function(v) SK.Minimap:SetShown(v) end)
+	display:AddSwitch("Reduce motion", "No window, tab or sync animations.", function() return s.reduceMotion end,
+		function(v) s.reduceMotion = v end)
+	display:Finish()
+	self.display = display
+	-- Reload button, shown once the font choice differs from the one in use.
+	self.reload = W.Button(general, "Reload now", nil, S.control, function() SK.Compat.ReloadUI() end, "primary")
+	self.reload:SetPoint("TOPRIGHT", display, "BOTTOMRIGHT", 0, -SP.s)
+	self.reload.tooltip = "Reloads the interface (like /reload) so the new font is used."
+	self.reloadText = Theme.Text(general, "small", "dim")
+	self.reloadText:SetPoint("RIGHT", self.reload, "LEFT", -SP.s, 0)
+	self.reloadText:SetText("The new font shows after a reload.")
+
+	-------------------------------------------------------------------------
+	-- Advanced
+	-------------------------------------------------------------------------
+	local advanced = CreateFrame("Frame", nil, page)
+	advanced:SetPoint("TOPLEFT", 0, top)
+	advanced:SetPoint("BOTTOMRIGHT")
+	self.advanced = advanced
+	local tools = W.SettingsCard(advanced, Settings.COL_W, "Tools")
+	tools:SetPoint("TOPLEFT", 0, 0)
+	local function action(label, desc, text, fn, tip)
+		tools:AddControl(label, desc, function(r) return W.Button(r, text, 92, S.controlSmall + 2, fn) end, tip)
+	end
+	action("Rescan my character", "Gear, talents, professions, reputation.", "Rescan", function()
+		SK.Profile:BuildSelf(); SK:Print("Character rescanned.")
+	end)
+	action("Sync now", "Announce your data, ask for anything missing.", "Sync", function()
+		SK.Sync:SendHello(); SK.Sync:SendQuery(); SK:Print("Sync requested.")
+	end)
+	action("Window position", "Put the window back in the middle.", "Reset", function() SK.MainFrame:ResetPosition() end)
+	action("Debug report", "Same as /sr debug, to send to the addon author.", "Open", function() SK.DebugWindow:Open() end)
+	tools:AddSwitch("Debug logging in chat", nil, function() return s.debug end, function(v) s.debug = v end)
+	tools:Finish()
+	self.tools = tools
+
+	self.status = W.Sheet(advanced, Settings.COL_W - SP.m)
+	self.status:SetPoint("TOPLEFT", colB, 0)
 	self.status:SetPoint("BOTTOM", 0, 0)
-	self.status:SetWidth(Settings.RIGHT_W)
+	self.status:SetWidth(Settings.COL_W - SP.m)
 end
 
 -- Status sections. Pure apart from reading SK state; tested.
@@ -165,12 +206,23 @@ function Settings.StatusSections()
 end
 
 function Settings:Refresh()
-	if not self.checks then return end
-	for _, c in ipairs(self.checks) do c:Refresh() end
-	local scale = SK.DB.settings.window.scale or 1
-	for _, b in ipairs(self.scaleButtons) do b:SetActive(math.abs(b.value - scale) < 0.01) end
+	if not self.views then return end
+	local s = SK.DB.settings
+	local view = s.settingsView == "advanced" and "advanced" or "general"
+	self.views:SetActive(view)
+	self.general:SetShown(view == "general")
+	self.advanced:SetShown(view == "advanced")
+	self.sharing:Refresh()
+	self.profs:Refresh()
+	self.display:Refresh()
+	self.tools:Refresh()
+	self.swatches:SetColours(Settings.AccentItems())
+	local pending = (s.font == "narrow" and "narrow" or "inter") ~= Theme.body
+	self.reload:SetShown(pending)
+	self.reloadText:SetShown(pending)
 	self.sections = Settings.StatusSections()
 	self.status:SetSections(self.sections)
 end
 
-SK.MainFrame:AddTab("settings", "Settings", Settings)
+SK.MainFrame:AddTab("settings", "Settings", Settings, { group = "settings",
+	desc = "What you share, how the window looks, and reminders." })
