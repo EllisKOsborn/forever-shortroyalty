@@ -142,7 +142,7 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 - **All recipes → Show:** only recipes you can learn now, ones from recipe items or trainers, or ones that still give you points.
 - **Skill-up colours in tooltips:** every recipe tooltip (Professions, All recipes, Crafters) says where it turns yellow, green and grey, and, if you've learned it, its colour for you now. The numbers come from **WoW Forever's own game data** (not Classic or Retail), and Short Royalty checks them against your profession window each time you open it (`/sr debug` shows the result). The Crafters panel shows the same line under the reagents.
 
-- **Cooldowns:** everyone's profession cooldowns (transmutes, Mooncloth…), ready first, then soonest. Shows who, how long, and **as of** when we last heard from them (orange after a day: a cooldown only updates while its owner is online). **Whisper** when they're on.
+- **Cooldowns:** everyone's profession cooldowns (transmutes, Mooncloth…: only recipes that have a cooldown in WoW Forever's own data), ready first, then soonest. Shows who, how long, and **as of** when we last heard from them (orange after a day: a cooldown only updates while its owner is online). **Whisper** when they're on.
 - **Specialisations** (Gnomish/Goblin Engineer, Dragonscale/Elemental/Tribal Leatherworking, Armorsmith/Weaponsmith and the master smiths) are read from your spellbook. A spell only counts when the game's own name for it matches, so a wrong ID can never mislabel anyone.
 
 ### ⚙️ Settings

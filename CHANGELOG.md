@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.7 (not released yet): fixes
+
+- **Cooldowns** listed recipes that never have a cooldown (Linen Boots,
+  Woolen Cape…). Opening your profession window just after crafting made the
+  game report its short global cooldown on every recipe, and Short Royalty
+  remembered them all. Now only the recipes that really have a cooldown in
+  WoW Forever's own data count (Mooncloth, the alchemy transmutes and a few
+  more: 15 in all). Wrong entries from older versions are hidden and
+  cleaned up.
+
 ## v0.5.6 (12 Nov 2026): Back to the basics of professions
 
 The levelling tools weren't working as intended, so they're **removed for

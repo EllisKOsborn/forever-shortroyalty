@@ -48,6 +48,16 @@ function DB.RecipeItem(recipeID)
 end
 
 function DB.Count() index(); return #all end
+
+-- Does this recipe have a profession cooldown (Mooncloth, transmutes...)?
+-- From Forever's SpellCooldowns (v0.5.7). The game reports the short global
+-- cooldown on every recipe right after a craft, so nothing else counts.
+-- Without the data (an older Data file) every recipe is allowed.
+function DB.HasCooldown(recipeID)
+	local list = SK.Data.RECIPE_COOLDOWNS
+	if type(list) ~= "table" then return true end
+	return list[recipeID] ~= nil
+end
 function DB.Get(recipeID) index(); return byID[recipeID] end
 
 -- Recipes of one profession (or all), skipping ones this client doesn't have.

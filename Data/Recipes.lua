@@ -4134,3 +4134,23 @@ SK.Data.RECIPE_ITEMS = {
 	[1319313] = { 286153, 225 },
 	[1328948] = { 289560, 280 },
 }
+
+-- [recipe] = cooldown in seconds, from SpellCooldowns (v0.5.7). Only these recipes
+-- have a profession cooldown; the Cooldowns board lists nothing else.
+SK.Data.RECIPE_COOLDOWNS = {
+	[11479] = 3600,
+	[11480] = 3600,
+	[17187] = 169200,
+	[17559] = 82800,
+	[17560] = 82800,
+	[17561] = 82800,
+	[17562] = 82800,
+	[17563] = 82800,
+	[17564] = 82800,
+	[17565] = 82800,
+	[17566] = 82800,
+	[18560] = 342000,
+	[22430] = 7200,
+	[25146] = 600,
+	[1317279] = 169200,
+}

@@ -206,7 +206,8 @@ function PB.Cooldowns(ctx)
 		local status = statusOf(ctx, guid, m)
 		local seen = asOf(ctx, guid, p)
 		for recipeID, expires in pairs(p.cds) do
-			if type(recipeID) == "number" and type(expires) == "number" then
+			-- Older versions shared every recipe as a cooldown (v0.5.7 fix).
+			if type(recipeID) == "number" and type(expires) == "number" and SK.RecipeDB.HasCooldown(recipeID) then
 				local left = math.max(0, expires - ctx.now)
 				out[#out + 1] = {
 					recipeID = recipeID, guid = guid, name = m.name or p.name or "?", class = m.class or p.class,

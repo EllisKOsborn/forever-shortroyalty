@@ -111,9 +111,15 @@ function Profile:Commit(guild, p, now)
 end
 
 -- Recipes that have a cooldown (learned from scans), per character.
+-- v0.5.7: recipes wrongly tracked before (every recipe, from the global
+-- cooldown after a craft) are dropped here.
 local function cooldownSpells(guid)
-	SK.DB.cooldownSpells[guid] = SK.DB.cooldownSpells[guid] or {}
-	return SK.DB.cooldownSpells[guid]
+	local t = SK.DB.cooldownSpells[guid] or {}
+	SK.DB.cooldownSpells[guid] = t
+	for id in pairs(t) do
+		if not SK.RecipeDB.HasCooldown(id) then t[id] = nil end
+	end
+	return t
 end
 
 -- Refresh cooldowns from the spell API, so they are right even when the
@@ -181,7 +187,7 @@ function Profile:BuildSelf()
 	-- once expired), anything else only until it expires.
 	local tracked = cooldownSpells(guid)
 	for id, expires in pairs(old.cds or {}) do
-		if tracked[id] or expires > now then p.cds[id] = expires end
+		if SK.RecipeDB.HasCooldown(id) and (tracked[id] or expires > now) then p.cds[id] = expires end
 	end
 	refreshCooldowns(guid, p.cds, now)
 	return self:Commit(guild, p, now)
@@ -203,6 +209,9 @@ function Profile:SetScan(skillLine, scan)
 	p.recipes = p.recipes or {}
 	p.recipes[skillLine] = scan.learned
 	p.cds = p.cds or {}
+	for id in pairs(p.cds) do
+		if not SK.RecipeDB.HasCooldown(id) then p.cds[id] = nil end
+	end
 	local tracked = cooldownSpells(p.guid)
 	for id, expires in pairs(scan.cds) do
 		p.cds[id] = expires

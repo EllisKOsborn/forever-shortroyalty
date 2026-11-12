@@ -325,7 +325,9 @@ function Char.DetailSections(p, now, extra)
 	end
 	-- Cooldowns
 	local cds = {}
-	for id, expires in pairs(p.cds or {}) do cds[#cds + 1] = { id = id, at = expires } end
+	for id, expires in pairs(p.cds or {}) do
+		if SK.RecipeDB.HasCooldown(id) then cds[#cds + 1] = { id = id, at = expires } end
+	end
 	if #cds > 0 then
 		rows = section("Cooldowns", 1)
 		table.sort(cds, function(a, b) return a.at < b.at end)

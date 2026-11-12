@@ -24,7 +24,7 @@ const { execFileSync } = require("child_process");
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "Data", "Recipes.lua");
 const TABLES = ["SkillLineAbility", "TradeSkillCategory", "SpellReagents", "SpellEffect",
-  "ItemEffect", "ItemXItemEffect", "ItemSparse"];
+  "ItemEffect", "ItemXItemEffect", "ItemSparse", "SpellCooldowns"];
 
 // The professions Short Kings knows (Data/Professions.lua).
 const PROFESSIONS = { 171: "Alchemy", 164: "Blacksmithing", 333: "Enchanting", 202: "Engineering", 182: "Herbalism",
@@ -146,6 +146,17 @@ function build(dir, version) {
     if (ok.length) recipeItems[spell] = { item: ok[0][1], learnAt: ok[0][0] };
   }
 
+  // Recipes with a real cooldown (v0.5.7): Mooncloth, transmutes... in
+  // seconds. The game reports the short global cooldown on every recipe just
+  // after a craft, so the addon only tracks cooldowns of recipes listed here.
+  const COOLDOWN_MIN_MS = 60000;
+  const cooldowns = {};
+  for (const r of load(dir, "SpellCooldowns")) {
+    if (!recipes.has(r.SpellID)) continue;
+    const ms = Math.max(+r.CategoryRecoveryTime || 0, +r.RecoveryTime || 0);
+    if (ms >= COOLDOWN_MIN_MS) cooldowns[r.SpellID] = Math.max(cooldowns[r.SpellID] || 0, Math.round(ms / 1000));
+  }
+
   // Categories in use, plus their parents (for "Camping in Herbalism").
   const usedCats = new Set();
   for (const { cat } of recipes.values()) {
@@ -191,9 +202,15 @@ function build(dir, version) {
     L.push(`\t[${spell}] = { ${recipeItems[spell].item}, ${recipeItems[spell].learnAt} },`);
   }
   L.push("}");
+  L.push("");
+  L.push("-- [recipe] = cooldown in seconds, from SpellCooldowns (v0.5.7). Only these recipes");
+  L.push("-- have a profession cooldown; the Cooldowns board lists nothing else.");
+  L.push("SK.Data.RECIPE_COOLDOWNS = {");
+  for (const spell of Object.keys(cooldowns).sort((a, b) => a - b)) L.push(`\t[${spell}] = ${cooldowns[spell]},`);
+  L.push("}");
   fs.writeFileSync(OUT, L.join("\n") + "\n");
   console.log(`wrote ${path.relative(ROOT, OUT)}: ${recipes.size} recipes, ${usedCats.size} categories, ` +
-    `${Object.keys(recipeItems).length} recipe items (build ${version})`);
+    `${Object.keys(recipeItems).length} recipe items, ${Object.keys(cooldowns).length} cooldowns (build ${version})`);
   for (const skill of Object.keys(bySkill)) console.log(`  ${PROFESSIONS[skill]}: ${bySkill[skill].length}`);
 }
 

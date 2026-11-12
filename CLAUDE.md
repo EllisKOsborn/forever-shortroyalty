@@ -29,6 +29,17 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 12 Nov 2026)
+- **v0.5.7 (not released yet): cooldown fix** (owner's screenshot 12 Nov:
+  Etay Summermoon had 54 "Ready" cooldowns for ordinary Tailoring recipes).
+  Cause: `GetRecipeCooldown` returns the short global cooldown for every
+  recipe right after a craft, so every recipe got into `cooldownSpells` and
+  `cds` and was shared. Fix: `tools/recipes.js` now also reads Forever's
+  **SpellCooldowns** (max of CategoryRecoveryTime/RecoveryTime ≥ 60 s) →
+  `SK.Data.RECIPE_COOLDOWNS` (15 recipes, build 1.60.1.70888; the rest of
+  Data/Recipes.lua unchanged); `RecipeDB.HasCooldown` filters the scan,
+  `cooldownSpells` (cleans old entries), BuildSelf/SetScan `cds`,
+  `ProfBoard.Cooldowns` (hides other players' bad data) and the Character
+  tab. Tests `tests/cooldowns_v057_spec.lua`; TESTING 186.
 - **v0.5.6 (released 12 Nov on `main`): levelling tools REMOVED** (owner, 12 Nov: "I want to rollback the changes
   for levelling, route, shopping list and profit. They're just not working
   as intended and requires more work from you to get right. So, remove for

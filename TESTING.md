@@ -568,6 +568,13 @@ panel): skip them.
    the help. Recipe tooltips still show the skill-up colours and where to
    learn.
 
+## v0.5.7 Fixes
+
+186. [ ] Professions → **Cooldowns**: only real cooldowns (Mooncloth,
+   transmutes…), no Linen Boots or Woolen Cape, even from guildmates on an
+   older version. Craft something, open your profession window straight
+   away, and check again.
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

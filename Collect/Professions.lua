@@ -73,7 +73,7 @@ function Prof.ProcessRecipes(ids, done, runNow)
 				if info.learned then
 					result.learned[id] = itemID
 					if type(info.difficulty) == "number" then result.difficulty[id] = info.difficulty end
-					local cd = Compat.RecipeCooldown(id)
+					local cd = SK.RecipeDB.HasCooldown(id) and Compat.RecipeCooldown(id)
 					if cd then result.cds[id] = cd end
 				end
 			end
