@@ -29,6 +29,17 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 12 Nov 2026)
+- **v0.6.0 redesign, step 1 done (12 Nov):** brief in
+  `docs/prompts/next-design-v2.md`; the owner sent screenshots of FojjiCore,
+  EllesmereUI and Polestar. Clutter audit + directions page:
+  `docs/design/v0.6-directions.html` (also an Artifact). A = Quiet (top tabs,
+  hairline panels, one accent, status in a footer); B = Sidebar
+  (recommended: Guild/Crafting sections, page title + one sentence, page
+  tabs, Roster 6 columns); C = themes (Royal/Midnight/Forge, accent pink/
+  gold/class, standard/transparent window) on either. Proposed: recipe
+  tooltips 5 lines with the rest on Shift, Settings as switch rows with an
+  Advanced section, Overview stat strip + "Needs a look". **Nothing built
+  yet: wait for the owner's pick** (questions at the end of that page).
 - **v0.5.7 (released 12 Nov on `main`): cooldown fix** (owner's screenshot 12 Nov:
   Etay Summermoon had 54 "Ready" cooldowns for ordinary Tailoring recipes).
   Cause: `GetRecipeCooldown` returns the short global cooldown for every
@@ -919,6 +930,9 @@ a test send worked. The Mac AddOns path is still not confirmed by name
    And the colour-check line after opening a profession window.
 3. The Warband currency `/run` test (TESTING 124): if it lists their own
    alts, automatic "my alts" can be built on it. Otherwise alts stay as now.
+5. v0.6.0 look: A or B, default accent, themes yes/no, Inter or Arial
+   Narrow, moving the Overview's Professions/Recipes cards, which screen
+   first (`docs/design/v0.6-directions.html`).
 4. Onyxia attunement: whether any Horde members exist (Horde chain differs), and
    in-game check that the Drakefire Amulet check works.
 
