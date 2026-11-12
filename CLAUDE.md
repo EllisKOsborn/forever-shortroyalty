@@ -29,8 +29,7 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 12 Nov 2026)
-- **v0.5.6 (not released yet, on `claude/short-kings-addon-hlf0t4`):
-  levelling tools REMOVED** (owner, 12 Nov: "I want to rollback the changes
+- **v0.5.6 (released 12 Nov on `main`): levelling tools REMOVED** (owner, 12 Nov: "I want to rollback the changes
   for levelling, route, shopping list and profit. They're just not working
   as intended and requires more work from you to get right. So, remove for
   now."). Gone: `Core/Shopping.lua`, `Core/Prices.lua`, `Core/Route.lua`,
@@ -161,8 +160,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   **`docs/prompts/next-design-v2.md`** (v0.6.0). Licences: Polestar GPL v3
   (github.com/fitzforge/polestar), EllesmereUI custom all rights reserved,
   FojjiCore All Rights Reserved: **inspiration only**, never code/art.
-- **Next:** the owner says "put it on main" to release v0.5.6; then ask
-  what's next. Still useful from v0.5.5: TESTING 167–169, 181–185.
+- **Next:** v0.5.6 is released; ask the owner what's next (next version
+  v0.5.7, or v0.6.0 for the redesign). Still useful from v0.5.5: TESTING 167–169, 181–185.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from
@@ -426,7 +425,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   shopping list); **v0.4.6** (11 Nov, Profit with Auctionator/TSM prices,
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
-  (11 Nov, professions upgrade). Tag only when
+  (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed). Tag only when
   the user asks.
 
 ## Layout

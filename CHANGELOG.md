@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.6 (not released yet): back to the basics of professions
+## v0.5.6 (12 Nov 2026): Back to the basics of professions
 
 The levelling tools weren't working as intended, so they're **removed for
 now** and will come back reworked:

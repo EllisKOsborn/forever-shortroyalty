@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="WoW Forever 1.60.1" src="https://img.shields.io/badge/WoW%20Forever-1.60.1%20%C2%B7%2016001-FFC000?labelColor=000000">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.5.5%20alpha-F06BB0?labelColor=000000">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.5.6%20alpha-F06BB0?labelColor=000000">
   <img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-FF6A1A?labelColor=000000">
 </p>
 
