@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.0 (not released yet): A calmer Short Royalty
+## v0.6.0 (12 Nov 2026): A calmer Short Royalty
 
 A redesign of every screen, inspired by the clean look of FojjiCore,
 EllesmereUI and Polestar (none of their code or art is used). Everything

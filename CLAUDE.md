@@ -29,7 +29,7 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 12 Nov 2026)
-- **v0.6.0 (built 12 Nov, not released): the redesign.** The owner picked
+- **v0.6.0 (released 12 Nov on `main`, owner: "put it on main"): the redesign.** The owner picked
   from `docs/design/v0.6-directions.html` (audit + directions; brief in
   `docs/prompts/next-design-v2.md`): **B (sidebar)**, **pink** default
   accent, **no themes**, **add Inter**, yes to moving the Overview's
@@ -216,8 +216,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   **`docs/prompts/next-design-v2.md`** (v0.6.0). Licences: Polestar GPL v3
   (github.com/fitzforge/polestar), EllesmereUI custom all rights reserved,
   FojjiCore All Rights Reserved: **inspiration only**, never code/art.
-- **Next:** v0.5.7 is released; ask the owner what's next (next version
-  v0.5.8, or v0.6.0 for the redesign). Still useful from v0.5.5: TESTING 167–169, 181–185.
+- **Next:** v0.6.0 is released; get the owner's in-game look (TESTING
+  187–196) and fix what they find in v0.6.1. Still useful from v0.5.5: TESTING 167–169, 181–185.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from
@@ -482,7 +482,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
   (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed); **v0.5.7** (12 Nov, cooldown
-  fix). Tag only when
+  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter). Tag only when
   the user asks.
 
 ## Layout
@@ -968,8 +968,7 @@ a test send worked. The Mac AddOns path is still not confirmed by name
    And the colour-check line after opening a profession window.
 3. The Warband currency `/run` test (TESTING 124): if it lists their own
    alts, automatic "my alts" can be built on it. Otherwise alts stay as now.
-5. v0.6.0: the owner's look at the new pictures, whether to release it,
-   then TESTING 187–196 in game (fonts, accent, sidebar icons, cut-off text).
+5. v0.6.0 is out: TESTING 187–196 in game (fonts, accent, sidebar icons, cut-off text).
 4. Onyxia attunement: whether any Horde members exist (Horde chain differs), and
    in-game check that the Drakefire Amulet check works.
 
