@@ -1,5 +1,48 @@
 # Changelog
 
+## v0.6.0 (not released yet): A calmer Short Royalty
+
+A redesign of every screen, inspired by the clean look of FojjiCore,
+EllesmereUI and Polestar (none of their code or art is used). Everything
+that worked before still works; your saved data and how guildmates share
+data are unchanged.
+
+- **A sidebar.** The tabs are now a list on the left: **Guild** (Overview,
+  Roster, Character), **Crafting** (Find a crafter, Professions) and
+  Settings. Each page has its title and one sentence saying what it's for.
+  The window is a little bigger (960 × 600); it still shrinks to fit small
+  screens.
+- **One accent colour**, pink like the crest, for where you are, what you
+  picked and the one main button. Pick **gold** or **your class colour** in
+  Settings; it changes at once. Orange is only for alerts now.
+- **Inter** (a free, clear font) for names and numbers. Prefer the game's
+  Arial Narrow? Switch back in Settings → Font (after a reload).
+- **Sync status** moved to the bottom of the sidebar: a green dot when
+  synced, your guild and who's online, and "Update: … is out" when a
+  guildmate runs a newer Short Royalty.
+- **Overview:** four numbers across the top (members, online, have Short
+  Royalty, days until raids), **Needs a look** (only what's missing; each
+  row opens the Roster with those people first), **Raids** with a bar, and
+  **Milestones** with a quiet Grats link. Names are in tooltips. The
+  professions and recipe numbers moved to the Professions page.
+- **Roster:** six columns (Name, Lvl, Spec, Professions, iLvl, Seen). Rank,
+  talent points, addon version and data age are in the name's tooltip, and
+  an orange **!** marks anyone out of date. *Group alts* and *Copy* are in
+  the new **···** menu.
+- **Professions:** page tabs **Guild**, **Recipes** (was "All recipes") and
+  **Cooldowns**; the recipe numbers ("412 recipes known · 37 by only one
+  character") on the right; the "your skill went up" reminder is a slim bar
+  with an **Open** button; specialisations moved into the tooltips.
+- **Recipe tooltips are short:** the name, who can make it (named when it's
+  only one person), and what it needs. Hold **Shift** for the full item,
+  skill-up colours, where to learn it and the click hints.
+- **Settings:** rows of switches, each with one line saying what it does,
+  in Sharing, Display and Professions and tooltips. Window size is a
+  slider. Tools, debug logging and the status read-out are under
+  **Advanced**.
+- **Character:** thinner gear-slot edges; *Ask for latest* is a quiet link.
+  **Whisper** buttons in lists are quiet links too.
+
 ## v0.5.7 (not released yet): fixes
 
 - **Cooldowns** listed recipes that never have a cooldown (Linen Boots,

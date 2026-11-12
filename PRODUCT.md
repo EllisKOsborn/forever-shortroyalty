@@ -38,7 +38,8 @@ other addons (ElvUI, Bagnon, DBM and so on). Often used at small UI scales
 and on laptops; sometimes opened in combat (sync pauses then).
 
 ## Capabilities and Constraints
-- Windows: main window (Overview, Roster, Character, Crafters, Settings),
+- Windows: main window with a sidebar (v0.6.0: Overview, Roster, Character,
+  Find a crafter, Professions, Settings),
   a copy/debug window, minimap button, item-tooltip line.
 - Only fonts that ship with the game or the addon render. Textures must be
   .tga/.blp, power-of-two sizes.
@@ -53,6 +54,9 @@ and on laptops; sometimes opened in combat (sync pauses then).
 - Owner's chosen palette direction: true black and gold (Lamborghini
   DESIGN.md reference), pink beard as a secondary accent, dynamite-spark
   orange reserved for alerts and sync status.
+- v0.6.0 (owner, 12 Nov 2026): the sidebar layout, **one** accent colour,
+  pink by default (gold or class colour in Settings), no colour themes,
+  Inter bundled for body text, everything decluttered.
 - A bundled free OFL display font for titles only is approved; body text
   stays in the game font.
 

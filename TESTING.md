@@ -575,6 +575,39 @@ panel): skip them.
    older version. Craft something, open your profession window straight
    away, and check again.
 
+## v0.6.0 Redesign
+
+187. [ ] `/sr`: the window has a **sidebar** (crest, Guild: Overview, Roster,
+   Character; Crafting: Find a crafter, Professions; Settings) and each page
+   shows its title and one sentence. Clicking each item opens its page.
+   The sidebar icons show (not green squares).
+188. [ ] **Fonts:** names and numbers are in Inter (rounder than before),
+   titles in the square font. Settings → Font → Arial Narrow, press
+   **Reload now**: the old font is back. Switch back to Inter. Do names in
+   Russian, Korean or Chinese still show?
+189. [ ] **Accent colour:** Settings → Accent colour → gold, then your class
+   colour, then pink. The sidebar marker, page-tab underline, switches and
+   the main button change at once. Send a screenshot of anything that stays
+   the old colour until you close the window.
+190. [ ] Bottom of the sidebar: green dot and "Synced", your guild and how
+   many are online. Point at it: the tooltip. If a guildmate has a newer
+   version: "Update: … is out".
+191. [ ] **Overview:** four numbers; point at "have Short Royalty" for the
+   names; click a **Needs a look** row: the Roster opens with those people
+   first. Grats still types into guild chat.
+192. [ ] **Roster:** six columns; the name's tooltip has rank, version and
+   data age; the **···** menu groups alts and copies the list.
+193. [ ] **Professions:** the Guild / Recipes / Cooldowns tabs; the recipe
+   numbers on the right; if your skill went up, the slim bar's **Open**
+   button opens that profession window.
+194. [ ] **Recipe tooltips** (Professions, Recipes, Find a crafter): short;
+   hold **Shift** while pointing: the full item, skill-up colours and where
+   to learn appear, and go again when you let go.
+195. [ ] **Settings:** every switch works; the window-size slider resizes
+   the window when you let go; **Advanced** shows Tools and Status.
+196. [ ] Does anything look cut off (text ending in "…" where it shouldn't,
+   or overlapping)? Screenshot it.
+
 ## Known gaps in v0.1
 
 - No Raids tab yet (v0.4).

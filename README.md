@@ -39,47 +39,45 @@
 
 | | What you get |
 |---|---|
-| 🏰 **Overview** | The guild at a glance: who's around, raid readiness, data health, professions, recipes and recent milestones |
+| 🏰 **Overview** | The guild at a glance: four numbers, what needs a look, raid readiness and recent milestones |
 | 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
-| ⚒️ **Crafters** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
-| 🧪 **Professions** | Every profession in the guild, **every recipe in the game** (search by name, group or material), each profession's crafters, everyone's cooldowns, specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
-| ⚙️ **Settings** | Sharing and privacy switches, display options, window size, tools and a live status read-out |
-| 🧨 **Everywhere** | `/sr`, a minimap button, "Crafted by" lines on item tooltips, chat reminders and a copyable debug report |
+| ⚒️ **Find a crafter** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
+| 🧪 **Professions** | Three page tabs: **Guild** (every profession in the guild, then each profession's crafters and recipes), **Recipes** (**every recipe in the game**, by name, group or material) and **Cooldowns**; specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
+| ⚙️ **Settings** | Sharing and privacy switches, accent colour, font, window size and reminders; tools and a live status read-out under **Advanced** |
+| 🧨 **Everywhere** | A sidebar window in your pick of accent colour, `/sr`, a minimap button, short guild lines on item tooltips, chat reminders and a copyable debug report |
 
 ### 🏰 Overview
-<p align="center"><img src="docs/images/overview.png" alt="Overview tab" width="100%"></p>
+<p align="center"><img src="docs/images/overview.png" alt="Overview page" width="100%"></p>
 
-The first tab: six sections in three columns, set like a spec sheet. Each
-section has a link to the place where you can act on it.
+The first page. The line under its title says your guild, members, players
+(alts counted once) and who's online.
 
-- **Guild**: members, players (alts counted once), online now (and how many of them run Short Royalty), **who has Short Royalty, and who hasn't been seen with it yet** (some may have it on another character), with the first ten names of those not seen (online ones first, with a dot, so you can ask them now); point at them for **everyone** in a tooltip. Characters in the guild's **Alt rank** (any rank named "Alt" or "Alts") are left out of the whole Overview except Professions and Recipes. Then levels in bands (60, 50–59, 40–49, 1–39). *Not seen yet* opens the Roster with them on top.
-- **Raids**: the one big number, days until raids open on 9 Dec. Barrow Deeps (10) and Hyjal Summit (20) need no attunement, so it counts your level 60s. Onyxia's Lair (40) shows attuned / not attuned / unknown, and how many have the quest done but the Drakefire Amulet out of their bags. *Onyxia list*.
-- **Data health**: members who have the addon but whose data hasn't reached you yet, profiles older than a week, profession windows never opened, and anyone on an old Short Royalty (you included). "All good" when there's nothing to fix. *Oldest first* opens the Roster with missing and oldest data on top.
-- **Professions**: characters per crafting profession, how many are at 300 (or the best so far), **nobody** in red where the guild has a gap, and one line for gathering. *Find a crafter*.
-- **Recipes**: recipes the guild knows, from how many crafters, and how many **only one character** knows, with examples, so you can see where there's no backup. *Search recipes*.
-- **Getting started** (new players, in place of milestones): open your profession windows (it names which), check your Character tab, choose what you share, mark your main on an alt, and how many guildmates have Short Royalty. Ticks itself off and goes away when done, or click **Hide**.
+- **Four numbers** across the top: **members** (point at it for levels in bands and players), **online now** (and how many with Short Royalty), **have Short Royalty** out of everyone (point at it for **everyone not seen with it yet**, online first; click to see them in the Roster), and **days until raids** open on 9 Dec (in the accent colour). Characters in the guild's **Alt rank** (any rank named "Alt" or "Alts") are left out.
+- **Needs a look**: only what's actually missing or out of date: members not seen with the addon yet, anyone on an old Short Royalty, members who have the addon but whose data hasn't reached you, profession windows not opened, profiles older than a week. Each row opens the Roster with those people on top; point at it for names or an explanation. "All good" when there's nothing to fix, and a line when a newer Short Royalty is out.
+- **Raids**: Onyxia's Lair (40) with a bar of attuned / not yet / unknown, and how many have the quest done but the Drakefire Amulet out of their bags; Barrow Deeps and Hyjal Summit (no attunement) on one line with how many are ready. Rows and *Attunement list* open the Roster's raid view.
+- **Getting started** (new players, in place of milestones): open your profession windows (it names which), check your Character tab, choose what you share, and how many guildmates have Short Royalty. Ticks itself off and goes away when done, or click **Hide**.
 
 <p align="center"><img src="docs/images/getting-started.png" alt="Getting started" width="100%"></p>
 
-- **Recent milestones**: level-ups (every 10 levels), profession 75/150/225/300, Onyxia attunement and new recipes. Hover for when, click to open the character, **Grats** types "Grats Bramble on level 60!" into guild chat (you press Enter).
+- **Milestones**: level-ups (every 10 levels), profession 75/150/225/300, Onyxia attunement and new recipes. Hover for when, click to open the character, **Grats** types "Grats Bramble on level 60!" into guild chat (you press Enter).
 
-The line above the columns shows your guild, members and who's online.
-Milestones are worked out by **your own addon** and kept on your computer
-only (the last 50); nothing extra is sent. Turn them off in Settings.
+The professions summary and the recipe numbers moved to the Professions
+page (v0.6.0). Milestones are worked out by **your own addon** and kept on
+your computer only (the last 50); nothing extra is sent. Turn them off in
+Settings.
 
 ### 👥 Roster
 <p align="center"><img src="docs/images/roster.png" alt="Roster tab" width="100%"></p>
 
 - **Every guild member**, including people without the addon.
-- **Columns:** **Name** in class colour (*(you)* in pink on your characters, **+2** when alts are folded in), **Level**, **Rank**, **Spec** (main tree and points), **Professions**, **iLvl**, **Online** (a dot, then *online*, *on alt* or how long ago), **Version** (orange when out of date; **old** for v0.3.2 or earlier, which can't share with newer versions) and **Data** (how fresh their profile is; orange after a week).
+- **Six columns:** **Name** with a status dot, in class colour (*(you)* in the accent colour on your characters, **+2** when alts are folded in, an orange **!** when their addon is out of date or their data is over a week old), **Lvl**, **Spec** (main tree), **Professions**, **iLvl** and **Seen** (*online*, *on alt* or how long ago). Rank, talent points, addon version and how fresh their data is are in the name's tooltip (v0.6.0).
 - **Status dots:** 🟢 online with Short Royalty · ⚪ online without it · ⚫ offline.
 - **Sort** by clicking a column (an arrow marks the sorted one). Online members come first.
 - **Search** by name, profession, spec, class, rank, a word from their note, or an alt's name. A search with no matches says so.
-- **Group alts** (on by default) shows each player once, under their main.
-- **Counter**: characters, how many have data, how many need an update, and whether a newer Short Royalty is out.
-- **Copy** gives the list exactly as shown, as plain text for Discord. Notes are never included.
-- **Hover a row** for online status, every profession, missing enchants, the public note (and officer note if you're an officer), their alts and their addon version. **Click** to open the character.
+- **The ··· menu:** *Group alts under their main* (on by default: each player once) and *Copy the list as text* (exactly as shown, for Discord; notes are never included).
+- **Counter**: characters, how many have data, and how many need an update.
+- **Hover a row** for rank, online status, talent points, every profession, missing enchants, the public note (and officer note if you're an officer), their alts, their addon version and how old their data is. **Click** to open the character.
 
 **Raid view.** Pick a raid from the menu (Barrow Deeps, Hyjal Summit or
 Onyxia's Lair, Forever's first wave) to see who's attuned:
@@ -94,10 +92,10 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 ### 🛡️ Character
 <p align="center"><img src="docs/images/character.png" alt="Character tab" width="100%"></p>
 
-- **Top:** *Back to roster*, *My character*, *Whisper* and the gold **Ask for latest** button.
+- **Top:** *Back to roster*, *My character*, *Whisper* and *Ask for latest*.
 - **Ask for latest** asks them (or their online alt) for their newest data. It works while they're online with Short Royalty, at most every 30 seconds; otherwise it's greyed out and says why.
 - **Header:** name in class colour, level, race, class and rank, plus how old the data is and where it came from (*this account*, *from them*, *relayed by a guildmate*). Old data says *may be out of date*.
-- **Paperdoll:** all 19 slots with item-quality borders. Hover for the **real item tooltip**, Shift-click to link it, Ctrl-click for the dressing room. The middle shows **average item level** in gold, the main talent tree, and how many enchants are missing (an orange **!** marks each slot).
+- **Paperdoll:** all 19 slots with item-quality borders. Hover for the **real item tooltip**, Shift-click to link it, Ctrl-click for the dressing room. The middle shows **average item level** in the accent colour, the main talent tree, and how many enchants are missing (an orange **!** marks each slot).
 - **Character model** (the **Model** chip, on by default) in the middle of the paperdoll: drag to turn it, scroll to zoom. When they're your **target** or in your **group** it's their real look. Otherwise it's **their gear on your character**, switched to their race where the game allows (face, hair, gender and build stay yours: the game only lets addons show players who are actually there). Shows their item level underneath. Click **Model** again for the item level, talents and missing enchants instead.
 - **Details** in two columns:
   - **Alts** and **notes**; **talents** per tree; **professions** with skill, recipe count or *not scanned yet*; **cooldowns** (transmutes, Mooncloth: time left or *ready*).
@@ -105,65 +103,83 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 - **Privacy:** hidden gear or recipes say *hidden by this player*.
 - **No data yet?** The panel says so and explains why, instead of showing empty boxes.
 
-### ⚒️ Crafters
-<p align="center"><img src="docs/images/crafters.png" alt="Crafters tab" width="100%"></p>
+### ⚒️ Find a crafter
+<p align="center"><img src="docs/images/crafters.png" alt="Find a crafter page" width="100%"></p>
 
 - **Search** at least 3 letters of an item or recipe: "arcanite", "mooncloth", "enchant boots".
-- **Results** (up to 200): the item's icon, its name in quality colour, the profession, and how many crafters there are (and how many online). Hover for the real item tooltip; click to pick it.
+- **Results** (up to 200): the item's icon, its name in quality colour, the profession, and how many crafters there are (and how many online). Hover for a short tooltip (who can make it, what it needs; hold **Shift** for the full item); click to pick it.
 - **Side panel:** every crafter, online first, then by skill, with a status dot, their skill, *on Gillybean* when they're on an alt (Whisper goes there) or *alt of X*, and a **Whisper** button. Long item names wrap rather than being cut off.
-- **Post to guild chat** (gold) types "[Item] can be made by: A, B, C" into your chat box; you press Enter. **Copy** gives the list as plain text.
+- **Post to guild chat** (the one filled button) types "[Item] can be made by: A, B, C" into your chat box; you press Enter. **Copy** gives the list as plain text.
 - **Wowhead** gives you the recipe's [Wowhead](https://www.wowhead.com/forever) page as a link to copy. **Star** (top right) adds it to your favourites.
 - **Reagents** under the crafter list: icon, name, how many, and how many you have in your bags (green when you have enough). From your own game when it can say, otherwise from the built-in recipe list, so they show even for recipes nobody knows. Never sent to anyone.
 - **Favourites:** right-click a result or a crafter to star it (a pink star). The **Favourites** chip lists only starred recipes; starred crafters come first among the same status. Saved on your computer only.
 - Recipes come from each crafter's last visit to their profession window. While item names load from the game, placeholder rows show where results will appear.
 
 ### 🧪 Professions
-<p align="center"><img src="docs/images/professions.png" alt="Professions tab, guild board" width="100%"></p>
+<p align="center"><img src="docs/images/professions.png" alt="Professions page, Guild tab" width="100%"></p>
 
-- **Guild board:** one row per profession (crafting first, then gathering, then Cooking, First Aid and Fishing), including ones **nobody** has. Characters, how many are at 300, how many online, the top skill, when recipes were last recorded (orange after a week) and specialisations. Click a row to open that profession.
-- **A reminder line** when your skill has gone up 15 or more since you last opened that profession's window ("Your Tailoring went from 240 to 262…"). In chat it says it at most once every three days; you can turn that off in Settings.
+Three page tabs under the title: **Guild**, **Recipes** and **Cooldowns**
+(v0.6.0; Levelling will get its own tab when it comes back). The line on
+the right says how many recipes the guild knows, how many **only one
+character** knows (no backup), and which professions nobody has.
+
+- **Guild:** one row per profession (crafting first, then gathering, then Cooking, First Aid and Fishing), including ones **nobody** has. Crafters, how many are at 300, how many online, the top skill and when recipes were last updated (orange after a week). Point at a row for its specialisations; click it to open that profession.
+- **A slim reminder bar** when your skill has gone up 15 or more since you last opened that profession's window ("Your Tailoring went from 240 to 262…"), with an **Open** button for that window. In chat it says it at most once every three days; you can turn that off in Settings.
 
 <p align="center"><img src="docs/images/professions-one.png" alt="One profession" width="100%"></p>
 
 - **Gathering professions too:** in Forever, Herbalism and others have recipes (camping items like the Seed Hybridizer); they're recorded and listed like crafting ones.
-- **All recipes:** every profession recipe in Forever (about 2,250), learned or not. Type at least 3 letters: a recipe or item ("mooncloth"), a group from the profession window ("camping", "transmutes") or a **material** ("thorium bar" shows everything that uses it). Or pick a profession to see all of its recipes. Each row shows the profession, group and how many guildmates can make it (**nobody** in orange). Click for crafters, reagents and a Wowhead link.
+- **Recipes:** every profession recipe in Forever (about 2,250), learned or not. Type at least 3 letters: a recipe or item ("mooncloth"), a group from the profession window ("camping", "transmutes") or a **material** ("thorium bar" shows everything that uses it). Or pick a profession to see all of its recipes. Each row shows the profession, group and how many guildmates can make it (**nobody** in orange). Click for crafters, reagents and a Wowhead link.
 
-<p align="center"><img src="docs/images/all-recipes.png" alt="All recipes search" width="100%"></p>
+<p align="center"><img src="docs/images/all-recipes.png" alt="Recipes tab: every recipe in the game" width="100%"></p>
 
-- **One profession:** everyone with it (status dot, star, *alt of X*, skill, specialisation, "recipes recorded 3d ago" in orange after a week, **Whisper**) and every recipe known in the guild with its crafter count (a lone crafter in orange). Filters: **All**, **Only one crafter**, **Favourites**, and **Nobody knows** (every recipe of that profession in the game that nobody in the guild has learned). Hover a recipe for its reagents; click to open it in Crafters; right-click to star it.
+- **One profession** (under Guild, with *All professions* to go back): everyone with it (status dot, star, *alt of X*, skill, "recipes recorded 3d ago" in orange after a week, a quiet **Whisper**; specialisations in the tooltip) and every recipe known in the guild with its crafter count (a lone crafter in orange). Filters: **All**, **Only one crafter**, **Favourites**, and **Nobody knows** (every recipe of that profession in the game that nobody in the guild has learned). Hover a recipe for who can make it and its reagents; click to open it in Find a crafter; right-click to star it.
 - **One crafter's recipes:** click a crafter to see only **their** recipes in that profession (the crafter count still shows who else can make each one; **Only they know** lists the ones nobody else has). **Character** opens their character sheet; **Everyone** (or clicking them again) goes back to the whole guild. If the list is empty it says why: recipes kept private, or they haven't opened that profession window with the addon yet.
 
 <p align="center"><img src="docs/images/professions-crafter.png" alt="One crafter's recipes" width="100%"></p>
 
 <p align="center"><img src="docs/images/cooldowns.png" alt="Cooldown board" width="100%"></p>
 
-- **Where to learn a recipe:** tooltips for recipes you don't know name the recipe item that teaches it (pattern, plan, formula…, from Forever's own data) and the skill it needs, what a trainer charges (remembered when you open a trainer),.
+- **Short recipe tooltips (v0.6.0):** the name, who can make it (named when there's only one), what it needs, and "Shift: …". Hold **Shift** for the full item, the skill-up colours, where to learn it and the click hints.
+
+<p align="center"><img src="docs/images/tooltips.png" alt="Recipe tooltip before and after: 17 lines, now 4 with the rest on Shift" width="100%"></p>
+
+- **Where to learn a recipe** (hold Shift): for recipes you don't know, the recipe item that teaches it (pattern, plan, formula…, from Forever's own data) and the skill it needs, and what a trainer charges (remembered when you open a trainer).
 - **Who wears it:** item tooltips say which guildmates wear the item (from the gear they share), and `/sr who` followed by a Shift-clicked item or part of its name lists them in chat.
-- **All recipes → Show:** only recipes you can learn now, ones from recipe items or trainers, or ones that still give you points.
-- **Skill-up colours in tooltips:** every recipe tooltip (Professions, All recipes, Crafters) says where it turns yellow, green and grey, and, if you've learned it, its colour for you now. The numbers come from **WoW Forever's own game data** (not Classic or Retail), and Short Royalty checks them against your profession window each time you open it (`/sr debug` shows the result). The Crafters panel shows the same line under the reagents.
+- **Recipes → Show:** only recipes you can learn now, ones from recipe items or trainers, or ones that still give you points.
+- **Skill-up colours in tooltips** (hold Shift): every recipe tooltip (Professions, Recipes, Find a crafter) says where it turns yellow, green and grey, and, if you've learned it, its colour for you now. The numbers come from **WoW Forever's own game data** (not Classic or Retail), and Short Royalty checks them against your profession window each time you open it (`/sr debug` shows the result). The Find a crafter panel shows the same line under the reagents.
 
 - **Cooldowns:** everyone's profession cooldowns (transmutes, Mooncloth…: only recipes that have a cooldown in WoW Forever's own data), ready first, then soonest. Shows who, how long, and **as of** when we last heard from them (orange after a day: a cooldown only updates while its owner is online). **Whisper** when they're on.
 - **Specialisations** (Gnomish/Goblin Engineer, Dragonscale/Elemental/Tribal Leatherworking, Armorsmith/Weaponsmith and the master smiths) are read from your spellbook. A spell only counts when the game's own name for it matches, so a wrong ID can never mislabel anyone.
 
 ### ⚙️ Settings
-<p align="center"><img src="docs/images/settings.png" alt="Settings tab" width="100%"></p>
+<p align="center"><img src="docs/images/settings.png" alt="Settings page, General" width="100%"></p>
 
-- **Sharing:** *Share and receive guild data* (sync on or off), *Share my gear and talents*, *Share my recipes and cooldowns*.
-- **Display:** *Show guild crafters and wearers in item tooltips*, *Record guild milestones*, *Remind me to reopen profession windows*, *Show minimap button*, **Reduce motion**, *Debug logging in chat*.
-- **Window size:** 70% to 130%.
-- **Tools:** *Rescan my character*, *Sync now*, *Reset window position*, *Debug report*.
+Two page tabs. **General** is rows of switches, each with one line saying
+what it does:
+
+- **Sharing:** *Share and receive guild data* (sync on or off), *Share my gear and talents*, *Share my recipes* (recipes, skill levels and cooldowns). Notes and officer notes are never shared.
+- **Display:** **Accent colour** (pink like the crest, gold, or your class colour: it changes at once), **Font** (Inter or the game's Arial Narrow, after a reload: a *Reload now* button appears), **Window size** (a slider, 70% to 130%), *Minimap button*, **Reduce motion**.
+- **Professions and tooltips:** *Guild lines in item tooltips*, *Remind me to reopen profession windows*, *Record guild milestones*.
+
+**Advanced** holds the rest:
+
+<p align="center"><img src="docs/images/settings-advanced.png" alt="Settings page, Advanced" width="100%"></p>
+
+- **Tools:** *Rescan my character*, *Sync now*, *Window position* (reset), *Debug report*, and *Debug logging in chat*.
 - **Status:** version, guild, whether sync is running or paused (and why), whether you may send, message counts, Lua errors caught, when your data last updated, and which profession windows you still need to open.
 - **What guildmates see from you:** a read-only list of exactly what you share, what stays private, and what's never shared.
 
 ### 🧨 Everywhere
 - **Open it** with `/sr` (or `/shortroyalty`, `/sk`) or the **minimap button** (our crest): left-click opens the window, right-click opens Settings, drag to move it.
-- **Profession reminder bar:** until you've opened each of your crafting profession windows once (that's when your recipes are recorded), an orange bar sits under the tabs on **every** tab: "Your guild can't see your recipes yet. Open your Alchemy and Tailoring windows once." Its gold **Open Alchemy** button opens that window for you (not in combat), then the next one, and the bar goes away by itself when all are done. The window grows by the bar's height, so nothing on the tabs moves. No bar if you chose not to share recipes.
+- **The window (v0.6.0):** a **sidebar** on the left with the crest, the sections (**Guild**: Overview, Roster, Character; **Crafting**: Find a crafter, Professions; then Settings) and, at the bottom, the sync status (a green dot when synced, the guild and who's online, or "Update: 0.6.1 is out" when a guildmate has a newer version; point at it for details). Each page has its title and one sentence saying what it's for. One **accent colour** (pink by default) marks where you are, what you picked and the one main button; orange is only for alerts.
+- **Profession reminder bar:** until you've opened each of your crafting profession windows once (that's when your recipes are recorded), an orange bar sits under the page title on **every** page: "Your guild can't see your recipes yet. Open your Alchemy and Tailoring windows once." Its **Open Alchemy** button opens that window for you (not in combat), then the next one, and the bar goes away by itself when all are done. The window grows by the bar's height, so nothing on the pages moves. No bar if you chose not to share recipes.
 
 <p align="center"><img src="docs/images/reminder.png" alt="Profession reminder bar" width="100%"></p>
 
-- **The window** opens on the Overview the first time, then on your last tab. Drag it by the title bar; it remembers where you left it. **Esc** closes it. The title bar shows the crest, your guild and the sync status.
+- **The window** opens on the Overview the first time, then on your last page. Drag it by the crest or the page title; it remembers where you left it. **Esc** closes it.
 - **Automatic collection** on every character you play: gear, item level, talents, reputations, professions, recipes (when you open the profession window), cooldowns, attunements and your other characters.
-- **"Crafted by" on item tooltips:** hover any item to see "Short Royalty: Bramble (online), Dabble +2 more". Online crafters first, at most three names.
+- **"Crafted by" on item tooltips:** hover any item to see "Short Royalty: Bramble (online), Dabble +2 more". Online crafters first, at most three names. Two lines at most, with who wears it.
 - **A welcome line** the first time Short Royalty loads, pointing to *Getting started*.
 - **Chat reminders** for profession windows still to open (and, rarely, ones to reopen after your skill went up), a newer Short Royalty, and trial accounts that can't share.
 - **`/sr debug`** opens a copyable report of what the addon can see, starting with the live-client checks and the profession checks for v0.3 (unlearned recipes, recipe categories, reagents, specialisations), and ending with the last Lua errors it caught. **Send it when something looks wrong.**
@@ -369,6 +385,7 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.4.8**: **cheapest levelling route** (step 4 of the levelling tools)
 - [x] **v0.5.5**: professions upgrade: where to learn each recipe (recipe items, trainers), shopping list upgrades (tooltips, make or buy, raw materials, Copy for TSM), route with recipes to learn, panel beside the profession window, recipe filters, who wears it
 - [x] **v0.5.6**: Levelling, Route, Shopping list, Profit and the panel beside the profession window removed for now (to be reworked)
+- [ ] **v0.6.0** (built, not released): the calmer redesign: a sidebar window, one accent colour (pink, gold or your class), Inter, short tooltips with details on Shift, page tabs, Settings as switches ([before and after](#the-look))
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders
 - [ ] **Ideas for later**: craft requests, a short status line, lockout board
@@ -384,32 +401,27 @@ week is in [PLAN.md section 10](PLAN.md#10-once-forever-is-live-from-4-nov-2026)
 
 ## 👑 The look
 
-<p align="center"><img src="docs/images/before-after.png" alt="The Overview tab before and after the redesign" width="100%"></p>
+<p align="center"><img src="docs/images/before-after.png" alt="The Overview before (v0.5.7) and after (v0.6.0)" width="100%"></p>
 
-Black and gold, the way WoW's own UI likes it, with the mascot on top: a gnome
-with a **pink beard** and **lit dynamite**.
+v0.6.0 is a calmer redesign, inspired by the clean, modern look of
+guildmates' favourite addons (FojjiCore, EllesmereUI, Polestar) without
+copying any of their code, art or layouts. True black, a **sidebar** for
+the sections, flat panels with thin edges, and one accent colour, with the
+mascot on top: a gnome with a **pink beard** and **lit dynamite**.
 
-<p align="center"><img src="docs/images/palette.png" alt="Colour roles: black, surface, gold, beard pink, dynamite, text, good, bad" width="100%"></p>
+<p align="center"><img src="docs/images/before-after-professions.png" alt="Professions before and after" width="100%"></p>
 
-- **Every colour has one job.** Gold shows where you are and the one main
-  button on a screen. Pink shows what you've picked. Dynamite orange appears
-  only on alerts (old data, a missing enchant, an update) and the sync dot.
-  Green and red mean yes and no.
-- **Clear type.** Square-cut **Chakra Petch** for the title, tabs and
-  headings; the game's own **Arial Narrow** for names and numbers, with
-  Blizzard's Russian, Korean and Chinese fallbacks so every name shows.
-- **Quick, quiet motion.** The window fades in, the gold underline glides
-  between tabs, rows light up under the mouse, menus drop from their button,
-  and the sync dot sends out a ring when new data arrives. All of it is
-  under a fifth of a second, picks up where it was if you click again, and
-  turns off with **Reduce motion**. Opening with `/sk` and closing with Esc
-  are always instant.
-- **Honest states.** Lists explain themselves when they're empty ("Nobody
-  matches…", "You're not in a guild…"), item names show placeholders while
-  they load, missing values are a dash, and Lua errors are counted in the
-  title bar.
-- **Fits your screen.** The window shrinks itself if your UI scale and
-  screen size would push it off the edge.
+<p align="center"><img src="docs/images/palette.png" alt="Colour roles: black, surface, accent, sidebar, dynamite, text, good, bad" width="100%"></p>
+
+- **One accent colour.** Pink like the crest by default (gold or your class colour in Settings) shows where you are, what you've picked and the one main button on a page. Dynamite orange appears only on alerts (old data, a missing enchant, an update). Green and red mean yes and no.
+
+<p align="center"><img src="docs/images/accent-gold.png" alt="The Roster with the gold accent" width="49%"> <img src="docs/images/accent-class.png" alt="The Overview with a class-colour accent" width="49%"></p>
+
+- **Less at once.** Names, explanations and rarely-needed columns moved into tooltips; recipe tooltips show the details only while you hold Shift; each page has one row of tabs at most.
+- **Clear type.** Square-cut **Chakra Petch** for the titles and labels; **Inter** (bundled, SIL OFL) for names and numbers, or the game's own **Arial Narrow** if you prefer, both with Blizzard's Russian, Korean and Chinese fallbacks so every name shows.
+- **Quick, quiet motion.** The window fades in, rows light up under the mouse, menus drop from their button, and the sync dot sends out a ring when new data arrives. All of it is under a fifth of a second and turns off with **Reduce motion**. Opening with `/sk` and closing with Esc are always instant.
+- **Honest states.** Lists explain themselves when they're empty ("Nobody matches…", "You're not in a guild…"), item names show placeholders while they load, missing values are a dash, and Lua errors are counted at the bottom of the sidebar.
+- **Fits your screen.** The window shrinks itself if your UI scale and screen size would push it off the edge.
 
 The full design system is in [DESIGN.md](DESIGN.md).
 
@@ -428,7 +440,7 @@ node tools/textures.js          # redraw the crest and icons (power-of-two .tga)
 
 Open [`preview/index.html`](preview/index.html) in a browser to click through
 every window with full, empty, loading, error and worst-case data, or to see
-any tab before and after the redesign.
+any page before and after the v0.6.0 redesign.
 
 | Folder | What lives there |
 |---|---|
@@ -436,7 +448,7 @@ any tab before and after the redesign.
 | `Collect/` | reads gear, talents, professions, recipes, reputation and attunements |
 | `Sync/` | encoding (LibSerialize + LibDeflate), merge rules, the HI/RQ/PR/SQ/SO protocol |
 | `UI/` | `Theme.lua` (**every** colour, font, size, spacing step and motion timing; a test fails if one is hard-coded elsewhere), `Motion.lua`, widgets, tabs, the item-tooltip line |
-| `Media/` | Chakra Petch (SIL OFL), Arial Narrow font families, the crest and four small icons |
+| `Media/` | Chakra Petch and Inter (both SIL OFL, with their licences), the Inter and Arial Narrow font families, the crest, sidebar icons and a few small glyphs |
 | `Data/` | profession, attunement and faction tables (IDs verified or marked TODO, never guessed) |
 | `preview/`, `tools/`, `docs/` | the browser preview, the texture and token scripts, mock-up renderer and design notes |
 
@@ -474,7 +486,11 @@ no code from either is included.
 
 Titles use [Chakra Petch](https://fonts.google.com/specimen/Chakra+Petch) by
 Cadson Demak (SIL Open Font License 1.1, bundled in `Media/Fonts/` with its
-licence). The black-and-gold direction started from the Lamborghini-inspired
+licence). Names and numbers use [Inter](https://rsms.me/inter/) by Rasmus
+Andersson (SIL Open Font License 1.1, bundled with its licence,
+`Media/Fonts/Inter-OFL.txt`). The v0.6.0 layout was inspired by the look of
+FojjiCore, EllesmereUI and Polestar; none of their code, art or layouts is
+used. The black-and-gold direction started from the Lamborghini-inspired
 DESIGN.md by [getdesign](https://www.npmjs.com/package/getdesign). The crest
 is drawn from simple shapes by `tools/textures.js`.
 
