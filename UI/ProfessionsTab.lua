@@ -314,7 +314,9 @@ local function setProfitCell(fs, r, col)
 		local skill = SK.RecipeDB.MySkill(r.skillLine)
 		fs:SetText(skill and Theme.SkillColour(SK.RecipeDB.ColourAt(r.recipeID, skill)) or "")
 	elseif k == "cost" then
-		fs:SetText(r.cost and money(r.cost) or Theme.Paint("dim", NO_PRICE))
+		local first = not r.cost and r.missingIDs and r.missingIDs[1]
+		fs:SetText(r.cost and money(r.cost) or (first and Theme.Paint("spark", "needs " .. (CI.ItemName(first) or "...")))
+			or Theme.Paint("dim", NO_PRICE))
 	elseif k == "value" then
 		fs:SetText(r.value and money(r.value) or Theme.Paint("dim", NO_PRICE))
 	elseif k == "profit" then
@@ -341,8 +343,8 @@ function Prof.ProfitTip(tip, r)
 			Theme.Paint("dim", "  (what a vendor pays)")), "text", true)
 	end
 	if r.missing > 0 then
-		Theme.TipLine(tip, "Reagents without a price: buy one from a vendor while Short Royalty is on, or scan " ..
-			"the auction house with Auctionator or TSM.", "dim", true)
+		Theme.TipLine(tip, "Reagents without a price: open the vendor that sells them (you don't need to buy), " ..
+			"or scan the auction house with Auctionator or TSM.", "dim", true)
 	end
 end
 
@@ -1225,7 +1227,15 @@ function Prof:RefreshProfit()
 	self.profitList:SetItems(rows)
 	self.profitList:SetEmptyText(prof.scanned and "No learned recipes in this profession yet." or
 		("Open your " .. (prof.name or "profession") .. " window once so Short Royalty knows which recipes you've learned."))
-	self.status:SetText(Prof.ProfitSummary(rows, SK.Prices.Source()))
+	self.status:SetText(Prof.ProfitSummary(rows, SK.Prices.Source()) .. Prof.MissingText(SK.Prices.MissingTop(rows, 3)))
+end
+
+-- "  ·  no price yet: Green Dye (12), Coarse Thread (9)" (v0.5.6), or "".
+function Prof.MissingText(top)
+	if #top == 0 then return "" end
+	local parts = {}
+	for i, m in ipairs(top) do parts[i] = (CI.ItemName(m[1]) or "...") .. " (" .. m[2] .. ")" end
+	return "  ·  " .. Theme.Paint("spark", "no price yet: " .. table.concat(parts, ", "))
 end
 
 Prof.SHOW_ITEMS = {

@@ -6,6 +6,10 @@
   Forever's bundled recipe list (it helps us keep that list complete).
 - Lists built from your recipes now start from what your game recorded, so
   a recipe missing from the bundled list still shows up.
+- With TSM installed, thread, dyes and other vendor items now get their
+  price from TSM's own vendor price list, so the shopping list cost and the
+  levelling route no longer skip recipes that need them. Lists that still
+  can't price a recipe now name the material that has no price.
 
 ## v0.5.5 (11 Nov 2026): Professions upgrade
 

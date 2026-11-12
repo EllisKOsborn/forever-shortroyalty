@@ -264,6 +264,10 @@ function Commands.BuildReport()
 		P.Source() and P.SOURCE_NAMES[P.Source()] or "vendor prices only")
 	add("Vendor prices remembered: %d; Linen Cloth sells to a vendor for %s", P.VendorKnown(),
 		cash(Compat.VendorSellPrice(LINEN)))
+	-- v0.5.6: TSM's vendor price list (Coarse Thread 2321, Green Dye 2605)
+	add("TSM VendorBuy: Coarse Thread %s, Green Dye %s; used: Coarse Thread %s, Green Dye %s",
+		cash(Compat.TSMPrice(2321, "VendorBuy")), cash(Compat.TSMPrice(2605, "VendorBuy")),
+		cash(P.VendorBuy(2321)), cash(P.VendorBuy(2605)))
 	-- v0.5.0: where to learn recipes. Does the game answer GetRecipeSourceText / disabledReason?
 	local LN = SK.Learn
 	local items = 0

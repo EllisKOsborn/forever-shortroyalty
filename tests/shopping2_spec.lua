@@ -21,7 +21,8 @@ describe("Shopping list upgrades", function()
 		SK.Identity:ReadRoster()
 		SK.Profile:BuildSelf()
 		SK.Profile:Own().recipes[197] = { [WOOL_BOLT_RECIPE] = BOLT, [SHIRT] = 2587 }
-		_G.TSM_API = { GetCustomPriceValue = function(_, item)
+		_G.TSM_API = { GetCustomPriceValue = function(src, item)
+			if src == "VendorBuy" then return nil end
 			return ({ ["i:" .. BOLT] = 100, ["i:" .. WOOL] = 20, ["i:" .. THREAD] = 5, ["i:" .. DYE] = 30 })[item]
 		end }
 	end)

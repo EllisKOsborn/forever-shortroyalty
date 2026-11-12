@@ -163,7 +163,7 @@ describe("Professions → Profit", function()
 		SK.DB.unlocked.profit = true
 		SK.Prices.OWNERS[W.player.guid] = true
 	end)
-	after_each(function() _G.Auctionator = nil end)
+	after_each(function() _G.Auctionator, _G.TSM_API = nil, nil end)
 
 	it("is hidden until /sr profit unlocks it, for the whole account (v0.4.7)", function()
 		SK.DB.unlocked.profit = nil
@@ -216,6 +216,32 @@ describe("Professions → Profit", function()
 		assert.truthy(tab.status:GetText():find("Prices from Auctionator", 1, true))
 		assert.truthy(SK.ProfessionsTab.PriceItems()[3].text:find("not installed", 1, true))
 		assert.equal(0, #SK.errors)
+	end)
+
+	it("uses TSM's vendor price list for thread and dyes, cheapest wins (v0.5.6)", function()
+		local P, THREAD, DYE = SK.Prices, 2321, 2605
+		assert.is_nil(P.VendorBuy(THREAD))
+		_G.TSM_API = { GetCustomPriceValue = function(src, item)
+			if src ~= "VendorBuy" then return nil end
+			return ({ ["i:" .. THREAD] = 10, ["i:" .. DYE] = 100 })[item]
+		end }
+		assert.equal(10, P.VendorBuy(THREAD))
+		SK.DB.vendorBuy[DYE] = 80 -- seen cheaper at a merchant
+		assert.equal(80, P.VendorBuy(DYE))
+		local v, via = P.Buy(THREAD)
+		assert.same({ 10, "vendor" }, { v, via })
+		local c = P.Craft({ { i = THREAD, q = 1 }, { i = DYE, q = 1 } }, 0, 1, P)
+		assert.equal(90, c.cost)
+	end)
+
+	it("names the reagents that leave recipes unpriced (v0.5.6)", function()
+		local c = SK.Prices.Craft({ { i = 5, q = 1 }, { i = 6, q = 2 } }, 0, 1, fakePrices({ [5] = 1 }, {}))
+		assert.same({ 6 }, c.missingIDs)
+		local top = SK.Prices.MissingTop({ { missingIDs = { 6, 7 } }, { missingIDs = { 6, 6 } }, { missingIDs = {} },
+			{ missingIDs = { 8 } } }, 2)
+		assert.same({ { 6, 2 }, { 7, 1 } }, top)
+		assert.equal("", SK.ProfessionsTab.MissingText({}))
+		assert.truthy(SK.ProfessionsTab.MissingText({ { 6, 2 } }):find("no price yet", 1, true))
 	end)
 
 	it("lists every recipe you know, even one missing from the bundled data (v0.5.6)", function()

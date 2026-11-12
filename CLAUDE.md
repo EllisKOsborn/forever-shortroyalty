@@ -139,8 +139,14 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   known)` now iterates the player's recorded recipes (`own.recipes[line]`,
   id → itemID) instead of the bundled `RecipeDB.List`, with the scan's itemID
   as fallback (`Prices.Recipe(id, itemID)`). `/sr debug` adds "not in
-  Forever's recipe list: N (ids)" per profession (TESTING 184). Cause not
-  confirmed yet: ask which recipes were missing and get that line.
+  Forever's recipe list: N (ids)" per profession (TESTING 184). **Real
+  cause (owner, 12 Nov):** Green Woolen Bag (3758) was known but sat at the
+  bottom as unpriced: Green Dye 2605 / Coarse Thread 2321 are vendor-only,
+  so TSM had no auction price and no vendor had been visited. Fix:
+  `Prices.VendorBuy` = cheaper of remembered and TSM's `VendorBuy` price
+  source (**unverified in Forever**; `/sr debug` "TSM VendorBuy" line,
+  TESTING 185); `Prices.Craft` returns `missingIDs`, `Prices.MissingTop`;
+  Profit cost cell "needs <item>", status "no price yet: …".
 - **Guild-shared prices: dropped** (owner, 11 Nov: "I don't think price
   sharing is what we should add at all"). Don't propose it again unless asked.
 - **Redesign (owner, 11 Nov: "the interface is now very cluttered"; likes

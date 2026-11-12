@@ -50,7 +50,16 @@ function P.LearnMerchant(items)
 	return n
 end
 
-function P.VendorBuy(itemID) return vendorBuy()[itemID] end
+-- What a vendor charges: the cheapest you've seen, or TSM's own vendor price
+-- list ("VendorBuy", v0.5.6) when TSM is installed: thread and dyes are never
+-- on the auction house, so without it every recipe that needs them went
+-- unpriced (owner, 12 Nov: Green Woolen Bag at the bottom of Profit).
+function P.VendorBuy(itemID)
+	local seen = vendorBuy()[itemID]
+	local tsm = Compat.PriceAddons().tsm and Compat.TSMPrice(itemID, "VendorBuy") or nil
+	if tsm and tsm > 0 and (not seen or tsm < seen) then return tsm end
+	return seen
+end
 
 function P.VendorKnown()
 	local n = 0
@@ -154,10 +163,13 @@ P.VendorSell = Compat.VendorSellPrice
 -- with `prices` = { Buy(id), Sell(id) }. Missing prices are counted, never
 -- guessed: cost/profit are nil when any reagent has no price.
 function P.Craft(reagents, outputID, yield, prices)
-	local out = { cost = 0, missing = 0, yield = yield or 1 }
+	local out = { cost = 0, missing = 0, yield = yield or 1, missingIDs = {} }
 	for _, x in ipairs(reagents or {}) do
 		local each = x.i and prices.Buy(x.i) or nil
-		if each then out.cost = out.cost + each * x.q else out.missing = out.missing + 1 end
+		if each then out.cost = out.cost + each * x.q else
+			out.missing = out.missing + 1
+			if x.i then out.missingIDs[#out.missingIDs + 1] = x.i end
+		end
 	end
 	if not reagents or #reagents == 0 then out.missing = out.missing + 1 end
 	if out.missing > 0 then out.cost = nil end
@@ -202,6 +214,22 @@ function P.Rows(skillLine, known, craft)
 		return a.recipeID < b.recipeID
 	end)
 	return rows
+end
+
+-- The reagents that leave most rows unpriced, most rows first: { { id, n } }.
+-- Pure; tested.
+function P.MissingTop(rows, max)
+	local count, list = {}, {}
+	for _, r in ipairs(rows) do
+		local seen = {}
+		for _, id in ipairs(r.missingIDs or {}) do
+			if not seen[id] then seen[id] = true; count[id] = (count[id] or 0) + 1 end
+		end
+	end
+	for id, n in pairs(count) do list[#list + 1] = { id, n } end
+	table.sort(list, function(a, b) if a[2] ~= b[2] then return a[2] > b[2] end return a[1] < b[1] end)
+	while #list > (max or 3) do list[#list] = nil end
+	return list
 end
 
 ---------------------------------------------------------------------------

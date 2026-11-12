@@ -559,6 +559,10 @@ in game if anything looks different and send it.
 184. [ ] Open each profession window once, then `/sr debug`: under each
    "Profession …" line, is there a "not in Forever's recipe list" line?
    Send it (and the names of any recipes you noticed missing).
+185. [ ] `/sr debug` line "TSM VendorBuy": do Coarse Thread and Green Dye have
+   prices (not "none")? In Profit, Green Woolen Bag should now have a cost
+   and sit near the top; rows still without a price say "needs <material>",
+   and the status line names the materials with no price yet.
 
 ## Known gaps in v0.1
 
