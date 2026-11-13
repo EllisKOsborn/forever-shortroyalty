@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="WoW Forever 1.60.1" src="https://img.shields.io/badge/WoW%20Forever-1.60.1%20%C2%B7%2016001-FFC000?labelColor=000000">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.6.0%20alpha-F06BB0?labelColor=000000">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.7.0%20alpha-F06BB0?labelColor=000000">
   <img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-FF6A1A?labelColor=000000">
 </p>
 
@@ -426,7 +426,7 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [ ] **Ideas for later**: craft requests, a short status line, lockout board
 - [ ] **Later**: raid attendance, guild bank viewer and more in the [plan](PLAN.md#later-in-rough-priority-order)
 - [x] CurseForge release (every release uploads automatically)
-- [ ] **v0.7.0** (built, not released): **Short Words**, a daily and free-for-all word game with guild leaderboards
+- [x] **v0.7.0**: **Short Words**, a daily and free-for-all word game with guild leaderboards
 
 Testing it in game? Work through [TESTING.md](TESTING.md). The plan for launch
 week is in [PLAN.md section 10](PLAN.md#10-once-forever-is-live-from-4-nov-2026).

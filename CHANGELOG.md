@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.7.0 (not released yet): Short Words
+## v0.7.0 (13 Nov 2026): Short Words
 
 - **Short Words**, a new page in the sidebar (Games → Short Words, or
   `/sr words`): guess the five-letter word in six tries. Green means the

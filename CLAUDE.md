@@ -29,7 +29,7 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 13 Nov 2026)
-- **v0.7.0 (built 13 Nov, not released): Short Words** (owner: "build Short
+- **v0.7.0 (released 13 Nov on `main`, owner: "Push to main"): Short Words** (owner: "build Short
   Words. One word a day mode and a free for all mode where they can keep
   going. Leaderboard for today, all time. Separated by mode."). Not called
   Wordle (NYT trademark).
@@ -249,7 +249,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   **`docs/prompts/next-design-v2.md`** (v0.6.0). Licences: Polestar GPL v3
   (github.com/fitzforge/polestar), EllesmereUI custom all rights reserved,
   FojjiCore All Rights Reserved: **inspiration only**, never code/art.
-- **Next:** release v0.7.0 when the owner asks; then what they pick from
+- **Next:** v0.7.0 is released; get TESTING.md 6–12 from the owner, then what they pick from
   PLAN.md (raids re-plan before 9 Dec, craft requests, levelling rework…). Still useful from v0.5.5: TESTING 167–169, 181–185.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
@@ -518,7 +518,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
   (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed); **v0.5.7** (12 Nov, cooldown
-  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter). Tag only when
+  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words). Tag only when
   the user asks.
 
 ## Layout
@@ -990,8 +990,7 @@ what's still open and **renumbered**; older TESTING numbers in this file
 refer to `git show v0.6.0:TESTING.md`.
 1. TESTING.md 1–5: Onyxia amulet check, real cooldowns only, where to learn
    at a trainer, who wears it, the reminder bar's Open button.
-2. v0.7.0 Short Words: release when the owner says "put it on main", then
-   TESTING.md 6–12.
+2. v0.7.0 Short Words is out: TESTING.md 6–12.
 3. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
 
