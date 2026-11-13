@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.7.0 (not released yet): Short Words
+
+- **Short Words**, a new page in the sidebar (Games → Short Words, or
+  `/sr words`): guess the five-letter word in six tries. Green means the
+  right letter in the right place, yellow means it's in the word somewhere
+  else, grey means it isn't in the word.
+- **Daily:** the same word for the whole guild, a new one every day at
+  midnight UTC. One go per account (your alts see the same game).
+  **Share in guild chat** types your result, without letters, into the chat
+  box.
+- **Free for all:** as many words as you like, one after another.
+- **Leaderboards** for each mode, **Today** and **All time**: guesses and
+  finishing time today; wins, win %, average guesses and streaks all time.
+  Point at someone for their colours (never their letters).
+- Your results travel with the rest of your data. Settings → Sharing →
+  *Share my Short Words results* turns that off. Guildmates on older
+  versions pass the results along without showing them.
+- Words: common English words from SCOWL for the answers, and any word in
+  the public-domain ENABLE list as a guess.
+
 ## v0.6.0 (12 Nov 2026): A calmer Short Royalty
 
 A redesign of every screen, inspired by the clean look of FojjiCore,

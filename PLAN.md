@@ -323,7 +323,9 @@ section is the single source of truth for order and status.
 - D7 `!sk <item>` guild-chat lookup for members without the addon. Only if
   Forever allows automatic guild-chat replies (`SendChatMessage` is restricted)
 - D4 missing recipes with where to get them (needs a recipe-source table)
-- D9 guild fun events (raffles, fishing derby, contests)
+- D9 guild fun events (raffles, fishing derby, contests). **Started in v0.7.0
+  with Short Words** (owner, 13 Nov: daily + free-for-all modes, Today and
+  All time leaderboards per mode)
 - CurseForge release: **in progress (6 Nov)**, steps in `docs/CURSEFORGE.md`
 
 ### Not planned (and why)
@@ -421,7 +423,7 @@ Crafters and tooltips, Copy, the Overview's numbers and milestones.
   skill, and how they're learned: unlocks the camp planner (P6).
 - **Raid lockouts**: whether `/dump GetNumSavedInstances()` returns a number
   after a dungeon (it isn't in the 1.60.1 docs): decides the lockout board (P15).
-- **Horde members**: if there are any, their Onyxia chain is different.
+- ~~Horde members~~: none (owner, 13 Nov: the guild is Alliance only).
 - What players ask for in the first two weeks. Real requests beat any plan.
 
 ## 11. v0.3 Professions plan (5 Nov 2026, **approved**: "do all of them")

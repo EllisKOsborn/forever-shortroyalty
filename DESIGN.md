@@ -16,7 +16,8 @@ familiar; the brand lives in colour, type and a few precise details.
 ## Layout
 - **Window** 960 × 600 (shrinks to fit small screens). **Sidebar** 184 on
   the left: crest and name, the sections **Guild** (Overview, Roster,
-  Character) and **Crafting** (Find a crafter, Professions), then Settings,
+  Character), **Crafting** (Find a crafter, Professions) and **Games**
+  (Short Words, v0.7.0), then Settings,
   and the sync status at the bottom (dot, "Synced", guild and who's online,
   or "Update: … is out").
 - **Page header** 60: the page title (display, uppercase) and **one
@@ -58,6 +59,7 @@ different, and the sidebar has room for Levelling or Raids when they return.
 | onAccent | black or white, whichever has more contrast (`Theme.InkOn`) | text on an accent fill | |
 | **spark** | `#FF6A1A` | alerts only: old data, missing enchants, an update, errors, the reminder bars | anything else |
 | good / bad | `#4CC38A` / `#E5484D` | synced, online, attuned, ready, shared / not attuned | |
+| wordHit / wordNear / wordMiss | `#3F8F57` / `#B8962E` / `#333338` | Short Words tiles and keys: right place / elsewhere in the word / not in it (darker than good so white letters read) | anything else |
 
 The accent is one colour (v0.6.0; before, gold meant "where you are" and
 pink "what you picked", so three bright colours competed). The UI never

@@ -235,6 +235,9 @@
   .copywin pre { position: absolute; left: 16px; right: 16px; top: 56px; bottom: 56px; margin: 0; padding: 8px; background: var(--surface); font: 12px/1.4 "Arial Narrow", Arial, sans-serif; color: var(--text); overflow: auto; white-space: pre; user-select: text; }
   .tip { position: fixed; z-index: 100; pointer-events: none; background: rgba(8, 10, 22, .94); border: 1px solid #5d6a7a; border-radius: 4px; padding: 6px 9px; font: 13px/1.35 "Arial Narrow", Arial, sans-serif; color: #fff; max-width: 320px; display: none; }
   .tip .dl { display: flex; justify-content: space-between; gap: 16px; }
+  .wtile { position: absolute; width: 40px; height: 40px; box-sizing: border-box; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; font-size: 20px; }
+  .wkey { position: absolute; height: 30px; background: var(--raised); display: grid; place-items: center; font-size: var(--fsm); cursor: pointer; }
+  .wkey:hover { background: var(--lineStrong); }
   .ttshot { position: absolute; inset: 0; display: flex; gap: 40px; padding: 36px 40px; background:
     radial-gradient(ellipse at 20% 15%, rgba(255,190,120,.30), transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(60,110,90,.45), transparent 60%),
     linear-gradient(170deg, #4a5a6a 0%, #2f3d33 55%, #1d241d 100%); }
@@ -686,20 +689,85 @@ function settings() {
       `left:${x2}px;top:${t0}px;width:${W}px`);
 }
 
+// ---------------------------------------------------------------- short words (v0.7.0)
+function words() {
+  const view = S.wordsView === "free" ? "free" : "daily", board = S.wordsBoard === "all" ? "all" : "today";
+  const done = S.wordsDone === "1";
+  const LEFT = 10 * 26 + 9 * 4, TILE = 40, GAP = 5, t0 = T.sizes.subTabs + T.space.m;
+  const answer = "plume";
+  const score = (g) => { const out = [], left = {}; for (let i = 0; i < 5; i++) { if (g[i] === answer[i]) out[i] = 2; else { out[i] = 0; left[answer[i]] = (left[answer[i]] || 0) + 1; } }
+    for (let i = 0; i < 5; i++) if (out[i] === 0 && left[g[i]] > 0) { out[i] = 1; left[g[i]]--; } return out; };
+  const guesses = view === "free" ? (done ? ["stair", "plume"] : ["stair"]) : (done ? ["crane", "plied", "plume"] : ["crane", "plied"]);
+  const typed = done ? "" : (view === "free" ? "clo" : "plu");
+  const TONE = ["wordMiss", "wordNear", "wordHit"];
+  let tiles = "";
+  const bx = (LEFT - (5 * TILE + 4 * GAP)) / 2;
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 5; c++) {
+    const g = guesses[r], x = bx + c * (TILE + GAP), y = t0 + r * (TILE + GAP);
+    let st = "", l = "";
+    if (g) { l = g[c]; const s = score(g)[c]; st = `background:var(--${TONE[s]});border-color:var(--${TONE[s]})`; }
+    else if (r === guesses.length && typed[c]) { l = typed[c]; st = "border-color:var(--dim)"; }
+    tiles += `<div class="wtile display" style="left:${x}px;top:${y}px;${st}">${l.toUpperCase()}</div>`;
+  }
+  const keys = {}; guesses.forEach((g) => score(g).forEach((s, i) => { keys[g[i]] = Math.max(keys[g[i]] ?? -1, s); }));
+  const ky = t0 + 6 * TILE + 5 * GAP + 8 + 18 + 8;
+  let kb = "";
+  ["qwertyuiop", "asdfghjkl", "zxcvbnm"].forEach((row, i) => {
+    const wide = 41, count = row.length + (i === 2 ? 2 : 0), width = row.length * 26 + (count - 1) * 4 + (i === 2 ? 2 * wide : 0);
+    let x = (LEFT - width) / 2;
+    const add = (label, w, st) => { kb += `<div class="wkey" style="left:${x}px;top:${ky + i * 34}px;width:${w}px${st ? ";background:var(--" + st + ")" : ""}">${label}</div>`; x += w + 4; };
+    if (i === 2) add("Enter", wide);
+    for (const l of row) add(l.toUpperCase(), 26, keys[l] !== undefined ? TONE[keys[l]] : "");
+    if (i === 2) add("Del", wide);
+  });
+  const msg = done ? (view === "daily" ? `<span class="good">Solved in 3!  ·  next word in 9h 14m</span>` : `<span class="good">Solved in 2!</span>`)
+    : `<span class="dim">Type a word, Enter to guess, Esc to stop typing.</span>`;
+  const after = done ? (view === "daily" ? btn("Share in guild chat", "", `style="position:absolute;left:${LEFT / 2 - 70}px;top:${ky + 3 * 34 + 8}px"`)
+    : btn("Next word", "primary", `style="position:absolute;left:${LEFT / 2 - 45}px;top:${ky + 3 * 34 + 8}px"`)) : "";
+  // leaderboard
+  const RX = LEFT + 24, ms = G.members.filter((m) => m.hasData && !(done && view === "daily" && m.self)).slice(0, 12);
+  const rows = ms.map((m, i) => ({ m, won: i % 5 !== 4, g: 2 + (i * 7) % 5, n: 20 - i, w: 18 - i - (i % 3), avg: (3.2 + (i % 5) * 0.3).toFixed(1), streak: (12 - i) % 6, best: 9 - (i % 4),
+    fn: 6 - (i % 4), fw: 5 - (i % 4), when: ["12m ago", "40m ago", "1h ago", "2h ago", "3h ago", "4h ago", "6h ago"][i % 7] }));
+  if (done && view === "daily") rows.splice(1, 0, { m: G.members[0], won: true, g: 3, when: "now", n: 12, w: 11, avg: "3.4", streak: 4, best: 6, fn: 3, fw: 3 });
+  if (view === "daily" && board === "today") rows.sort((a, b) => (b.won - a.won) || (a.won ? a.g - b.g : 0));
+  else rows.sort((a, b) => (view === "daily" || board === "all" ? b.w - a.w : b.fw - a.fw) || a.avg - b.avg);
+  const nm = (r) => dot(r.m.online ? "good" : "faint") + cls(r.m) + (r.m.self ? ` <span class="acc">(you)</span>` : "");
+  const rk = (i) => `<span class="${i < 3 ? "acc" : "dim"}">${i + 1}</span>`;
+  const COLS = {
+    daily_today: [[{ key: "r", t: "#", w: 32, r: 1 }, { key: "n", t: "Name", w: 200 }, { key: "res", t: "Result", w: 80, r: 1 }, { key: "when", t: "Finished", w: 100, r: 1 }],
+      (r, c, i) => c.key === "r" ? rk(i) : c.key === "n" ? nm(r) : c.key === "res" ? (r.won ? r.g + "/6" : `<span class="spark">X/6</span>`) : `<span class="dim">${r.when}</span>`],
+    daily_all: [[{ key: "r", t: "#", w: 32, r: 1 }, { key: "n", t: "Name", w: 140 }, { key: "w", t: "Won", w: 50, r: 1 }, { key: "p", t: "Win %", w: 56, r: 1 }, { key: "a", t: "Avg", w: 50, r: 1 }, { key: "s", t: "Streak", w: 84, r: 1 }],
+      (r, c, i) => c.key === "r" ? rk(i) : c.key === "n" ? nm(r) : c.key === "w" ? r.w : c.key === "p" ? `<span class="dim">${Math.round(r.w / r.n * 100)}%</span>` : c.key === "a" ? r.avg : `${r.streak || DASH}<span class="dim">  best ${r.best}</span>`],
+    free_today: [[{ key: "r", t: "#", w: 32, r: 1 }, { key: "n", t: "Name", w: 180 }, { key: "w", t: "Solved", w: 70, r: 1 }, { key: "p", t: "Played", w: 64, r: 1 }, { key: "a", t: "Avg", w: 66, r: 1 }],
+      (r, c, i) => c.key === "r" ? rk(i) : c.key === "n" ? nm(r) : c.key === "w" ? r.fw : c.key === "p" ? `<span class="dim">${r.fn}</span>` : r.avg],
+    free_all: [[{ key: "r", t: "#", w: 32, r: 1 }, { key: "n", t: "Name", w: 146 }, { key: "w", t: "Solved", w: 64, r: 1 }, { key: "p", t: "Win %", w: 56, r: 1 }, { key: "a", t: "Avg", w: 50, r: 1 }, { key: "b", t: "Best run", w: 64, r: 1 }],
+      (r, c, i) => c.key === "r" ? rk(i) : c.key === "n" ? nm(r) : c.key === "w" ? r.w * 3 : c.key === "p" ? `<span class="dim">${Math.round(r.w / r.n * 100)}%</span>` : c.key === "a" ? r.avg : r.best],
+  };
+  const [cols, cell] = COLS[view + "_" + board];
+  let idx = 0;
+  const lb = list(cols, rows, (r, c) => { const i = rows.indexOf(r); return cell(r, c, i); }, { click: true, style: `left:${RX}px;right:0;top:${t0 + 32}px;bottom:0` });
+  void idx;
+  return `${subtabs([["daily", "Daily"], ["free", "Free for all"]], view, "data-wv")}<div class="substatus ell">${view === "daily" ? "Short Words #1" : "37 words solved so far"}</div>
+    ${tiles}<div class="abs" style="left:0;width:${LEFT}px;top:${t0 + 6 * TILE + 5 * GAP + 8}px;text-align:center">${msg}</div>${kb}${after}
+    <div class="abs" style="left:${RX}px;top:${t0}px;display:flex;gap:4px">${[["today", "Today"], ["all", "All time"]].map((b) => `<span class="chip ${b[0] === board ? "on" : ""}" data-wb="${b[0]}">${b[1]}</span>`).join("")}</div>
+    <div class="abs dim small" style="right:0;top:${t0 + 5}px">${rows.length} players</div>${lb}`;
+}
+
 // ---------------------------------------------------------------- window
 const TABS = [["overview", "Overview", "guild"], ["roster", "Roster", "guild"], ["character", "Character", "guild"], ["crafters", "Find a crafter", "crafting"],
-  ["professions", "Professions", "crafting"], ["settings", "Settings", "settings"]];
+  ["professions", "Professions", "crafting"], ["words", "Short Words", "games"], ["settings", "Settings", "settings"]];
 const DESC = { roster: "Everyone in the guild. Click a name for their gear, talents and professions.", character: "Gear, talents, professions, cooldowns, reputations and attunements.",
   crafters: "Search an item or recipe to see who in the guild can make it, and whisper them.", professions: "Who crafts what in the guild, every recipe in the game, and cooldowns.",
-  settings: "What you share, how the window looks, and reminders." };
-const RENDER = { overview, roster, character, crafters, professions, settings };
+  settings: "What you share, how the window looks, and reminders.",
+  words: "A five-letter word in six guesses: one word a day for the whole guild, or as many as you like." };
+const RENDER = { overview, roster, character, crafters, professions, words, settings };
 function windowHTML() {
   const err = S.data === "error", paused = err || !G.name || S.data === "loading";
   const why = err ? "combat" : "roster not loaded";
   const online = G.members.filter((m) => m.online).length;
   const st = `${paused ? "Sync paused: " + why : "Synced"}${err ? '  ·  <span class="spark">2 errors</span>' : ""}`;
   let y = T.sizes.pageHead + 4, nav = "";
-  for (const g of [["guild", "Guild"], ["crafting", "Crafting"], ["settings"]]) {
+  for (const g of [["guild", "Guild"], ["crafting", "Crafting"], ["games", "Games"], ["settings"]]) {
     if (g[1]) { nav += `<div class="navlbl display" style="top:${y + 8}px">${g[1]}</div>`; y += 28; } else y += 12;
     for (const t of TABS.filter((x) => x[2] === g[0])) {
       nav += `<div class="nav ${S.screen === t[0] ? "on" : ""}" data-tab="${t[0]}" style="top:${y}px"><i class="mask" style="-webkit-mask-image:var(--tex-icon-${t[0]});mask-image:var(--tex-icon-${t[0]})"></i>${t[1]}</div>`;
@@ -770,6 +838,8 @@ function hideTip() { tip.style.display = "none"; }
 function wire() {
   document.querySelectorAll("[data-tab]").forEach((el) => (el.onclick = () => { if (S.screen === el.dataset.tab) return; S.screen = el.dataset.tab; S.menuOpen = false; S.optOpen = false; seg("segScreen"); render({ reveal: true }); }));
   document.querySelectorAll("[data-pv]").forEach((el) => (el.onclick = () => { S.profView = el.dataset.pv; S.prof = null; S.crafter = null; render(); }));
+  document.querySelectorAll("[data-wv]").forEach((el) => (el.onclick = () => { S.wordsView = el.dataset.wv; render(); }));
+  document.querySelectorAll("[data-wb]").forEach((el) => (el.onclick = () => { S.wordsBoard = el.dataset.wb; render(); }));
   document.querySelectorAll("[data-sv]").forEach((el) => (el.onclick = () => { S.setView = el.dataset.sv; render(); }));
   document.querySelectorAll("[data-accent]").forEach((el) => (el.onclick = () => { S.accent = el.dataset.accent; render(); }));
   const fm = $("#fontMenu"); if (fm) fm.onclick = () => { S.font = S.font === "narrow" ? "inter" : "narrow"; render(); };
@@ -846,7 +916,7 @@ function seg(id) {
 try { Object.assign(S, JSON.parse(localStorage.getItem("skPreview") || "{}")); } catch (e) { /* ignore */ }
 // ?screen=roster&data=worst&view=before&raid=ony  (and &shot=1 for the README pictures: window only, no chrome)
 const Q = new URLSearchParams(location.search);
-for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView"]) if (Q.get(k)) S[k] = Q.get(k);
+for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone"]) if (Q.get(k)) S[k] = Q.get(k);
 const SHOT = Q.get("shot");
 if (SHOT) {
   document.body.classList.add("shot"); S.view = SHOT === "compare" ? "before" : "after"; S.reduce = true;

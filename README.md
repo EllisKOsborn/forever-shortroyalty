@@ -25,11 +25,13 @@
 </p>
 
 > [!NOTE]
-> **Not run in game yet.** Short Royalty is built against Blizzard's own Forever
-> 1.60.1 interface code and tested against a simulated WoW client. The
-> pictures here are drawn by the [browser preview](preview/index.html) from
-> the addon's real colours, fonts and layout. Item icons are placeholders;
-> in game you see the real ones.
+> **Used by the guild in game since launch (4 Nov 2026).** Each version is
+> built against Blizzard's own Forever 1.60.1 interface code and tested
+> against a simulated WoW client before it's released; what still needs
+> checking in game is in [TESTING.md](TESTING.md). The pictures here are
+> drawn by the [browser preview](preview/index.html) from the addon's real
+> colours, fonts and layout. Item icons are placeholders; in game you see
+> the real ones.
 
 ---
 
@@ -44,6 +46,7 @@
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
 | ⚒️ **Find a crafter** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
 | 🧪 **Professions** | Three page tabs: **Guild** (every profession in the guild, then each profession's crafters and recipes), **Recipes** (**every recipe in the game**, by name, group or material) and **Cooldowns**; specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
+| 🔤 **Short Words** | A five-letter word game: **Daily** (one word a day for the whole guild) and **Free for all** (keep going), each with **Today** and **All time** guild leaderboards |
 | ⚙️ **Settings** | Sharing and privacy switches, accent colour, font, window size and reminders; tools and a live status read-out under **Advanced** |
 | 🧨 **Everywhere** | A sidebar window in your pick of accent colour, `/sr`, a minimap button, short guild lines on item tooltips, chat reminders and a copyable debug report |
 
@@ -152,13 +155,44 @@ character** knows (no backup), and which professions nobody has.
 - **Cooldowns:** everyone's profession cooldowns (transmutes, Mooncloth…: only recipes that have a cooldown in WoW Forever's own data), ready first, then soonest. Shows who, how long, and **as of** when we last heard from them (orange after a day: a cooldown only updates while its owner is online). **Whisper** when they're on.
 - **Specialisations** (Gnomish/Goblin Engineer, Dragonscale/Elemental/Tribal Leatherworking, Armorsmith/Weaponsmith and the master smiths) are read from your spellbook. A spell only counts when the game's own name for it matches, so a wrong ID can never mislabel anyone.
 
+### 🔤 Short Words
+<p align="center"><img src="docs/images/short-words-done.png" alt="Short Words, daily word solved, with today's guild leaderboard" width="100%"></p>
+
+Guess the five-letter word in six tries. After each guess the tiles show
+**green** (right letter, right place), **yellow** (in the word, somewhere
+else) or **grey** (not in the word); the keyboard keeps track.
+
+- **Daily:** the same word for the whole guild, a new one every day at
+  midnight UTC (Short Words #1 was 13 Nov 2026). One go per account: once
+  you've started it, your alts see that game too. **Share in guild chat**
+  types "Short Words #12: 4/6 (streak 3)" into the chat box (no letters, so
+  no spoilers); you press Enter.
+- **Free for all:** a new random word as soon as you finish (**Next word**),
+  as many as you like. Never today's daily word.
+- **Leaderboards** for each mode, **Today** and **All time**:
+  - *Daily, today:* fewest guesses first, then who finished first. Point at a
+    name for their colour pattern (never their letters).
+  - *Daily, all time:* words won, win %, average guesses, current and best
+    streak.
+  - *Free for all:* words solved, games played (today) or win % and best run
+    of wins (all time), average guesses.
+- **Typing:** click the board and type, Enter to guess, Esc to stop typing
+  (your movement keys work again). The on-screen keys work too. Made-up
+  words ("Not in the word list") don't use a turn.
+- Scores reach guildmates with the rest of your data: within about a minute
+  for the daily word, every couple of minutes at most for free play. Turn
+  sharing off in Settings → *Share my Short Words results*. Scores are on
+  trust: it's for fun.
+
+<p align="center"><img src="docs/images/short-words-free.png" alt="Short Words, free for all, all-time leaderboard" width="100%"></p>
+
 ### ⚙️ Settings
 <p align="center"><img src="docs/images/settings.png" alt="Settings page, General" width="100%"></p>
 
 Two page tabs. **General** is rows of switches, each with one line saying
 what it does:
 
-- **Sharing:** *Share and receive guild data* (sync on or off), *Share my gear and talents*, *Share my recipes* (recipes, skill levels and cooldowns). Notes and officer notes are never shared.
+- **Sharing:** *Share and receive guild data* (sync on or off), *Share my gear and talents*, *Share my recipes* (recipes, skill levels and cooldowns), *Share my Short Words results*. Notes and officer notes are never shared.
 - **Display:** **Accent colour** (pink like the crest, gold, or your class colour: it changes at once), **Font** (Inter or the game's Arial Narrow, after a reload: a *Reload now* button appears), **Window size** (a slider, 70% to 130%), *Minimap button*, **Reduce motion**.
 - **Professions and tooltips:** *Guild lines in item tooltips*, *Remind me to reopen profession windows*, *Record guild milestones*.
 
@@ -249,6 +283,7 @@ recipes are recorded (the addon reminds you), and log in on each **alt** once.
 | `/sr scan` | re-read your character now |
 | `/sr sync` | share your data now and ask for anything missing |
 | `/sr who <item>` | list the guildmates who wear an item (Shift-click it, or type part of its name) |
+| `/sr words` | play Short Words |
 | `/sr reset` | put the window back in the middle of the screen |
 
 `/shortroyalty` and `/sk` work too, if another addon already uses `/sr`.
@@ -374,7 +409,7 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.3.2**: every recipe in the game with search (name, group, material), Wowhead links, Getting started, on CurseForge
 - [x] **v0.3.0 Professions**: guild coverage, crafters and recipes per profession, cooldown board, specialisations, reagents, favourites, reminders
 - [x] **v0.3.1**: renamed to **Short Royalty** (window, folder, download and `/sr`)
-- [ ] **In-game test round** with guildmates (TESTING.md), then fixes
+- [x] **In-game test round** with guildmates: sync, professions, the redesign, the character model and alts confirmed; a few checks left in [TESTING.md](TESTING.md)
 - [x] **v0.4.0**: Raids tab (read-only, removed again in v0.4.1), simpler "who has the addon", Alt rank left out of the Overview
 - [x] **v0.4.2**: fixes from the first big in-game report (a Lua error, lost profession recipes, false send errors)
 - [x] **v0.4.3**: character model on the Character tab
@@ -390,7 +425,8 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders
 - [ ] **Ideas for later**: craft requests, a short status line, lockout board
 - [ ] **Later**: raid attendance, guild bank viewer and more in the [plan](PLAN.md#later-in-rough-priority-order)
-- [ ] CurseForge release
+- [x] CurseForge release (every release uploads automatically)
+- [ ] **v0.7.0** (built, not released): **Short Words**, a daily and free-for-all word game with guild leaderboards
 
 Testing it in game? Work through [TESTING.md](TESTING.md). The plan for launch
 week is in [PLAN.md section 10](PLAN.md#10-once-forever-is-live-from-4-nov-2026).
@@ -449,7 +485,7 @@ any page before and after the v0.6.0 redesign.
 | `Sync/` | encoding (LibSerialize + LibDeflate), merge rules, the HI/RQ/PR/SQ/SO protocol |
 | `UI/` | `Theme.lua` (**every** colour, font, size, spacing step and motion timing; a test fails if one is hard-coded elsewhere), `Motion.lua`, widgets, tabs, the item-tooltip line |
 | `Media/` | Chakra Petch and Inter (both SIL OFL, with their licences), the Inter and Arial Narrow font families, the crest, sidebar icons and a few small glyphs |
-| `Data/` | profession, attunement and faction tables (IDs verified or marked TODO, never guessed) |
+| `Data/` | profession, attunement and faction tables (IDs verified or marked TODO, never guessed), Short Words' word lists (made by `tools/words.js`) |
 | `preview/`, `tools/`, `docs/` | the browser preview, the texture and token scripts, mock-up renderer and design notes |
 
 **Releasing:** push a tag like `v0.2.3` on `main`. The *Release* workflow runs
@@ -483,6 +519,11 @@ Auction prices are read through the public addon APIs of
 [Auctionator](https://www.curseforge.com/wow/addons/auctionator) and
 [TradeSkillMaster](https://tradeskillmaster.com) when you have them installed;
 no code from either is included.
+
+Short Words' answers come from [SCOWL / the English Speller Database](https://github.com/en-wl/wordlist)
+by Kevin Atkinson (MIT-like licence; notice in `Data/Words.lua`), and every
+word you may guess from ENABLE (public domain). It's an original game in a
+well-known style; it isn't affiliated with Wordle or The New York Times.
 
 Titles use [Chakra Petch](https://fonts.google.com/specimen/Chakra+Petch) by
 Cadson Demak (SIL Open Font License 1.1, bundled in `Media/Fonts/` with its

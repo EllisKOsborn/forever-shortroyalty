@@ -174,6 +174,24 @@ window.SK_THEME = {
       0.502,
       0.502,
       1
+    ],
+    "wordHit": [
+      0.247,
+      0.561,
+      0.341,
+      1
+    ],
+    "wordNear": [
+      0.722,
+      0.588,
+      0.18,
+      1
+    ],
+    "wordMiss": [
+      0.2,
+      0.2,
+      0.22,
+      1
     ]
   },
   "space": {
@@ -200,6 +218,7 @@ window.SK_THEME = {
     "statH": 58,
     "cardRow": 28,
     "settingRow": 42,
+    "tile": 40,
     "titleBar": 52,
     "tabBar": 32,
     "pad": 16,

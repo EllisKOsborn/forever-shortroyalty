@@ -28,8 +28,41 @@ A World of Warcraft: **Forever** addon for the guild **Short Royalty**
 talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
-## Start here (handover, 12 Nov 2026)
-- **v0.6.0 (released 12 Nov on `main`, owner: "put it on main"): the redesign.** The owner picked
+## Start here (handover, 13 Nov 2026)
+- **v0.7.0 (built 13 Nov, not released): Short Words** (owner: "build Short
+  Words. One word a day mode and a free for all mode where they can keep
+  going. Leaderboard for today, all time. Separated by mode."). Not called
+  Wordle (NYT trademark).
+  - Words: `tools/words.js enable1.txt scowl/data/scowl-pre.txt` (sources in
+    its header) → `Data/Words.lua`: `WORDS_ANSWERS` (1836 SCOWL size-35 base
+    words also in ENABLE, minus a hand blocklist of rude/slang/plural words,
+    shuffled with a fixed seed) and `WORDS_VALID` (8636 ENABLE five-letter
+    words, sorted), each one long string (5 chars per word; binary search,
+    no tables). SCOWL's licence notice must stay in that file.
+  - `Core/ShortWords.lua` (pure + `SK.DB.words`): `Day(now)` from
+    `EPOCH` 1794528000 (13 Nov 2026 UTC = #1, new word at UTC midnight),
+    `Answer(day)`, `IsWord`, `Score` (greens first, repeats counted),
+    `Guess`, `RecordDaily/RecordFree`, `Streak`, `Board(entries, mode,
+    period, today)`, `Entries(guild)`, `ShareText`. Daily game is
+    **account-wide** (`SK.DB.words.daily`, `game.guid` = who started it; an
+    alt can't replay). Free game per character. Stats per character in
+    `SK.DB.words.chars[guid]` = `{ d, ds, f, ft }` (see the file header).
+  - Shared as profile field **`words`** (results + "20110,22222" patterns,
+    never letters), checked by `Merge.FIELDS.words`; older clients accept it
+    as a plain extra field. `Profile:SetWords` commits: daily at once, free
+    at most every `SW.FREE_PUBLISH` 120 s (each profile change goes to every
+    addon user). `settings.share.words` (Settings → Sharing) drops it in
+    `Profile.Public`.
+  - `UI/WordsTab.lua`: sidebar group **Games**; page tabs Daily / Free for
+    all (`settings.wordsView`), Today / All time chips (`settings.wordsBoard`),
+    one `W.List` per board (`Words.COLUMNS`). Typing = an invisible EditBox
+    focused only after clicking the board (Esc / leaving the page releases
+    it); on-screen keys too. Theme `wordHit/wordNear/wordMiss`, `SIZES.tile/
+    key`, `Theme.Square`, texture `icon-words`. `/sr words`.
+  - Tests `tests/v070_words_spec.lua`; pictures `short-words*.png`
+    (preview `screen=words`, `wordsView`, `wordsBoard`, `wordsDone`).
+    TESTING.md 6–12.
+- **v0.6.0 (released 12 Nov on `main`; owner 13 Nov: "looks fine"): the redesign.** The owner picked
   from `docs/design/v0.6-directions.html` (audit + directions; brief in
   `docs/prompts/next-design-v2.md`): **B (sidebar)**, **pink** default
   accent, **no themes**, **add Inter**, yes to moving the Overview's
@@ -216,8 +249,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   **`docs/prompts/next-design-v2.md`** (v0.6.0). Licences: Polestar GPL v3
   (github.com/fitzforge/polestar), EllesmereUI custom all rights reserved,
   FojjiCore All Rights Reserved: **inspiration only**, never code/art.
-- **Next:** v0.6.0 is released; get the owner's in-game look (TESTING
-  187–196) and fix what they find in v0.6.1. Still useful from v0.5.5: TESTING 167–169, 181–185.
+- **Next:** release v0.7.0 when the owner asks; then what they pick from
+  PLAN.md (raids re-plan before 9 Dec, craft requests, levelling rework…). Still useful from v0.5.5: TESTING 167–169, 181–185.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from
@@ -401,6 +434,9 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   - The window also lists the "SEASON OF DISCOVERY" category (54 recipes),
     which our data leaves out on purpose.
   - 50 vendor prices remembered; TSM works; no Lua errors; send errors 0.
+- **Owner, 13 Nov:** v0.6.0 "looks fine"; character model "looks fine"
+  (TESTING 140–144 old numbering); alts "look fine"; the guild is
+  **Alliance only** (Horde Onyxia chain not needed).
 - **Realmless:** characters have two-part names that are unique per region.
   Key everything by **player GUID**. The `sender` format in addon messages is
   unconfirmed, so `Core/Identity.lua` matches it several ways.
@@ -498,9 +534,10 @@ Core/     Init (events, timers, modules), Log (+ error capture: SK:Safe,
           (where to learn: recipe items, trainers), GearIndex (who wears
           it), Onboarding (Getting started),
           Export (plain text for Copy), Feed (local milestones,
-          never synced), Overview (numbers for the Overview tab)
+          never synced), Overview (numbers for the Overview tab),
+          ShortWords (v0.7.0 word game: rules, results, leaderboards)
 Data/     Professions, Recipes (GENERATED by tools/recipes.js), Attunements
-          (quest IDs), Factions, Enchants
+          (quest IDs), Factions, Enchants, Words (GENERATED by tools/words.js)
 Collect/  Character, Talents, Professions (recipe scan), Reputation,
           Attunements, Profile (full/public copies, cooldowns, main)
 Sync/     Codec (LibSerialize stable → LibDeflate), Merge (rules), Sync (protocol)
@@ -513,14 +550,15 @@ UI/       Theme (EVERY colour/font/size/spacing/motion value, the accent),
           Needs a look, Raids, Milestones),
           RosterTab (+ raid filter, Oldest first), CharacterTab (+ Ask for
           latest), CraftersTab (+ reagents, Favourites chip), ProfessionsTab
-          (board / one profession / cooldowns), SettingsTab, DebugWindow,
+          (board / one profession / cooldowns), WordsTab (Short Words),
+          SettingsTab, DebugWindow,
           Minimap, Tooltip
 Media/    Fonts.xml (Inter and Arial Narrow families + CJK fallback),
           Fonts/ (Chakra Petch, Inter, both OFL), Textures/ (crest, sidebar
           icons, pill, chevron, arrow, close, dot, ring, star .tga)
 preview/  browser mock-up of every window (theme.css/js generated)
 tools/    textures.js (draws Media/Textures), preview-tokens.js, recipes.js
-          (Data/Recipes.lua from wago.tools)
+          (Data/Recipes.lua from wago.tools), words.js (Data/Words.lua)
 Libs/     vendored Ace3 bits, LibSerialize, LibDeflate; LDB + LibDBIcon via .pkgmeta
 tests/    busted specs; tests/helpers/wow.lua is the stubbed WoW API
 docs/     FEATURE-REVIEW.md, SECURITY-REVIEW.md, mockups/render.js, images/ (+ before/), prompts/,
@@ -946,31 +984,16 @@ messages → sender ignored for the session).
   (not persistent); rebuild with lua.org 5.1.5 + LuaRocks if needed.
 
 ## Waiting on the user (remind them when relevant)
-Full post-launch checklist: PLAN.md section 10.
-Done on 5 Nov: interface 16001 confirmed, the addon loads, GUID stable,
-a test send worked. The Mac AddOns path is still not confirmed by name
-(the owner installed successfully).
-0. **Owner, 11 Nov (v0.4.5 in game): "All works fine"**, only the menu
-   hover bug (fixed in v0.4.6). Their Levelling menu listed Tailoring
-   120/150, Enchanting 79/150, Cooking 93/150, First Aid 41/75, Fishing
-   91/150. Still not reported: the items below.
-1. v0.4.4 is out: a new `/sr debug` (skill-up colour check, TESTING 145;
-   send errors after the v0.4.2 fix; Tailoring/First Aid stay "scanned yes",
-   TESTING 138), TESTING 140–144 (character model) and 145–149 (levelling,
-   crest icon, no tagline).
-2. v0.4.5 is out: TESTING 150–154, especially whether the bank count
-   works away from the bank (152).
-2c. v0.5.5 is out: TESTING 167–183. Most useful: `/sr debug` lines "Where to
-   learn" and "Trainers" (after opening a profession window and a trainer),
-   where the panel sits, and whether TSM accepts "Copy for TSM".
-2b. v0.4.6: "Prices:" line received 11 Nov (TSM works, Auctionator "no").
-   Still: is Auctionator installed? Do Profit's numbers look right (157)?
-   And the colour-check line after opening a profession window.
-3. The Warband currency `/run` test (TESTING 124): if it lists their own
-   alts, automatic "my alts" can be built on it. Otherwise alts stay as now.
-5. v0.6.0 is out: TESTING 187–196 in game (fonts, accent, sidebar icons, cut-off text).
-4. Onyxia attunement: whether any Horde members exist (Horde chain differs), and
-   in-game check that the Drakefire Amulet check works.
+Cleaned up 13 Nov (owner: v0.6.0 "looks fine", character model "looks
+fine", alts "look fine", guild is **Alliance only**). TESTING.md was cut to
+what's still open and **renumbered**; older TESTING numbers in this file
+refer to `git show v0.6.0:TESTING.md`.
+1. TESTING.md 1–5: Onyxia amulet check, real cooldowns only, where to learn
+   at a trainer, who wears it, the reminder bar's Open button.
+2. v0.7.0 Short Words: release when the owner says "put it on main", then
+   TESTING.md 6–12.
+3. CurseForge: rename the project from "Short Kings" and archive the old
+   files (owner's job, `docs/CURSEFORGE.md`).
 
 ## Answers already given to the guild (stay consistent)
 - **Alts:** linked automatically once each alt has logged in with the addon
