@@ -12,7 +12,7 @@ local DEFAULTS = {
 		debug = false,
 		minimap = { hide = false, minimapPos = 210 },
 		window = { point = "CENTER", x = 0, y = 0, scale = 1 },
-		share = { gear = true, recipes = true }, -- privacy toggles (A7)
+		share = { gear = true, recipes = true, words = true }, -- privacy toggles (A7; words v0.7.0)
 		groupAlts = true,                         -- Roster: alts under their main
 		main = nil,                               -- guid of the player's main
 		roster = { raid = nil, attFilter = "all", maxLevelOnly = true }, -- Raid filter (v0.1.2)
@@ -28,6 +28,8 @@ local DEFAULTS = {
 		accent = "pink",                          -- v0.6.0 accent colour: pink, gold or class
 		font = "inter",                           -- v0.6.0 body font: inter or narrow (after a reload)
 		settingsView = "general",                 -- v0.6.0 Settings page tab: general or advanced
+		wordsView = "daily",                      -- v0.7.0 Short Words page tab: daily or free
+		wordsBoard = "today",                     -- v0.7.0 Short Words leaderboard: today or all
 	},
 	own = {},             -- [guid] = full profile of our own characters (never sent)
 	cooldownSpells = {},  -- [guid] = { [recipeID] = true } recipes with cooldowns
@@ -44,6 +46,7 @@ local DEFAULTS = {
 	scanKeep = {},  -- [guid] = { [skillLine] = { scanned, rank, recipes } } scans of professions missing from the last read (v0.4.2, local)
 	scanRank = {},  -- [guid] = { [skillLine] = skill when the recipes were last scanned } (nudges, local)
 	nudgedAt = nil, -- last "open your profession window" chat reminder
+	words = { chars = {}, free = {} }, -- Short Words games and results (v0.7.0); results shared via the profile
 	guilds = {},
 }
 

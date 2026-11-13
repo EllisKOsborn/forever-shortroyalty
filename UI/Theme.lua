@@ -53,6 +53,10 @@ Theme.COLOR = {
 	skillYellow = { 1.000, 1.000, 0.000, 1 },  -- #FFFF00 yellow: usually
 	skillGreen  = { 0.251, 0.749, 0.251, 1 },  -- #40BF40 green: sometimes
 	skillGrey   = { 0.502, 0.502, 0.502, 1 },  -- #808080 grey: never
+	-- Short Words tiles (v0.7.0): darker than "good" so white letters read on them.
+	wordHit   = { 0.247, 0.561, 0.341, 1 },    -- #3F8F57 right letter, right place
+	wordNear  = { 0.722, 0.588, 0.180, 1 },    -- #B8962E in the word, elsewhere
+	wordMiss  = { 0.200, 0.200, 0.220, 1 },    -- #333338 not in the word
 }
 
 -- Alphas used with a colour (a tint, a selected row).
@@ -297,6 +301,8 @@ Theme.SIZES = {
 	cardRow = 28,           -- a row in a panel (Overview, Settings)
 	settingRow = 42,        -- a setting with a sentence under its name
 	switch = { 28, 16 },    -- on/off switch
+	tile = 40,              -- a Short Words letter tile (v0.7.0)
+	key = { 26, 30 },       -- an on-screen keyboard key
 	titleBar = 52,          -- (v0.5) kept for older callers
 	tabBar = 32,
 	pad = 16,           -- window inner margin
@@ -339,6 +345,7 @@ Theme.TEX = {
 	crafters = MEDIA .. "Textures\\icon-crafters",
 	professions = MEDIA .. "Textures\\icon-professions",
 	settings = MEDIA .. "Textures\\icon-settings",
+	words = MEDIA .. "Textures\\icon-words",
 }
 
 -- Inline round dot ("|T...|t") in a theme colour, for text.
@@ -346,6 +353,14 @@ function Theme.Dot(name, size)
 	local r, g, b = Theme.RGB(name)
 	size = size or 8
 	return string.format("|T%s:%d:%d:0:0:16:16:0:16:0:16:%d:%d:%d|t", Theme.TEX.dot, size, size,
+		math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
+end
+
+-- Inline square in a theme colour (Short Words colour patterns).
+function Theme.Square(name, size)
+	local r, g, b = Theme.RGB(name)
+	size = size or 12
+	return string.format("|T%s:%d:%d:0:0:8:8:0:8:0:8:%d:%d:%d|t", Theme.TEX.white, size, size,
 		math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
 end
 

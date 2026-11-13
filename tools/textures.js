@@ -145,6 +145,9 @@ const ICONS = {
   "icon-professions": [line([12, 5], [20, 5], W2, WHITE), line([13, 5], [13, 13], W2, WHITE), line([19, 5], [19, 13], W2, WHITE),
     line([13, 13], [6, 25], W2, WHITE), line([19, 13], [26, 25], W2, WHITE), line([6, 25], [8, 27], W2, WHITE),
     line([26, 25], [24, 27], W2, WHITE), line([8, 27], [24, 27], W2, WHITE), line([10, 20], [22, 20], W2, WHITE)],
+  // Short Words: a row of three letter tiles over two more
+  "icon-words": [...box(3.5, 6, 11, 13.5), ...box(12.5, 6, 20, 13.5), poly([[21, 6], [28.5, 6], [28.5, 13.5], [21, 13.5]], WHITE),
+    poly([[8, 18.5], [15.5, 18.5], [15.5, 26], [8, 26]], WHITE), ...box(17, 18.5, 24.5, 26)],
   "icon-settings": [line([5, 10], [17, 10], W2, WHITE), line([24, 10], [27, 10], W2, WHITE), ring(20.5, 10, 3.2, W2, WHITE),
     line([5, 22], [8, 22], W2, WHITE), line([15, 22], [27, 22], W2, WHITE), ring(11.5, 22, 3.2, W2, WHITE)],
 };

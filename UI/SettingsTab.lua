@@ -67,6 +67,12 @@ function Settings:Build(page)
 			SK.Profile:BuildSelf()
 			SK:Print(v and "Your recipes will be shared." or "Your recipes are now private.")
 		end)
+	sharing:AddSwitch("Share my Short Words results", "Your scores on the leaderboards; never your letters.",
+		function() return s.share.words ~= false end, function(v)
+			s.share.words = v
+			SK.Profile:BuildSelf()
+			SK:Print(v and "Your Short Words results will be shared." or "Your Short Words results are now private.")
+		end)
 	sharing:Finish()
 	sharing:SetNote("Notes and officer notes are never shared.")
 	self.sharing = sharing

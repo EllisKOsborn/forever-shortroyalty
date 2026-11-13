@@ -60,7 +60,7 @@ for (const [k, v] of Object.entries(tokens.size)) css += `  --fs-${k}: ${v}px;\n
 for (const [k, v] of Object.entries(sizes)) css += `  --sz-${k}: ${v}px;\n`;
 for (const [k, v] of Object.entries(tokens.motion)) css += `  --mo-${k}: ${k === "openScale" ? v : v * 1000 + "ms"};\n`;
 for (const t of ["crest", "arrow", "close", "dot", "ring", "star", "pill", "chevron", "icon-overview", "icon-roster",
-  "icon-character", "icon-crafters", "icon-professions", "icon-settings"]) {
+  "icon-character", "icon-crafters", "icon-professions", "icon-settings", "icon-words"]) {
   css += `  --tex-${t}: url(data:image/png;base64,${b64("preview/img/" + t + ".png")});\n`;
 }
 css += "}\n";

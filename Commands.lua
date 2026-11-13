@@ -348,6 +348,7 @@ local HELP = {
 	"/sr sync - share your data now",
 	"/sr reset - centre the window",
 	"/sr who <item> - who in the guild wears it (Shift-click an item, or type part of its name)",
+	"/sr words - play Short Words",
 }
 Commands.HELP = HELP
 
@@ -370,6 +371,8 @@ function Commands.Run(msg)
 		Commands.Who(msg:match("^%s*%S+%s*(.-)%s*$"))
 	elseif cmd == "reset" then
 		SK.MainFrame:ResetPosition()
+	elseif cmd == "words" then
+		SK.MainFrame:Open("words", true)
 	else
 		for _, line in ipairs(HELP) do SK:Print(line) end
 	end

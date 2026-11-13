@@ -49,6 +49,7 @@ function Profile.Public(p, share)
 		pub.recipes, pub.cds = nil, nil
 		hidden.recipes = true
 	end
+	if share and share.words == false then pub.words = nil end -- Short Words results (v0.7.0)
 	pub.hidden = next(hidden) and hidden or nil
 	return pub
 end
@@ -66,6 +67,7 @@ local SHARING = {
 	{ "Reputations", function(p) return p.reps ~= nil end },
 	{ "Raid attunements (and whether the Drakefire Amulet is in your bags)", function(p) return p.att ~= nil end },
 	{ "Which characters are yours, and your main", function(p) return p.family ~= nil end },
+	{ "Short Words results (never your letters)", function(p) return p.words ~= nil end },
 }
 Profile.NEVER_SHARED = "Notes and officer notes, gold, bag and bank contents (except the amulet yes/no), chat, location"
 
@@ -155,6 +157,7 @@ function Profile:BuildSelf()
 		family = familyOf(guild, guid),
 		recipes = {},
 		cds = {},
+		words = SK.ShortWords and SK.ShortWords.Field(guid) or nil,
 	}
 	-- Keep scan results for professions the character still has. The game's
 	-- profession list can come back incomplete (just after login, on a loading
@@ -191,6 +194,17 @@ function Profile:BuildSelf()
 	end
 	refreshCooldowns(guid, p.cds, now)
 	return self:Commit(guild, p, now)
+end
+
+-- Called by Short Words when a game finishes (v0.7.0).
+function Profile:SetWords()
+	local guild = SK.DBM:Guild()
+	if guild and not self:Own() then return self:BuildSelf() end
+	local own = self:Own()
+	if not guild or not own then return false end
+	local p = SK.CopyTable(own)
+	p.words = SK.ShortWords.Field(own.guid)
+	return self:Commit(guild, p, Compat.Now())
 end
 
 -- Called by Professions after a recipe scan.

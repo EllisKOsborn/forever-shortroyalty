@@ -181,7 +181,7 @@ describe("Main window", function()
 		local groups = {}
 		for _, tab in ipairs(SK.MainFrame.tabs) do groups[#groups + 1] = tab.key .. ":" .. tab.group end
 		assert.same({ "overview:guild", "roster:guild", "character:guild", "crafters:crafting", "professions:crafting",
-			"settings:settings" }, groups)
+			"words:games", "settings:settings" }, groups)
 		assert.equal("ROSTER", f.pageTitle:GetText())
 		assert.truthy(f.desc:GetText():find("Everyone in the guild", 1, true))
 		assert.is_true(f.navButtons[2].active)

@@ -83,6 +83,7 @@ local function plain(v, depth)
 end
 
 local isNum = function(k) return finite(k) end
+local function int(v, lo, hi) return finite(v) and v == math.floor(v) and v >= lo and v <= hi end
 
 local FIELDS = {
 	guid = function(v) return type(v) == "string" and #v >= 3 and #v <= L.str end,
@@ -140,6 +141,28 @@ local FIELDS = {
 	-- checks the field, since guildmates on v0.3.6 keep sending it.
 	-- v0.4.0 sent raid roles { main = "TANK"|"HEALER"|"DPS", second = ... };
 	-- v0.4.1 removed the Raids tab but still checks the field (v0.4.0 clients send it).
+	-- Short Words results (v0.7.0): numbers in range and a colour pattern
+	-- ("20110,22222"), never letters.
+	words = function(v)
+		if v == nil then return true end
+		return each(v, 4, function(k, x)
+			if k == "d" then
+				return each(x, 5, function(f, y)
+					if f == "won" then return type(y) == "boolean" end
+					if f == "p" then return type(y) == "string" and #y <= 41 and y:match("^[012,]*$") ~= nil end
+					if f == "day" or f == "g" then return int(y, 0, 1e6) end
+					if f == "at" then return finite(y) end
+					return false
+				end)
+			elseif k == "ds" or k == "f" or k == "ft" then
+				return each(x, 6, function(f, y)
+					return (f == "n" or f == "w" or f == "g" or f == "cs" or f == "bs" or f == "last" or f == "run"
+						or f == "best" or f == "day") and int(y, 0, 1e7)
+				end)
+			end
+			return false
+		end)
+	end,
 	roles = function(v)
 		if v == nil then return true end
 		if type(v) ~= "table" then return false end

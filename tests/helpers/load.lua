@@ -13,8 +13,8 @@ local FILES = {
 	"Core/CraftIndex.lua", "Core/Favourites.lua", "Core/Reagents.lua", "Core/ProfBoard.lua",
 	"Core/RecipeDB.lua", "Core/Onboarding.lua",
 	"Core/Export.lua", "Core/Learn.lua",
-	"Core/GearIndex.lua", "Core/Feed.lua", "Core/Overview.lua",
-	"Data/Professions.lua", "Data/Recipes.lua", "Data/Attunements.lua", "Data/Factions.lua", "Data/Enchants.lua",
+	"Core/GearIndex.lua", "Core/Feed.lua", "Core/Overview.lua", "Core/ShortWords.lua",
+	"Data/Professions.lua", "Data/Recipes.lua", "Data/Attunements.lua", "Data/Factions.lua", "Data/Enchants.lua", "Data/Words.lua",
 	"Collect/Character.lua", "Collect/Talents.lua", "Collect/Professions.lua",
 	"Collect/Reputation.lua", "Collect/Attunements.lua", "Collect/Profile.lua",
 	"Sync/Codec.lua", "Sync/Frames.lua", "Sync/Merge.lua", "Sync/Sync.lua",
@@ -23,7 +23,7 @@ local FILES = {
 -- UI files in TOC order (the stubbed frames are enough for them to build).
 local UI_FILES = {
 	"UI/Theme.lua", "UI/Motion.lua", "UI/Widgets.lua", "UI/MainFrame.lua", "UI/OverviewTab.lua", "UI/RosterTab.lua",
-	"UI/CharacterTab.lua", "UI/CraftersTab.lua", "UI/ProfessionsTab.lua", "UI/SettingsTab.lua", "UI/DebugWindow.lua",
+	"UI/CharacterTab.lua", "UI/CraftersTab.lua", "UI/ProfessionsTab.lua", "UI/WordsTab.lua", "UI/SettingsTab.lua", "UI/DebugWindow.lua",
 	"UI/Minimap.lua", "UI/Tooltip.lua", "Commands.lua",
 }
 

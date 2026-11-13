@@ -12,7 +12,8 @@ Main.tabs = {}        -- ordered { key, title, module, group, desc, icon }
 Main.FRAME_NAME = "ShortRoyaltyMainFrame"
 
 -- Sidebar sections, in order. The settings group has no label.
-Main.GROUPS = { { key = "guild", title = "Guild" }, { key = "crafting", title = "Crafting" }, { key = "settings" } }
+Main.GROUPS = { { key = "guild", title = "Guild" }, { key = "crafting", title = "Crafting" }, { key = "games", title = "Games" },
+	{ key = "settings" } }
 
 -- Tab modules call this at load time. module:Build(page) once,
 -- module:Refresh() whenever data changes while the tab is visible.
