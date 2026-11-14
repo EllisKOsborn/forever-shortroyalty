@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.7.2 (not released yet): Short Words on flights
+## v0.7.2 (14 Nov 2026): Short Words on flights
 
 - When you take a **flight path**, a small box near the top of the screen
   offers a game: "Flying? Play Short Words". It says *Today's word is

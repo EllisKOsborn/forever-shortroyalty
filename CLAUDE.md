@@ -29,7 +29,7 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
-- **v0.7.2 (on branch `claude/short-kings-addon-hlf0t4`, not released):
+- **v0.7.2 (released 14 Nov on `main`, owner: "Push to main"):
   Short Words on flights** (owner: "Go as that's a good idea" to: small box,
   not the whole window; closes on landing; Settings switch, default on).
   `UI/FlightWords.lua`: PLAYER_CONTROL_LOST (+0.5 s) and `Compat.OnTaxi`
@@ -282,7 +282,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   **`docs/prompts/next-design-v2.md`** (v0.6.0). Licences: Polestar GPL v3
   (github.com/fitzforge/polestar), EllesmereUI custom all rights reserved,
   FojjiCore All Rights Reserved: **inspiration only**, never code/art.
-- **Next:** v0.7.1 is released; get TESTING.md 6–14 from the owner, then what they pick from
+- **Next:** v0.7.2 is released; get TESTING.md 6–17 from the owner, then what they pick from
   PLAN.md (raids re-plan before 9 Dec, craft requests, levelling rework…). Still useful from v0.5.5: TESTING 167–169, 181–185.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
@@ -551,7 +551,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
   (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed); **v0.5.7** (12 Nov, cooldown
-  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours). Tag only when
+  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights). Tag only when
   the user asks.
 
 ## Layout
@@ -1024,8 +1024,7 @@ what's still open and **renumbered**; older TESTING numbers in this file
 refer to `git show v0.6.0:TESTING.md`.
 1. TESTING.md 1–5: Onyxia amulet check, real cooldowns only, where to learn
    at a trainer, who wears it, the reminder bar's Open button.
-2. v0.7.0 and v0.7.1 Short Words are out: TESTING.md 6–14; v0.7.2
-   (flights, not released yet): 15–17.
+2. v0.7.0–v0.7.2 Short Words are out: TESTING.md 6–14; flights 15–17.
 3. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
 
