@@ -59,7 +59,7 @@ different, and the sidebar has room for Levelling or Raids when they return.
 | onAccent | black or white, whichever has more contrast (`Theme.InkOn`) | text on an accent fill | |
 | **spark** | `#FF6A1A` | alerts only: old data, missing enchants, an update, errors, the reminder bars | anything else |
 | good / bad | `#4CC38A` / `#E5484D` | synced, online, attuned, ready, shared / not attuned | |
-| wordHit / wordNear / wordMiss | `#3F8F57` / `#B8962E` / `#333338` | Short Words tiles and keys: right place / elsewhere in the word / not in it (darker than good so white letters read) | anything else |
+| wordHit / wordNear / wordMiss | `#3F8F57` / `#B8962E` / `#943636` | Short Words tiles and keys: right place / elsewhere in the word / not in it (red since v0.7.1, the guild asked; all darker than good/bad so white letters read) | anything else |
 
 The accent is one colour (v0.6.0; before, gold meant "where you are" and
 pink "what you picked", so three bright colours competed). The UI never

@@ -44,6 +44,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   day, ~400 days) and `guildBest`. UI: Daily page status
   `Words.GuildStreakText`; `SW.ShareText(game, streak, guildStreak)`.
   Tests in `tests/v070_words_spec.lua`; TESTING.md 13.
+  Also in v0.7.1 (guild asked): `wordMiss` is red `#943636` (was dark grey),
+  on tiles, keys and tooltip patterns.
 - **v0.7.0 (released 13 Nov on `main`, owner: "Push to main"): Short Words** (owner: "build Short
   Words. One word a day mode and a free for all mode where they can keep
   going. Leaderboard for today, all time. Separated by mode."). Not called

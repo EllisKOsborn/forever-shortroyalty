@@ -39,7 +39,7 @@ git history (`git show v0.6.0:TESTING.md`).
    green square).
 7. [ ] **Daily:** click the board, type a word, press Enter. Tiles turn
    green (right letter, right place), yellow (in the word, wrong place) or
-   grey. A made-up word says "Not in the word list" and doesn't use a turn.
+   red (not in the word). A made-up word says "Not in the word list" and doesn't use a turn.
    The on-screen keys work too, and Esc stops typing so you can move again.
 8. [ ] After the daily word, the board stays solved for the rest of the day,
    also on your alts ("Played on …"), and the next word comes at midnight

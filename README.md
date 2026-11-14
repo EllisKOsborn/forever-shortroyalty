@@ -160,7 +160,7 @@ character** knows (no backup), and which professions nobody has.
 
 Guess the five-letter word in six tries. After each guess the tiles show
 **green** (right letter, right place), **yellow** (in the word, somewhere
-else) or **grey** (not in the word); the keyboard keeps track.
+else) or **red** (not in the word); the keyboard keeps track.
 
 - **Daily:** the same word for the whole guild, a new one every day at
   midnight UTC (Short Words #1 was 13 Nov 2026). One go per account: once

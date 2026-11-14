@@ -56,7 +56,7 @@ Theme.COLOR = {
 	-- Short Words tiles (v0.7.0): darker than "good" so white letters read on them.
 	wordHit   = { 0.247, 0.561, 0.341, 1 },    -- #3F8F57 right letter, right place
 	wordNear  = { 0.722, 0.588, 0.180, 1 },    -- #B8962E in the word, elsewhere
-	wordMiss  = { 0.200, 0.200, 0.220, 1 },    -- #333338 not in the word
+	wordMiss  = { 0.580, 0.212, 0.212, 1 },    -- #943636 not in the word (v0.7.1: red, guild asked; dark so white letters read)
 }
 
 -- Alphas used with a colour (a tint, a selected row).

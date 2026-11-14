@@ -7,6 +7,8 @@
   counts once 3 have played; until then it says how many have, and the
   streak doesn't break while the day is still going.
 - **Share in guild chat** adds the guild streak ("· guild streak 5").
+- Letters that aren't in the word are now **red** instead of dark grey, on
+  the board, the keyboard and in the colour patterns (the guild asked).
 - Each player now shares which daily words they played (the last 60, day
   numbers only), so everyone sees the same streak. Turning off *Share my
   Short Words results* stops that too. Guildmates still on v0.7.0 pass it
