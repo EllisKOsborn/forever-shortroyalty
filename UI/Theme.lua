@@ -57,6 +57,11 @@ Theme.COLOR = {
 	wordHit   = { 0.247, 0.561, 0.341, 1 },    -- #3F8F57 right letter, right place
 	wordNear  = { 0.722, 0.588, 0.180, 1 },    -- #B8962E in the word, elsewhere
 	wordMiss  = { 0.580, 0.212, 0.212, 1 },    -- #943636 not in the word (v0.7.1: red, guild asked; dark so white letters read)
+	-- Colour-blind colours (v0.7.1, a toggle on the Short Words page): orange
+	-- and blue instead of green and red, which many colour-blind players mix up.
+	wordHitCB  = { 0.851, 0.443, 0.122, 1 },   -- #D9711F right letter, right place
+	wordNearCB = { 0.231, 0.510, 0.769, 1 },   -- #3B82C4 in the word, elsewhere
+	wordMissCB = { 0.227, 0.227, 0.251, 1 },   -- #3A3A40 not in the word
 }
 
 -- Alphas used with a colour (a tint, a selected row).

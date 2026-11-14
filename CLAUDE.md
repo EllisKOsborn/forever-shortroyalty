@@ -45,7 +45,10 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   `Words.GuildStreakText`; `SW.ShareText(game, streak, guildStreak)`.
   Tests in `tests/v070_words_spec.lua`; TESTING.md 13.
   Also in v0.7.1 (guild asked): `wordMiss` is red `#943636` (was dark grey),
-  on tiles, keys and tooltip patterns.
+  on tiles, keys and tooltip patterns; and (owner) a **colour-blind toggle**
+  under the keyboard, left of Share / Next word (`settings.wordsColourBlind`,
+  `Words.Tone(state)`, Theme `wordHitCB/NearCB/MissCB` = orange #D9711F /
+  blue #3B82C4 / grey #3A3A40). TESTING.md 14.
 - **v0.7.0 (released 13 Nov on `main`, owner: "Push to main"): Short Words** (owner: "build Short
   Words. One word a day mode and a free for all mode where they can keep
   going. Leaderboard for today, all time. Separated by mode."). Not called

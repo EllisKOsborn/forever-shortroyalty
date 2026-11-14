@@ -9,6 +9,9 @@
 - **Share in guild chat** adds the guild streak ("· guild streak 5").
 - Letters that aren't in the word are now **red** instead of dark grey, on
   the board, the keyboard and in the colour patterns (the guild asked).
+- **Colour-blind colours:** a toggle under the keyboard switches to orange
+  (right place), blue (in the word) and grey (not in it). Only on your
+  screen, remembered for your account.
 - Each player now shares which daily words they played (the last 60, day
   numbers only), so everyone sees the same streak. Turning off *Share my
   Short Words results* stops that too. Guildmates still on v0.7.0 pass it

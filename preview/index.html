@@ -699,7 +699,7 @@ function words() {
     for (let i = 0; i < 5; i++) if (out[i] === 0 && left[g[i]] > 0) { out[i] = 1; left[g[i]]--; } return out; };
   const guesses = view === "free" ? (done ? ["stair", "plume"] : ["stair"]) : (done ? ["crane", "plied", "plume"] : ["crane", "plied"]);
   const typed = done ? "" : (view === "free" ? "clo" : "plu");
-  const TONE = ["wordMiss", "wordNear", "wordHit"];
+  const TONE = S.wordsCB === "1" ? ["wordMissCB", "wordNearCB", "wordHitCB"] : ["wordMiss", "wordNear", "wordHit"];
   let tiles = "";
   const bx = (LEFT - (5 * TILE + 4 * GAP)) / 2;
   for (let r = 0; r < 6; r++) for (let c = 0; c < 5; c++) {
@@ -722,8 +722,10 @@ function words() {
   });
   const msg = done ? (view === "daily" ? `<span class="good">Solved in 3!  ·  next word in 9h 14m</span>` : `<span class="good">Solved in 2!</span>`)
     : `<span class="dim">Type a word, Enter to guess, Esc to stop typing.</span>`;
-  const after = done ? (view === "daily" ? btn("Share in guild chat", "", `style="position:absolute;left:${LEFT / 2 - 70}px;top:${ky + 3 * 34 + 8}px"`)
-    : btn("Next word", "primary", `style="position:absolute;left:${LEFT / 2 - 45}px;top:${ky + 3 * 34 + 8}px"`)) : "";
+  const by = ky + 3 * 34 + 8;
+  const after = `<span class="chip ${S.wordsCB === "1" ? "on" : ""}" data-wcb="1" style="position:absolute;left:0;top:${by + 1}px">Colour-blind colours</span>` +
+    (done ? (view === "daily" ? btn("Share in guild chat", "", `style="position:absolute;right:${T.sizes.contentW - LEFT}px;top:${by}px"`)
+    : btn("Next word", "primary", `style="position:absolute;right:${T.sizes.contentW - LEFT}px;top:${by}px"`)) : "");
   // leaderboard
   const RX = LEFT + 24, ms = G.members.filter((m) => m.hasData && !(done && view === "daily" && m.self)).slice(0, 12);
   const rows = ms.map((m, i) => ({ m, won: i % 5 !== 4, g: 2 + (i * 7) % 5, n: 20 - i, w: 18 - i - (i % 3), avg: (3.2 + (i % 5) * 0.3).toFixed(1), streak: (12 - i) % 6, best: 9 - (i % 4),
@@ -839,6 +841,7 @@ function wire() {
   document.querySelectorAll("[data-tab]").forEach((el) => (el.onclick = () => { if (S.screen === el.dataset.tab) return; S.screen = el.dataset.tab; S.menuOpen = false; S.optOpen = false; seg("segScreen"); render({ reveal: true }); }));
   document.querySelectorAll("[data-pv]").forEach((el) => (el.onclick = () => { S.profView = el.dataset.pv; S.prof = null; S.crafter = null; render(); }));
   document.querySelectorAll("[data-wv]").forEach((el) => (el.onclick = () => { S.wordsView = el.dataset.wv; render(); }));
+  document.querySelectorAll("[data-wcb]").forEach((el) => (el.onclick = () => { S.wordsCB = S.wordsCB === "1" ? "0" : "1"; render(); }));
   document.querySelectorAll("[data-wb]").forEach((el) => (el.onclick = () => { S.wordsBoard = el.dataset.wb; render(); }));
   document.querySelectorAll("[data-sv]").forEach((el) => (el.onclick = () => { S.setView = el.dataset.sv; render(); }));
   document.querySelectorAll("[data-accent]").forEach((el) => (el.onclick = () => { S.accent = el.dataset.accent; render(); }));
@@ -916,7 +919,7 @@ function seg(id) {
 try { Object.assign(S, JSON.parse(localStorage.getItem("skPreview") || "{}")); } catch (e) { /* ignore */ }
 // ?screen=roster&data=worst&view=before&raid=ony  (and &shot=1 for the README pictures: window only, no chrome)
 const Q = new URLSearchParams(location.search);
-for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone"]) if (Q.get(k)) S[k] = Q.get(k);
+for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB"]) if (Q.get(k)) S[k] = Q.get(k);
 const SHOT = Q.get("shot");
 if (SHOT) {
   document.body.classList.add("shot"); S.view = SHOT === "compare" ? "before" : "after"; S.reduce = true;

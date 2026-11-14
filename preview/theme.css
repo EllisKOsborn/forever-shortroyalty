@@ -36,6 +36,9 @@
   --wordHit: rgba(63, 143, 87, 1);
   --wordNear: rgba(184, 150, 46, 1);
   --wordMiss: rgba(148, 54, 54, 1);
+  --wordHitCB: rgba(217, 113, 31, 1);
+  --wordNearCB: rgba(59, 130, 196, 1);
+  --wordMissCB: rgba(58, 58, 64, 1);
   --accent-selected: rgba(240, 107, 176, 0.16);
   --spark-alert: rgba(255, 106, 26, 0.14);
   --sp-xxs: 2px;

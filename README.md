@@ -180,6 +180,9 @@ else) or **red** (not in the word); the keyboard keeps track.
     streak.
   - *Free for all:* words solved, games played (today) or win % and best run
     of wins (all time), average guesses.
+- **Colour-blind colours:** the toggle under the keyboard swaps to orange
+  (right place), blue (in the word) and grey (not in it). Only on your
+  screen.
 - **Typing:** click the board and type, Enter to guess, Esc to stop typing
   (your movement keys work again). The on-screen keys work too. Made-up
   words ("Not in the word list") don't use a turn.

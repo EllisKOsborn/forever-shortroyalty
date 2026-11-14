@@ -19,7 +19,16 @@ Words.LEFT_W = 10 * S.key[1] + 9 * SP.xs                       -- the keyboard's
 Words.RIGHT_W = S.contentW - Words.LEFT_W - SP.xl - SP.xs       -- leaderboard (424)
 local TILE, GAP = S.tile, SP.xs + 1
 local KEY_ROWS = { "qwertyuiop", "asdfghjkl", "zxcvbnm" }
-local TONE = { [0] = "wordMiss", [1] = "wordNear", [2] = "wordHit" }
+local TONES = {
+	normal = { [0] = "wordMiss", [1] = "wordNear", [2] = "wordHit" },
+	colourBlind = { [0] = "wordMissCB", [1] = "wordNearCB", [2] = "wordHitCB" },
+}
+
+-- The theme colour for a tile state (0 not in the word, 1 elsewhere, 2 right
+-- place), in the colours the player picked. Pure apart from the setting; tested.
+function Words.Tone(state)
+	return TONES[SK.DB.settings.wordsColourBlind and "colourBlind" or "normal"][state]
+end
 
 ---------------------------------------------------------------------------
 -- Leaderboard columns (424 - 12 = 412) and cells
@@ -71,7 +80,7 @@ function Words.PatternLines(p)
 	local lines = {}
 	for row in (p or ""):gmatch("[012]+") do
 		local sq = {}
-		for i = 1, #row do sq[i] = Theme.Square(TONE[tonumber(row:sub(i, i))], 12) end
+		for i = 1, #row do sq[i] = Theme.Square(Words.Tone(tonumber(row:sub(i, i))), 12) end
 		lines[#lines + 1] = table.concat(sq, " ")
 	end
 	return lines
@@ -116,8 +125,8 @@ local function tile(parent)
 			Theme.Solid(self.bg, "surface")
 			Theme.SetBorderColor(self, state == "typed" and "dim" or "line")
 		else
-			Theme.Solid(self.bg, TONE[state])
-			Theme.SetBorderColor(self, TONE[state])
+			Theme.Solid(self.bg, Words.Tone(state))
+			Theme.SetBorderColor(self, Words.Tone(state))
 		end
 	end
 	t:Set(nil)
@@ -134,7 +143,7 @@ local function key(parent, label, width, onClick)
 	k.label:SetText(label)
 	k.state = false
 	function k:Paint(hover)
-		if self.state then Theme.Solid(self.bg, TONE[self.state])
+		if self.state then Theme.Solid(self.bg, Words.Tone(self.state))
 		else Theme.Solid(self.bg, hover and "lineStrong" or "raised") end
 	end
 	k:SetScript("OnEnter", function(self) self:Paint(true) end)
@@ -229,11 +238,20 @@ function Words:Build(page)
 	self.keyboard = kb
 
 	-- Under the keyboard: Share (daily, when done) or Next word (free).
+	-- Under the keyboard: the colour-blind toggle on the left, Share (daily,
+	-- when done) or Next word (free) on the right.
+	self.colourBlind = W.Chip(page, "Colour-blind colours", function()
+		s.wordsColourBlind = not s.wordsColourBlind
+		Words:Refresh()
+	end)
+	self.colourBlind:SetPoint("TOPLEFT", kb, "BOTTOMLEFT", 0, -SP.m - 1)
+	self.colourBlind.tooltip = "Orange (right place), blue (in the word) and grey (not in it) instead of " ..
+		"green, yellow and red. Only on your screen."
 	self.share = W.Button(page, "Share in guild chat", nil, S.control, function() Words:Share() end)
-	self.share:SetPoint("TOP", kb, "BOTTOM", 0, -SP.m)
+	self.share:SetPoint("TOPRIGHT", kb, "BOTTOMRIGHT", 0, -SP.m)
 	self.share.tooltip = "Types your result into guild chat (no letters). Press Enter to send it."
 	self.nextWord = W.Button(page, "Next word", nil, S.control, function() Words:Next() end, "primary")
-	self.nextWord:SetPoint("TOP", kb, "BOTTOM", 0, -SP.m)
+	self.nextWord:SetPoint("TOPRIGHT", kb, "BOTTOMRIGHT", 0, -SP.m)
 
 	-- Typing: an invisible edit box holds the current row's letters.
 	local input = CreateFrame("EditBox", nil, page)
@@ -450,6 +468,7 @@ function Words:Refresh()
 	if not self:CanPlay(game) then self:StopTyping() end
 	self:DrawBoard()
 	self:DrawMessage()
+	self.colourBlind:SetActive(SK.DB.settings.wordsColourBlind and true or false)
 	self.share:SetShown(view == "daily" and game.done)
 	self.nextWord:SetShown(view == "free" and game.done)
 	local now = Compat.Now()
