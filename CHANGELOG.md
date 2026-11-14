@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.7.1 (not released yet): Guild streak
+## v0.7.1 (14 Nov 2026): Guild streak, red letters, colour-blind colours
 
 - **Short Words → Daily** now shows the **guild streak**: how many days in a
   row at least 3 guildmates have played the daily word (won or not). Today

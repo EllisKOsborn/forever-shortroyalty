@@ -29,7 +29,7 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
-- **v0.7.1 (built 14 Nov, not released): guild streak** (owner: "Add that
+- **v0.7.1 (released 14 Nov on `main`, owner: "post to main"): guild streak** (owner: "Add that
   then", after a guildmate asked for a Discord-style "streak together"; the
   real NYT Wordle can't be used: addons have no internet and the content is
   the NYT's). A day counts when `SW.GUILD_MIN` (3, chosen by me; tell the
@@ -269,7 +269,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   **`docs/prompts/next-design-v2.md`** (v0.6.0). Licences: Polestar GPL v3
   (github.com/fitzforge/polestar), EllesmereUI custom all rights reserved,
   FojjiCore All Rights Reserved: **inspiration only**, never code/art.
-- **Next:** v0.7.0 is released; get TESTING.md 6–12 from the owner, then what they pick from
+- **Next:** v0.7.1 is released; get TESTING.md 6–14 from the owner, then what they pick from
   PLAN.md (raids re-plan before 9 Dec, craft requests, levelling rework…). Still useful from v0.5.5: TESTING 167–169, 181–185.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
@@ -538,7 +538,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
   (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed); **v0.5.7** (12 Nov, cooldown
-  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words). Tag only when
+  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours). Tag only when
   the user asks.
 
 ## Layout
@@ -1010,8 +1010,7 @@ what's still open and **renumbered**; older TESTING numbers in this file
 refer to `git show v0.6.0:TESTING.md`.
 1. TESTING.md 1–5: Onyxia amulet check, real cooldowns only, where to learn
    at a trainer, who wears it, the reminder bar's Open button.
-2. v0.7.0 Short Words is out: TESTING.md 6–12. v0.7.1 (guild streak,
-   TESTING.md 13) waits for "put it on main".
+2. v0.7.0 and v0.7.1 Short Words are out: TESTING.md 6–14.
 3. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
 
