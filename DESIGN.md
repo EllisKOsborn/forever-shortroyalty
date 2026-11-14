@@ -26,6 +26,9 @@ familiar; the brand lives in colour, type and a few precise details.
   General / Advanced) sit under the header: plain text, accent underline.
   A page has one row of tabs at most; a new feature gets a tab or a sidebar
   line, never another row of buttons.
+- **Flight box** (v0.7.2, Short Words on flight paths): 320 × 56 near the
+  top of the screen (`SIZES.flightBox`, `flightBoxY`), black with an accent
+  edge, the Short Words icon, two lines, one Play button and a close.
 - **Content** 744 wide (`Theme.SIZES.contentW`). Two columns of cards on
   the Overview and Settings.
 

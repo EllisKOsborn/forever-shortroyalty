@@ -122,6 +122,11 @@ function Settings:Build(page)
 		function(v) SK.Minimap:SetShown(v) end)
 	display:AddSwitch("Reduce motion", "No window, tab or sync animations.", function() return s.reduceMotion end,
 		function(v) s.reduceMotion = v end)
+	display:AddSwitch("Short Words on flights", "A small box offers a game on flight paths.",
+		function() return s.flightWords ~= false end, function(v)
+			s.flightWords = v
+			if not v then SK.FlightWords:HideBox() end
+		end)
 	display:Finish()
 	self.display = display
 	-- Reload button, shown once the font choice differs from the one in use.

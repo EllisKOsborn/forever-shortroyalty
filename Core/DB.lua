@@ -31,6 +31,7 @@ local DEFAULTS = {
 		wordsView = "daily",                      -- v0.7.0 Short Words page tab: daily or free
 		wordsBoard = "today",                     -- v0.7.0 Short Words leaderboard: today or all
 		wordsColourBlind = false,                 -- v0.7.1 Short Words orange/blue/grey colours
+		flightWords = true,                       -- v0.7.2 offer Short Words on flight paths
 	},
 	own = {},             -- [guid] = full profile of our own characters (never sent)
 	cooldownSpells = {},  -- [guid] = { [recipeID] = true } recipes with cooldowns

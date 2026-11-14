@@ -98,6 +98,14 @@ function Compat.InCombat()
 	return InCombatLockdown and InCombatLockdown() or false
 end
 
+-- On a flight path (v0.7.2)? UnitOnTaxi is in Forever's UnitDocumentation
+-- (SecretArguments AllowedWhenUntainted: fine from our own code). pcall'd.
+function Compat.OnTaxi()
+	if not UnitOnTaxi then return false end
+	local ok, on = pcall(UnitOnTaxi, "player")
+	return ok and on == true
+end
+
 function Compat.InChatLockdown()
 	if has("C_ChatInfo", "InChatMessagingLockdown") then
 		return C_ChatInfo.InChatMessagingLockdown() and true or false

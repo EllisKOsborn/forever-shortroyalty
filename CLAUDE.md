@@ -29,6 +29,19 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.7.2 (on branch `claude/short-kings-addon-hlf0t4`, not released):
+  Short Words on flights** (owner: "Go as that's a good idea" to: small box,
+  not the whole window; closes on landing; Settings switch, default on).
+  `UI/FlightWords.lua`: PLAYER_CONTROL_LOST (+0.5 s) and `Compat.OnTaxi`
+  (`UnitOnTaxi("player")`, in Forever's UnitDocumentation, SecretArguments
+  AllowedWhenUntainted) → pure `Flight.Offer(enabled, inCombat, onWords,
+  daily, me)` → box `ShortRoyaltyFlightWords` (`SIZES.flightBox` 320 × 56,
+  `flightBoxY` 140, in UISpecialFrames). Play sets `settings.wordsView` and
+  opens the window; `Flight.opened` only when the window wasn't already
+  shown. Landing = PLAYER_CONTROL_GAINED or a 3 s `OnTaxi` ticker; closes
+  the box and the window if the box opened it. `OnLogin` checks after 3 s
+  (reload mid-air). `settings.flightWords` (Settings → Display). Unverified
+  in game: TESTING 15–17. Picture `short-words-flight.png` (`shot=flight`).
 - **v0.7.1 (released 14 Nov on `main`, owner: "post to main"): guild streak** (owner: "Add that
   then", after a guildmate asked for a Discord-style "streak together"; the
   real NYT Wordle can't be used: addons have no internet and the content is
@@ -571,6 +584,7 @@ UI/       Theme (EVERY colour/font/size/spacing/motion value, the accent),
           RosterTab (+ raid filter, Oldest first), CharacterTab (+ Ask for
           latest), CraftersTab (+ reagents, Favourites chip), ProfessionsTab
           (board / one profession / cooldowns), WordsTab (Short Words),
+          FlightWords (v0.7.2 box offering Short Words on flight paths),
           SettingsTab, DebugWindow,
           Minimap, Tooltip
 Media/    Fonts.xml (Inter and Arial Narrow families + CJK fallback),
@@ -1010,7 +1024,8 @@ what's still open and **renumbered**; older TESTING numbers in this file
 refer to `git show v0.6.0:TESTING.md`.
 1. TESTING.md 1–5: Onyxia amulet check, real cooldowns only, where to learn
    at a trainer, who wears it, the reminder bar's Open button.
-2. v0.7.0 and v0.7.1 Short Words are out: TESTING.md 6–14.
+2. v0.7.0 and v0.7.1 Short Words are out: TESTING.md 6–14; v0.7.2
+   (flights, not released yet): 15–17.
 3. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
 

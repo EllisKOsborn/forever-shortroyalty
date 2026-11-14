@@ -37,7 +37,7 @@ read_globals = {
 	"Auctionator", "TSM_API",
 	-- Global API
 	"GetAddOnMetadata", "GetServerTime", "GetTime", "GetBuildInfo", "IsTrialAccount",
-	"IsVeteranTrialAccount", "IsRestrictedAccount", "GameLimitedMode_IsActive", "InCombatLockdown",
+	"IsVeteranTrialAccount", "IsRestrictedAccount", "GameLimitedMode_IsActive", "InCombatLockdown", "UnitOnTaxi",
 	"IsInInstance", "UnitGUID", "UnitFullName", "UnitName", "UnitClass", "UnitRace", "UnitLevel",
 	"UnitFactionGroup", "IsInGuild", "GetGuildInfo", "GuildRoster", "GetNumGuildMembers",
 	"GetGuildRosterInfo", "GetGuildRosterLastOnline", "GetGuildRosterShowOffline",

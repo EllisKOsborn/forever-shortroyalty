@@ -23,7 +23,8 @@ local FILES = {
 -- UI files in TOC order (the stubbed frames are enough for them to build).
 local UI_FILES = {
 	"UI/Theme.lua", "UI/Motion.lua", "UI/Widgets.lua", "UI/MainFrame.lua", "UI/OverviewTab.lua", "UI/RosterTab.lua",
-	"UI/CharacterTab.lua", "UI/CraftersTab.lua", "UI/ProfessionsTab.lua", "UI/WordsTab.lua", "UI/SettingsTab.lua", "UI/DebugWindow.lua",
+	"UI/CharacterTab.lua", "UI/CraftersTab.lua", "UI/ProfessionsTab.lua", "UI/WordsTab.lua", "UI/FlightWords.lua",
+	"UI/SettingsTab.lua", "UI/DebugWindow.lua",
 	"UI/Minimap.lua", "UI/Tooltip.lua", "Commands.lua",
 }
 

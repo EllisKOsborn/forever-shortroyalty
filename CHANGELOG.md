@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.7.2 (not released yet): Short Words on flights
+
+- When you take a **flight path**, a small box near the top of the screen
+  offers a game: "Flying? Play Short Words". It says *Today's word is
+  waiting* if you haven't played the daily word yet, otherwise it offers
+  free for all.
+- **Play** opens the window on Short Words. You still click the board to
+  start typing, so your keyboard is never taken without asking.
+- When you land, the box goes away, and the window closes if the box opened
+  it (your game is saved as you go). A window you had open already stays.
+  **✕** or Esc hides the box for that flight.
+- Turn it off in Settings → Display → *Short Words on flights*.
+
 ## v0.7.1 (14 Nov 2026): Guild streak, red letters, colour-blind colours
 
 - **Short Words → Daily** now shows the **guild streak**: how many days in a

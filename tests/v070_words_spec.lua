@@ -344,3 +344,90 @@ describe("v0.7.1 Short Words colour-blind colours", function()
 		assert.is_false(SK.DB.settings.wordsColourBlind)
 	end)
 end)
+
+describe("v0.7.2 Short Words on flights", function()
+	local SK, W, F
+	before_each(function()
+		SK, W = H.load()
+		H.loadUI(SK)
+		W.member("Pip", W.player.guid)
+		SK.Identity:ReadRoster()
+		SK.Profile:BuildSelf()
+		F = SK.FlightWords
+		SK.DB.settings.reduceMotion = true -- the stub doesn't play fades
+		W.taxi = false
+		_G.UnitOnTaxi = function(u) return u == "player" and W.taxi end
+	end)
+
+	local function takeOff()
+		W.taxi = true
+		W.fire("PLAYER_CONTROL_LOST")
+		W.advance(1)
+	end
+	local function land()
+		W.taxi = false
+		W.fire("PLAYER_CONTROL_GAINED")
+		W.advance(1)
+	end
+
+	it("offers today's word, else free for all, and nothing when off, in combat or already playing", function()
+		local fresh = { done = false }
+		assert.equal("daily", F.Offer(true, false, false, fresh, "me").view)
+		assert.equal("free", F.Offer(true, false, false, { done = true }, "me").view)
+		assert.equal("free", F.Offer(true, false, false, { done = false, guid = "alt" }, "me").view) -- started on an alt
+		assert.equal("daily", F.Offer(true, false, false, { done = false, guid = "me" }, "me").view)
+		assert.is_nil(F.Offer(false, false, false, fresh, "me"))
+		assert.is_nil(F.Offer(true, true, false, fresh, "me"))
+		assert.is_nil(F.Offer(true, false, true, fresh, "me"))
+	end)
+
+	it("shows the box when a flight starts, opens Short Words on Play, and closes it on landing", function()
+		takeOff()
+		assert.is_true(F.box:IsShown())
+		assert.equal("Today's word is waiting.", F.box.text:GetText())
+		F.box.play:GetScript("OnClick")(F.box.play)
+		assert.is_false(F.box:IsShown())
+		assert.is_true(SK.MainFrame.frame:IsShown())
+		assert.equal("words", SK.MainFrame.current)
+		assert.equal("daily", SK.DB.settings.wordsView)
+		land()
+		assert.is_false(SK.MainFrame.frame:IsShown())
+		assert.is_false(F.flying)
+	end)
+
+	it("ignores stuns (control lost without a flight) and leaves a window you opened yourself", function()
+		W.fire("PLAYER_CONTROL_LOST")
+		W.advance(1)
+		assert.is_false(F.flying)
+		assert.is_falsy(F.box and F.box:IsShown())
+		SK.MainFrame:Show("roster")
+		takeOff()
+		F:Play()
+		assert.equal("words", SK.MainFrame.current)
+		land()
+		assert.is_true(SK.MainFrame.frame:IsShown()) -- it was open before the flight
+	end)
+
+	it("hides the box on landing even if the event is missed, and respects the setting", function()
+		takeOff()
+		assert.is_true(F.box:IsShown())
+		W.taxi = false
+		W.advance(F.CHECK_EVERY + 1)
+		assert.is_false(F.box:IsShown())
+		assert.is_false(F.flying)
+		SK.DB.settings.flightWords = false
+		takeOff()
+		assert.is_true(F.flying)
+		assert.is_false(F.box:IsShown())
+	end)
+
+	it("offers free for all once today's word is done", function()
+		local SW = SK.ShortWords
+		local game = SW:Daily(W.now)
+		SW:Play(game, game.word, W.player.guid, "Pip", W.now)
+		takeOff()
+		assert.equal("free", F.offer.view)
+		F:Play()
+		assert.equal("free", SK.DB.settings.wordsView)
+	end)
+end)

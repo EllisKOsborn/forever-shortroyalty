@@ -46,7 +46,7 @@
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
 | ⚒️ **Find a crafter** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
 | 🧪 **Professions** | Three page tabs: **Guild** (every profession in the guild, then each profession's crafters and recipes), **Recipes** (**every recipe in the game**, by name, group or material) and **Cooldowns**; specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
-| 🔤 **Short Words** | A five-letter word game: **Daily** (one word a day for the whole guild) and **Free for all** (keep going), each with **Today** and **All time** guild leaderboards |
+| 🔤 **Short Words** | A five-letter word game: **Daily** (one word a day for the whole guild) and **Free for all** (keep going), each with **Today** and **All time** guild leaderboards; offered on flight paths |
 | ⚙️ **Settings** | Sharing and privacy switches, accent colour, font, window size and reminders; tools and a live status read-out under **Advanced** |
 | 🧨 **Everywhere** | A sidebar window in your pick of accent colour, `/sr`, a minimap button, short guild lines on item tooltips, chat reminders and a copyable debug report |
 
@@ -190,6 +190,12 @@ else) or **red** (not in the word); the keyboard keeps track.
   for the daily word, every couple of minutes at most for free play. Turn
   sharing off in Settings → *Share my Short Words results*. Scores are on
   trust: it's for fun.
+- **On flights:** when you take a flight path, a small box offers a game
+  (today's word if you haven't played it, otherwise free for all). **Play**
+  opens Short Words; landing closes it again if the box opened it. Turn it
+  off in Settings → Display → *Short Words on flights*.
+
+<p align="center"><img src="docs/images/short-words-flight.png" alt="The box shown on a flight path: Flying? Play Short Words" width="100%"></p>
 
 <p align="center"><img src="docs/images/short-words-free.png" alt="Short Words, free for all, all-time leaderboard" width="100%"></p>
 
@@ -200,7 +206,7 @@ Two page tabs. **General** is rows of switches, each with one line saying
 what it does:
 
 - **Sharing:** *Share and receive guild data* (sync on or off), *Share my gear and talents*, *Share my recipes* (recipes, skill levels and cooldowns), *Share my Short Words results*. Notes and officer notes are never shared.
-- **Display:** **Accent colour** (pink like the crest, gold, or your class colour: it changes at once), **Font** (Inter or the game's Arial Narrow, after a reload: a *Reload now* button appears), **Window size** (a slider, 70% to 130%), *Minimap button*, **Reduce motion**.
+- **Display:** **Accent colour** (pink like the crest, gold, or your class colour: it changes at once), **Font** (Inter or the game's Arial Narrow, after a reload: a *Reload now* button appears), **Window size** (a slider, 70% to 130%), *Minimap button*, **Reduce motion**, *Short Words on flights*.
 - **Professions and tooltips:** *Guild lines in item tooltips*, *Remind me to reopen profession windows*, *Record guild milestones*.
 
 **Advanced** holds the rest:
@@ -433,7 +439,7 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [ ] **Ideas for later**: craft requests, a short status line, lockout board
 - [ ] **Later**: raid attendance, guild bank viewer and more in the [plan](PLAN.md#later-in-rough-priority-order)
 - [x] CurseForge release (every release uploads automatically)
-- [x] **v0.7.0**: **Short Words**, a daily and free-for-all word game with guild leaderboards
+- [x] **v0.7.0**: **Short Words**, a daily and free-for-all word game with guild leaderboards (v0.7.1: guild streak, colour-blind colours; v0.7.2: offered on flight paths)
 
 Testing it in game? Work through [TESTING.md](TESTING.md). The plan for launch
 week is in [PLAN.md section 10](PLAN.md#10-once-forever-is-live-from-4-nov-2026).

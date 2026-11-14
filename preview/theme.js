@@ -237,6 +237,7 @@ window.SK_THEME = {
     "cardRow": 28,
     "settingRow": 42,
     "tile": 40,
+    "flightBoxY": 140,
     "titleBar": 52,
     "tabBar": 32,
     "pad": 16,

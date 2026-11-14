@@ -36,6 +36,7 @@ const SHOTS = {
   "short-words": ["shot=1&screen=words&data=full", W, H],
   "short-words-done": ["shot=1&screen=words&data=full&wordsDone=1&wordsBoard=today", W, H],
   "short-words-colourblind": ["shot=1&screen=words&data=full&wordsDone=1&wordsCB=1", W, H],
+  "short-words-flight": ["shot=flight", 840, 180],
   "short-words-free": ["shot=1&screen=words&data=full&wordsView=free&wordsBoard=all", W, H],
   "before-after": ["shot=compare&screen=overview&data=full", 880 + W + 72, H + 84],
   "before-after-professions": ["shot=compare&screen=professions&data=full", 880 + W + 72, H + 84],

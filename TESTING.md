@@ -59,3 +59,14 @@ git history (`git show v0.6.0:TESTING.md`).
 14. [ ] **Colour-blind colours** (v0.7.1, under the keyboard): click it and
     the board, keys and leaderboard colours turn orange / blue / grey;
     click again for green / yellow / red. It's still on after a `/reload`.
+
+## v0.7.2 Short Words on flights
+
+15. [ ] Take a **flight path**: within a second a small box appears near the
+    top of the screen, "Flying? Play Short Words". It says *Today's word is
+    waiting* if you haven't played today, otherwise *Play free for all
+    until you land*.
+16. [ ] **Play** opens Short Words. When you land, the box is gone and the
+    window closes (only if the box opened it). **✕** or Esc hides the box.
+17. [ ] Getting stunned or feared (not on a flight) never shows the box,
+    and Settings → Display → *Short Words on flights* off stops it.

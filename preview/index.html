@@ -241,6 +241,14 @@
   .ttshot { position: absolute; inset: 0; display: flex; gap: 40px; padding: 36px 40px; background:
     radial-gradient(ellipse at 20% 15%, rgba(255,190,120,.30), transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(60,110,90,.45), transparent 60%),
     linear-gradient(170deg, #4a5a6a 0%, #2f3d33 55%, #1d241d 100%); }
+  .flightshot { display: flex; gap: 40px; padding: 40px; background: linear-gradient(#2b3a55, #6f7f96); width: 840px; height: 180px; box-sizing: border-box; }
+  .flightshot .cap { color: #fff; font-size: 12px; margin-bottom: 8px; opacity: .8; }
+  .flightbox { position: relative; width: 320px; height: 56px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 12px;
+    background: var(--void); border: 1px solid var(--line); }
+  .flightbox .edge { position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--accent); }
+  .flightbox .fi { width: 20px; height: 20px; color: var(--accent); -webkit-mask-image: var(--tex-icon-words); mask-image: var(--tex-icon-words); margin-right: 2px; }
+  .flightbox .ft { flex: 1; min-width: 0; font-size: 13px; color: var(--text); } .flightbox .ft .dim { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .flightbox .close { position: static; }
   .ttshot .tip { position: static; display: block; width: 330px; }
   .ttshot .cap { font: 600 12px "Chakra Petch SK", sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #fff; margin-bottom: 10px; }
 </style>
@@ -351,7 +359,7 @@ const SLOT = { 1: "Head", 2: "Neck", 3: "Shoulder", 15: "Back", 5: "Chest", 4: "
 const S = { view: "after", screen: "overview", data: "full", scale: 1, open: true, reduce: false, sort: { key: "seen", desc: false },
   accent: "pink", font: "inter", setView: "general", optOpen: false,
   search: "", raid: "none", attFilter: "all", groupAlts: true, crafterQuery: "arcanite", recipe: 0, charIdx: 1, menuOpen: false,
-  copy: false, checks: { sync: true, gear: true, recipes: true, tips: true, feed: true, nudges: true, minimap: true, reduce: false, debug: false } };
+  copy: false, checks: { sync: true, gear: true, recipes: true, tips: true, feed: true, nudges: true, minimap: true, reduce: false, debug: false, flight: true, words: true } };
 let G = makeGuild("full");
 
 // ---------------------------------------------------------------- helpers
@@ -680,12 +688,14 @@ function settings() {
   const slider = `<span class="slider"><span class="track"><b style="width:${(S.scale - 0.7) / 0.6 * 100}%"></b><i style="left:${(S.scale - 0.7) / 0.6 * 100}%"></i></span><span>${Math.round(S.scale * 100)}%</span></span>`;
   return top + setCard("Sharing", [{ name: "Share and receive guild data", desc: "Off: nothing is sent or received.", ctl: sw("sync") },
       { name: "Share my gear and talents", desc: "Gear, item level and talents.", ctl: sw("gear") },
-      { name: "Share my recipes", desc: "Recipes, skill levels and cooldowns.", ctl: sw("recipes") }], `left:0;top:${t0}px;width:${W}px`, "Notes and officer notes are never shared.")
+      { name: "Share my recipes", desc: "Recipes, skill levels and cooldowns.", ctl: sw("recipes") },
+      { name: "Share my Short Words results", desc: "Your scores on the leaderboards; never your letters.", ctl: sw("words") }], `left:0;top:${t0}px;width:${W}px`, "Notes and officer notes are never shared.")
     + setCard("Professions and tooltips", [{ name: "Guild lines in item tooltips", desc: "Who can make an item, and who wears it.", ctl: sw("tips") },
       { name: "Remind me to reopen profession windows", desc: "In chat, at most every few days.", ctl: sw("nudges") },
-      { name: "Record guild milestones", desc: "For the Overview; kept on this computer.", ctl: sw("feed") }], `left:0;top:${t0 + 20 + 3 * T.sizes.settingRow + 2 + 22 + T.space.l}px;width:${W}px`)
+      { name: "Record guild milestones", desc: "For the Overview; kept on this computer.", ctl: sw("feed") }], `left:0;top:${t0 + 20 + 4 * T.sizes.settingRow + 2 + 22 + T.space.l}px;width:${W}px`)
     + setCard("Display", [{ name: "Accent colour", desc: "Pink like the crest, gold, or your class.", ctl: swatches }, { name: "Font", desc: "Changes after a reload.", ctl: font },
-      { name: "Window size", ctl: slider }, { name: "Minimap button", ctl: sw("minimap") }, { name: "Reduce motion", desc: "No window, tab or sync animations.", ctl: sw("reduce") }],
+      { name: "Window size", ctl: slider }, { name: "Minimap button", ctl: sw("minimap") }, { name: "Reduce motion", desc: "No window, tab or sync animations.", ctl: sw("reduce") },
+      { name: "Short Words on flights", desc: "A small box offers a game on flight paths.", ctl: sw("flight") }],
       `left:${x2}px;top:${t0}px;width:${W}px`);
 }
 
@@ -801,6 +811,12 @@ function tooltipShot() {
       <div style="color:#a6a6a6">Yellow · green · grey at <span style="color:#ff0">300</span> · <span style="color:#40bf40">305</span> · <span style="color:#808080">310</span></div><div>Plans: Arcanite Reaper (drop, Upper Blackrock Spire)</div>
       <div style="color:var(--accent)">Click: crafters, reagents, Wowhead  ·  Right-click: star</div></div></div></div>`;
 }
+// v0.7.2: the box shown on a flight path (Theme.SIZES.flightBox 320 x 56, 140 from the top).
+function flightShot() {
+  const box = (text) => `<div class="flightbox"><i class="edge"></i><i class="mask fi"></i><div class="ft"><div>Flying? Play Short Words</div><div class="dim">${text}</div></div>${btn("Play", "primary")}<div class="close"><i></i></div></div>`;
+  return `<div class="flightshot"><div><div class="cap">Today's word not played yet</div>${box("Today's word is waiting.")}</div>
+    <div><div class="cap">Already played today</div>${box("Play free for all until you land.")}</div></div>`;
+}
 function copyWin() {
   const lines = ["Short Royalty roster", ...rosterRows().slice(0, 30).map((m) => `${m.name}  ${m.level}  ${m.rank}  ${m.spec || "-"}  ${m.ilvl || "-"}`)];
   return `<div class="copywin"><div class="abs display" style="left:16px;top:16px;font-size:13px">Copy as text</div>
@@ -818,6 +834,7 @@ function accentStyle() {
 function render(opts = {}) {
   document.body.classList.toggle("reduce", S.reduce);
   const stage = $("#stage");
+  if (SHOT === "flight") { stage.innerHTML = flightShot(); return; }
   if (SHOT === "tooltip") { stage.innerHTML = `<div style="position:relative;width:${T.sizes.windowW}px;height:440px">${tooltipShot()}</div>`; return; }
   // Window size (as in game) times a fit-to-screen factor for narrow browser windows.
   const cols = S.view === "before" && (innerWidth > 1840 || SHOT === "compare") ? 2 : 1;
