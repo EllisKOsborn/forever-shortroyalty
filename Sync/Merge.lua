@@ -163,6 +163,11 @@ local FIELDS = {
 			return false
 		end)
 	end,
+	-- Short Words daily days played (v0.7.1, guild streak): day numbers.
+	wd = function(v)
+		if v == nil then return true end
+		return each(v, 60, function(k, x) return int(k, 1, 60) and int(x, 1, 1e6) end)
+	end,
 	roles = function(v)
 		if v == nil then return true end
 		if type(v) ~= "table" then return false end

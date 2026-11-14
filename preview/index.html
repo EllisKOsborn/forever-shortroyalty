@@ -747,7 +747,7 @@ function words() {
   let idx = 0;
   const lb = list(cols, rows, (r, c) => { const i = rows.indexOf(r); return cell(r, c, i); }, { click: true, style: `left:${RX}px;right:0;top:${t0 + 32}px;bottom:0` });
   void idx;
-  return `${subtabs([["daily", "Daily"], ["free", "Free for all"]], view, "data-wv")}<div class="substatus ell">${view === "daily" ? "Short Words #1" : "37 words solved so far"}</div>
+  return `${subtabs([["daily", "Daily"], ["free", "Free for all"]], view, "data-wv")}<div class="substatus ell">${view === "daily" ? `Short Words #1  ·  Guild streak <span class="acc">5 days</span>` : "37 words solved so far"}</div>
     ${tiles}<div class="abs" style="left:0;width:${LEFT}px;top:${t0 + 6 * TILE + 5 * GAP + 8}px;text-align:center">${msg}</div>${kb}${after}
     <div class="abs" style="left:${RX}px;top:${t0}px;display:flex;gap:4px">${[["today", "Today"], ["all", "All time"]].map((b) => `<span class="chip ${b[0] === board ? "on" : ""}" data-wb="${b[0]}">${b[1]}</span>`).join("")}</div>
     <div class="abs dim small" style="right:0;top:${t0 + 5}px">${rows.length} players</div>${lb}`;

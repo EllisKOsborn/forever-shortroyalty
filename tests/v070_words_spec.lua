@@ -250,3 +250,72 @@ describe("Short Words page", function()
 		assert.equal(4, #SK.WordsTab.PatternLines(items[1].p))
 	end)
 end)
+
+describe("v0.7.1 Short Words guild streak", function()
+	local SK, W
+	before_each(function()
+		SK, W = H.load()
+	end)
+
+	it("counts days in a row with at least 3 players, and doesn't break today while it's still going", function()
+		local SW = SK.ShortWords
+		local function e(days) return { wd = days } end
+		local entries = { e({ 1, 2, 3, 4, 5 }), e({ 2, 3, 4, 5, 6 }), e({ 3, 4, 5, 6 }), e({ 4, 5 }), e({ 6, 6 }) }
+		local counts = SW.GuildCounts(entries)
+		assert.equal(2, counts[2])
+		assert.equal(3, counts[6]) -- a day listed twice by one player counts once
+		assert.same({ 4, 3 }, { SW.GuildStreak(counts, 6, 3) })  -- days 3, 4, 5, 6
+		assert.same({ 4, 0 }, { SW.GuildStreak(counts, 7, 3) })  -- day 7 has nobody yet: still 4
+		assert.same({ 0, 0 }, { SW.GuildStreak(counts, 8, 3) })  -- day 7 missed: gone
+		assert.same({ 5, 3 }, { SW.GuildStreak(counts, 6, 2) })  -- the minimum is a setting
+	end)
+
+	it("keeps a local record so the streak can outlast what profiles carry", function()
+		local SW = SK.ShortWords
+		SK.DB.words.guildDays = { [1] = 3, [2] = 4 }
+		local entries = { { wd = { 3 } }, { wd = { 3 } }, { wd = { 3 } } }
+		local streak, played, best = SW:GuildStreakNow(entries, 3)
+		assert.same({ 3, 3, 3 }, { streak, played, best })
+		H.loadUI(SK)
+		local text = SK.WordsTab.GuildStreakText(3, 3, 3)
+		assert.truthy(text:find("Short Words #3  ·  Guild streak ", 1, true))
+		assert.truthy(text:find("3 days", 1, true))
+		assert.is_nil(text:find("played today", 1, true)) -- enough players today: no count
+	end)
+
+	it("says how many have played today until there are enough", function()
+		H.loadUI(SK)
+		local text = SK.WordsTab.GuildStreakText(9, 0, 1)
+		assert.truthy(text:find("1 of 3 played today", 1, true))
+		assert.truthy(SK.ShortWords.ShareText({ day = 9, won = true, rows = { {}, {}, {} } }, 2, 5):find("· guild streak 5", 1, true))
+	end)
+
+	it("shares the days played beside the results, and a v0.7.0 player still accepts the profile", function()
+		local SW = SK.ShortWords
+		W.member("Pip", W.player.guid)
+		SK.Identity:ReadRoster()
+		SK.Profile:BuildSelf()
+		local g = SW:Daily(W.now)
+		SW:Play(g, g.word, W.player.guid, "Pip", W.now)
+		local pub = SK.DBM:Guild().profiles[W.player.guid]
+		assert.same({ SW.Day(W.now) }, pub.wd)
+		assert.is_nil(pub.words.days)          -- never inside `words`
+		assert.is_true((SK.Merge.Validate(pub)))
+		-- v0.7.0's check of `words` only knows d, ds, f, ft: still true for this profile
+		for k in pairs(pub.words) do assert.truthy(({ d = 1, ds = 1, f = 1, ft = 1 })[k], k) end
+		assert.is_false(SK.Merge.FIELDS.wd({ "x" }))
+		assert.is_false(SK.Merge.FIELDS.wd({ [99] = 3 }))
+		assert.is_true(SK.Merge.FIELDS.wd({ 1, 2, 3 }))
+		SK.DB.settings.share.words = false
+		SK.Profile:BuildSelf()
+		assert.is_nil(SK.DBM:Guild().profiles[W.player.guid].wd)
+	end)
+
+	it("results saved by v0.7.0 (no days list) start the list from today's result", function()
+		local SW = SK.ShortWords
+		SK.DB.words.chars["G-1"] = { d = { day = 2, g = 3, won = true, p = "22222", at = 1 },
+			ds = { n = 1, w = 1, g = 3, cs = 1, bs = 1, last = 2 }, f = { n = 0, w = 0, g = 0, run = 0, best = 0 } }
+		assert.same({ 2 }, SW.DaysField("G-1"))
+		assert.is_nil(SW.DaysField("nobody"))
+	end)
+end)

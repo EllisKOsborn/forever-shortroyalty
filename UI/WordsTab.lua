@@ -366,7 +366,10 @@ function Words:Share()
 	if not game.done then return end
 	local stats = SW.Store().chars[game.guid or ""]
 	local streak = stats and SW.Streak(stats.ds, game.day) or 0
-	if not Compat.OpenChat("/g " .. SW.ShareText(game, streak)) then SK:Print("Couldn't open the chat box on this client.") end
+	local guildStreak = SW:GuildStreakNow(SW.Entries(SK.DBM:Guild(), Compat.Now()), game.day)
+	if not Compat.OpenChat("/g " .. SW.ShareText(game, streak, guildStreak)) then
+		SK:Print("Couldn't open the chat box on this client.")
+	end
 end
 
 ---------------------------------------------------------------------------
@@ -425,6 +428,16 @@ function Words:DrawMessage()
 	self.message:SetTextColor(Theme.RGB(tone))
 end
 
+-- "Short Words #12  ·  Guild streak 5 days (2 of 3 today)". Pure; tested.
+function Words.GuildStreakText(today, streak, played)
+	local text = "Short Words #" .. today .. "  ·  Guild streak " ..
+		Theme.Paint(streak > 0 and "accent" or "dim", Theme.Count(streak, "day"))
+	if played < SW.GUILD_MIN then
+		text = text .. Theme.Paint("dim", "  (" .. played .. " of " .. SW.GUILD_MIN .. " played today)")
+	end
+	return text
+end
+
 function Words:Description()
 	return "A five-letter word in six guesses: one word a day for the whole guild, or as many as you like."
 end
@@ -441,15 +454,20 @@ function Words:Refresh()
 	self.nextWord:SetShown(view == "free" and game.done)
 	local now = Compat.Now()
 	local today = SW.Day(now)
-	self.status:SetText(view == "daily" and ("Short Words #" .. today) or
-		(Theme.Count(SW.Store().chars[Compat.PlayerGUID() or ""] and SW.Store().chars[Compat.PlayerGUID()].f.w or 0, "word") ..
-		" solved so far"))
+	local entries = SW.Entries(SK.DBM:Guild(), now)
+	if view == "daily" then
+		local streak, played = SW:GuildStreakNow(entries, today)
+		self.status:SetText(Words.GuildStreakText(today, streak, played))
+	else
+		local mine = SW.Store().chars[Compat.PlayerGUID() or ""]
+		self.status:SetText(Theme.Count(mine and mine.f.w or 0, "word") .. " solved so far")
+	end
 
 	for _, c in ipairs(self.boardChips) do c:SetActive(c.value == boardKey) end
 	local listKey = view .. "_" .. boardKey
 	for name, l in pairs(self.lists) do l:SetShown(name == listKey) end
 	local list = self.lists[listKey]
-	local rows = SW.Board(SW.Entries(SK.DBM:Guild(), now), view, boardKey, today)
+	local rows = SW.Board(entries, view, boardKey, today)
 	list:SetItems(rows)
 	list:SetEmptyText(boardKey == "today" and (view == "daily" and "Nobody has played today's word yet. Be the first!" or
 		"Nobody has played free for all today yet.") or "No results yet. Scores appear as guildmates play.")

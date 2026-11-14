@@ -49,7 +49,7 @@ function Profile.Public(p, share)
 		pub.recipes, pub.cds = nil, nil
 		hidden.recipes = true
 	end
-	if share and share.words == false then pub.words = nil end -- Short Words results (v0.7.0)
+	if share and share.words == false then pub.words, pub.wd = nil, nil end -- Short Words results (v0.7.0, wd v0.7.1)
 	pub.hidden = next(hidden) and hidden or nil
 	return pub
 end
@@ -158,6 +158,7 @@ function Profile:BuildSelf()
 		recipes = {},
 		cds = {},
 		words = SK.ShortWords and SK.ShortWords.Field(guid) or nil,
+		wd = SK.ShortWords and SK.ShortWords.DaysField(guid) or nil,
 	}
 	-- Keep scan results for professions the character still has. The game's
 	-- profession list can come back incomplete (just after login, on a loading
@@ -204,6 +205,7 @@ function Profile:SetWords()
 	if not guild or not own then return false end
 	local p = SK.CopyTable(own)
 	p.words = SK.ShortWords.Field(own.guid)
+	p.wd = SK.ShortWords.DaysField(own.guid)
 	return self:Commit(guild, p, Compat.Now())
 end
 

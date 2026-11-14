@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.7.1 (not released yet): Guild streak
+
+- **Short Words → Daily** now shows the **guild streak**: how many days in a
+  row at least 3 guildmates have played the daily word (won or not). Today
+  counts once 3 have played; until then it says how many have, and the
+  streak doesn't break while the day is still going.
+- **Share in guild chat** adds the guild streak ("· guild streak 5").
+- Each player now shares which daily words they played (the last 60, day
+  numbers only), so everyone sees the same streak. Turning off *Share my
+  Short Words results* stops that too. Guildmates still on v0.7.0 pass it
+  along without showing it.
+
 ## v0.7.0 (13 Nov 2026): Short Words
 
 - **Short Words**, a new page in the sidebar (Games → Short Words, or

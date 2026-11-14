@@ -28,7 +28,22 @@ A World of Warcraft: **Forever** addon for the guild **Short Royalty**
 talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
-## Start here (handover, 13 Nov 2026)
+## Start here (handover, 14 Nov 2026)
+- **v0.7.1 (built 14 Nov, not released): guild streak** (owner: "Add that
+  then", after a guildmate asked for a Discord-style "streak together"; the
+  real NYT Wordle can't be used: addons have no internet and the content is
+  the NYT's). A day counts when `SW.GUILD_MIN` (3, chosen by me; tell the
+  owner it's one number) players played the daily word, won or not; today
+  counts once it has enough, otherwise the streak runs to yesterday. Data:
+  new top-level profile field **`wd`** = daily days played (last
+  `SW.HISTORY` 60), validated by `Merge.FIELDS.wd`; kept **out of `words`**
+  because v0.7.0's `words` check rejects unknown keys (an unknown top-level
+  field is accepted). `SW.DaysField` (seeds from `d.day` for v0.7.0 saves),
+  `SW.GuildCounts`, pure `SW.GuildStreak(counts, today, min)`,
+  `SW:GuildStreakNow` keeps `SK.DB.words.guildDays` (max players seen per
+  day, ~400 days) and `guildBest`. UI: Daily page status
+  `Words.GuildStreakText`; `SW.ShareText(game, streak, guildStreak)`.
+  Tests in `tests/v070_words_spec.lua`; TESTING.md 13.
 - **v0.7.0 (released 13 Nov on `main`, owner: "Push to main"): Short Words** (owner: "build Short
   Words. One word a day mode and a free for all mode where they can keep
   going. Leaderboard for today, all time. Separated by mode."). Not called
@@ -990,7 +1005,8 @@ what's still open and **renumbered**; older TESTING numbers in this file
 refer to `git show v0.6.0:TESTING.md`.
 1. TESTING.md 1–5: Onyxia amulet check, real cooldowns only, where to learn
    at a trainer, who wears it, the reminder bar's Open button.
-2. v0.7.0 Short Words is out: TESTING.md 6–12.
+2. v0.7.0 Short Words is out: TESTING.md 6–12. v0.7.1 (guild streak,
+   TESTING.md 13) waits for "put it on main".
 3. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
 

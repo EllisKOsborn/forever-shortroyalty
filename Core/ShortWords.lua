@@ -28,6 +28,8 @@ SK.ShortWords = SW
 SW.LEN, SW.TRIES = 5, 6
 SW.EPOCH = 1794528000      -- 13 Nov 2026 00:00 UTC = Short Words #1
 SW.FREE_PUBLISH = 120      -- free-for-all results reach the guild at most every 2 minutes
+SW.GUILD_MIN = 3           -- v0.7.1: players a day needs for the guild streak
+SW.HISTORY = 60            -- v0.7.1: daily words played that each profile lists (`wd`)
 
 ---------------------------------------------------------------------------
 -- Words
@@ -162,6 +164,11 @@ function SW.RecordDaily(stats, game)
 	end
 	ds.last = game.day
 	stats.d = { day = game.day, g = tries, won = game.won, p = SW.Pattern(game.rows), at = game.at }
+	-- v0.7.1: the days played, newest last, for the guild streak (shared as
+	-- the profile's `wd`, not inside `words`: v0.7.0 rejects new keys there).
+	stats.days = stats.days or {}
+	stats.days[#stats.days + 1] = game.day
+	while #stats.days > SW.HISTORY do table.remove(stats.days, 1) end
 	return stats
 end
 
@@ -194,12 +201,65 @@ function SW.Streak(ds, today)
 	return ds.cs or 0
 end
 
--- "Short Words #12: 4/6 (streak 3)" for guild chat.
-function SW.ShareText(game, streak)
+-- "Short Words #12: 4/6 (streak 3) · guild streak 5" for guild chat.
+function SW.ShareText(game, streak, guildStreak)
 	local result = game.won and (#game.rows .. "/" .. SW.TRIES) or ("X/" .. SW.TRIES)
 	local text = "Short Words #" .. game.day .. ": " .. result
 	if streak and streak > 1 then text = text .. " (streak " .. streak .. ")" end
+	if guildStreak and guildStreak > 1 then text = text .. " · guild streak " .. guildStreak end
 	return text
+end
+
+---------------------------------------------------------------------------
+-- Guild streak (v0.7.1): days in a row on which at least GUILD_MIN
+-- guildmates played the daily word (won or not). Today counts once it has
+-- enough players; until then the streak runs to yesterday, so it never
+-- breaks while the day is still going.
+---------------------------------------------------------------------------
+-- Players per day from everyone's `wd` lists. The daily word is
+-- account-wide, so each player counts once a day even with alts.
+function SW.GuildCounts(entries)
+	local counts = {}
+	for _, e in ipairs(entries) do
+		local seen = {}
+		for _, day in ipairs(e.wd or {}) do
+			if type(day) == "number" and not seen[day] then
+				seen[day] = true
+				counts[day] = (counts[day] or 0) + 1
+			end
+		end
+	end
+	return counts
+end
+
+-- Pure: streak length and today's player count from per-day counts.
+function SW.GuildStreak(counts, today, min)
+	min = min or SW.GUILD_MIN
+	local day = (counts[today] or 0) >= min and today or today - 1
+	local streak = 0
+	while (counts[day] or 0) >= min do
+		streak = streak + 1
+		day = day - 1
+	end
+	return streak, counts[today] or 0
+end
+
+-- The guild streak as this computer knows it: today's counts merged into a
+-- local record of every day seen (SK.DB.words.guildDays), so the streak can
+-- run longer than the HISTORY each profile carries. Returns streak, played
+-- today, best streak seen.
+function SW:GuildStreakNow(entries, today)
+	local db = SW.Store()
+	db.guildDays = db.guildDays or {}
+	for day, n in pairs(SW.GuildCounts(entries)) do
+		if n > (db.guildDays[day] or 0) then db.guildDays[day] = n end
+	end
+	for day in pairs(db.guildDays) do
+		if day < today - 400 then db.guildDays[day] = nil end -- keep about a year
+	end
+	local streak, played = SW.GuildStreak(db.guildDays, today)
+	if streak > (db.guildBest or 0) then db.guildBest = streak end
+	return streak, played, db.guildBest or 0
 end
 
 ---------------------------------------------------------------------------
@@ -281,11 +341,24 @@ function SW.StatsOf(guid)
 	return db.chars[guid]
 end
 
--- What goes into this character's profile (nil = never played).
+-- What goes into this character's profile (nil = never played). The days
+-- list goes separately (DaysField): v0.7.0 rejects new keys in `words`.
 function SW.Field(guid)
 	local st = guid and SW.Store().chars[guid]
 	if not st then return nil end
-	return SK.CopyTable(st)
+	local copy = SK.CopyTable(st)
+	copy.days = nil
+	return copy
+end
+
+-- The profile's `wd`: daily words played (day numbers, newest last).
+-- Results from v0.7.0 had no list: today's result seeds it.
+function SW.DaysField(guid)
+	local st = guid and SW.Store().chars[guid]
+	if not st then return nil end
+	if not st.days and st.d and st.d.day then st.days = { st.d.day } end
+	if not st.days or #st.days == 0 then return nil end
+	return SK.CopyTable(st.days)
 end
 
 -- Today's daily game (account-wide). A new one each day.
@@ -349,11 +422,12 @@ function SW.Entries(guild, now)
 	for guid, m in pairs(guild.members) do
 		if not m.leftAt then
 			local p = SK.Profile:Get(guid, guild)
-			local words = p and p.words
-			if SK.DB.account[guid] then words = SW.Field(guid) or words end
-			if words then
+			local words, wd = p and p.words, p and p.wd
+			if SK.DB.account[guid] then words, wd = SW.Field(guid) or words, SW.DaysField(guid) or wd end
+			if words or wd then
 				out[#out + 1] = { guid = guid, name = m.name or (p and p.name) or "?", class = m.class or (p and p.class),
-					status = SK.Identity.Status(m, SK.DB.account[guid] and m.online, now), words = words }
+					status = SK.Identity.Status(m, SK.DB.account[guid] and m.online, now), words = words,
+					wd = type(wd) == "table" and wd or nil }
 			end
 		end
 	end

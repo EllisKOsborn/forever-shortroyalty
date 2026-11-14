@@ -167,6 +167,10 @@ else) or **grey** (not in the word); the keyboard keeps track.
   you've started it, your alts see that game too. **Share in guild chat**
   types "Short Words #12: 4/6 (streak 3)" into the chat box (no letters, so
   no spoilers); you press Enter.
+- **Guild streak** (top right of the Daily page): days in a row on which at
+  least 3 guildmates played the daily word, won or not. Today counts once 3
+  have played ("2 of 3 played today" until then), so it never breaks while
+  the day is still going. The Share line adds it too.
 - **Free for all:** a new random word as soon as you finish (**Next word**),
   as many as you like. Never today's daily word.
 - **Leaderboards** for each mode, **Today** and **All time**:

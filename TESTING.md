@@ -53,3 +53,6 @@ git history (`git show v0.6.0:TESTING.md`).
     their letters.
 12. [ ] Settings → Sharing → *Share my Short Words results* off: you
     disappear from guildmates' leaderboards after their next update.
+13. [ ] **Guild streak** (v0.7.1, top right of Daily): says "N of 3 played
+    today" until three of you have played, then the streak goes up by one.
+    Share in guild chat adds "· guild streak N".
