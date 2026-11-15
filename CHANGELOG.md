@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.1 (not released yet): Attendance for every officer, no spreadsheet
+## v0.8.1 (15 Nov 2026): Attendance for every officer, no spreadsheet
 
 - **Every officer and raid leader sees every recorded raid** on the
   Attendance tab, whoever recorded it. When a recording ends, or someone

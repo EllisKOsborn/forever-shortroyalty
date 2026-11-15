@@ -330,7 +330,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
     Test stub: `time(t)` now uses `os.time(t)` for tables; `W.raid`.
     Pictures `raids*.png` (preview `screen=raids`, `officer=1`,
     `raidsView`, `attView`). TESTING.md 18–29.
-- **v0.8.1 (built 15 Nov, not released): attendance for every officer, no
+- **v0.8.1 (released 15 Nov on `main`, owner: "push to main"): attendance for every officer, no
   spreadsheet** (owner: "We didn't want anything in a spreadsheet anymore.
   everything should be inside the addon itself for the officers to see").
   Removed `Attendance.Sheet`, Copy as spreadsheet, `settings.sheetCommas`.
@@ -352,7 +352,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   - **Unverified in game:** everything; especially rank-name matching,
     `GetRaidRosterInfo`/`UnitGUID("raidN")` inside a raid instance, guild
     roster "online" inside instances, whether tabs survive Copy into Sheets.
-- **Next:** release v0.8.1 when the owner says; get TESTING.md 6–29, then what they pick from
+- **Next:** v0.8.1 is released; get TESTING.md 6–29, then what they pick from
   PLAN.md (craft requests, levelling rework, raid reminders/invites…). Still useful from v0.5.5: TESTING 167–169, 181–185.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
@@ -621,7 +621,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
   (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed); **v0.5.7** (12 Nov, cooldown
-  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights). Tag only when
+  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet). Tag only when
   the user asks.
 
 ## Layout
@@ -1105,7 +1105,7 @@ refer to `git show v0.6.0:TESTING.md`.
 1. TESTING.md 1–5: Onyxia amulet check, real cooldowns only, where to learn
    at a trainer, who wears it, the reminder bar's Open button.
 2. v0.7.0–v0.7.2 Short Words are out: TESTING.md 6–14; flights 15–17.
-3. v0.8.0 Raids (released 15 Nov): an officer's `/sr debug` Raids
+3. v0.8.0/v0.8.1 Raids (released 15 Nov): an officer's `/sr debug` Raids
    block (rank names matched? raid group read inside an instance?) and
    TESTING.md 18–29.
 4. CurseForge: rename the project from "Short Kings" and archive the old
