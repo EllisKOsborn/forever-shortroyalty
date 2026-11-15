@@ -282,12 +282,17 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   **`docs/prompts/next-design-v2.md`** (v0.6.0). Licences: Polestar GPL v3
   (github.com/fitzforge/polestar), EllesmereUI custom all rights reserved,
   FojjiCore All Rights Reserved: **inspiration only**, never code/art.
-- **Raid officer tools (15 Nov, proposal only, nothing built):** the GM
-  asked for in-game sign-ups and attendance incl. bench (signed up, online,
-  not in the raid). `docs/RAID-OFFICER-TOOLS.md` compares it with the
-  removed v0.4.0 Raids tab and proposes an officer-only Raids page with
-  attendance + spreadsheet copy, after a probe release. Waiting on the
-  owner/GM's answers (Waiting on the user 3).
+- **Raids re-plan (15 Nov, plan only, nothing built): `docs/RAID-OFFICER-TOOLS.md`.**
+  GM asked for in-game sign-ups + attendance incl. bench. **Owner decided:
+  no Blizzard calendar** (v0.4.0 "interacted weirdly with the calendar" and
+  making raids there made the addon feel unnecessary): officers make raids
+  in the addon (rank checked by every receiver via
+  `C_GuildInfo.GuildControlGetRankFlags`), members sign up in the addon,
+  new synced messages for raids and sign-ups, attendance from
+  `GetRaidRosterInfo` + guild roster online. Spreadsheet columns (owner):
+  On time & whole raid / Late / Didn't attend + separate Bench tick. Owner
+  is **not an officer** ("Can view officer notes: no"); the GM must run the
+  probes too. Steps: probes → v0.8.0 raids + sign-ups → v0.8.1 attendance.
 - **Next:** v0.7.2 is released; get TESTING.md 6–17 from the owner, then what they pick from
   PLAN.md (raids re-plan before 9 Dec, craft requests, levelling rework…). Still useful from v0.5.5: TESTING 167–169, 181–185.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
@@ -947,6 +952,8 @@ messages → sender ignored for the session).
   gate (TESTING.md, `/sr debug` "Live-client checks"), its decision table,
   fixes only (now **v0.2.5**: v0.2.3 = new look, v0.2.4 = tagline). Raids is now
   **v0.4** before 9 Dec (`docs/prompts/next-v0.4-raids.md`); Professions is v0.3.
+- **Debug 15 Nov (v0.7.2, build 70938):** 0 Lua errors, skill-up colours
+  14156 match / 0 differ, 46 members (32 with data), send errors 0.
 - Calendar facts (1.60.1 docs): invites carry `guid`; no role field; only
   `AddEvent` is `HasRestrictions`; `GetDayEvent`/`EventGetInvite` are secret
   during chat lockdown; `C_PartyInfo.InviteUnit` and `ConvertToRaid` exist.
@@ -1031,10 +1038,9 @@ refer to `git show v0.6.0:TESTING.md`.
 1. TESTING.md 1–5: Onyxia amulet check, real cooldowns only, where to learn
    at a trainer, who wears it, the reminder bar's Open button.
 2. v0.7.0–v0.7.2 Short Words are out: TESTING.md 6–14; flights 15–17.
-3. Raid officer tools: the GM's answers in `docs/RAID-OFFICER-TOOLS.md`
-   (spreadsheet columns, what counts as attended / bench, calendar or
-   Discord sign-ups), what "not set up right" meant for v0.4.0, and go-ahead
-   for the probe release.
+3. Raids (`docs/RAID-OFFICER-TOOLS.md`): who may make raids (all officer
+   ranks or chosen ranks), left early = late column?, go-ahead for the
+   probe release.
 4. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
 

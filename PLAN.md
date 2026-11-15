@@ -195,6 +195,9 @@ runtime and copes if it's missing.
 
 ## 6. Raid sign-ups (added 1 Nov)
 
+> **Superseded 15 Nov 2026:** the owner chose raids made in the addon, no
+> calendar. Current plan: `docs/RAID-OFFICER-TOOLS.md`. Below is history.
+
 **Recommendation: build on Blizzard's in-game calendar instead of making our own.**
 
 Forever ships Blizzard's full calendar (`C_Calendar`, `Blizzard_Calendar`).

@@ -1,113 +1,121 @@
-# Raid sign-ups and attendance for officers (proposal, 15 Nov 2026)
+# Raid sign-ups and attendance (plan, 15 Nov 2026)
 
-Not built. A plan to talk through with the owner and the Guild Master (GM).
+Nothing built yet. Waiting on the owner's go-ahead (questions at the end).
 
-## The request (GM, relayed 15 Nov)
+## The request (Guild Master, relayed 15 Nov)
 > Raid signups in game, with attendance tracking, including being able to
 > see people who were signed and online for the raid but weren't actually
 > in the raid (i.e. people on the bench). This is stuff that I'd normally
 > track manually in a spreadsheet.
 
-## What v0.4.0 already solved (built 7 Nov, removed in v0.4.1)
-The code is in git history (v0.4.0 tag: `UI/RaidsTab.lua`, `Core/Raids.lua`,
-the Compat calendar layer). It never had an in-game test.
+## Owner's decisions (15 Nov)
+- **No Blizzard calendar.** v0.4.0's "not set up right" meant it interacted
+  weirdly with the calendar, and making everything in the calendar made the
+  addon feel unnecessary. Raids are **made and signed up for in the
+  addon**. This replaces PLAN.md section 6's calendar design.
+- **Spreadsheet columns:** *On time, whole raid* · *Late / didn't attend
+  the whole raid* · *Didn't attend*, plus **Bench** as a separate tick.
 
-| GM needs | v0.4.0 | Notes |
-|---|---|---|
-| Sign-ups in game | **Half** | Read Blizzard's calendar: who signed up, tentative, declined, standby. Signing up itself still happened in Blizzard's calendar window |
-| Who's coming, with role/spec/ilvl/attunement | **Yes** | Role counts, readiness line (missing tanks/healers, not attuned, enchants, same player on two characters) |
-| Members without the addon | **Yes** | The calendar is Blizzard's, so everyone counts |
-| Copy the line-up as text | **Yes** | One event, as plain text |
-| **Who actually came** | **No** | Never looked at the raid group |
-| **Bench** (signed, online, not in the raid) | **No** | Needs the sign-ups + who was online + who was in the group, at raid time |
-| **History over weeks** (attendance %) | **No** | Nothing was saved after the session |
-| **Into the spreadsheet** | **No** | No export of attendance |
-| Officer-only view | **No** | It was a tab for every member |
+## What v0.4.0 solved, and what we keep from it
+v0.4.0 (tag `v0.4.0`, removed in v0.4.1) read sign-ups from the calendar and
+showed role, spec, item level and attunement per person, role counts, a
+readiness line (missing tanks/healers, not attuned, same player on two
+characters) and a Copy button. **We keep the line-up and readiness ideas**
+(and can reuse that code from git history). **We drop** everything that
+touched the calendar: reading events, opening them, title keywords.
 
-So the old work covers the **"before the raid"** half (reading sign-ups).
-The GM's real pain is the **"during and after"** half, which was
-deliberately left out (attendance was item D2, "later").
+It never had: making raids, attendance, bench, history, spreadsheet export,
+officer-only controls. Those are the new work.
 
-## What to do differently
-1. **Build it for the officers first, not for everyone.** The GM is the
-   customer. One **Raids** page in the sidebar's Guild group, shown only to ranks the game says are
-   officers (`C_GuildInfo.IsGuildOfficer()`, checked in the Forever source).
-   Members don't need to see attendance at all at first (they could later
-   get just a Sign up button).
-2. **Attendance is the core, sign-up display second.** v0.4.0 was a
-   member-facing line-up screen. The new version records each raid.
-3. **Keep Blizzard's calendar for sign-ups.** Still the right call: it works
-   for people without the addon, it's stored on Blizzard's servers, and the
-   addon isn't allowed to create events. Add **Sign up / Tentative / Decline
-   buttons** later (the calls aren't restricted), so members don't have to
-   open the calendar.
-4. **Test the game calls before building**, like v0.2.7 did for
-   professions: a small `/sr debug` block first. v0.4.0 was built blind
-   and never checked. Same lesson as the levelling tools (built in one go,
-   removed in v0.5.6): small steps, each checked in game.
-5. **Ask what "not set up right" meant** about v0.4.0, so we don't repeat it.
-6. **Match the GM's spreadsheet**: a **Copy as spreadsheet** button
-   (tab-separated text that pastes straight into Google Sheets or Excel),
-   with the same columns they already use.
+## How it would work
 
-## How attendance would work
-Runs only on the officer's own game. Nothing new on the sync wire to start
-with, so it can't be faked or spammed by others.
+### 1. Officers make a raid
+- **Raids** page in the sidebar's Guild group. Officers get **New raid**:
+  pick the raid from a list (Barrow Deeps, Hyjal, Onyxia), date, start time,
+  and optionally a size. **No free text** at first (titles and notes would be
+  the first free text on the wire; that's a security review of its own).
+- Who counts as an officer: **checked by every receiver**, not just the
+  sender, so nobody can fake it. The game tells any client what a rank may do
+  (`C_GuildInfo.GuildControlGetRankFlags(rankOrder)`, and the sender's rank
+  from the roster). Rule: "ranks that can read officer chat" (to confirm in
+  game which flag that is). Officers can edit or cancel raids they made; the
+  Guild Master can edit any.
 
-**Before the raid** (outside the instance, not in combat): read the
-calendar event's sign-up list (the v0.4.0 code: name, GUID, status, plus
-the sign-up's `notes`).
+### 2. Members sign up in the addon
+- On the Raids page (and a small "New raid on Friday" line on the Overview):
+  **Sign up / Tentative / Can't come**, and the role (Tank / Healer / DPS,
+  defaulting to a guess from talents).
+- Everyone with the addon sees the list: name, status, role, spec, item
+  level, attunement, role counts, readiness. A sign-up can only come from
+  the player themself; officers can also add or mark someone by hand.
 
-**During the raid** (the officer is in the raid group): a snapshot every
-few minutes and on each boss kill:
-- who is in the raid group (`GetRaidRosterInfo`: name, online, zone);
-- who in the guild is online (the guild roster, which we already read).
+### 3. Sharing without a server
+- New addon messages, all small and checked like profiles: **raid** (made
+  or changed by an officer) and **sign-up** (one player, one raid, newest
+  wins). Everyone stores them and passes them on with the existing
+  "what do you have / I have newer" exchange, so a raid reaches people who
+  log in after the officer has gone offline.
+- Old raids are deleted after 90 days (attendance records stay with the
+  officers).
 
-**After the raid**, each person who signed up gets one of:
+### 4. Attendance during the raid
+Runs on the game of any officer who is in the raid group:
+- at the start time and every few minutes after it (between pulls, never
+  during chat lockdown), note **who is in the raid group**
+  (`GetRaidRosterInfo`, used by Blizzard's own raid window in the Forever
+  UI) and **who in the guild is online** (the roster we already read);
+- on each boss kill as well.
 
-| Result | Meaning |
+After the raid (or when the officer presses **End raid**), each guild member
+gets one result:
+
+| Column | Rule (proposed, adjustable) |
 |---|---|
-| **Attended** | In the raid group for most of the snapshots |
-| **Partly** | Joined late or left early (how many minutes) |
-| **Bench** | Signed up or on Standby, **online**, but not in the raid group |
-| **No-show** | Signed up, but never online |
-| **Declined** | Said no in the calendar |
-| **Came without signing up** | In the raid, not on the calendar |
+| **On time, whole raid** | In the group within 10 min of the start and until the end (gaps under 10 min ignored) |
+| **Late / not the whole raid** | In the group, but joined later or left earlier than that |
+| **Didn't attend** | Signed up (or tentative) and never in the group |
+| **Bench** tick | Signed up, **online during the raid**, and not in the group. Suggested automatically; the officer can tick or untick it |
+| (extra) Came without signing up | In the group but not signed up: counted as attended, marked |
 
-Saved per raid on the officer's computer (date, raid, every name and
-result). The Raids page shows:
-- the last raids, each with these lists;
-- per member over 30/60/90 days: raids attended, benched, no-shows, % ;
-- **Copy as spreadsheet** for one raid or the whole history.
+Members who said **Can't come** go in their own list, not "Didn't attend"
+(tell the owner; easy to change).
 
-**Later, if wanted:** share records between officers (only accepted from
-officer ranks, owner copy wins, same rules as profiles); sign-up buttons;
-a reminder 15 minutes before; "Invite everyone signed up".
+### 5. History and the spreadsheet
+- Saved on the officer's computer per raid: date, raid, each name, column,
+  bench tick, minutes in the raid.
+- Raids page, officers only: the last raids, and per member over 30/60/90
+  days (on time %, late, missed, benched).
+- **Copy as spreadsheet**: tab-separated text (columns: Date, Raid, Name,
+  On time, Late, Didn't attend, Bench) that pastes straight into Google
+  Sheets or Excel, for one raid or the whole history.
+- Later, if wanted: officers share attendance records with each other.
 
-## Things to check in game first (probe release)
-- `GetRaidRosterInfo` / `GetNumGroupMembers` exist and work inside a raid
-  instance (they're old global functions, not in Blizzard's generated docs).
-- Whether the guild roster's "online" stays readable inside an instance.
-- Which of these are blocked during combat or "chat lockdown" (Midnight's
-  secret values). `C_Calendar.EventGetInvite` is (checked in the source),
-  so sign-ups are read before the raid, and snapshots are taken between pulls.
-- Calendar event IDs are the same on every officer's client (needed only if
-  officers share records).
-- `C_GuildInfo.IsGuildOfficer()` is true for the GM's officer ranks.
+### Honest trade-offs of dropping the calendar
+- Members **without the addon** (14 of 46 right now) can't see raids or sign
+  up. Officers can add them by hand, and attendance still works for them
+  (the raid group and the roster come from the game).
+- A raid only spreads while someone who has it is online. With 32 members
+  on the addon that's rarely a problem.
 
-## Questions for the GM
-1. What columns are in the spreadsheet today? (Paste a header row.)
-2. What counts as "attended"? Whole raid, or any part? Do late arrivals count?
-3. Does bench count as attendance (for loot priority)?
-4. Is Blizzard's calendar how people sign up now, or Discord?
-5. Only officers see attendance, or can members see their own?
-6. Who will be in the raid running the addon: one officer, or several?
+## Steps (each one checked in game before the next)
+1. **Probe release** (small): `/sr debug` gains a "Raid checks" block:
+   `C_GuildInfo.IsGuildOfficer`, the permission flags per rank, the
+   sender's rank from the roster, `GetRaidRosterInfo` in a group (a
+   dungeon group works), whether the guild roster's "online" still reads
+   inside an instance, and lockdown. **The Guild Master should run it too**
+   (the owner's report says "Can view officer notes: no", so the owner
+   isn't an officer).
+2. **v0.8.0 Raids and sign-ups**: New raid (officers), sign-up buttons,
+   line-up and readiness, sharing.
+3. **v0.8.1 Attendance**: recording, End raid, history, Copy as spreadsheet.
+4. Later: reminders before a raid, "Invite everyone signed up", sharing
+   attendance between officers, free-text notes.
 
-## Size and timing
-- Probe release: small (a `/sr debug` block), can go out in the next release.
-- Raids page with attendance + spreadsheet copy: medium (about the size of
-  the v0.3.0 Professions work). Raids open **9 Dec**: probes this week, the
-  page the week after, leaves about two weeks for testing with a real raid
-  group (a dungeon group can stand in for some checks).
-- Sign-up buttons, reminders and sharing between officers: after the first
-  real raids.
+Raids open **9 Dec**: step 1 this week, step 2 the week after, step 3
+before the first raid. A guild dungeon run can test step 3 early.
+
+## Questions for the owner
+1. Who may make raids: every officer rank, or only the ranks you choose?
+2. Left early: same column as late? (Proposed: yes, "Late / not the whole
+   raid".)
+3. Go ahead with step 1?
