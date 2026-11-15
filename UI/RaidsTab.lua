@@ -1,7 +1,7 @@
 -- Raids page (v0.8.0). Everyone: upcoming guild raids, who's coming, and
 -- Sign up / Tentative / Can't come with a role. Officers and raid leaders
--- who typed /sr officer also get New raid, Cancel and Attendance (with
--- Copy as spreadsheet). The rules live in Core/RaidBoard.lua and
+-- who typed /sr officer also get New raid, Cancel and Attendance (shared
+-- between officers; v0.8.1: no spreadsheet, it all stays in the addon). The rules live in Core/RaidBoard.lua and
 -- Core/Attendance.lua.
 local _, SK = ...
 
@@ -90,9 +90,16 @@ function RT.MineText(su)
 	return "You: " .. Theme.Paint(STATUS_TONE[su.s], Board.STATUS_NAME[su.s]) .. (role and su.s ~= "n" and (" as " .. role) or "")
 end
 
--- The line at the top of Attendance.
-function RT.RecordingText(rec, now)
+-- The line at the top of Attendance: what's being recorded, else who
+-- recorded the raid picked below (v0.8.1: records come from every officer).
+function RT.RecordingText(rec, now, shown)
 	if not rec then
+		if shown then
+			local raid = Board.Raid(shown.raid)
+			local by = SK.Identity:Member(shown.by)
+			return string.format("%s, %s  ·  recorded by %s  ·  %s", raid and raid.name or "Raid", Board.When(shown.at),
+				by and Theme.ClassText(by.name, by.class) or "an officer", Theme.Count(shown.snaps, "check"))
+		end
 		return "Not recording. It starts by itself when you're in a raid group from 30 minutes before a raid's start."
 	end
 	local raid = Board.Raid(rec.raid)
@@ -357,29 +364,17 @@ function RT:Build(page)
 	self.attPage = at
 	self.recording = Theme.Text(at, "small", "dim")
 	self.recording:SetPoint("TOPLEFT", 0, -SP.xs)
-	self.recording:SetPoint("RIGHT", -300, 0)
+	self.recording:SetPoint("RIGHT", -120, 0)
 	self.recording:SetJustifyH("LEFT")
 	self.recording:SetWordWrap(true)
-	self.attOptions = W.OptionsButton(at, function()
-		return {
-			{ text = "Use commas instead of tabs", checked = function() return s.sheetCommas end,
-				onClick = function() s.sheetCommas = not s.sheetCommas end },
-			{ text = "Copy every raid as a spreadsheet", onClick = function() RT:CopySheet(true) end },
-		}
-	end, "Spreadsheet options")
-	self.attOptions:SetPoint("TOPRIGHT", 0, 0)
-	self.copySheet = W.Button(at, "Copy as spreadsheet", nil, S.control, function() RT:CopySheet(false) end)
-	self.copySheet:SetPoint("RIGHT", self.attOptions, "LEFT", -SP.s, 0)
-	self.copySheet.tooltip = "The selected raid (or, on Totals, every raid in the period) as text that pastes " ..
-		"into Google Sheets or Excel as columns."
 	self.endRaid = W.Button(at, "End raid", nil, S.control, function() Att:Stop(Compat.Now()); RT:Refresh() end)
-	self.endRaid:SetPoint("RIGHT", self.copySheet, "LEFT", -SP.s, 0)
+	self.endRaid:SetPoint("TOPRIGHT", 0, 0)
 	self.endRaid.tooltip = "Stop recording now. It also stops by itself 15 minutes after you leave the raid group."
 	self.resume = W.Button(at, "Resume", nil, S.control, function()
 		if RT.record then Att:Resume(RT.record) end
 		RT:Refresh()
 	end)
-	self.resume:SetPoint("RIGHT", self.copySheet, "LEFT", -SP.s, 0)
+	self.resume:SetPoint("TOPRIGHT", 0, 0)
 	self.resume.tooltip = "Start recording this raid again (you're in a raid group in its time)."
 
 	local chipsY = -(S.control + SP.m)
@@ -488,22 +483,6 @@ function RT:CopyLineUp()
 	SK.DebugWindow:ShowText("Raid line-up", Board.Text(ev, rows, sum))
 end
 
-function RT:CopySheet(all)
-	local store = Att:Store() or {}
-	local list
-	if all then
-		list = Att.Sorted(store)
-	elseif SK.DB.settings.attView == "totals" then
-		local days = SK.DB.settings.attDays or 30
-		list = Att.Sorted(store, days > 0 and (Compat.Now() - days * 86400) or nil)
-	else
-		list = { store[RT.record or ""] }
-	end
-	if #list == 0 then return SK:Print("No recorded raid to copy yet.") end
-	local sep = SK.DB.settings.sheetCommas and "," or "\t"
-	SK.DebugWindow:ShowText("Attendance spreadsheet", Att.Sheet(list, sep))
-end
-
 function RT:ShowRaid(id)
 	RT.selected = id
 	SK.DB.settings.raidsView = "upcoming"
@@ -567,12 +546,12 @@ function RT:RefreshAttendance(now)
 	local s = SK.DB.settings
 	local mode = s.attView == "totals" and "totals" or "raids"
 	local days = s.attDays or 30
-	self.recording:SetText(RT.RecordingText(Att.current, now))
 	self.endRaid:SetShown(Att.current ~= nil)
 	local store = Att:Store() or {}
 	local list = Att.Sorted(store)
 	if not RT.record or not store[RT.record] then RT.record = Att.current and Att.current.id or (list[1] and list[1].id) end
 	local rec = RT.record and store[RT.record]
+	self.recording:SetText(RT.RecordingText(Att.current, now, mode == "raids" and rec or nil))
 	local canResume = Att.current == nil and rec ~= nil and rec.ended ~= nil and Compat.InRaidGroup()
 		and now <= rec.at + Att.LONGEST
 	self.resume:SetShown(canResume and mode == "raids")

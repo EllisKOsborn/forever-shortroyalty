@@ -101,8 +101,10 @@ says about your raid group.
     someone who signed up and never came shows **Didn't attend**.
 27. [ ] Leave the group: the recording stops 15 minutes later (or press
     *End raid*) and chat says what was saved.
-28. [ ] **Copy as spreadsheet**, then paste into Google Sheets or Excel: one
-    column per heading. If it all lands in one column, tick *Use commas
-    instead of tabs* in the ··· menu, paste again, and tell me.
+28. [ ] (v0.8.1) **Other officers see it:** after the recording ends and the
+    recording officer is out of the instance, another officer or raid
+    leader online sees the raid on their Attendance tab ("recorded by …")
+    within a minute. One who was offline sees it about 2 minutes after
+    logging in. A Bench change shows for the others too.
 29. [ ] **Totals** with 30 / 60 / 90 days / All.
 

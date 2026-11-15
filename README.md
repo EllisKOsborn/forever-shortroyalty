@@ -44,7 +44,7 @@
 | 🏰 **Overview** | The guild at a glance: four numbers, what needs a look, raid readiness and recent milestones |
 | 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
-| 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals and **Copy as spreadsheet** |
+| 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals, shared between all officers |
 | ⚒️ **Find a crafter** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
 | 🧪 **Professions** | Three page tabs: **Guild** (every profession in the guild, then each profession's crafters and recipes), **Recipes** (**every recipe in the game**, by name, group or material) and **Cooldowns**; specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
 | 🔤 **Short Words** | A five-letter word game: **Daily** (one word a day for the whole guild) and **Free for all** (keep going), each with **Today** and **All time** guild leaderboards; today's word offered on flight paths |
@@ -137,8 +137,7 @@ make or cancel one.
 <p align="center"><img src="docs/images/raids-totals.png" alt="Attendance totals per person" width="100%"></p>
 
 - **Totals** per person over 30, 60 or 90 days, or all: raids, on time, late, didn't attend, bench and attended %.
-- **Copy as spreadsheet** gives one line per person per raid (Date, Raid, Name, Signed up, On time, Late, Didn't attend, Bench, Minutes in raid; ticks are 1 so the columns add up) that pastes straight into Google Sheets or Excel. The ··· menu copies every raid, or uses commas instead of tabs.
-- Attendance stays on the officer's computer; it's never sent to anyone.
+- **Every officer sees it** (v0.8.1): when a recording ends, or Bench is ticked or unticked, the record goes by whisper to the officers and raid leaders online with the addon; officers who were offline get it when they log in. The tab says who recorded each raid. Members never receive attendance. Everything stays in the addon: there's no spreadsheet export.
 
 ### ⚒️ Find a crafter
 <p align="center"><img src="docs/images/crafters.png" alt="Find a crafter page" width="100%"></p>
@@ -404,8 +403,8 @@ answer within a minute. You need Short Royalty to see guild raids.
 Only officers and raid leaders who typed `/sr officer` record it. Their game
 notes who's in the raid group and who in the guild is online every 2 minutes
 while they're in the raid group at a raid's time, and sorts everyone who
-signed up into on time, late, didn't attend and bench. It stays on their
-computer; **Copy as spreadsheet** pastes it into Google Sheets or Excel.
+signed up into on time, late, didn't attend and bench. Every officer and raid
+leader sees it on the Attendance tab; members don't.
 </details>
 
 <details>
@@ -491,8 +490,8 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.5.6**: Levelling, Route, Shopping list, Profit and the panel beside the profession window removed for now (to be reworked)
 - [x] **v0.6.0**: the calmer redesign: a sidebar window, one accent colour (pink, gold or your class), Inter, short tooltips with details on Shift, page tabs, Settings as switches ([before and after](#the-look))
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
-- [x] **v0.8.0**: **Raids** made in the addon: sign-ups with roles, who's coming, and for officers New raid and automatic attendance with Copy as spreadsheet
-- [ ] **Raids, next**: reminders before a raid, "invite everyone signed up", sharing attendance between officers
+- [x] **v0.8.0**: **Raids** made in the addon: sign-ups with roles, who's coming, and for officers New raid and automatic attendance (v0.8.1: shared between officers, no spreadsheet)
+- [ ] **Raids, next**: reminders before a raid, "invite everyone signed up"
 - [ ] **Ideas for later**: craft requests, a short status line, lockout board
 - [ ] **Later**: guild bank viewer and more in the [plan](PLAN.md#later-in-rough-priority-order)
 - [x] CurseForge release (every release uploads automatically)

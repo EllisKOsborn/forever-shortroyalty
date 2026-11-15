@@ -1,6 +1,9 @@
 -- Attendance (v0.8.0): recorded on an officer's or raid leader's own game
--- while they're in the raid group, never sent to anyone. Stored per guild
--- in guild.attendance = { [raid id] = record }.
+-- while they're in the raid group. Stored per guild in guild.attendance =
+-- { [raid id] = record }. v0.8.1: shared with the other officers and raid
+-- leaders by whisper (Sync/AttendanceSync.lua), never with members, and
+-- seen only in the addon (owner, 15 Nov: "We didn't want anything in a
+-- spreadsheet anymore").
 --
 -- Every EVERY seconds (and after each boss), outside combat and chat
 -- lockdown, a snapshot notes who is in the raid group and who in the guild
@@ -19,7 +22,8 @@
 -- People who said "Can't come" are listed without a tick. People in the
 -- raid who didn't sign up are listed as attended, marked "No".
 --
--- Pure parts (tested): NewRecord, AddSnapshot, Rows, Sheet, Totals.
+-- Pure parts (tested): NewRecord, AddSnapshot, Rows, Totals, BenchOf,
+-- ValidRecord, Merge.
 local _, SK = ...
 
 local Att = SK:NewModule("Attendance")
@@ -43,9 +47,19 @@ local SIGNED_NAME = { y = "Yes", t = "Tentative", n = "Can't come" }
 ---------------------------------------------------------------------------
 -- Records (pure)
 ---------------------------------------------------------------------------
+-- An officer's Bench choice for one person: true, false, or nil (automatic).
+-- Stored as { v = true|false|nil, u = when } so choices merge between
+-- officers (newest wins); a plain boolean is a v0.8.0 record.
+function Att.BenchOf(rec, guid)
+	local b = rec.bench and rec.bench[guid]
+	if type(b) == "boolean" then return b end
+	if type(b) == "table" then return b.v end
+	return nil
+end
+
 function Att.NewRecord(ev, by, now)
 	return { id = ev.id, raid = ev.raid, at = ev.at, by = by, began = now, last = nil, ended = nil,
-		total = 0, snaps = 0, people = {}, signed = {}, bench = {} }
+		total = 0, snaps = 0, people = {}, signed = {}, bench = {}, u = now }
 end
 
 -- inGroup / online = { [guid] = true }; names = { [guid] = { name, class } };
@@ -83,6 +97,7 @@ function Att.AddSnapshot(rec, t, inGroup, online, names, signups)
 	end
 	rec.last = t
 	rec.snaps = rec.snaps + 1
+	rec.u = math.max(rec.u or 0, t)
 	return dt
 end
 
@@ -106,7 +121,8 @@ function Att.Rows(rec)
 		if result then
 			local auto = (signed == "y" or signed == "t") and rec.total > 0 and p.bnS > 0 and p.bnS >= benchNeed
 			local bench = auto
-			if rec.bench[guid] ~= nil then bench = rec.bench[guid] end
+			local set = Att.BenchOf(rec, guid)
+			if set ~= nil then bench = set end
 			rows[#rows + 1] = { guid = guid, name = p.name or "?", class = p.class, signed = signed,
 				signedName = SIGNED_NAME[signed] or "No", result = result, resultName = Att.RESULT_NAME[result],
 				bench = bench and true or false, benchAuto = auto and true or false, inS = p.inS, bnS = p.bnS,
@@ -140,35 +156,6 @@ function Att.Sorted(store, since)
 	return out
 end
 
--- Spreadsheet text (the owner's columns, 15 Nov): one line per person per
--- raid, ticks as 1 so the columns can be summed. sep = "\t" (pastes into
--- Google Sheets and Excel as columns) or ",".
-Att.SHEET_COLUMNS = { "Date", "Raid", "Name", "Signed up", "On time, whole raid", "Late / not the whole raid",
-	"Didn't attend", "Bench", "Minutes in raid" }
-function Att.Sheet(records, sep)
-	sep = sep or "\t"
-	local function cell(v)
-		v = SK.Export.Plain(tostring(v or ""))
-		if sep == "," and v:find("[,\"]") then v = '"' .. v:gsub('"', '""') .. '"' end
-		return v
-	end
-	local lines = {}
-	local head = {}
-	for i, c in ipairs(Att.SHEET_COLUMNS) do head[i] = cell(c) end
-	lines[1] = table.concat(head, sep)
-	for _, rec in ipairs(records) do
-		local raid = SK.RaidBoard.Raid(rec.raid)
-		for _, r in ipairs(Att.Rows(rec)) do
-			lines[#lines + 1] = table.concat({
-				cell(date("%Y-%m-%d", rec.at)), cell(raid and raid.name or rec.raid), cell(r.name), cell(r.signedName),
-				r.result == "full" and "1" or "", r.result == "late" and "1" or "", r.result == "missed" and "1" or "",
-				r.bench and "1" or "", string.format("%d", math.floor(r.inS / 60 + 0.5)),
-			}, sep)
-		end
-	end
-	return table.concat(lines, "\n")
-end
-
 -- Per person over the given records: { guid, name, class, raids, full, late,
 -- missed, bench, declined }. "raids" counts every raid they're listed in.
 function Att.Totals(records)
@@ -194,6 +181,89 @@ function Att.Totals(records)
 	end
 	table.sort(out, function(a, b) return a.name:lower() < b.name:lower() end)
 	return out
+end
+
+---------------------------------------------------------------------------
+-- Sharing between officers (v0.8.1): checks and merging (pure)
+---------------------------------------------------------------------------
+Att.MAX_PEOPLE = 120 -- people in one record
+local function finite(v) return type(v) == "number" and v == v and v ~= math.huge and v ~= -math.huge end
+local function str(v, max) return type(v) == "string" and #v > 0 and #v <= max end
+local function optFinite(v) return v == nil or (finite(v) and v >= 0) end
+local SIGNED = { y = true, t = true, n = true }
+
+-- Is a received record well formed? Everything received is untrusted.
+function Att.ValidRecord(r, now)
+	if type(r) ~= "table" then return false, "not a table" end
+	if not str(r.id, 80) or not str(r.by, 64) or not SK.RaidBoard.Raid(r.raid) then return false, "bad id" end
+	for _, k in ipairs({ "at", "began", "total", "snaps", "u" }) do
+		if not finite(r[k]) or r[k] < 0 then return false, "bad " .. k end
+	end
+	if r.u > now + 300 then return false, "from the future" end
+	if not optFinite(r.last) or not optFinite(r.ended) then return false, "bad time" end
+	local n = 0
+	if type(r.people) ~= "table" or type(r.signed) ~= "table" or type(r.bench) ~= "table" then return false, "bad lists" end
+	for guid, p in pairs(r.people) do
+		n = n + 1
+		if n > Att.MAX_PEOPLE or not str(guid, 64) or type(p) ~= "table" then return false, "bad person" end
+		if not finite(p.inS) or not finite(p.bnS) or p.inS < 0 or p.bnS < 0 then return false, "bad minutes" end
+		if not optFinite(p.first) or not optFinite(p.last) then return false, "bad person time" end
+		if p.name ~= nil and not str(p.name, 64) then return false, "bad name" end
+		if p.class ~= nil and not str(p.class, 20) then return false, "bad class" end
+	end
+	n = 0
+	for guid, v in pairs(r.signed) do
+		n = n + 1
+		if n > Att.MAX_PEOPLE or not str(guid, 64) or not SIGNED[v] then return false, "bad sign-up" end
+	end
+	n = 0
+	for guid, b in pairs(r.bench) do
+		n = n + 1
+		if n > Att.MAX_PEOPLE or not str(guid, 64) or type(b) ~= "table" or not finite(b.u)
+			or (b.v ~= nil and type(b.v) ~= "boolean") then return false, "bad bench" end
+	end
+	return true
+end
+
+-- A clean copy with only the fields we know (what goes on the wire, and
+-- what is stored from it).
+function Att.Copy(r)
+	local out = { id = r.id, by = r.by, raid = r.raid, at = r.at, began = r.began, last = r.last, ended = r.ended,
+		total = r.total, snaps = r.snaps, u = r.u, people = {}, signed = {}, bench = {} }
+	for guid, p in pairs(r.people) do
+		out.people[guid] = { name = p.name, class = p.class, inS = p.inS, bnS = p.bnS, first = p.first, last = p.last }
+	end
+	for guid, v in pairs(r.signed) do out.signed[guid] = v end
+	for guid, b in pairs(r.bench) do
+		if type(b) == "boolean" then out.bench[guid] = { v = b, u = 0 } else out.bench[guid] = { v = b.v, u = b.u } end
+	end
+	return out
+end
+
+-- Merge a received record into what we hold. The recording with more checks
+-- wins (two officers may record the same raid; an ended copy beats a
+-- running one with as many); Bench choices merge per person, newest wins.
+-- `recording` = we are writing this record right now (keep our body).
+-- Returns the record to store (or nil to keep ours unchanged), changed.
+function Att.Merge(have, inc, recording)
+	if not have then return Att.Copy(inc), true end
+	local changed = false
+	local out = have
+	if not recording and (inc.snaps > have.snaps or (inc.snaps == have.snaps and inc.ended and not have.ended)) then
+		out = Att.Copy(inc)
+		for guid, b in pairs(have.bench or {}) do out.bench[guid] = type(b) == "boolean" and { v = b, u = 0 } or b end
+		changed = true
+	end
+	for guid, b in pairs(inc.bench) do
+		local mine = out.bench[guid]
+		local mineU = type(mine) == "table" and mine.u or (mine ~= nil and 0 or -1)
+		if b.u > mineU then
+			out.bench[guid] = { v = b.v, u = b.u }
+			changed = true
+		end
+	end
+	if changed then out.u = math.max(out.u or 0, inc.u) end
+	return out, changed
 end
 
 ---------------------------------------------------------------------------
@@ -292,8 +362,11 @@ function Att:Stop(at)
 	if not rec then return false end
 	rec.ended = at or Compat.Now()
 	self.current = nil
+	rec.u = math.max(rec.u or 0, rec.ended)
 	local s = Att.Summary(Att.Rows(rec))
-	SK:Print("Attendance saved: %d on time, %d late, %d didn't attend, %d bench.", s.full, s.late, s.missed, s.bench)
+	SK:Print("Attendance saved: %d on time, %d late, %d didn't attend, %d bench. Other officers get it when you're " ..
+		"out of the instance.", s.full, s.late, s.missed, s.bench)
+	if SK.AttendanceSync then SK.AttendanceSync:Share(rec.id) end
 	SK:Fire("ATTENDANCE_UPDATED")
 	return true
 end
@@ -317,7 +390,10 @@ function Att:ToggleBench(id, guid)
 	for _, r in ipairs(Att.Rows(rec)) do
 		if r.guid == guid then
 			local want = not r.bench
-			if want == r.benchAuto then rec.bench[guid] = nil else rec.bench[guid] = want end
+			local now = Compat.Now()
+			rec.bench[guid] = { v = (want ~= r.benchAuto) and want or nil, u = now }
+			rec.u = math.max(rec.u or 0, now)
+			if SK.AttendanceSync then SK.AttendanceSync:Share(id) end
 		end
 	end
 	SK:Fire("ATTENDANCE_UPDATED")

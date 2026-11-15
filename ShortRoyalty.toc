@@ -52,6 +52,7 @@ Sync\Frames.lua
 Sync\Merge.lua
 Sync\Sync.lua
 Sync\RaidSync.lua
+Sync\AttendanceSync.lua
 
 Media\Fonts.xml
 UI\Theme.lua

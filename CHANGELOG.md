@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.8.1 (not released yet): Attendance for every officer, no spreadsheet
+
+- **Every officer and raid leader sees every recorded raid** on the
+  Attendance tab, whoever recorded it. When a recording ends, or someone
+  ticks or unticks **Bench**, it's sent privately (by whisper) to the
+  officers and raid leaders online with the addon; officers who were
+  offline get it when they log in. Members never receive attendance.
+- **Copy as spreadsheet is gone** (the officers want everything in the
+  addon): *By raid* and *Totals* are the place to look.
+- The Attendance tab says who recorded the raid you're looking at.
+- If two officers recorded the same raid, the fuller recording is kept;
+  Bench choices from any officer are kept, the newest one winning.
+- `/sr debug` → Raids shows attendance sharing numbers.
+
 ## v0.8.0 (15 Nov 2026): Raids, sign-ups and attendance
 
 - **Raids**, a new page in the sidebar (Guild → Raids, or `/sr raids`).

@@ -394,26 +394,7 @@ describe("v0.8.0 attendance rules", function()
 		assert.is_true(result(A.Rows(rec), "A4").bench)
 		A:ToggleBench("x", "A4")
 		assert.is_false(result(A.Rows(rec), "A4").bench)
-		assert.is_nil(rec.bench.A4) -- back to the automatic answer
-	end)
-
-	it("copies as a spreadsheet: tabs by default, commas with quotes if asked", function()
-		local rec = A.NewRecord({ id = "x", raid = "ony", at = START }, "me", START)
-		rec.signups = { A1 = { s = "y" }, A4 = { s = "y" } }
-		play(rec, { A1 = function() return "in" end, A4 = function() return "on" end })
-		rec.people.A1.name = "Pocus, the Tall"
-		local text = A.Sheet({ rec }, "\t")
-		local lines = {}
-		for l in text:gmatch("[^\n]+") do lines[#lines + 1] = l end
-		assert.equal(3, #lines)
-		assert.equal(table.concat(A.SHEET_COLUMNS, "\t"), lines[1])
-		local cells = {}
-		for c in (lines[2] .. "\t"):gmatch("([^\t]*)\t") do cells[#cells + 1] = c end
-		assert.same({ os.date("%Y-%m-%d", START), "Onyxia's Lair", "Pocus, the Tall", "Yes", "1", "", "", "", "180" }, cells)
-		assert.truthy(lines[3]:find("\t\t1\t1\t0$")) -- didn't attend, bench, 0 minutes
-		local csv = A.Sheet({ rec }, ",")
-		assert.truthy(csv:find('"Pocus, the Tall"', 1, true))
-		assert.truthy(csv:find('"On time, whole raid"', 1, true))
+		assert.is_nil(rec.bench.A4.v) -- back to the automatic answer (the time stays, for sharing)
 	end)
 
 	it("adds raids up per person", function()
@@ -576,5 +557,131 @@ describe("v0.8.0 /sr officer and the page", function()
 		assert.truthy(text:find("== Raids (v0.8.0) ==", 1, true))
 		assert.truthy(text:find("can make raids: yes", 1, true))
 		assert.truthy(text:find("1 Officer (raids)", 1, true))
+	end)
+end)
+
+describe("v0.8.1 attendance shared between officers, no spreadsheet", function()
+	local SK, W, A, AS, sent
+	local function deliverAs(t, fields, sender, guid, dist)
+		SK.Sync:OnCommReceived(SK.PREFIX, H.peerMessage(SK, t, fields, guid), dist or "WHISPER", sender)
+	end
+	local function record(id, snaps, u)
+		local rec = SK.Attendance.NewRecord({ id = id, raid = "ony", at = W.now - 3600 }, BOB, W.now - 3600)
+		rec.signed = { [CAT] = "y" }
+		rec.people = { [CAT] = { name = "Cat", class = "MAGE", inS = 1800, bnS = 0, first = W.now - 3600, last = W.now } }
+		rec.snaps, rec.total, rec.u, rec.ended = snaps, 3600, u or W.now, W.now
+		return rec
+	end
+	before_each(function()
+		SK, W = setup()
+		A, AS = SK.Attendance, SK.AttendanceSync
+		sent = H.captureSends(SK)
+		SK.Identity:Member(BOB).addonSeen = W.now -- Bob is online with the addon
+	end)
+
+	it("the spreadsheet copy is gone", function()
+		assert.is_nil(A.Sheet)
+		H.loadUI(SK)
+		assert.is_nil(SK.RaidsTab.CopySheet)
+	end)
+
+	it("only officers online with the addon are sent attendance", function()
+		SK.Identity:Member(CAT).addonSeen = W.now -- a member: never
+		assert.same({ BOB }, AS.Targets(SK.DBM:Guild(), W.now))
+		A:Store()["r1"] = record("r1", 10)
+		AS:Share("r1")
+		W.advance(AS.SHARE_DELAY + 1)
+		SK.Sync:Flush()
+		assert.equal(1, #sent)
+		assert.equal("AR", sent[1].msg.t)
+		assert.equal("WHISPER", sent[1].dist)
+		assert.equal("Bob", sent[1].target)
+		assert.equal(10, sent[1].msg.r.snaps)
+	end)
+
+	it("waits until out of the instance before sending", function()
+		A:Store()["r1"] = record("r1", 10)
+		W.instance = "raid"
+		AS:Share("r1")
+		W.advance(AS.SHARE_DELAY + 1)
+		SK.Sync:Flush()
+		assert.equal(0, #sent)
+		W.instance = nil
+		W.advance(31)
+		SK.Sync:Flush()
+		assert.equal(1, #sent)
+	end)
+
+	it("stores a record from an officer; ignores members and records sent to members", function()
+		deliverAs("AR", { r = record("r1", 10) }, "Bob", BOB)
+		assert.equal(10, A:Store()["r1"].snaps)
+		deliverAs("AR", { r = record("r2", 10) }, "Cat", CAT)
+		assert.is_nil(A:Store()["r2"])
+		deliverAs("AR", { r = record("r3", 10) }, "Bob", BOB, "GUILD")
+		assert.is_nil(A:Store()["r3"])
+		local SK2 = setup({ rank = "Member", rankIndex = 4 })
+		SK2.Sync:OnCommReceived(SK2.PREFIX, H.peerMessage(SK2, "AR", { r = record("r4", 10) }, BOB), "WHISPER", "Bob")
+		assert.equal(0, SK2.Count(SK2.Attendance:Store()))
+	end)
+
+	it("refuses broken records", function()
+		local bad = record("r1", 10)
+		bad.people[CAT].inS = "lots"
+		deliverAs("AR", { r = bad }, "Bob", BOB)
+		local bad2 = record("r2", 10)
+		bad2.signed[CAT] = "maybe"
+		deliverAs("AR", { r = bad2 }, "Bob", BOB)
+		local bad3 = record("r3", 10)
+		bad3.raid = "naxx"
+		deliverAs("AR", { r = bad3 }, "Bob", BOB)
+		assert.equal(0, SK.Count(A:Store()))
+		assert.equal(3, AS.stats.rejected)
+	end)
+
+	it("keeps the fuller recording and merges Bench choices, newest first", function()
+		local mine = record("r1", 20)
+		mine.bench[CAT] = { v = true, u = W.now - 10 }
+		A:Store()["r1"] = mine
+		local theirs = record("r1", 12)
+		theirs.bench[CAT] = { v = false, u = W.now }
+		deliverAs("AR", { r = theirs }, "Bob", BOB)
+		local got = A:Store()["r1"]
+		assert.equal(20, got.snaps)          -- ours had more checks
+		assert.is_false(got.bench[CAT].v)    -- their Bench choice is newer
+		local fuller = record("r1", 30)
+		deliverAs("AR", { r = fuller }, "Bob", BOB)
+		assert.equal(30, A:Store()["r1"].snaps)
+		assert.is_false(A:Store()["r1"].bench[CAT].v) -- the newer choice survives the swap
+	end)
+
+	it("a Bench change is shared", function()
+		A:Store()["r1"] = record("r1", 10)
+		A:ToggleBench("r1", CAT)
+		W.advance(AS.SHARE_DELAY + 1)
+		SK.Sync:Flush()
+		assert.equal(1, #sent)
+		assert.is_not_nil(sent[1].msg.r.bench[CAT])
+	end)
+
+	it("after login, asks other officers and gets what it's missing", function()
+		A:Store()["r1"] = record("r1", 10)
+		AS:SendQuery()
+		SK.Sync:Flush()
+		assert.equal("AQ", sent[1].msg.t)
+		assert.equal(10, sent[1].msg.k.r1.s)
+		sent = H.captureSends(SK)
+		-- Bob asks us, holding nothing: he gets r1; holding the same: nothing.
+		deliverAs("AQ", { k = {} }, "Bob", BOB)
+		SK.Sync:Flush()
+		assert.equal(1, #sent)
+		assert.equal("r1", sent[1].msg.r.id)
+		sent = H.captureSends(SK)
+		deliverAs("AQ", { k = { r1 = { s = 10, u = A:Store()["r1"].u } } }, "Bob", BOB)
+		SK.Sync:Flush()
+		assert.equal(0, #sent)
+		-- a member asking gets nothing
+		deliverAs("AQ", { k = {} }, "Cat", CAT)
+		SK.Sync:Flush()
+		assert.equal(0, #sent)
 	end)
 end)

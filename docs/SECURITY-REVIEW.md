@@ -122,4 +122,12 @@ fingerprint per raid). Checked in `Core/RaidBoard.lua` and tested in
   stored. Limits: 30 raids, 100 sign-ups per raid, 120 items per message,
   60 raids per digest, timestamps at most 5 minutes ahead, raids at most 60
   days ahead.
-- Attendance is local only and never sent.
+- Attendance is local only and never sent. (v0.8.1: see below.)
+
+v0.8.1: attendance is shared between officers with `AR` (one record) and
+`AQ` (what I hold), **WHISPER only**, sent only to officer/raid leader ranks
+and accepted only from them, and only by a receiver who is one
+(`Sync/AttendanceSync.lua`). `Attendance.ValidRecord` checks every field
+(raid key, numbers, at most 120 people, sign-ups y/t/n, Bench `{v, u}`);
+`Attendance.Copy` keeps only known fields. A rogue officer could send a
+fuller fake record; accepted risk (officers are trusted by the guild).

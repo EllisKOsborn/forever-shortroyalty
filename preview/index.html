@@ -791,8 +791,8 @@ function raids() {
       const r = i < 9 ? 0 : i < 12 ? 1 : i < 16 ? 2 : 3;
       return { m, signed: i === 8 ? "No" : r === 3 ? "Can't come" : i === 15 ? "Tentative" : "Yes", res: RES[r], bench: i === 9 || i === 14 || i === 15, mins: r === 0 ? 180 - (i % 3) : r === 1 ? 95 + i * 3 : 0 };
     });
-    const top = `<div class="abs small" style="left:0;top:${t0 + 4}px;right:300px"><span class="good">Recording</span> <span class="dim">Onyxia's Lair (Today 20:00)  ·  64 checks  ·  last now</span></div>
-      ${btn("End raid", "", `style="position:absolute;right:194px;top:${t0}px"`)}${btn("Copy as spreadsheet", "", `style="position:absolute;right:36px;top:${t0}px"`)}${btn("···", "", `style="position:absolute;right:0;top:${t0}px;width:28px;padding:0;justify-content:center"`)}
+    const top = `<div class="abs small" style="left:0;top:${t0 + 4}px;right:120px"><span class="good">Recording</span> <span class="dim">Onyxia's Lair (Today 20:00)  ·  64 checks  ·  last now</span></div>
+      ${btn("End raid", "", `style="position:absolute;right:0;top:${t0}px"`)}
       <div class="abs" style="left:0;top:${t0 + 36}px;display:flex;gap:4px"><span class="chip ${totals ? "" : "on"}" data-av="raids">By raid</span><span class="chip ${totals ? "on" : ""}" data-av="totals">Totals</span>
       ${totals ? `<span style="width:12px"></span><span class="chip on">30 days</span><span class="chip">60 days</span><span class="chip">90 days</span><span class="chip">All</span>` : ""}</div>`;
     const lt = t0 + 36 + 22 + 12;

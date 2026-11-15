@@ -414,6 +414,10 @@ function Commands.RaidLines()
 	add("Attendance: recording %s%s, raids saved: %d, last check skipped because: %s",
 		rec and "yes" or "no", rec and string.format(" (%s, %d checks)", tostring(rec.raid), rec.snaps) or "",
 		SK.Count(SK.Attendance:Store() or {}), tostring(SK.Attendance.lastWhy))
+	local as = SK.AttendanceSync.stats
+	add("Attendance sharing (v0.8.1): officers online with the addon: %d, sent %d records / %d asks, received %d / %d, " ..
+		"accepted %d, rejected %d, last reject: %s", #SK.AttendanceSync.Targets(guild, now), as.sentAR, as.sentAQ,
+		as.gotAR, as.gotAQ, as.accepted, as.rejected, tostring(SK.AttendanceSync.lastReject))
 	return L
 end
 

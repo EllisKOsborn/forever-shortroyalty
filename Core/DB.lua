@@ -35,7 +35,6 @@ local DEFAULTS = {
 		raidsView = "upcoming",                   -- v0.8.0 Raids page tab: upcoming, new or attendance
 		attView = "raids",                        -- v0.8.0 Attendance: raids or totals
 		attDays = 30,                             -- v0.8.0 Attendance totals period (0 = all)
-		sheetCommas = false,                      -- v0.8.0 spreadsheet copy with commas instead of tabs
 		newRaid = {},                             -- v0.8.0 New raid form { raid, day, minutes }
 	},
 	officer = {},   -- [guid] = true: /sr officer turned the officer tools on for this character (v0.8.0)
