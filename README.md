@@ -47,7 +47,7 @@
 | 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals and **Copy as spreadsheet** |
 | ⚒️ **Find a crafter** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
 | 🧪 **Professions** | Three page tabs: **Guild** (every profession in the guild, then each profession's crafters and recipes), **Recipes** (**every recipe in the game**, by name, group or material) and **Cooldowns**; specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
-| 🔤 **Short Words** | A five-letter word game: **Daily** (one word a day for the whole guild) and **Free for all** (keep going), each with **Today** and **All time** guild leaderboards; offered on flight paths |
+| 🔤 **Short Words** | A five-letter word game: **Daily** (one word a day for the whole guild) and **Free for all** (keep going), each with **Today** and **All time** guild leaderboards; today's word offered on flight paths |
 | ⚙️ **Settings** | Sharing and privacy switches, accent colour, font, window size and reminders; tools and a live status read-out under **Advanced** |
 | 🧨 **Everywhere** | A sidebar window in your pick of accent colour, `/sr`, a minimap button, short guild lines on item tooltips, chat reminders and a copyable debug report |
 
@@ -224,9 +224,10 @@ else) or **red** (not in the word); the keyboard keeps track.
   for the daily word, every couple of minutes at most for free play. Turn
   sharing off in Settings → *Share my Short Words results*. Scores are on
   trust: it's for fun.
-- **On flights:** when you take a flight path, a small box offers a game
-  (today's word if you haven't played it, otherwise free for all). **Play**
-  opens Short Words; landing closes it again if the box opened it. Turn it
+- **On flights:** when you take a flight path and haven't played today's
+  word yet, a small box offers it. Once you've played it, the box doesn't
+  come back that day (v0.8.0). **Play** opens Short Words; landing closes it
+  again if the box opened it. Turn it
   off in Settings → Display → *Short Words on flights*.
 
 <p align="center"><img src="docs/images/short-words-flight.png" alt="The box shown on a flight path: Flying? Play Short Words" width="100%"></p>

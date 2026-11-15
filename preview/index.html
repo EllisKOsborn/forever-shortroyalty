@@ -886,8 +886,8 @@ function tooltipShot() {
 // v0.7.2: the box shown on a flight path (Theme.SIZES.flightBox 320 x 56, 140 from the top).
 function flightShot() {
   const box = (text) => `<div class="flightbox"><i class="edge"></i><i class="mask fi"></i><div class="ft"><div>Flying? Play Short Words</div><div class="dim">${text}</div></div>${btn("Play", "primary")}<div class="close"><i></i></div></div>`;
-  return `<div class="flightshot"><div><div class="cap">Today's word not played yet</div>${box("Today's word is waiting.")}</div>
-    <div><div class="cap">Already played today</div>${box("Play free for all until you land.")}</div></div>`;
+  // v0.8.0: only until today's word is played; no box after that.
+  return `<div class="flightshot"><div><div class="cap">Today's word not played yet (no box once it's played)</div>${box("Today's word is waiting.")}</div></div>`;
 }
 function copyWin() {
   const lines = ["Short Royalty roster", ...rosterRows().slice(0, 30).map((m) => `${m.name}  ${m.level}  ${m.rank}  ${m.spec || "-"}  ${m.ilvl || "-"}`)];

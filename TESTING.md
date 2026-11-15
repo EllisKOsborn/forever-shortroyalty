@@ -63,9 +63,9 @@ git history (`git show v0.6.0:TESTING.md`).
 ## v0.7.2 Short Words on flights
 
 15. [ ] Take a **flight path**: within a second a small box appears near the
-    top of the screen, "Flying? Play Short Words". It says *Today's word is
-    waiting* if you haven't played today, otherwise *Play free for all
-    until you land*.
+    top of the screen, "Flying? Play Short Words", *Today's word is
+    waiting*, but only if you haven't played today's word (v0.8.0: after
+    that, no box until the next day's word).
 16. [ ] **Play** opens Short Words. When you land, the box is gone and the
     window closes (only if the box opened it). **✕** or Esc hides the box.
 17. [ ] Getting stunned or feared (not on a flight) never shows the box,

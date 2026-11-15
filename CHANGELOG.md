@@ -44,6 +44,9 @@
   raid group.
 - Works with guildmates on v0.3.3 and later; older versions just don't see
   the raids.
+- **Short Words on flights** (the guild asked): the box now only offers
+  **today's word**, and stops appearing once you've played it. It no longer
+  offers free for all.
 
 ## v0.7.2 (14 Nov 2026): Short Words on flights
 

@@ -330,6 +330,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
     Test stub: `time(t)` now uses `os.time(t)` for tables; `W.raid`.
     Pictures `raids*.png` (preview `screen=raids`, `officer=1`,
     `raidsView`, `attView`). TESTING.md 18–29.
+  - Also in v0.8.0 (guild asked): the flight box (`Flight.Offer`) offers only
+    today's daily word and returns nil once it's done (no free-for-all offer).
   - **Unverified in game:** everything; especially rank-name matching,
     `GetRaidRosterInfo`/`UnitGUID("raidN")` inside a raid instance, guild
     roster "online" inside instances, whether tabs survive Copy into Sheets.

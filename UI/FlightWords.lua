@@ -1,6 +1,7 @@
 -- Short Words on flights (v0.7.2). When you take a flight path, a small box
--- near the top of the screen offers a game: today's word if you haven't
--- played it, otherwise free for all. Play opens the window on Short Words
+-- near the top of the screen offers today's word, only while you haven't
+-- played it (v0.8.0, the guild asked: no box once the daily word is done,
+-- no free-for-all offer). Play opens the window on Short Words
 -- (you still click the board to type, so the keyboard is never taken).
 -- Landing hides the box, and closes the window if the box opened it (games
 -- are saved as you go). Settings → General → "Short Words on flights".
@@ -24,12 +25,13 @@ Flight.TITLE = "Flying? Play Short Words"
 -- What the box offers, or nil for no box. Pure; tested.
 --   enabled: the setting; onWords: the window is already showing Short Words;
 --   daily: today's daily game; me: this character's GUID.
+-- Only today's word, and only until it's done (on any of your characters).
 function Flight.Offer(enabled, inCombat, onWords, daily, me)
 	if not enabled or inCombat or onWords then return nil end
 	if daily and not daily.done and not (daily.guid and daily.guid ~= me) then
 		return { view = "daily", text = "Today's word is waiting." }
 	end
-	return { view = "free", text = "Play free for all until you land." }
+	return nil
 end
 
 local function windowShown()

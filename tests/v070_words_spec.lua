@@ -370,11 +370,11 @@ describe("v0.7.2 Short Words on flights", function()
 		W.advance(1)
 	end
 
-	it("offers today's word, else free for all, and nothing when off, in combat or already playing", function()
+	it("offers only today's word, and nothing once it's done, when off, in combat or already playing", function()
 		local fresh = { done = false }
 		assert.equal("daily", F.Offer(true, false, false, fresh, "me").view)
-		assert.equal("free", F.Offer(true, false, false, { done = true }, "me").view)
-		assert.equal("free", F.Offer(true, false, false, { done = false, guid = "alt" }, "me").view) -- started on an alt
+		assert.is_nil(F.Offer(true, false, false, { done = true }, "me")) -- v0.8.0: no free-for-all offer
+		assert.is_nil(F.Offer(true, false, false, { done = false, guid = "alt" }, "me")) -- started on an alt
 		assert.equal("daily", F.Offer(true, false, false, { done = false, guid = "me" }, "me").view)
 		assert.is_nil(F.Offer(false, false, false, fresh, "me"))
 		assert.is_nil(F.Offer(true, true, false, fresh, "me"))
@@ -421,13 +421,13 @@ describe("v0.7.2 Short Words on flights", function()
 		assert.is_false(F.box:IsShown())
 	end)
 
-	it("offers free for all once today's word is done", function()
+	it("v0.8.0: no box once today's word is done", function()
 		local SW = SK.ShortWords
 		local game = SW:Daily(W.now)
 		SW:Play(game, game.word, W.player.guid, "Pip", W.now)
 		takeOff()
-		assert.equal("free", F.offer.view)
-		F:Play()
-		assert.equal("free", SK.DB.settings.wordsView)
+		assert.is_true(F.flying)
+		assert.is_falsy(F.offer)
+		assert.is_falsy(F.box and F.box:IsShown())
 	end)
 end)
