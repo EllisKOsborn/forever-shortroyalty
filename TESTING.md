@@ -70,3 +70,39 @@ git history (`git show v0.6.0:TESTING.md`).
     window closes (only if the box opened it). **✕** or Esc hides the box.
 17. [ ] Getting stunned or feared (not on a flight) never shows the box,
     and Settings → Display → *Short Words on flights* off stops it.
+
+## v0.8.0 Raids, sign-ups and attendance
+
+Officers: first send the `/sr debug` **Raids** block. It shows your rank,
+which ranks can make raids (they're matched by the words "Officer" and
+"Raid Leader" in the rank name, plus the Guild Master), and what the game
+says about your raid group.
+
+18. [ ] The sidebar has **Guild → Raids** with a calendar icon. A member
+    sees only the *Raids* tab; `/sr officer` prints the help for them.
+19. [ ] An officer or raid leader types `/sr officer`: *New raid* and
+    *Attendance* appear. Typing it again hides them.
+20. [ ] **New raid:** make one for tonight. Within a minute a guildmate
+    with v0.8.0 sees it under Raids and on their Overview, at the right
+    time for them. Someone who logs in later gets it too (within about two
+    minutes of logging in).
+21. [ ] **Sign up / Tentative / Can't come** and the role menu: your answer
+    shows for guildmates within a minute; the counts and line-up update.
+22. [ ] Cancel the raid from its ··· menu: it disappears for everyone.
+23. [ ] **Attendance** (a dungeon group converted to a raid group works for
+    a first test): be in a raid group from 30 minutes before a raid's start.
+    Chat says "Recording attendance for …", and *Attendance* shows checks
+    going up every 2 minutes. `/sr debug` → *Raid group* shows members read,
+    with GUID and matched to the guild.
+24. [ ] After a boss or a fight, a check is taken once combat ends.
+25. [ ] Someone who signed up and stays online outside the group gets the
+    **Bench** tick after 30 minutes; clicking their row changes it.
+26. [ ] Someone who joins late or leaves early shows **Late / part**;
+    someone who signed up and never came shows **Didn't attend**.
+27. [ ] Leave the group: the recording stops 15 minutes later (or press
+    *End raid*) and chat says what was saved.
+28. [ ] **Copy as spreadsheet**, then paste into Google Sheets or Excel: one
+    column per heading. If it all lands in one column, tick *Use commas
+    instead of tabs* in the ··· menu, paste again, and tell me.
+29. [ ] **Totals** with 30 / 60 / 90 days / All.
+

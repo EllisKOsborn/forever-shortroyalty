@@ -25,7 +25,7 @@ function W.reset()
 
 	_G.wipe = function(t) for k in pairs(t) do t[k] = nil end return t end
 	_G.date = os.date
-	_G.time = function() return W.now end
+	_G.time = function(t) if t then return os.time(t) end return W.now end
 	_G.GetTime = function() return W.now end
 	_G.GetServerTime = function() return W.now end
 	_G.print = function(...) W.prints[#W.prints + 1] = table.concat({ ... }, " ") end
@@ -93,7 +93,21 @@ function W.reset()
 
 	_G.C_AddOns = { GetAddOnMetadata = function() return "0.1.0" end }
 	_G.GetBuildInfo = function() return "1.60.1", "70532", "Oct 22 2026", 16001 end
-	_G.UnitGUID = function(u) if u == "player" then return W.player.guid end end
+	_G.UnitGUID = function(u)
+		if u == "player" then return W.player.guid end
+		local i = tonumber(tostring(u):match("^raid(%d+)$"))
+		local m = i and W.raid and W.raid[i]
+		if m and not W.raidHideGuid then return m.guid end
+	end
+	-- v0.8.0 raid group: W.raid = nil (not in a raid) or { {name, guid, class, online}, ... }
+	W.raid, W.raidHideGuid = nil, false
+	_G.IsInRaid = function() return W.raid ~= nil end
+	_G.GetNumGroupMembers = function() return W.raid and #W.raid or 0 end
+	_G.GetRaidRosterInfo = function(i)
+		local m = W.raid and W.raid[i]
+		if not m then return nil end
+		return m.name, 0, 1, 60, "Mage", m.class or "MAGE", "Onyxia's Lair", m.online ~= false
+	end
 	_G.UnitFullName = function(u) if u == "player" then return W.player.name, W.player.realm end end
 	_G.UnitName = function(u) if u == "player" then return W.player.name end end
 	_G.UnitClass = function() return W.player.class, W.player.class, 8 end

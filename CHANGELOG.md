@@ -1,5 +1,50 @@
 # Changelog
 
+## v0.8.0 (not released yet): Raids, sign-ups and attendance
+
+- **Raids**, a new page in the sidebar (Guild → Raids, or `/sr raids`).
+  Officers and raid leaders make guild raids **in the addon**; Blizzard's
+  calendar isn't used. Everyone with Short Royalty sees them within a minute,
+  and people who were offline get them when they log in.
+- **Sign up** with one click: *Sign up*, *Tentative* or *Can't come*, plus
+  your role (Tank, Healer or DPS; remembered, and guessed from your talents
+  until you pick). Change your answer any time.
+- **Who's coming:** everyone who answered, with role, spec, item level and
+  attunement, role counts ("Tanks 3 · Healers 6 · DPS 13 · 22 / 40"), and
+  a readiness line: missing tanks or healers, tentatives, more sign-ups than
+  the raid holds, not attuned, amulet not in bags, item-level range, missing
+  enchants, old data, and anyone signed up on two characters. Copy the
+  line-up as text from the ··· menu.
+- **The Overview's Raids card** starts with the next guild raid, how many
+  signed up and your own answer; click it to sign up.
+- **Officer tools** (officers, raid leaders and the Guild Master): type
+  `/sr officer` to switch them on for that character. They add:
+  - **New raid**: pick the raid, the day (next two weeks) and the start
+    time (your own time; everyone sees it in theirs), then *Create raid*.
+    Cancel a raid from its ··· menu.
+  - **Attendance**, recorded automatically while you're in the raid group,
+    from 30 minutes before the start: every 2 minutes (and after each boss,
+    never in combat) it notes who's in the group and who in the guild is
+    online. Each person gets **On time, whole raid**, **Late / not the whole
+    raid** (late or left early) or **Didn't attend**, plus a separate
+    **Bench** tick for people who signed up and were online but not in the
+    raid (ticked automatically; click a name to change it). It stops 15
+    minutes after you leave the group, 6 hours after the start, or when you
+    press *End raid*.
+  - **Totals** per person over 30, 60 or 90 days (or all), and **Copy as
+    spreadsheet**: one line per person per raid that pastes straight into
+    Google Sheets or Excel (Date, Raid, Name, Signed up, On time, Late,
+    Didn't attend, Bench, Minutes in raid; ticks are 1 so columns add up).
+    The ··· menu switches to commas or copies every raid.
+  - Attendance stays on your computer; nothing about it is sent to anyone.
+- Every player's game checks that a raid was made by an officer or raid
+  leader (by the rank names in the guild roster), so nobody else can make
+  or cancel one. `/sr debug` has a new **Raids** block: your rank, which
+  ranks can make raids, raid sync numbers and what the game says about the
+  raid group.
+- Works with guildmates on v0.3.3 and later; older versions just don't see
+  the raids.
+
 ## v0.7.2 (14 Nov 2026): Short Words on flights
 
 - When you take a **flight path**, a small box near the top of the screen

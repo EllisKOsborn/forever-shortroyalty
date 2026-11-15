@@ -32,7 +32,14 @@ local DEFAULTS = {
 		wordsBoard = "today",                     -- v0.7.0 Short Words leaderboard: today or all
 		wordsColourBlind = false,                 -- v0.7.1 Short Words orange/blue/grey colours
 		flightWords = true,                       -- v0.7.2 offer Short Words on flight paths
+		raidsView = "upcoming",                   -- v0.8.0 Raids page tab: upcoming, new or attendance
+		attView = "raids",                        -- v0.8.0 Attendance: raids or totals
+		attDays = 30,                             -- v0.8.0 Attendance totals period (0 = all)
+		sheetCommas = false,                      -- v0.8.0 spreadsheet copy with commas instead of tabs
+		newRaid = {},                             -- v0.8.0 New raid form { raid, day, minutes }
 	},
+	officer = {},   -- [guid] = true: /sr officer turned the officer tools on for this character (v0.8.0)
+	raidRole = {},  -- [guid] = "TANK" | "HEALER" | "DPS", the role picked for raid sign-ups (v0.8.0)
 	own = {},             -- [guid] = full profile of our own characters (never sent)
 	cooldownSpells = {},  -- [guid] = { [recipeID] = true } recipes with cooldowns
 	account = {},  -- [guid] = true for characters seen on this account

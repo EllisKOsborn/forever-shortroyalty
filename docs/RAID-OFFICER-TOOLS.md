@@ -1,6 +1,13 @@
 # Raid sign-ups and attendance (plan, 15 Nov 2026)
 
-Nothing built yet. Waiting on the owner's go-ahead (questions at the end).
+**Built as v0.8.0 on 15 Nov** (owner: "Build this now"), not released yet.
+What changed from this plan while building: the owner answered the
+questions below (Officer and Raid Leader ranks; left early = late; officer
+tools behind a command like `/sr profit` → `/sr officer`; members without
+the addon "will just have to download the addon", so no adding by hand),
+and the probe release was folded into v0.8.0's `/sr debug` Raids block
+instead of shipping first. Ranks are matched by name (like the Alt rank),
+not by `GuildControlGetRankFlags`. The code notes are in CLAUDE.md.
 
 ## The request (Guild Master, relayed 15 Nov)
 > Raid signups in game, with attendance tracking, including being able to

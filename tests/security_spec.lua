@@ -166,3 +166,45 @@ describe("Security", function()
 		assert.is_true(SK.Count(SK.Sync.rate) <= SK.Sync.MAX_RATE_KEYS + 1)
 	end)
 end)
+
+describe("Security: v0.8.0 raid messages (RB, RD)", function()
+	local SK, W
+	local BOB, CAT = "Player-1-B", "Player-1-C"
+	before_each(function()
+		SK, W = H.load()
+		W.member("Pip", W.player.guid)
+		W.member("Bob", BOB, { rank = "Officer", rankIndex = 1 })
+		W.member("Cat", CAT, { rank = "Member", rankIndex = 4 })
+		SK.Identity:ReadRoster()
+	end)
+	local function send(t, fields, sender, guid, dist)
+		SK.Sync:OnCommReceived(SK.PREFIX, H.peerMessage(SK, t, fields, guid), dist or "GUILD", sender)
+	end
+	local function ev(by, extra)
+		local e = { id = by .. ":" .. string.format("%d", W.now), by = by, c = W.now, raid = "ony", at = W.now + 3600, u = W.now }
+		for k, v in pairs(extra or {}) do e[k] = v end
+		return e
+	end
+
+	it("only officers' and raid leaders' raids are kept, whoever relays them", function()
+		send("RB", { e = { ev(CAT) } }, "Cat", CAT)
+		send("RB", { e = { ev(CAT) } }, "Bob", BOB)
+		assert.equal(0, SK.Count(SK.RaidBoard:Get().events))
+		send("RB", { e = { ev(BOB) } }, "Cat", CAT) -- relayed by a member: fine, Bob made it
+		assert.equal(1, SK.Count(SK.RaidBoard:Get().events))
+		-- a member can't cancel it
+		send("RB", { e = { ev(BOB, { u = W.now + 1, x = true, eb = CAT }) } }, "Cat", CAT)
+		assert.is_nil(SK.RaidBoard:Get().events[ev(BOB).id].x)
+	end)
+
+	it("drops raid messages from strangers, by whisper, and junk, without errors", function()
+		send("RB", { e = { ev(BOB) } }, "Mallory", "Player-9-M")
+		send("RB", { e = { ev(BOB) } }, "Bob", BOB, "WHISPER")
+		assert.equal(0, SK.Count(SK.RaidBoard:Get().events))
+		send("RB", { e = { { id = {}, by = 5 } }, su = { { e = 1 } } }, "Bob", BOB)
+		send("RD", { d = { [{}] = 5 } }, "Bob", BOB)
+		send("RB", { su = { { e = ev(BOB).id, g = "Player-9-M", s = "y", u = W.now } } }, "Bob", BOB)
+		W.advance(20)
+		assert.equal(0, #SK.errors)
+	end)
+end)

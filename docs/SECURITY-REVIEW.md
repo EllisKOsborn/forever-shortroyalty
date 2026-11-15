@@ -103,3 +103,23 @@ New profile fields, all checked in `Merge.FIELDS` and display-only:
 - SQ/SO `a` (who runs the addon) only sets a local "seen" mark, never a
   version, so it can't trigger "newer version" notices.
 - The Raids tab reads Blizzard's calendar (server data); no sync involved.
+
+## Addendum (15 Nov 2026, v0.8.0 raids)
+
+Two new GUILD-only message types, `RB` (raids and sign-ups) and `RD` (a
+fingerprint per raid). Checked in `Core/RaidBoard.lua` and tested in
+`tests/security_spec.lua` and `tests/v080_raids_spec.lua`:
+- A raid is kept only if its creator (`by`) and whoever changed it (`eb`)
+  are in an officer or raid leader rank **in the receiver's own roster**.
+  Ranks come from Blizzard's roster, so a message can't promote anyone.
+- Like relayed profiles, relayed items can't prove who wrote them: a member
+  could forge a sign-up for someone else, or replay an officer's raid with a
+  newer time. Accepted risk for a guild tool (same as profile relays); the
+  damage is a wrong line-up entry. Attendance doesn't trust sign-ups for
+  anything but the "Signed up" column and the bench suggestion.
+- No free text: raids are a key from `Data/Attunements` plus numbers;
+  sign-ups are y/t/n and a role from a fixed list. Only known fields are
+  stored. Limits: 30 raids, 100 sign-ups per raid, 120 items per message,
+  60 raids per digest, timestamps at most 5 minutes ahead, raids at most 60
+  days ahead.
+- Attendance is local only and never sent.

@@ -118,6 +118,7 @@
   .btn { display: inline-flex; align-items: center; justify-content: center; height: var(--sz-control); padding: 0 var(--sp-l); border: 1px solid var(--lineStrong);
     color: var(--text); cursor: pointer; white-space: nowrap; box-sizing: border-box; }
   .btn:hover { background: var(--raised); border-color: var(--dim); } .btn:active { background: var(--pressed); padding-top: 2px; }
+  .btn.on { background: var(--accent-selected); border-color: var(--accent); }
   .btn.primary { background: var(--accent); color: var(--onAccent); border-color: transparent; text-shadow: none; }
   .btn.primary:hover { background: var(--accentLit); } .btn.primary:active { background: var(--accentDeep); }
   .btn.quiet { border-color: transparent; color: var(--dim); font-size: var(--fsm); padding: 0 var(--sp-s); }
@@ -765,14 +766,84 @@ function words() {
     <div class="abs dim small" style="right:0;top:${t0 + 5}px">${rows.length} players</div>${lb}`;
 }
 
+// ---------------------------------------------------------------- raids (v0.8.0)
+function raids() {
+  const officer = S.officer === "1";
+  let view = S.raidsView || "upcoming";
+  if (!officer && view !== "upcoming") view = "upcoming";
+  const tabs = [["upcoming", "Raids"]].concat(officer ? [["new", "New raid"], ["attendance", "Attendance"]] : []);
+  const t0 = T.sizes.subTabs + T.space.m;
+  const head = subtabs(tabs, view, "data-rv");
+  const menu = (text, style) => `<div class="menu abs" style="${style}">${btn(text).replace("</span>", '<i class="arrow"></i></span>')}</div>`;
+  const M = G.members;
+  const nm = (m) => cls(m);
+  if (view === "new") {
+    const field = (label, text, y) => `<div class="abs display dim" style="left:0;top:${t0 + y}px;font-size:11px;letter-spacing:.08em">${label.toUpperCase()}</div>${menu(text, `left:0;top:${t0 + y + 20}px;width:240px`)}`;
+    return head + field("Raid", "Onyxia's Lair (40)", 0) + field("Day", "Friday 11 December", 60) + field("Start time (your time)", "20:00", 120) +
+      btn("Create raid", "primary", `style="position:absolute;left:0;top:${t0 + 180}px"`) +
+      `<div class="abs dim small" style="left:0;top:${t0 + 216}px;width:460px;line-height:1.4">Everyone with Short Royalty sees the raid within a minute (people who are offline get it when they log in) and can sign up from this page. Times show in each player's own time zone. To change a raid, cancel it from its ··· menu and make a new one.</div>
+      <div class="abs" style="left:0;top:${t0 + 280}px"><span class="good">Made: </span>Onyxia's Lair, Fri 11 Dec, 20:00</div>`;
+  }
+  if (view === "attendance") {
+    const totals = S.attView === "totals";
+    const RES = [["full", "On time", "good"], ["late", "Late / part", "spark"], ["missed", "Didn't attend", "bad"], ["declined", "Can't come", "faint"]];
+    const people = M.slice(0, 19).map((m, i) => {
+      const r = i < 9 ? 0 : i < 12 ? 1 : i < 16 ? 2 : 3;
+      return { m, signed: i === 8 ? "No" : r === 3 ? "Can't come" : i === 15 ? "Tentative" : "Yes", res: RES[r], bench: i === 9 || i === 14 || i === 15, mins: r === 0 ? 180 - (i % 3) : r === 1 ? 95 + i * 3 : 0 };
+    });
+    const top = `<div class="abs small" style="left:0;top:${t0 + 4}px;right:300px"><span class="good">Recording</span> <span class="dim">Onyxia's Lair (Today 20:00)  ·  64 checks  ·  last now</span></div>
+      ${btn("End raid", "", `style="position:absolute;right:194px;top:${t0}px"`)}${btn("Copy as spreadsheet", "", `style="position:absolute;right:36px;top:${t0}px"`)}${btn("···", "", `style="position:absolute;right:0;top:${t0}px;width:28px;padding:0;justify-content:center"`)}
+      <div class="abs" style="left:0;top:${t0 + 36}px;display:flex;gap:4px"><span class="chip ${totals ? "" : "on"}" data-av="raids">By raid</span><span class="chip ${totals ? "on" : ""}" data-av="totals">Totals</span>
+      ${totals ? `<span style="width:12px"></span><span class="chip on">30 days</span><span class="chip">60 days</span><span class="chip">90 days</span><span class="chip">All</span>` : ""}</div>`;
+    const lt = t0 + 36 + 22 + 12;
+    if (totals) {
+      const rows = M.slice(0, 22).map((m, i) => ({ m, raids: 6 - (i % 3), full: 5 - (i % 4), late: i % 3 === 1 ? 1 : 0, missed: i % 5 === 4 ? 1 : 0, bench: i % 6 === 2 ? 2 : 0 }))
+        .map((r) => Object.assign(r, { pct: Math.round((r.full + r.late) / Math.max(1, r.full + r.late + r.missed) * 100) }));
+      return head + top + list([{ key: "n", t: "Name", w: 180 }, { key: "raids", t: "Raids", w: 70, r: 1 }, { key: "full", t: "On time", w: 80, r: 1 }, { key: "late", t: "Late", w: 70, r: 1 },
+        { key: "missed", t: "Didn't attend", w: 100, r: 1 }, { key: "bench", t: "Bench", w: 70, r: 1 }, { key: "pct", t: "Attended", w: 90, r: 1 }], rows,
+        (r, c) => c.key === "n" ? nm(r.m) : c.key === "pct" ? r.pct + "%" : r[c.key], { sort: { key: "n" }, style: `left:0;right:0;top:${lt}px;bottom:0` });
+    }
+    const recs = [["Fri 11 Dec", "Onyxia's Lair", 20, 1], ["Wed 09 Dec", "Hyjal Summit", 18], ["Wed 09 Dec", "Barrow Deeps", 10]];
+    return head + top + list([{ key: "d", t: "Date", w: 96 }, { key: "r", t: "Raid", w: 110 }, { key: "c", t: "Came", w: 52, r: 1 }], recs,
+      (r, c) => c.key === "d" ? r[0] : c.key === "r" ? r[1] + (r[3] ? ' <span class="good">•</span>' : "") : r[2], { click: true, sel: (r) => r === recs[0], style: `left:0;top:${lt}px;bottom:0;width:270px` }) +
+      list([{ key: "n", t: "Name", w: 140 }, { key: "s", t: "Signed up", w: 84 }, { key: "res", t: "Result", w: 110 }, { key: "b", t: "Bench", w: 56 }, { key: "m", t: "Mins", w: 52, r: 1 }], people,
+        (p, c) => c.key === "n" ? nm(p.m) : c.key === "s" ? `<span class="${p.signed === "Yes" ? "good" : p.signed === "No" || p.signed === "Can't come" ? "faint" : ""}">${p.signed}</span>`
+          : c.key === "res" ? `<span class="${p.res[2]}">${p.res[1]}</span>` : c.key === "b" ? (p.bench ? '<span class="acc">yes</span>' : DASH) : p.mins,
+        { click: true, style: `left:290px;right:0;top:${lt}px;bottom:0` });
+  }
+  const events = [["Today 20:00", "Onyxia's Lair", 22, 40, "y"], ["Wed 16 Dec 19:30", "Hyjal Summit", 14, 20, "t"], ["Fri 18 Dec 20:00", "Barrow Deeps", 6, 10, ""], ["Wed 23 Dec 19:30", "Onyxia's Lair", 3, 40, ""]];
+  const ROLE = { WARRIOR: "Tank", PRIEST: "Healer", PALADIN: "Healer", DRUID: "Healer", SHAMAN: "Healer" };
+  const lineup = M.slice(0, 27).map((m, i) => ({ m, st: i < 22 ? ["Signed up", "good"] : i < 25 ? ["Tentative", ""] : ["Can't come", "faint"],
+    role: ROLE[m.cls] || "DPS", guess: i % 4 === 3, att: i % 9 === 4 ? '<span class="bad">no</span>' : '<span class="good">yes</span>' }))
+    .sort((a, b) => ["Signed up", "Tentative", "Can't come"].indexOf(a.st[0]) - ["Signed up", "Tentative", "Can't come"].indexOf(b.st[0]) || ["Tank", "Healer", "DPS"].indexOf(a.role) - ["Tank", "Healer", "DPS"].indexOf(b.role));
+  const LW = 290, RX = LW + 20;
+  const dotFor = (s) => s === "y" ? ' <span class="good">•</span>' : s === "t" ? " <span>•</span>" : "";
+  return head + list([{ key: "w", t: "When", w: 124 }, { key: "r", t: "Raid", w: 106 }, { key: "s", t: "Signed", w: 60, r: 1 }], events,
+      (e, c) => c.key === "w" ? e[0] : c.key === "r" ? e[1] + dotFor(e[4]) : `${e[2]}<span class="faint"> / ${e[3]}</span>`,
+      { click: true, sel: (e) => e === events[0], sort: { key: "w" }, style: `left:0;top:${t0}px;bottom:0;width:${LW}px` }) +
+    `<div class="abs" style="left:${RX}px;top:${t0 + 2}px;font-size:15px">Onyxia's Lair (40)</div>
+    <div class="abs dim small" style="left:${RX}px;top:${t0 + 24}px">Fri 11 Dec, 20:00  ·  made by ${nm(M[3])}</div>
+    ${btn("···", "", `style="position:absolute;right:0;top:${t0}px;width:28px;padding:0;justify-content:center"`)}
+    <div class="abs" style="left:${RX}px;top:${t0 + 48}px;display:flex;gap:8px">${btn("Sign up", "on")}${btn("Tentative")}${btn("Can't come")}<span style="width:4px"></span>
+      <span class="menu" style="width:110px">${btn("Healer").replace("</span>", '<i class="arrow"></i></span>')}</span></div>
+    <div class="abs" style="left:${RX}px;top:${t0 + 80}px">You: <span class="good">Signed up</span> as Healer</div>
+    <div class="abs dim small" style="left:${RX}px;top:${t0 + 100}px">Tanks 3  ·  Healers 6  ·  DPS 13  ·  22 / 40  ·  3 tentative  ·  2 can't come</div>
+    <div class="abs dim small" style="left:${RX}px;right:0;top:${t0 + 120}px;line-height:1.4">3 tentative<span class="faint">  ·  </span><span class="bad">3 not attuned</span><span class="faint">  ·  </span><span class="spark">2 without the amulet in their bags</span><span class="faint">  ·  </span>Item level 52 to 75</div>` +
+    list([{ key: "n", t: "Name", w: 128 }, { key: "s", t: "Status", w: 82 }, { key: "r", t: "Role", w: 62 }, { key: "sp", t: "Spec", w: 76 }, { key: "i", t: "ilvl", w: 36, r: 1 }, { key: "a", t: "Attuned", w: 38, r: 1 }], lineup,
+      (r, c) => c.key === "n" ? (r.m.online ? dot("good") : "") + nm(r.m) : c.key === "s" ? `<span class="${r.st[1]}">${r.st[0]}</span>` : c.key === "r" ? `<span class="${r.guess ? "faint" : ""}">${r.role}</span>`
+        : c.key === "sp" ? `<span class="dim">${r.m.spec || "-"}</span>` : c.key === "i" ? (r.m.ilvl || DASH) : r.att,
+      { click: true, style: `left:${RX}px;right:0;top:${t0 + 164}px;bottom:0` });
+}
+
 // ---------------------------------------------------------------- window
-const TABS = [["overview", "Overview", "guild"], ["roster", "Roster", "guild"], ["character", "Character", "guild"], ["crafters", "Find a crafter", "crafting"],
+const TABS = [["overview", "Overview", "guild"], ["roster", "Roster", "guild"], ["character", "Character", "guild"], ["raids", "Raids", "guild"], ["crafters", "Find a crafter", "crafting"],
   ["professions", "Professions", "crafting"], ["words", "Short Words", "games"], ["settings", "Settings", "settings"]];
 const DESC = { roster: "Everyone in the guild. Click a name for their gear, talents and professions.", character: "Gear, talents, professions, cooldowns, reputations and attunements.",
   crafters: "Search an item or recipe to see who in the guild can make it, and whisper them.", professions: "Who crafts what in the guild, every recipe in the game, and cooldowns.",
   settings: "What you share, how the window looks, and reminders.",
-  words: "A five-letter word in six guesses: one word a day for the whole guild, or as many as you like." };
-const RENDER = { overview, roster, character, crafters, professions, words, settings };
+  words: "A five-letter word in six guesses: one word a day for the whole guild, or as many as you like.",
+  raids: "Guild raids made by officers and raid leaders. Sign up here so they know who's coming." };
+const RENDER = { overview, roster, character, raids, crafters, professions, words, settings };
 function windowHTML() {
   const err = S.data === "error", paused = err || !G.name || S.data === "loading";
   const why = err ? "combat" : "roster not loaded";
@@ -787,6 +858,7 @@ function windowHTML() {
     }
   }
   const members = G.members.length, players = members - G.members.reduce((a, m) => a + (m.alts ? 1 : 0), 0);
+  if (S.screen === "raids" && S.officer === "1") DESC.raids = "Guild raids, sign-ups and attendance (officer tools on: /sr officer turns them off)";
   const desc = S.screen === "overview" ? (G.name ? `${esc(G.name)}  ·  ${plural(members, "member")}  ·  ${plural(players, "player")}  ·  ${online} online` : "No guild  ·  join a guild to see guildmates here") : DESC[S.screen];
   const title = TABS.find((t) => t[0] === S.screen)[1];
   return `<div class="side"><div class="crest" role="img" aria-label="Short Royalty crest"></div><div class="brand display">Short<br>Royalty</div>${nav}
@@ -858,6 +930,8 @@ function wire() {
   document.querySelectorAll("[data-tab]").forEach((el) => (el.onclick = () => { if (S.screen === el.dataset.tab) return; S.screen = el.dataset.tab; S.menuOpen = false; S.optOpen = false; seg("segScreen"); render({ reveal: true }); }));
   document.querySelectorAll("[data-pv]").forEach((el) => (el.onclick = () => { S.profView = el.dataset.pv; S.prof = null; S.crafter = null; render(); }));
   document.querySelectorAll("[data-wv]").forEach((el) => (el.onclick = () => { S.wordsView = el.dataset.wv; render(); }));
+  document.querySelectorAll("[data-rv]").forEach((el) => (el.onclick = () => { S.raidsView = el.dataset.rv; render(); }));
+  document.querySelectorAll("[data-av]").forEach((el) => (el.onclick = () => { S.attView = el.dataset.av; render(); }));
   document.querySelectorAll("[data-wcb]").forEach((el) => (el.onclick = () => { S.wordsCB = S.wordsCB === "1" ? "0" : "1"; render(); }));
   document.querySelectorAll("[data-wb]").forEach((el) => (el.onclick = () => { S.wordsBoard = el.dataset.wb; render(); }));
   document.querySelectorAll("[data-sv]").forEach((el) => (el.onclick = () => { S.setView = el.dataset.sv; render(); }));
@@ -936,7 +1010,7 @@ function seg(id) {
 try { Object.assign(S, JSON.parse(localStorage.getItem("skPreview") || "{}")); } catch (e) { /* ignore */ }
 // ?screen=roster&data=worst&view=before&raid=ony  (and &shot=1 for the README pictures: window only, no chrome)
 const Q = new URLSearchParams(location.search);
-for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB"]) if (Q.get(k)) S[k] = Q.get(k);
+for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer"]) if (Q.get(k)) S[k] = Q.get(k);
 const SHOT = Q.get("shot");
 if (SHOT) {
   document.body.classList.add("shot"); S.view = SHOT === "compare" ? "before" : "after"; S.reduce = true;

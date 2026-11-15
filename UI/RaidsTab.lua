@@ -1,0 +1,615 @@
+-- Raids page (v0.8.0). Everyone: upcoming guild raids, who's coming, and
+-- Sign up / Tentative / Can't come with a role. Officers and raid leaders
+-- who typed /sr officer also get New raid, Cancel and Attendance (with
+-- Copy as spreadsheet). The rules live in Core/RaidBoard.lua and
+-- Core/Attendance.lua.
+local _, SK = ...
+
+local RT = SK:NewModule("RaidsTab")
+local Theme, W, Compat = SK.Theme, SK.Widgets, SK.Compat
+local Board, Att = SK.RaidBoard, SK.Attendance
+local S, SP = Theme.SIZES, Theme.SPACE
+
+RT.VIEWS = { { "upcoming", "Raids" }, { "new", "New raid" }, { "attendance", "Attendance" } }
+RT.OFFICER_VIEWS = { new = true, attendance = true }
+RT.LEFT_W = 290
+RT.RIGHT_W = S.contentW - RT.LEFT_W - SP.xl
+RT.ATT_LEFT_W = 270
+RT.ATT_RIGHT_W = S.contentW - RT.ATT_LEFT_W - SP.xl
+RT.DAYS = { { 30, "30 days" }, { 60, "60 days" }, { 90, "90 days" }, { 0, "All" } }
+
+RT.EVENT_COLUMNS = {
+	{ key = "when", title = "When", width = 124, sort = function(a, b) return a.at < b.at end },
+	{ key = "raid", title = "Raid", width = 106 },
+	{ key = "signed", title = "Signed", width = 60, align = "RIGHT" },
+}
+RT.LINEUP_COLUMNS = {
+	{ key = "name", title = "Name", width = 128, sort = function(a, b) return a.name:lower() < b.name:lower() end },
+	{ key = "status", title = "Status", width = 82 },
+	{ key = "role", title = "Role", width = 62 },
+	{ key = "spec", title = "Spec", width = 76 },
+	{ key = "ilvl", title = "ilvl", width = 36, align = "RIGHT", sort = function(a, b) return (a.ilvl or 0) < (b.ilvl or 0) end },
+	{ key = "att", title = "Attuned", width = RT.RIGHT_W - 128 - 82 - 62 - 76 - 36 - SP.m, align = "RIGHT" },
+}
+RT.RECORD_COLUMNS = {
+	{ key = "date", title = "Date", width = 96 },
+	{ key = "raid", title = "Raid", width = 110 },
+	{ key = "came", title = "Came", width = RT.ATT_LEFT_W - 96 - 110 - SP.m, align = "RIGHT" },
+}
+RT.PEOPLE_COLUMNS = {
+	{ key = "name", title = "Name", width = 140, sort = function(a, b) return a.name:lower() < b.name:lower() end },
+	{ key = "signed", title = "Signed up", width = 84 },
+	{ key = "result", title = "Result", width = 110 },
+	{ key = "bench", title = "Bench", width = 56, align = "CENTER" },
+	{ key = "mins", title = "Mins", width = RT.ATT_RIGHT_W - 140 - 84 - 110 - 56 - SP.m, align = "RIGHT",
+		sort = function(a, b) return a.inS < b.inS end },
+}
+local function pctSort(a, b) return (a.pct or -1) < (b.pct or -1) end
+RT.TOTAL_COLUMNS = {
+	{ key = "name", title = "Name", width = 180, sort = function(a, b) return a.name:lower() < b.name:lower() end },
+	{ key = "raids", title = "Raids", width = 70, align = "RIGHT", sort = function(a, b) return a.raids < b.raids end },
+	{ key = "full", title = "On time", width = 80, align = "RIGHT", sort = function(a, b) return a.full < b.full end },
+	{ key = "late", title = "Late", width = 70, align = "RIGHT", sort = function(a, b) return a.late < b.late end },
+	{ key = "missed", title = "Didn't attend", width = 100, align = "RIGHT", sort = function(a, b) return a.missed < b.missed end },
+	{ key = "bench", title = "Bench", width = 70, align = "RIGHT", sort = function(a, b) return a.bench < b.bench end },
+	{ key = "pct", title = "Attended", width = 90, align = "RIGHT", sort = pctSort },
+}
+
+local STATUS_TONE = { y = "good", t = "text", n = "faint" }
+-- Short names in the list; the full ones are in the tooltip and the spreadsheet.
+RT.RESULT_SHORT = { full = "On time", late = "Late / part", missed = "Didn't attend", declined = "Can't come" }
+local RESULT_TONE = { full = "good", late = "spark", missed = "bad", declined = "faint" }
+
+---------------------------------------------------------------------------
+-- Pure helpers (tested)
+---------------------------------------------------------------------------
+-- Which page tab to show: officer tabs fall back to Raids for everyone else.
+function RT.View(officer)
+	local v = SK.DB.settings.raidsView
+	if RT.OFFICER_VIEWS[v] and not officer then return "upcoming" end
+	if v ~= "new" and v ~= "attendance" then return "upcoming" end
+	return v
+end
+
+-- Rows for the left list of raids.
+function RT.EventRows(board, now, me)
+	local rows = {}
+	for _, e in ipairs(Board.Upcoming(board, now)) do
+		local raid = Board.Raid(e.raid)
+		local mine = board.signups[e.id] and board.signups[e.id][me or ""]
+		rows[#rows + 1] = { id = e.id, at = e.at, when = Board.ShortWhen(e.at, now), raidName = raid and raid.name or e.raid,
+			size = raid and raid.size, counts = Board.Counts(board, e.id), mine = mine and mine.s, ev = e }
+	end
+	return rows
+end
+
+-- "You: Signed up as Healer" / "You haven't answered yet".
+function RT.MineText(su)
+	if not su then return Theme.Paint("spark", "You haven't answered yet") end
+	local role = su.r and SK.Data.ROLE_NAMES[su.r]
+	return "You: " .. Theme.Paint(STATUS_TONE[su.s], Board.STATUS_NAME[su.s]) .. (role and su.s ~= "n" and (" as " .. role) or "")
+end
+
+-- The line at the top of Attendance.
+function RT.RecordingText(rec, now)
+	if not rec then
+		return "Not recording. It starts by itself when you're in a raid group from 30 minutes before a raid's start."
+	end
+	local raid = Board.Raid(rec.raid)
+	return string.format("%s %s (%s)  ·  %s  ·  %s", Theme.Paint("good", "Recording"), raid and raid.name or "raid",
+		Board.ShortWhen(rec.at, now), Theme.Count(rec.snaps, "check"),
+		rec.last and ("last " .. Theme.Ago(rec.last, now)) or "first check soon")
+end
+
+---------------------------------------------------------------------------
+-- Cells
+---------------------------------------------------------------------------
+local C = Theme.Code
+
+local function setEventCell(fs, r, col)
+	if col.key == "when" then
+		fs:SetText(r.when)
+	elseif col.key == "raid" then
+		fs:SetText(r.raidName .. (r.mine and (" " .. Theme.Paint(STATUS_TONE[r.mine], "•")) or ""))
+	elseif col.key == "signed" then
+		fs:SetText(r.counts.y .. (r.size and (C("faint") .. " / " .. r.size .. "|r") or ""))
+	end
+end
+
+local function setLineUpCell(fs, r, col)
+	local k = col.key
+	if k == "name" then
+		fs:SetText((r.online and (SK.RosterTab.DOT.addon .. " ") or "") .. Theme.ClassText(r.name, r.class) ..
+			(r.duplicateOf and (" " .. C("spark") .. "2x|r") or ""))
+	elseif k == "status" then
+		fs:SetText(Theme.Paint(STATUS_TONE[r.status], r.statusName))
+	elseif k == "role" then
+		fs:SetText(r.role and Theme.Paint(r.roleGuess and "faint" or "text", SK.Data.ROLE_NAMES[r.role]) or Theme.DASH)
+	elseif k == "spec" then
+		fs:SetText(r.tree and (C("dim") .. r.tree .. "|r") or Theme.DASH)
+	elseif k == "ilvl" then
+		fs:SetText(r.ilvl and string.format("%.0f", r.ilvl) or Theme.DASH)
+	elseif k == "att" then
+		local t = { yes = Theme.Paint("good", "yes"), no = Theme.Paint("bad", "no"), none = Theme.Paint("faint", "n/a") }
+		fs:SetText(t[r.att] or Theme.DASH)
+	end
+end
+
+local function setRecordCell(fs, r, col)
+	if col.key == "date" then
+		fs:SetText(date("%a %d %b", r.at))
+	elseif col.key == "raid" then
+		local raid = Board.Raid(r.raid)
+		fs:SetText((raid and raid.name or r.raid) .. ((Att.current == r) and (" " .. Theme.Paint("good", "•")) or ""))
+	elseif col.key == "came" then
+		local s = Att.Summary(Att.Rows(r))
+		fs:SetText(tostring(s.full + s.late))
+	end
+end
+
+local function setPersonCell(fs, r, col)
+	local k = col.key
+	if k == "name" then
+		fs:SetText(Theme.ClassText(r.name, r.class))
+	elseif k == "signed" then
+		fs:SetText(Theme.Paint(r.signed and STATUS_TONE[r.signed] or "faint", r.signedName))
+	elseif k == "result" then
+		fs:SetText(Theme.Paint(RESULT_TONE[r.result], RT.RESULT_SHORT[r.result]))
+	elseif k == "bench" then
+		fs:SetText(r.bench and Theme.Paint("accent", "yes") or Theme.DASH)
+	elseif k == "mins" then
+		fs:SetText(string.format("%d", math.floor(r.inS / 60 + 0.5)))
+	end
+end
+
+local function setTotalCell(fs, r, col)
+	local k = col.key
+	if k == "name" then
+		fs:SetText(Theme.ClassText(r.name, r.class))
+	elseif k == "pct" then
+		fs:SetText(r.pct and (r.pct .. "%") or Theme.DASH)
+	else
+		fs:SetText(tostring(r[k] or 0))
+	end
+end
+
+---------------------------------------------------------------------------
+-- Building
+---------------------------------------------------------------------------
+local function label(parent, text)
+	local fs = Theme.Text(parent, "label", "dim")
+	fs:SetText(text:upper())
+	return fs
+end
+
+function RT:Build(page)
+	self.page = page
+	local s = SK.DB.settings
+	self.views = W.SubTabs(page, RT.VIEWS, function(k)
+		s.raidsView = k
+		RT:Refresh()
+	end)
+	self.views:SetPoint("TOPLEFT", 0, 0)
+	self.views:SetPoint("TOPRIGHT", 0, 0)
+	local top = -(S.subTabs + SP.m)
+
+	-------------------------------------------------------------------------
+	-- Raids: the list on the left, the selected raid on the right
+	-------------------------------------------------------------------------
+	local up = CreateFrame("Frame", nil, page)
+	up:SetPoint("TOPLEFT", 0, top)
+	up:SetPoint("BOTTOMRIGHT")
+	self.upcoming = up
+	self.events = W.List(up, {
+		columns = RT.EVENT_COLUMNS, setCell = setEventCell,
+		onClick = function(r) RT.selected = r.id; RT:Refresh() end,
+	})
+	self.events:SetPoint("TOPLEFT")
+	self.events:SetPoint("BOTTOMLEFT")
+	self.events:SetWidth(RT.LEFT_W)
+	self.events.sortCol = 1
+
+	local d = CreateFrame("Frame", nil, up)
+	d:SetPoint("TOPLEFT", RT.LEFT_W + SP.xl, 0)
+	d:SetPoint("BOTTOMRIGHT")
+	self.detail = d
+	self.title = Theme.Text(d, "title", "text")
+	self.title:SetPoint("TOPLEFT", 0, -SP.xxs)
+	self.sub = Theme.Text(d, "small", "dim")
+	self.sub:SetPoint("TOPLEFT", self.title, "BOTTOMLEFT", 0, -SP.xs)
+	self.options = W.OptionsButton(d, function() return RT:DetailOptions() end, "Copy the line-up, cancel the raid")
+	self.options:SetPoint("TOPRIGHT", 0, 0)
+
+	self.signButtons = {}
+	local prev
+	for _, b in ipairs({ { "y", "Sign up" }, { "t", "Tentative" }, { "n", "Can't come" } }) do
+		local btn = W.Button(d, b[2], nil, S.control, function() RT:SignUp(b[1]) end)
+		btn.status = b[1]
+		-- Your answer stays marked, like a picked chip.
+		local paint = btn.Paint
+		function btn:Paint(state)
+			paint(self, state)
+			if self.active and not self.disabled then
+				Theme.Solid(self.bg, "accent", Theme.ALPHA.selected)
+				Theme.SetBorderColor(self, "accent")
+			end
+		end
+		if prev then btn:SetPoint("LEFT", prev, "RIGHT", SP.s, 0) else btn:SetPoint("TOPLEFT", 0, -(44 + SP.xs)) end
+		self.signButtons[#self.signButtons + 1] = btn
+		prev = btn
+	end
+	self.role = W.Menu(d, {
+		width = 110,
+		items = function()
+			local out = {}
+			for _, r in ipairs(SK.Data.ROLES) do out[#out + 1] = { value = r, text = SK.Data.ROLE_NAMES[r] } end
+			return out
+		end,
+		get = function() return (Board.MyRole()) end,
+		set = function(v)
+			local guid = Compat.PlayerGUID()
+			if guid then SK.DB.raidRole[guid] = v end
+			local board = Board:Get()
+			local mine = RT.selected and board and board.signups[RT.selected] and board.signups[RT.selected][guid or ""]
+			if mine then Board:SignUp(RT.selected, mine.s, v) end
+			RT:Refresh()
+		end,
+	})
+	self.role:SetPoint("LEFT", prev, "RIGHT", SP.m, 0)
+	self.role.tooltip = "Your role for raids (remembered). Until you pick one, it's a guess from your talents."
+	self.mine = Theme.Text(d, "body", "text")
+	self.mine:SetPoint("TOPLEFT", 0, -(44 + SP.xs + S.control + SP.s))
+	self.counts = Theme.Text(d, "small", "dim")
+	self.counts:SetPoint("TOPLEFT", self.mine, "BOTTOMLEFT", 0, -SP.xs)
+	self.ready = Theme.Text(d, "small", "dim")
+	self.ready:SetPoint("TOPLEFT", self.counts, "BOTTOMLEFT", 0, -SP.xs)
+	self.ready:SetPoint("RIGHT", 0, 0)
+	self.ready:SetJustifyH("LEFT")
+	self.ready:SetJustifyV("TOP")
+	self.ready:SetWordWrap(true)
+	self.ready:SetHeight(32)
+	self.lineup = W.List(d, {
+		columns = RT.LINEUP_COLUMNS, setCell = setLineUpCell,
+		onClick = function(r) SK.CharacterTab:ShowCharacter(r.guid) end,
+	})
+	self.lineup:SetPoint("TOPLEFT", 0, -(44 + SP.xs + S.control + SP.s + 18 + SP.xs + 16 + SP.xs + 32 + SP.s))
+	self.lineup:SetPoint("BOTTOMRIGHT")
+	self.lineup:SetEmptyText("Nobody has answered yet.")
+	self.empty = Theme.Text(d, "body", "dim")
+	self.empty:SetPoint("TOPLEFT", 0, -SP.xxs)
+	self.empty:SetPoint("RIGHT", 0, 0)
+	self.empty:SetJustifyH("LEFT")
+	self.empty:SetWordWrap(true)
+
+	-------------------------------------------------------------------------
+	-- New raid (officers)
+	-------------------------------------------------------------------------
+	local nw = CreateFrame("Frame", nil, page)
+	nw:SetPoint("TOPLEFT", 0, top)
+	nw:SetPoint("BOTTOMRIGHT")
+	self.newPage = nw
+	s.newRaid = s.newRaid or {}
+	local form = s.newRaid
+	local y = 0
+	local function field(text, menu)
+		local l = label(nw, text)
+		l:SetPoint("TOPLEFT", 0, -y)
+		menu:SetPoint("TOPLEFT", 0, -(y + W.CARD_LABEL_H))
+		y = y + W.CARD_LABEL_H + S.control + SP.l
+		return menu
+	end
+	self.raidMenu = field("Raid", W.Menu(nw, {
+		width = 240,
+		items = function()
+			local out = {}
+			for _, r in ipairs(SK.Data.ShownAttunements()) do
+				out[#out + 1] = { value = r.key, text = string.format("%s (%d)", r.name, r.size or 0) }
+			end
+			return out
+		end,
+		get = function() return form.raid or "ony" end,
+		set = function(v) form.raid = v end,
+	}))
+	self.dayMenu = field("Day", W.Menu(nw, {
+		width = 240,
+		items = function()
+			local out, now = {}, Compat.Now()
+			for i = 0, Board.DAYS_SHOWN - 1 do
+				local at = Board.DayStart(now, i)
+				out[#out + 1] = { value = i, text = (i == 0 and "Today, " or i == 1 and "Tomorrow, " or "") .. date("%A %d %B", at) }
+			end
+			return out
+		end,
+		get = function() return form.day or 0 end,
+		set = function(v) form.day = v end,
+	}))
+	self.timeMenu = field("Start time (your time)", W.Menu(nw, {
+		width = 240,
+		items = function()
+			local out = {}
+			for m = 0, 23 * 60 + 30, 30 do out[#out + 1] = { value = m, text = string.format("%02d:%02d", math.floor(m / 60), m % 60) } end
+			return out
+		end,
+		get = function() return form.minutes or 20 * 60 end,
+		set = function(v) form.minutes = v end,
+	}))
+	self.create = W.Button(nw, "Create raid", nil, S.control, function() RT:CreateRaid() end, "primary")
+	self.create:SetPoint("TOPLEFT", 0, -y)
+	self.createNote = Theme.Text(nw, "small", "dim")
+	self.createNote:SetPoint("TOPLEFT", 0, -(y + S.control + SP.m))
+	self.createNote:SetWidth(460)
+	self.createNote:SetJustifyH("LEFT")
+	self.createNote:SetWordWrap(true)
+	self.createNote:SetText("Everyone with Short Royalty sees the raid within a minute (people who are offline " ..
+		"get it when they log in) and can sign up from this page. Times show in each player's own time zone. " ..
+		"To change a raid, cancel it from its ··· menu and make a new one.")
+	self.createResult = Theme.Text(nw, "body", "text")
+	self.createResult:SetPoint("TOPLEFT", self.createNote, "BOTTOMLEFT", 0, -SP.m)
+	self.createResult:SetWidth(460)
+	self.createResult:SetJustifyH("LEFT")
+
+	-------------------------------------------------------------------------
+	-- Attendance (officers)
+	-------------------------------------------------------------------------
+	local at = CreateFrame("Frame", nil, page)
+	at:SetPoint("TOPLEFT", 0, top)
+	at:SetPoint("BOTTOMRIGHT")
+	self.attPage = at
+	self.recording = Theme.Text(at, "small", "dim")
+	self.recording:SetPoint("TOPLEFT", 0, -SP.xs)
+	self.recording:SetPoint("RIGHT", -300, 0)
+	self.recording:SetJustifyH("LEFT")
+	self.recording:SetWordWrap(true)
+	self.attOptions = W.OptionsButton(at, function()
+		return {
+			{ text = "Use commas instead of tabs", checked = function() return s.sheetCommas end,
+				onClick = function() s.sheetCommas = not s.sheetCommas end },
+			{ text = "Copy every raid as a spreadsheet", onClick = function() RT:CopySheet(true) end },
+		}
+	end, "Spreadsheet options")
+	self.attOptions:SetPoint("TOPRIGHT", 0, 0)
+	self.copySheet = W.Button(at, "Copy as spreadsheet", nil, S.control, function() RT:CopySheet(false) end)
+	self.copySheet:SetPoint("RIGHT", self.attOptions, "LEFT", -SP.s, 0)
+	self.copySheet.tooltip = "The selected raid (or, on Totals, every raid in the period) as text that pastes " ..
+		"into Google Sheets or Excel as columns."
+	self.endRaid = W.Button(at, "End raid", nil, S.control, function() Att:Stop(Compat.Now()); RT:Refresh() end)
+	self.endRaid:SetPoint("RIGHT", self.copySheet, "LEFT", -SP.s, 0)
+	self.endRaid.tooltip = "Stop recording now. It also stops by itself 15 minutes after you leave the raid group."
+	self.resume = W.Button(at, "Resume", nil, S.control, function()
+		if RT.record then Att:Resume(RT.record) end
+		RT:Refresh()
+	end)
+	self.resume:SetPoint("RIGHT", self.copySheet, "LEFT", -SP.s, 0)
+	self.resume.tooltip = "Start recording this raid again (you're in a raid group in its time)."
+
+	local chipsY = -(S.control + SP.m)
+	self.modeChips = {}
+	prev = nil
+	for _, m in ipairs({ { "raids", "By raid" }, { "totals", "Totals" } }) do
+		local c = W.Chip(at, m[2], function() s.attView = m[1]; RT:Refresh() end)
+		c.value = m[1]
+		if prev then c:SetPoint("LEFT", prev, "RIGHT", SP.xs, 0) else c:SetPoint("TOPLEFT", 0, chipsY) end
+		self.modeChips[#self.modeChips + 1] = c
+		prev = c
+	end
+	self.dayChips = {}
+	local dprev = nil
+	for _, dd in ipairs(RT.DAYS) do
+		local c = W.Chip(at, dd[2], function() s.attDays = dd[1]; RT:Refresh() end)
+		c.value = dd[1]
+		if dprev then c:SetPoint("LEFT", dprev, "RIGHT", SP.xs, 0) else c:SetPoint("LEFT", prev, "RIGHT", SP.l, 0) end
+		self.dayChips[#self.dayChips + 1] = c
+		dprev = c
+	end
+	local listTop = chipsY - (S.controlSmall + 2) - SP.m
+	self.records = W.List(at, {
+		columns = RT.RECORD_COLUMNS, setCell = setRecordCell,
+		onClick = function(r) RT.record = r.id; RT:Refresh() end,
+	})
+	self.records:SetPoint("TOPLEFT", 0, listTop)
+	self.records:SetPoint("BOTTOMLEFT")
+	self.records:SetWidth(RT.ATT_LEFT_W)
+	self.records:SetEmptyText("No raids recorded yet.")
+	self.people = W.List(at, {
+		columns = RT.PEOPLE_COLUMNS, setCell = setPersonCell,
+		onClick = function(r) if RT.record then Att:ToggleBench(RT.record, r.guid) end end,
+		onEnter = function(row, r)
+			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+			Theme.TipLine(GameTooltip, Theme.ClassText(r.name, r.class))
+			Theme.TipLine(GameTooltip, r.resultName, RESULT_TONE[r.result])
+			Theme.TipDouble(GameTooltip, "In the raid group", math.floor(r.inS / 60 + 0.5) .. " min", "dim", "text")
+			Theme.TipDouble(GameTooltip, "Online, not in the group", math.floor(r.bnS / 60 + 0.5) .. " min", "dim", "text")
+			Theme.TipLine(GameTooltip, r.benchAuto and "Bench was ticked automatically." or "Bench wasn't ticked automatically.", "faint")
+			Theme.TipLine(GameTooltip, "Click to tick or untick Bench", "accent")
+			GameTooltip:Show()
+		end,
+	})
+	self.people:SetPoint("TOPLEFT", RT.ATT_LEFT_W + SP.xl, listTop)
+	self.people:SetPoint("BOTTOMRIGHT")
+	self.people:SetEmptyText("Pick a raid on the left.")
+	self.totals = W.List(at, { columns = RT.TOTAL_COLUMNS, setCell = setTotalCell })
+	self.totals:SetPoint("TOPLEFT", 0, listTop)
+	self.totals:SetPoint("BOTTOMRIGHT")
+	self.totals:SetEmptyText("No raids recorded in this period.")
+	self.totals.sortCol = 1
+
+	SK:On("RAIDS_UPDATED", function() if page:IsShown() then RT:Refresh() end end)
+	SK:On("ATTENDANCE_UPDATED", function() if page:IsShown() then RT:Refresh() end end)
+	SK:On("ROSTER_UPDATED", function() if page:IsShown() then SK:Debounce("raidstab", 1, function() RT:Refresh() end) end end)
+end
+
+---------------------------------------------------------------------------
+-- Actions
+---------------------------------------------------------------------------
+function RT:SignUp(status)
+	if not RT.selected then return end
+	local role = Board.MyRole()
+	local ok, why = Board:SignUp(RT.selected, status, role)
+	if not ok then SK:Print("Couldn't answer: %s.", tostring(why)) end
+	RT:Refresh()
+end
+
+function RT:CreateRaid()
+	local form = SK.DB.settings.newRaid
+	local now = Compat.Now()
+	local at = Board.StartAt(Board.DayStart(now, form.day or 0), form.minutes or 20 * 60)
+	local e, why = Board:Create(form.raid or "ony", at)
+	if e then
+		local raid = Board.Raid(e.raid)
+		self.createResult:SetText(Theme.Paint("good", "Made: ") .. (raid and raid.name or "") .. ", " .. Board.When(e.at))
+		RT.selected = e.id
+		SK.DB.settings.raidsView = "upcoming"
+	else
+		self.createResult:SetText(Theme.Paint("bad", "Not made: " .. tostring(why)))
+	end
+	RT:Refresh()
+end
+
+function RT:DetailOptions()
+	local items = {
+		{ text = "Copy the line-up as text", onClick = function() RT:CopyLineUp() end },
+	}
+	if Board.OfficerView() and RT.selected then
+		items[#items + 1] = { text = "Cancel this raid", onClick = function()
+			local ok, why = Board:Cancel(RT.selected)
+			if not ok then SK:Print("Couldn't cancel: %s.", tostring(why)) end
+			RT.selected = nil
+			RT:Refresh()
+		end }
+	end
+	return items
+end
+
+function RT:CopyLineUp()
+	local board = Board:Get()
+	local ev = board and RT.selected and board.events[RT.selected]
+	if not ev then return end
+	local rows, sum = Board.LineUp(board, ev, RT.Ctx())
+	SK.DebugWindow:ShowText("Raid line-up", Board.Text(ev, rows, sum))
+end
+
+function RT:CopySheet(all)
+	local store = Att:Store() or {}
+	local list
+	if all then
+		list = Att.Sorted(store)
+	elseif SK.DB.settings.attView == "totals" then
+		local days = SK.DB.settings.attDays or 30
+		list = Att.Sorted(store, days > 0 and (Compat.Now() - days * 86400) or nil)
+	else
+		list = { store[RT.record or ""] }
+	end
+	if #list == 0 then return SK:Print("No recorded raid to copy yet.") end
+	local sep = SK.DB.settings.sheetCommas and "," or "\t"
+	SK.DebugWindow:ShowText("Attendance spreadsheet", Att.Sheet(list, sep))
+end
+
+function RT:ShowRaid(id)
+	RT.selected = id
+	SK.DB.settings.raidsView = "upcoming"
+	SK.MainFrame:Select("raids")
+end
+
+RT.Ctx = Board.Ctx
+
+---------------------------------------------------------------------------
+-- Refresh
+---------------------------------------------------------------------------
+function RT:Description()
+	if Board.OfficerView() then return "Guild raids, sign-ups and attendance (officer tools on: /sr officer turns them off)" end
+	return "Guild raids made by officers and raid leaders. Sign up here so they know who's coming."
+end
+
+function RT:RefreshUpcoming(board, now, me)
+	local rows = RT.EventRows(board or Board.New(), now, me)
+	local found = false
+	for _, r in ipairs(rows) do if r.id == RT.selected then found = true end end
+	if not found then RT.selected = rows[1] and rows[1].id or nil end
+	self.events:SetItems(rows)
+	self.events:SetSelected(function(r) return r.id == RT.selected end)
+	self.events:SetEmptyText(Board.OfficerView() and "No raids yet. Make one under New raid."
+		or "No raids yet. Officers and raid leaders make them.")
+
+	local ev = board and RT.selected and board.events[RT.selected]
+	local shown = ev ~= nil
+	for _, f in ipairs({ self.title, self.sub, self.options, self.role, self.mine, self.counts, self.ready, self.lineup }) do
+		f:SetShown(shown)
+	end
+	for _, b in ipairs(self.signButtons) do b:SetShown(shown) end
+	self.empty:SetShown(not shown)
+	if not shown then
+		self.empty:SetText(#rows == 0 and "When a raid is made it shows here, and you can sign up with one click." or "")
+		return
+	end
+	local raid = Board.Raid(ev.raid)
+	local creator = SK.Identity:Member(ev.by)
+	self.title:SetText(string.format("%s (%d)", raid and raid.name or ev.raid, raid and raid.size or 0))
+	self.sub:SetText(Board.When(ev.at) .. (creator and ("  ·  made by " .. Theme.ClassText(creator.name, creator.class)) or ""))
+	local mine = board.signups[ev.id] and board.signups[ev.id][me or ""]
+	for _, b in ipairs(self.signButtons) do
+		b.active = mine ~= nil and mine.s == b.status
+		b:Paint("rest")
+	end
+	self.role:Refresh()
+	self.mine:SetText(RT.MineText(mine))
+	local rows2, sum = Board.LineUp(board, ev, RT.Ctx())
+	self.counts:SetText(Board.CountsText(sum) .. "  ·  " .. sum.maybe .. " tentative  ·  " .. sum.out .. " can't come")
+	local parts = {}
+	for i, r in ipairs(Board.Readiness(sum)) do
+		if i > 4 then break end
+		parts[#parts + 1] = Theme.Paint(r.tone, r.text)
+	end
+	self.ready:SetText(table.concat(parts, C("faint") .. "  ·  |r"))
+	self.lineup:SetItems(rows2)
+end
+
+function RT:RefreshAttendance(now)
+	local s = SK.DB.settings
+	local mode = s.attView == "totals" and "totals" or "raids"
+	local days = s.attDays or 30
+	self.recording:SetText(RT.RecordingText(Att.current, now))
+	self.endRaid:SetShown(Att.current ~= nil)
+	local store = Att:Store() or {}
+	local list = Att.Sorted(store)
+	if not RT.record or not store[RT.record] then RT.record = Att.current and Att.current.id or (list[1] and list[1].id) end
+	local rec = RT.record and store[RT.record]
+	local canResume = Att.current == nil and rec ~= nil and rec.ended ~= nil and Compat.InRaidGroup()
+		and now <= rec.at + Att.LONGEST
+	self.resume:SetShown(canResume and mode == "raids")
+	for _, c in ipairs(self.modeChips) do c:SetActive(c.value == mode) end
+	for _, c in ipairs(self.dayChips) do
+		c:SetShown(mode == "totals")
+		c:SetActive(c.value == days)
+	end
+	self.records:SetShown(mode == "raids")
+	self.people:SetShown(mode == "raids")
+	self.totals:SetShown(mode == "totals")
+	if mode == "raids" then
+		self.records:SetItems(list)
+		self.records:SetSelected(function(r) return r.id == RT.record end)
+		self.people:SetItems(rec and Att.Rows(rec) or {})
+	else
+		self.totals:SetItems(Att.Totals(Att.Sorted(store, days > 0 and (now - days * 86400) or nil)))
+	end
+end
+
+function RT:Refresh()
+	if not self.page then return end
+	local officer = Board.OfficerView()
+	for _, t in ipairs(self.views.tabs) do t:SetShown(not RT.OFFICER_VIEWS[t.key] or officer) end
+	local view = RT.View(officer)
+	self.views:SetActive(view)
+	self.upcoming:SetShown(view == "upcoming")
+	self.newPage:SetShown(view == "new")
+	self.attPage:SetShown(view == "attendance")
+	local now = Compat.Now()
+	if view == "upcoming" then
+		self:RefreshUpcoming(Board:Get(), now, Compat.PlayerGUID())
+	elseif view == "new" then
+		self.raidMenu:Refresh(); self.dayMenu:Refresh(); self.timeMenu:Refresh()
+	else
+		self:RefreshAttendance(now)
+	end
+end
+
+SK.MainFrame:AddTab("raids", "Raids", RT, { group = "guild", icon = Theme.TEX.raids })

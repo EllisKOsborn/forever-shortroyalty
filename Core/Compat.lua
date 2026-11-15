@@ -964,6 +964,55 @@ end
 ---------------------------------------------------------------------------
 -- Report for /sr debug: which APIs this client actually has.
 ---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+-- Raid group (v0.8.0 attendance). GetRaidRosterInfo and IsInRaid are old
+-- global functions (not in Blizzard's generated docs); Blizzard's own raid
+-- window in the Forever UI calls GetRaidRosterInfo(i) for name, rank,
+-- subgroup, level, class, fileName, zone, online. UnitGUID is
+-- SecretWhenUnitIdentityRestricted, so a hidden GUID is looked up by name.
+---------------------------------------------------------------------------
+function Compat.InRaidGroup()
+	if not IsInRaid then return false end
+	local ok, v = pcall(IsInRaid)
+	return ok and clean(v) and true or false
+end
+
+function Compat.RaidMembers()
+	local out = {}
+	if not Compat.InRaidGroup() or not GetRaidRosterInfo then return out end
+	local okN, n = pcall(GetNumGroupMembers or function() return 0 end)
+	n = okN and clean(n) or 0
+	for i = 1, math.min(n, 40) do
+		local ok, name, _, _, _, _, fileName, _, online = pcall(GetRaidRosterInfo, i)
+		if ok and clean(name) then
+			local guid
+			if UnitGUID then
+				local okG, g = pcall(UnitGUID, "raid" .. i)
+				guid = okG and clean(g) or nil
+			end
+			-- A hidden "online" counts as online: they're in the group.
+			local on = online
+			if Compat.IsSecret(on) then on = true end
+			out[#out + 1] = { name = clean(name), class = clean(fileName), guid = guid, online = on and true or false }
+		end
+	end
+	return out
+end
+
+-- For /sr debug only: what the game says about the player's own rank.
+function Compat.GuildOfficerFlags()
+	local officer, leader
+	if has("C_GuildInfo", "IsGuildOfficer") then
+		local ok, v = pcall(C_GuildInfo.IsGuildOfficer)
+		if ok then officer = clean(v) and true or false end
+	end
+	if IsGuildLeader then
+		local ok, v = pcall(IsGuildLeader)
+		if ok then leader = clean(v) and true or false end
+	end
+	return officer, leader
+end
+
 Compat.PROBES = {
 	"C_ChatInfo.SendAddonMessage", "C_ChatInfo.InChatMessagingLockdown",
 	"C_ChatInfo.AreOutgoingAddonChatMessagesRestricted",
@@ -1000,6 +1049,8 @@ Compat.PROBES = {
 	"C_Spell.DoesSpellExist",
 	-- v0.4.3 character model
 	"ModelSceneMixin.GetPlayerActor", "C_CreatureInfo.GetRaceInfo", "UnitSex",
+	-- v0.8.0 raids and attendance
+	"IsInRaid", "GetNumGroupMembers", "GetRaidRosterInfo", "UnitGUID", "C_GuildInfo.IsGuildOfficer", "IsGuildLeader",
 }
 
 function Compat.ProbeAll()

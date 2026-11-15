@@ -284,6 +284,10 @@ function Commands.BuildReport()
 		SK.Count(SK.CraftIndex.spellNames), SK.Count(SK.CraftIndex.pendingItems), SK.Count(SK.CraftIndex.pendingSpells))
 
 	add("")
+	add("== Raids (v0.8.0) ==")
+	for _, line in ipairs(Commands.RaidLines()) do add("%s", line) end
+
+	add("")
 	add("== Attunement quests ==")
 	for _, a in ipairs(SK.Data.ATTUNEMENTS) do
 		for _, q in ipairs(a.quests) do
@@ -340,6 +344,79 @@ function Commands.Who(arg)
 	return #items
 end
 
+-- /sr officer (v0.8.0): officers and raid leaders switch New raid, Cancel
+-- and Attendance on or off for this character. For anyone else it does
+-- nothing and the help is printed, as for any unknown command. Hidden, not
+-- secret: every receiver still checks the creator's rank (RaidBoard).
+function Commands.Officer()
+	local guid = Compat.PlayerGUID()
+	if not guid or not SK.RaidBoard.IsLeadSelf() then return false end
+	local on = not SK.DB.officer[guid]
+	SK.DB.officer[guid] = on or nil
+	if on then
+		SK:Print("Officer tools on: Raids now has New raid and Attendance. Attendance is recorded while you're " ..
+			"in a raid group at a raid's time. /sr officer again turns them off.")
+		SK.MainFrame:Open("raids", true)
+	else
+		SK:Print("Officer tools off.")
+		if SK.MainFrame.frame and SK.MainFrame.frame:IsShown() then SK.MainFrame:Refresh() end
+	end
+	return true
+end
+
+-- /sr debug "Raids" block (v0.8.0).
+function Commands.RaidLines()
+	local L = {}
+	local function add(fmt, ...) L[#L + 1] = select("#", ...) > 0 and string.format(fmt, ...) or fmt end
+	local guild = SK.DBM:Guild()
+	local officer, leader = Compat.GuildOfficerFlags()
+	local me = Compat.PlayerGUID()
+	local m = guild and me and guild.members[me]
+	add("Your rank: %q (index %s)   can make raids: %s   officer tools on: %s   game says officer=%s, guild master=%s",
+		tostring(m and m.rank), tostring(m and m.rankIndex), yesno(SK.RaidBoard.IsLeadSelf()),
+		yesno(me and SK.DB.officer[me] or false), yesno(officer), yesno(leader))
+	local ranks, seen = {}, {}
+	for _, mm in pairs(guild and guild.members or {}) do
+		if mm.rank and not mm.leftAt and not seen[mm.rank] then
+			seen[mm.rank] = true
+			ranks[#ranks + 1] = { name = mm.rank, index = mm.rankIndex or 99, lead = SK.RaidBoard.IsLeadRank(mm) }
+		end
+	end
+	table.sort(ranks, function(a, b) return a.index < b.index end)
+	local parts = {}
+	for _, r in ipairs(ranks) do parts[#parts + 1] = string.format("%d %s%s", r.index, r.name, r.lead and " (raids)" or "") end
+	add("Guild ranks: %s", #parts > 0 and table.concat(parts, ", ") or "none read yet")
+	local board = guild and SK.RaidBoard:Get(guild)
+	local now = Compat.Now()
+	local up = board and SK.RaidBoard.Upcoming(board, now) or {}
+	local signups = 0
+	for _, list in pairs(board and board.signups or {}) do signups = signups + SK.Count(list) end
+	add("Raids held: %d (%d upcoming), sign-ups: %d", board and SK.Count(board.events) or 0, #up, signups)
+	local rs = SK.RaidSync.stats
+	add("Raid sync: sent %d RB / %d RD, received %d RB / %d RD, accepted %d, rejected %d, last reject: %s",
+		rs.sentRB, rs.sentRD, rs.gotRB, rs.gotRD, rs.accepted, rs.rejected, tostring(SK.RaidSync.lastReject))
+	local inRaid = Compat.InRaidGroup()
+	local members = Compat.RaidMembers()
+	local withGuid, resolved, online = 0, 0, 0
+	for _, x in ipairs(members) do
+		if x.guid then withGuid = withGuid + 1 end
+		if x.guid or (x.name and SK.Identity:ResolveSender(x.name)) then resolved = resolved + 1 end
+		if x.online then online = online + 1 end
+	end
+	add("Raid group: in one=%s, members read %d, online %d, with GUID %d, matched to the guild %d%s",
+		yesno(inRaid), #members, online, withGuid, resolved,
+		members[1] and string.format(" (first name read: %q)", tostring(members[1].name)) or "")
+	local guildOnline = 0
+	for _, mm in pairs(guild and guild.members or {}) do if mm.online and not mm.leftAt then guildOnline = guildOnline + 1 end end
+	local inInst, kind = Compat.InInstance()
+	add("Guild online now: %d (instance: %s %s)", guildOnline, yesno(inInst), tostring(kind or ""))
+	local rec = SK.Attendance.current
+	add("Attendance: recording %s%s, raids saved: %d, last check skipped because: %s",
+		rec and "yes" or "no", rec and string.format(" (%s, %d checks)", tostring(rec.raid), rec.snaps) or "",
+		SK.Count(SK.Attendance:Store() or {}), tostring(SK.Attendance.lastWhy))
+	return L
+end
+
 local HELP = {
 	"/sr - open or close the window (also /shortroyalty, /sk)",
 	"/sr debug - what the addon sees (copyable)",
@@ -349,6 +426,7 @@ local HELP = {
 	"/sr reset - centre the window",
 	"/sr who <item> - who in the guild wears it (Shift-click an item, or type part of its name)",
 	"/sr words - play Short Words",
+	"/sr raids - guild raids: sign up and see who's coming",
 }
 Commands.HELP = HELP
 
@@ -373,7 +451,11 @@ function Commands.Run(msg)
 		SK.MainFrame:ResetPosition()
 	elseif cmd == "words" then
 		SK.MainFrame:Open("words", true)
-	else
+	elseif cmd == "raids" then
+		SK.MainFrame:Open("raids", true)
+	elseif not (cmd == "officer" and Commands.Officer()) then
+		-- /sr officer only answers officers and raid leaders; for everyone else
+		-- it's an unknown command and the help is printed.
 		for _, line in ipairs(HELP) do SK:Print(line) end
 	end
 end

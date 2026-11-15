@@ -282,19 +282,59 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   **`docs/prompts/next-design-v2.md`** (v0.6.0). Licences: Polestar GPL v3
   (github.com/fitzforge/polestar), EllesmereUI custom all rights reserved,
   FojjiCore All Rights Reserved: **inspiration only**, never code/art.
-- **Raids re-plan (15 Nov, plan only, nothing built): `docs/RAID-OFFICER-TOOLS.md`.**
-  GM asked for in-game sign-ups + attendance incl. bench. **Owner decided:
-  no Blizzard calendar** (v0.4.0 "interacted weirdly with the calendar" and
-  making raids there made the addon feel unnecessary): officers make raids
-  in the addon (rank checked by every receiver via
-  `C_GuildInfo.GuildControlGetRankFlags`), members sign up in the addon,
-  new synced messages for raids and sign-ups, attendance from
-  `GetRaidRosterInfo` + guild roster online. Spreadsheet columns (owner):
-  On time & whole raid / Late / Didn't attend + separate Bench tick. Owner
-  is **not an officer** ("Can view officer notes: no"); the GM must run the
-  probes too. Steps: probes → v0.8.0 raids + sign-ups → v0.8.1 attendance.
-- **Next:** v0.7.2 is released; get TESTING.md 6–17 from the owner, then what they pick from
-  PLAN.md (raids re-plan before 9 Dec, craft requests, levelling rework…). Still useful from v0.5.5: TESTING 167–169, 181–185.
+- **v0.8.0 (built 15 Nov, not released): Raids, sign-ups and attendance**
+  (owner: "Build this now"; GM asked for in-game sign-ups + attendance
+  incl. bench). Plan and reasoning: `docs/RAID-OFFICER-TOOLS.md`.
+  **Owner decisions:** no Blizzard calendar (v0.4.0 "interacted weirdly
+  with the in-game calendar" and made the addon feel unnecessary); people
+  without the addon "will just have to download the addon" (no manual
+  adding); only **Officer and Raid Leader ranks** make raids; officer tools
+  behind a command like `/sr profit` → **`/sr officer`**; left early goes in
+  the **late** column; spreadsheet = On time & whole raid / Late / Didn't
+  attend + separate Bench tick.
+  - `Core/RaidBoard.lua`: `guild.raidBoard = { events, signups }`. Event
+    `{ id = by..":"..c, by, c, raid, at, u, x, eb }`, sign-up `{ s = y|t|n,
+    r = TANK|HEALER|DPS, u }`. `IsLeadRank(m)`: rankIndex 0 (GM) or rank name
+    words "officer(s)" / "raid leader(s)" / "raidleader" / "raid lead"
+    (like `IsAltRank`; confirm the guild's real rank names in `/sr debug`
+    "Guild ranks"). Every receiver checks `by`/`eb` against its own roster.
+    Pure `ValidEvent/ValidSignup/MergeEvent/MergeSignup` (newest `u` wins,
+    copies known fields only, `MAX_EVENTS` 30, `MAX_SIGNUPS` 100), `Prune`
+    (7 days after start), `Upcoming`, `Digest` (djb2 per raid), `LineUp`
+    (from v0.4.0), `Readiness`, `Text`, `DayStart/StartAt`. Actions
+    `Create/Cancel/SignUp`, `MyRole` (`SK.DB.raidRole[guid]` or
+    `Data.GuessRole`), `OfficerView()` = `SK.DB.officer[guid]` and lead rank.
+  - `Sync/RaidSync.lua`: **RB** (GUILD, raids + sign-ups, ≤120 items, sent 3 s
+    after a change) and **RD** (GUILD digest once per session ~75 s after
+    login). RD answers after a random 2–8 s; `heard[key] = u` suppresses
+    duplicates; holding newer than a passing RB → answer; missing a listed
+    raid → own RD (max every 5 min). Older clients ignore both.
+  - `Core/Attendance.lua`: only with `OfficerView()`; `guild.attendance[id]`
+    (local, never sent, max 200). Tick 15 s; starts in a raid group
+    (`Compat.InRaidGroup/RaidMembers`: `GetRaidRosterInfo` + `UnitGUID
+    ("raidN")`, name fallback via `Identity:ResolveSender`) within 30 min
+    before to 6 h after a raid; snapshot every 120 s and after
+    ENCOUNTER_END (success), never in combat/lockdown (`pendingSnap`); each
+    snapshot counts the time since the previous (≤10 min, from the start).
+    Rows: full (first ≤ start+10 min and missed ≤10 min), late, missed
+    (signed y/t, never in group), declined; bench auto = signed and online
+    not in group ≥ min(30 min, half). `ToggleBench` overrides. Stops 15 min
+    after leaving the group, 6 h after start, or End raid; Resume. `Sheet`
+    (tabs or commas, ticks = 1), `Totals` (pct = (full+late)/(full+late+missed)).
+  - UI `UI/RaidsTab.lua` (Guild group, after Character; icon `icon-raids`):
+    page tabs Raids / New raid / Attendance (officer tabs hidden otherwise).
+    Overview Raids card starts with the next raid (`o.nextRaid`).
+    `/sr raids`; `/sr officer` (not in the `/sr` help; prints help for
+    non-officers). `/sr debug` "Raids (v0.8.0)" block (`Commands.RaidLines`).
+  - Tests `tests/v080_raids_spec.lua`, security cases in `security_spec`.
+    Test stub: `time(t)` now uses `os.time(t)` for tables; `W.raid`.
+    Pictures `raids*.png` (preview `screen=raids`, `officer=1`,
+    `raidsView`, `attView`). TESTING.md 18–29.
+  - **Unverified in game:** everything; especially rank-name matching,
+    `GetRaidRosterInfo`/`UnitGUID("raidN")` inside a raid instance, guild
+    roster "online" inside instances, whether tabs survive Copy into Sheets.
+- **Next:** release v0.8.0 when the owner says; get TESTING.md 6–29, then what they pick from
+  PLAN.md (craft requests, levelling rework, raid reminders/invites…). Still useful from v0.5.5: TESTING 167–169, 181–185.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
   built. **FojjiCore review (11 Nov): `docs/FOJJICORE-REVIEW.md`** (All
   Rights Reserved: features only, never code). Top pick: recipe sources from
@@ -579,12 +619,15 @@ Core/     Init (events, timers, modules), Log (+ error capture: SK:Safe,
           it), Onboarding (Getting started),
           Export (plain text for Copy), Feed (local milestones,
           never synced), Overview (numbers for the Overview tab),
-          ShortWords (v0.7.0 word game: rules, results, leaderboards)
+          ShortWords (v0.7.0 word game: rules, results, leaderboards),
+          RaidBoard (v0.8.0 raids + sign-ups), Attendance (v0.8.0, local)
 Data/     Professions, Recipes (GENERATED by tools/recipes.js), Attunements
-          (quest IDs), Factions, Enchants, Words (GENERATED by tools/words.js)
+          (quest IDs), Factions, Enchants, Words (GENERATED by tools/words.js),
+          Roles (v0.8.0 role guess by class and tree order, todo)
 Collect/  Character, Talents, Professions (recipe scan), Reputation,
           Attunements, Profile (full/public copies, cooldowns, main)
-Sync/     Codec (LibSerialize stable → LibDeflate), Merge (rules), Sync (protocol)
+Sync/     Codec (LibSerialize stable → LibDeflate), Merge (rules), Sync (protocol),
+          RaidSync (v0.8.0 RB/RD)
 UI/       Theme (EVERY colour/font/size/spacing/motion value, the accent),
           Motion (AnimationGroups, Reduce motion), Widgets (Button,
           CloseButton, Tab, Chip, Check, Menu, SearchBox, List, TextPanel,
@@ -596,6 +639,7 @@ UI/       Theme (EVERY colour/font/size/spacing/motion value, the accent),
           latest), CraftersTab (+ reagents, Favourites chip), ProfessionsTab
           (board / one profession / cooldowns), WordsTab (Short Words),
           FlightWords (v0.7.2 box offering Short Words on flight paths),
+          RaidsTab (v0.8.0 raids, sign-ups, New raid, Attendance),
           SettingsTab, DebugWindow,
           Minimap, Tooltip
 Media/    Fonts.xml (Inter and Arial Narrow families + CJK fallback),
@@ -633,6 +677,8 @@ players. **Don't go back to AceComm multi-part messages.**
 | `PR` | WHISPER | One profile per message |
 | `SQ` | GUILD | Once per session: what I hold, and (`a`, v0.3.6) who I know runs the addon |
 | `SO` | GUILD | Backfill offer, random 2–8 s delay, suppressed if someone else offers first |
+| `RB` | GUILD | v0.8.0 raids and sign-ups (`Sync/RaidSync.lua`): after a change, and answering RD |
+| `RD` | GUILD | v0.8.0 once per session: fingerprint per raid held; answered after 2–8 s, duplicates suppressed |
 
 Merge rules (`Sync/Merge.lua`, tested):
 - The character must be a guild member.
@@ -1038,9 +1084,9 @@ refer to `git show v0.6.0:TESTING.md`.
 1. TESTING.md 1–5: Onyxia amulet check, real cooldowns only, where to learn
    at a trainer, who wears it, the reminder bar's Open button.
 2. v0.7.0–v0.7.2 Short Words are out: TESTING.md 6–14; flights 15–17.
-3. Raids (`docs/RAID-OFFICER-TOOLS.md`): who may make raids (all officer
-   ranks or chosen ranks), left early = late column?, go-ahead for the
-   probe release.
+3. v0.8.0 Raids: release go-ahead; then an officer's `/sr debug` Raids
+   block (rank names matched? raid group read inside an instance?) and
+   TESTING.md 18–29.
 4. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
 

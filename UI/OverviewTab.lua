@@ -103,6 +103,24 @@ end
 -- for the raids that don't.
 function Ov.RaidRows(o)
 	local rows, open = {}, {}
+	-- v0.8.0: the next guild raid first; the row opens the Raids page.
+	local nr = o.nextRaid
+	if nr then
+		local raid = SK.RaidBoard.Raid(nr.ev.raid)
+		local mine = nr.mine and SK.RaidBoard.STATUS_NAME[nr.mine] or "not signed up"
+		local function openRaid() SK.RaidsTab:ShowRaid(nr.ev.id) end
+		rows[#rows + 1] = { label = (raid and raid.name or "Raid") .. ", " .. SK.RaidBoard.ShortWhen(nr.ev.at, Compat.Now()),
+			value = n(nr.counts.y) .. " signed up", tone = "accent", onClick = openRaid, tip = function(tt)
+				Theme.TipLine(tt, "Next guild raid")
+				Theme.TipLine(tt, SK.RaidBoard.When(nr.ev.at), "dim")
+				Theme.TipDouble(tt, "Signed up", n(nr.counts.y), "dim", "text")
+				Theme.TipDouble(tt, "Tentative", n(nr.counts.t), "dim", "text")
+				Theme.TipDouble(tt, "Can't come", n(nr.counts.n), "dim", "text")
+				if nr.more > 0 then Theme.TipLine(tt, "and " .. Theme.Count(nr.more, "more raid") .. " after it", "faint") end
+				Theme.TipLine(tt, "Click to sign up or see who's coming", "accent")
+			end }
+		rows[#rows + 1] = { text = "You: " .. (nr.mine and mine or Theme.Paint("spark", mine)), onClick = openRaid }
+	end
 	local function toRoster(key) return function()
 		SK.DB.settings.roster.raid = key
 		SK.DB.settings.roster.attFilter = "all"

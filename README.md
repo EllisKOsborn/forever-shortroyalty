@@ -44,6 +44,7 @@
 | 🏰 **Overview** | The guild at a glance: four numbers, what needs a look, raid readiness and recent milestones |
 | 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
+| 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals and **Copy as spreadsheet** |
 | ⚒️ **Find a crafter** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
 | 🧪 **Professions** | Three page tabs: **Guild** (every profession in the guild, then each profession's crafters and recipes), **Recipes** (**every recipe in the game**, by name, group or material) and **Cooldowns**; specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
 | 🔤 **Short Words** | A five-letter word game: **Daily** (one word a day for the whole guild) and **Free for all** (keep going), each with **Today** and **All time** guild leaderboards; offered on flight paths |
@@ -58,7 +59,7 @@ The first page. The line under its title says your guild, members, players
 
 - **Four numbers** across the top: **members** (point at it for levels in bands and players), **online now** (and how many with Short Royalty), **have Short Royalty** out of everyone (point at it for **everyone not seen with it yet**, online first; click to see them in the Roster), and **days until raids** open on 9 Dec (in the accent colour). Characters in the guild's **Alt rank** (any rank named "Alt" or "Alts") are left out.
 - **Needs a look**: only what's actually missing or out of date: members not seen with the addon yet, anyone on an old Short Royalty, members who have the addon but whose data hasn't reached you, profession windows not opened, profiles older than a week. Each row opens the Roster with those people on top; point at it for names or an explanation. "All good" when there's nothing to fix, and a line when a newer Short Royalty is out.
-- **Raids**: Onyxia's Lair (40) with a bar of attuned / not yet / unknown, and how many have the quest done but the Drakefire Amulet out of their bags; Barrow Deeps and Hyjal Summit (no attunement) on one line with how many are ready. Rows and *Attunement list* open the Roster's raid view.
+- **Raids**: the **next guild raid** first (when, how many signed up and your own answer; click to sign up), then Onyxia's Lair (40) with a bar of attuned / not yet / unknown, and how many have the quest done but the Drakefire Amulet out of their bags; Barrow Deeps and Hyjal Summit (no attunement) on one line with how many are ready. Rows and *Attunement list* open the Roster's raid view.
 - **Getting started** (new players, in place of milestones): open your profession windows (it names which), check your Character tab, choose what you share, and how many guildmates have Short Royalty. Ticks itself off and goes away when done, or click **Hide**.
 
 <p align="center"><img src="docs/images/getting-started.png" alt="Getting started" width="100%"></p>
@@ -105,6 +106,39 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
   - **Attunements** for the first raid wave (with the amulet warning) and **reputations**: raid and crafting factions first, then everything at Friendly or above.
 - **Privacy:** hidden gear or recipes say *hidden by this player*.
 - **No data yet?** The panel says so and explains why, instead of showing empty boxes.
+
+### 📅 Raids
+<p align="center"><img src="docs/images/raids.png" alt="Raids page: upcoming raids, sign-up buttons and the line-up" width="100%"></p>
+
+Guild raids are made **in the addon** by officers and raid leaders (no
+Blizzard calendar). Everyone with Short Royalty sees them within a minute;
+people who were offline get them when they log in. `/sr raids` opens the page.
+
+- **Upcoming raids** on the left (when, which raid, how many signed up out of its size; a dot shows your own answer).
+- **Sign up**, **Tentative** or **Can't come** with one click, and your **role** (Tank, Healer or DPS: remembered, and guessed from your talents until you pick).
+- **Who's coming:** name (green dot = online), answer, role (greyed when guessed), spec, item level and attuned, coming first and by role. **Role counts** ("Tanks 3 · Healers 6 · DPS 13 · 22 / 40") and a **readiness** line: no tanks or healers yet, tentatives, more sign-ups than the raid holds, not attuned, amulet not in bags, item-level range, missing enchants, old data, and anyone signed up on two characters.
+- The ··· menu copies the line-up as text (for Discord).
+
+**Officer tools.** Officers, raid leaders and the Guild Master type
+`/sr officer` to switch on two more tabs (per character; type it again to
+switch them off). For anyone else the command just prints the help. Every
+player's game checks the rank of whoever made a raid, so nobody else can
+make or cancel one.
+
+<p align="center"><img src="docs/images/raids-new.png" alt="New raid: raid, day and start time" width="100%"></p>
+
+- **New raid:** pick the raid, the day (next two weeks) and the start time in your own time zone (everyone sees it in theirs), then **Create raid**. Cancel a raid from its ··· menu.
+
+<p align="center"><img src="docs/images/raids-attendance.png" alt="Attendance for one raid: on time, late, didn't attend and bench" width="100%"></p>
+
+- **Attendance** is recorded **automatically** while you're in the raid group, from 30 minutes before the start: every 2 minutes (and after each boss, never in combat) it notes who's in the group and who in the guild is online. It stops 15 minutes after you leave the group, 6 hours after the start, or when you press **End raid** (**Resume** starts it again).
+- Each person gets **On time, whole raid** (in the group within 10 minutes of the start and missed at most 10 minutes), **Late / not the whole raid** (joined late or left early) or **Didn't attend** (signed up or tentative, never came), and a separate **Bench** tick: signed up and online for at least 30 minutes without being in the group. Bench is ticked automatically; click a name to tick or untick it. People who said *Can't come* and people who came without signing up are listed too.
+
+<p align="center"><img src="docs/images/raids-totals.png" alt="Attendance totals per person" width="100%"></p>
+
+- **Totals** per person over 30, 60 or 90 days, or all: raids, on time, late, didn't attend, bench and attended %.
+- **Copy as spreadsheet** gives one line per person per raid (Date, Raid, Name, Signed up, On time, Late, Didn't attend, Bench, Minutes in raid; ticks are 1 so the columns add up) that pastes straight into Google Sheets or Excel. The ··· menu copies every raid, or uses commas instead of tabs.
+- Attendance stays on the officer's computer; it's never sent to anyone.
 
 ### ⚒️ Find a crafter
 <p align="center"><img src="docs/images/crafters.png" alt="Find a crafter page" width="100%"></p>
@@ -297,6 +331,8 @@ recipes are recorded (the addon reminds you), and log in on each **alt** once.
 | `/sr sync` | share your data now and ask for anything missing |
 | `/sr who <item>` | list the guildmates who wear an item (Shift-click it, or type part of its name) |
 | `/sr words` | play Short Words |
+| `/sr raids` | guild raids: sign up and see who's coming |
+| `/sr officer` | officers and raid leaders: switch New raid and Attendance on or off |
 | `/sr reset` | put the window back in the middle of the screen |
 
 `/shortroyalty` and `/sk` work too, if another addon already uses `/sr`.
@@ -350,6 +386,25 @@ both online, a change reaches guildmates in about **30–60 seconds**; **Ask for
 latest** gets it sooner. Offline members show what they had when they last
 played. Nothing is sent in combat or instances, so changes made there arrive
 once you're out.
+</details>
+
+<details>
+<summary><b>How do I sign up for a raid?</b></summary>
+
+Open **Raids** (`/sr raids`, or click the next raid on the Overview), pick
+the raid on the left and press **Sign up**, **Tentative** or **Can't come**.
+Pick your role in the menu next to them. Officers and raid leaders see your
+answer within a minute. You need Short Royalty to see guild raids.
+</details>
+
+<details>
+<summary><b>How does attendance work?</b></summary>
+
+Only officers and raid leaders who typed `/sr officer` record it. Their game
+notes who's in the raid group and who in the guild is online every 2 minutes
+while they're in the raid group at a raid's time, and sorts everyone who
+signed up into on time, late, didn't attend and bench. It stays on their
+computer; **Copy as spreadsheet** pastes it into Google Sheets or Excel.
 </details>
 
 <details>
@@ -435,9 +490,10 @@ The full design, data format and merge rules are in [PLAN.md](PLAN.md).
 - [x] **v0.5.6**: Levelling, Route, Shopping list, Profit and the panel beside the profession window removed for now (to be reworked)
 - [x] **v0.6.0**: the calmer redesign: a sidebar window, one accent colour (pink, gold or your class), Inter, short tooltips with details on Shift, page tabs, Settings as switches ([before and after](#the-look))
 - [x] **v0.4.1**: Raids tab taken out again for now (it wasn't set up right yet); the focus stays on crafting and professions
-- [ ] **Raids** (later, re-planned): calendar raids, sign-ups, roles, reminders
+- [x] **v0.8.0**: **Raids** made in the addon: sign-ups with roles, who's coming, and for officers New raid and automatic attendance with Copy as spreadsheet
+- [ ] **Raids, next**: reminders before a raid, "invite everyone signed up", sharing attendance between officers
 - [ ] **Ideas for later**: craft requests, a short status line, lockout board
-- [ ] **Later**: raid attendance, guild bank viewer and more in the [plan](PLAN.md#later-in-rough-priority-order)
+- [ ] **Later**: guild bank viewer and more in the [plan](PLAN.md#later-in-rough-priority-order)
 - [x] CurseForge release (every release uploads automatically)
 - [x] **v0.7.0**: **Short Words**, a daily and free-for-all word game with guild leaderboards (v0.7.1: guild streak, colour-blind colours; v0.7.2: offered on flight paths)
 

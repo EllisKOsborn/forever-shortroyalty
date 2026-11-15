@@ -152,6 +152,15 @@ function Overview.Build(guild, now)
 	o.raidsOpenAt = SK.Data.RAIDS_OPEN_AT
 	o.raidDays = SK.Data.RAIDS_OPEN_AT and math.ceil((SK.Data.RAIDS_OPEN_AT - now) / 86400) or nil
 
+	-- v0.8.0: the next guild raid made in the addon, and my sign-up for it.
+	local board = guild.raidBoard
+	local nextRaid = board and SK.RaidBoard.Next(board, now)
+	if nextRaid then
+		local mine = board.signups[nextRaid.id] and board.signups[nextRaid.id][SK.Compat.PlayerGUID() or ""]
+		o.nextRaid = { ev = nextRaid, counts = SK.RaidBoard.Counts(board, nextRaid.id), mine = mine and mine.s,
+			more = #SK.RaidBoard.Upcoming(board, now) - 1 }
+	end
+
 	o.recipes = Overview.Recipes(SK.CraftIndex:Get(true))
 	return o
 end

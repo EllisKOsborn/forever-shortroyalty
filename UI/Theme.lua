@@ -353,6 +353,7 @@ Theme.TEX = {
 	professions = MEDIA .. "Textures\\icon-professions",
 	settings = MEDIA .. "Textures\\icon-settings",
 	words = MEDIA .. "Textures\\icon-words",
+	raids = MEDIA .. "Textures\\icon-raids",
 }
 
 -- Inline round dot ("|T...|t") in a theme colour, for text.
