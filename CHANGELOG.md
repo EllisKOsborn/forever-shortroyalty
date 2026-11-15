@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.0 (not released yet): Raids, sign-ups and attendance
+## v0.8.0 (15 Nov 2026): Raids, sign-ups and attendance
 
 - **Raids**, a new page in the sidebar (Guild → Raids, or `/sr raids`).
   Officers and raid leaders make guild raids **in the addon**; Blizzard's
