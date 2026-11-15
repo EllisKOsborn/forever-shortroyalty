@@ -282,6 +282,12 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   **`docs/prompts/next-design-v2.md`** (v0.6.0). Licences: Polestar GPL v3
   (github.com/fitzforge/polestar), EllesmereUI custom all rights reserved,
   FojjiCore All Rights Reserved: **inspiration only**, never code/art.
+- **Raid officer tools (15 Nov, proposal only, nothing built):** the GM
+  asked for in-game sign-ups and attendance incl. bench (signed up, online,
+  not in the raid). `docs/RAID-OFFICER-TOOLS.md` compares it with the
+  removed v0.4.0 Raids tab and proposes an officer-only Raids page with
+  attendance + spreadsheet copy, after a probe release. Waiting on the
+  owner/GM's answers (Waiting on the user 4).
 - **Next:** v0.7.2 is released; get TESTING.md 6–17 from the owner, then what they pick from
   PLAN.md (raids re-plan before 9 Dec, craft requests, levelling rework…). Still useful from v0.5.5: TESTING 167–169, 181–185.
 - **Earlier:** the levelling tools (PLAN.md section 13) are all
@@ -1025,6 +1031,10 @@ refer to `git show v0.6.0:TESTING.md`.
 1. TESTING.md 1–5: Onyxia amulet check, real cooldowns only, where to learn
    at a trainer, who wears it, the reminder bar's Open button.
 2. v0.7.0–v0.7.2 Short Words are out: TESTING.md 6–14; flights 15–17.
+4. Raid officer tools: the GM's answers in `docs/RAID-OFFICER-TOOLS.md`
+   (spreadsheet columns, what counts as attended / bench, calendar or
+   Discord sign-ups), what "not set up right" meant for v0.4.0, and go-ahead
+   for the probe release.
 3. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
 
