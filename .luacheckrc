@@ -40,6 +40,8 @@ read_globals = {
 	"IsVeteranTrialAccount", "IsRestrictedAccount", "GameLimitedMode_IsActive", "InCombatLockdown", "UnitOnTaxi",
 	"IsInRaid", "GetRaidRosterInfo", "GetNumGroupMembers", "IsGuildLeader",
 	"GetNumLootItems", "GetLootSlotLink", "GetLootSlotInfo", "RANDOM_ROLL_RESULT",
+	"C_EncounterJournal", "EJ_GetCurrentTier", "EJ_GetInstanceByIndex", "EJ_GetNumLoot", "EJ_GetNumTiers",
+	"EJ_SelectInstance", "EJ_SelectTier", "GameRulesUtil",
 	"IsInInstance", "UnitGUID", "UnitFullName", "UnitName", "UnitClass", "UnitRace", "UnitLevel",
 	"UnitFactionGroup", "IsInGuild", "GetGuildInfo", "GuildRoster", "GetNumGuildMembers",
 	"GetGuildRosterInfo", "GetGuildRosterLastOnline", "GetGuildRosterShowOffline",

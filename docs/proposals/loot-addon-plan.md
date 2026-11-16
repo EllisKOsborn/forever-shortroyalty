@@ -81,32 +81,31 @@ Anyone could send the addon fake data, so:
   quits. Bonus and cap changes go into the history too and only count
   from then on.
 
-## Loot lists (searched 16 Nov)
+## Loot lists: filled in without typing (owner, 16 Nov)
 
-- **Onyxia's Lair:** in the game files now; one boss (encounter 1084). The
-  loot list can be built now from public sources and checked against
-  Forever's item data.
-- **Barrow Deeps and Hyjal Summit:** brand-new raids. They are **not in the
-  game files yet** (checked build 1.60.1.70938 on wago.tools: no map, no
-  bosses), and **no loot list has been published**. Guides even disagree
-  on the boss names. So nobody can know their loot before the patch that
-  adds them.
+Owner: "future proof this to look at some websites to see the loot that
+drops from the raid rather than having to do anything manually". Addons
+can't use the internet in game, so the websites are read outside the
+game and the result ships with the addon. Three sources, merged:
 
-How we fill the lists anyway:
+1. **The game's Encounter Journal.** Forever's client has Blizzard's
+   journal behind a game rule (`GameRulesUtil.EJIsDisabled`); its data had
+   no journal tables on 16 Nov. If Forever turns it on for its raids, every
+   player's addon reads the loot from it, no update needed. `/sr debug`
+   says whether it's on and which raids it lists.
+2. **warcraft.wiki.gg** (public API; content reusable with credit):
+   `node tools/loot.js` finds each raid's loot page, takes its loot
+   entries, looks up each item's ID and checks it against Forever's own
+   item data (wago.tools). A weekly GitHub job (`.github/workflows/loot.yml`)
+   reruns it and commits `Data/Loot.lua` when a list changed; the next
+   release ships it. Wowhead is not read (its terms forbid scraping).
+3. **Drops and officers:** the officer's addon adds every rare+ item it
+   sees in a loot window (shared with everyone); officers can still add an
+   item by hand.
 
-1. When the patch lands, rerun a data script (like the recipe one) to get
-   each raid's **bosses** from Forever's own data.
-2. Once trustworthy lists appear (warcraft.wiki.gg, which allows reuse with
-   credit; checked by hand against Wowhead's Forever pages, which we may
-   link but not scrape; AtlasLoot Classic Forever and NeedRoll are
-   building lists too), add them to the addon's data in an update.
-3. **The addon learns as you raid:** items in the loot window after a boss
-   kill are added to that boss's list and shared with everyone. Officers
-   can also add an item to a boss by shift-clicking it.
-
-Honest result: **on the first night of a new raid there may be no list to
-reserve from**, unless a reliable list appears in time. From the second
-week on, the learned list works.
+On 16 Nov: Onyxia = the wiki's original-game list (20 items; 4 in
+Forever's data, the rest probably held back until the raid opens);
+Barrow Deeps and Hyjal Summit have no loot page yet.
 
 ## Checks needed in game
 

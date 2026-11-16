@@ -164,7 +164,12 @@ reserve the same trinket for months and nobody new can take it from you.
 
 - **Loot night:** lock reserves (it notes who on the bench is online), drops from the loot windows you open (or paste a link), **Post to raid chat**, the rolls read from chat and ranked, **Award** (the win goes in the history), a **raid check** (reservers not in the raid, raiders without a reserve), and **End of night**: who gets the bonus and why, leave anyone out, **Save the bonus** once.
 - **Points → Everyone → Change points:** add or take points with a reason (a penalty can go below 0), or **move** points to another character and item (someone asked to main an alt). Right-click a change in the History to undo it.
-- **Rules:** reserves per player for each raid, the bonus per night, and adding items to a raid's loot list. Onyxia's list comes from the original game (Forever may change it); Barrow Deeps and Hyjal Summit have no published loot yet, so their lists fill in as items drop and officers add them.
+- **Rules:** reserves per player for each raid, the bonus per night, and adding items to a raid's loot list (rarely needed, see below).
+
+**Loot lists fill themselves in**, from three places:
+1. **The game's Encounter Journal**, if Forever turns it on for its raids: every player's addon reads the loot from it. `/sr debug` says whether it's on.
+2. **warcraft.wiki.gg**: `tools/loot.js` reads each raid's loot page, finds the item IDs and checks them against Forever's own item data. A weekly GitHub job reruns it and saves any change, so a new loot page is picked up by itself and ships with the next release. Onyxia's list comes from the original game for now; Barrow Deeps and Hyjal Summit have no loot page yet.
+3. **Drops:** the officer's addon adds every rare or better item it sees in a loot window, for everyone.
 
 <p align="center"><img src="docs/images/loot-rules.png" alt="Rules: reserves per raid, bonus per night, loot lists" width="100%"></p>
 

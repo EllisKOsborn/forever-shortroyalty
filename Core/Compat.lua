@@ -1089,6 +1089,69 @@ function Compat.ParseRoll(msg)
 	return name, tonumber(roll), tonumber(lo), tonumber(hi)
 end
 
+-- Blizzard's Encounter Journal (v0.9.0): Forever's client has it (the
+-- Mainline Blizzard_EncounterJournal, C_EncounterJournal) behind a game
+-- rule (GameRulesUtil.EJIsDisabled, in the Camelot micro menu), and on
+-- 16 Nov its data held no journal tables. If Forever turns it on for its
+-- raids, every player's addon reads the loot from it. The same calls as
+-- Blizzard's Mainline Blizzard_EncounterJournal.lua: EJ_GetNumTiers,
+-- EJ_SelectTier, EJ_GetInstanceByIndex(i, isRaid) -> id, name,
+-- EJ_SelectInstance, EJ_GetNumLoot, C_EncounterJournal.GetLootInfoByIndex.
+-- All pcall'd; nothing is read while the journal window is open (it shares
+-- the selected tier and instance).
+function Compat.JournalState()
+	local disabled
+	if GameRulesUtil and type(GameRulesUtil.EJIsDisabled) == "function" then
+		local ok, v = pcall(GameRulesUtil.EJIsDisabled)
+		if ok then disabled = clean(v) and true or false end
+	end
+	local calls = type(EJ_GetNumTiers) == "function" and type(EJ_SelectTier) == "function"
+		and type(EJ_GetInstanceByIndex) == "function" and type(EJ_SelectInstance) == "function"
+		and type(EJ_GetNumLoot) == "function" and has("C_EncounterJournal", "GetLootInfoByIndex")
+	return { disabled = disabled, calls = calls and true or false }
+end
+
+-- names = { [key] = "Raid Name" }. Returns { [key] = { itemID, ... } } for
+-- the raids the journal lists, and every raid name it saw (for /sr debug).
+function Compat.JournalRaidLoot(names)
+	local out, seen = {}, {}
+	local state = Compat.JournalState()
+	if not state.calls or state.disabled then return out, seen end
+	local ui = rawget(_G, "EncounterJournal")
+	if ui and ui.IsShown and ui:IsShown() then return out, seen end
+	local byName = {}
+	for key, n in pairs(names) do byName[n:lower()] = key end
+	local okT, tiers = pcall(EJ_GetNumTiers)
+	tiers = okT and clean(tiers) or 0
+	local okC, before = pcall(EJ_GetCurrentTier or function() return nil end)
+	for tier = 1, math.min(tiers or 0, 30) do
+		if pcall(EJ_SelectTier, tier) then
+			for i = 1, 60 do
+				local ok, id, name = pcall(EJ_GetInstanceByIndex, i, true)
+				id, name = ok and clean(id) or nil, ok and clean(name) or nil
+				if not id then break end
+				if type(name) == "string" then
+					seen[#seen + 1] = name
+					local key = byName[name:lower()]
+					if key and pcall(EJ_SelectInstance, id) then
+						local okN, n = pcall(EJ_GetNumLoot)
+						n = okN and clean(n) or 0
+						local list = {}
+						for j = 1, math.min(n or 0, 200) do
+							local okI, info = pcall(C_EncounterJournal.GetLootInfoByIndex, j)
+							local itemID = okI and type(info) == "table" and clean(info.itemID)
+							if type(itemID) == "number" and itemID > 0 then list[#list + 1] = itemID end
+						end
+						out[key] = list
+					end
+				end
+			end
+		end
+	end
+	if okC and clean(before) then pcall(EJ_SelectTier, before) end
+	return out, seen
+end
+
 -- The raid's loot method name for /sr debug (master loot or not).
 function Compat.LootMethodName()
 	if not has("C_PartyInfo", "GetLootMethod") then return nil end

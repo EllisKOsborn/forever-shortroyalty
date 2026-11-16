@@ -370,3 +370,57 @@ describe("v0.9.0 the Loot page", function()
 		assert.truthy(text:find("Tonight: ony", 1, true))
 	end)
 end)
+
+describe("v0.9.0 loot lists without typing (journal, wiki data, drops)", function()
+	after_each(function()
+		_G.EJ_GetNumTiers, _G.EJ_SelectTier, _G.EJ_GetInstanceByIndex, _G.EJ_SelectInstance = nil, nil, nil, nil
+		_G.EJ_GetNumLoot, _G.EJ_GetCurrentTier, _G.C_EncounterJournal, _G.GameRulesUtil = nil, nil, nil, nil
+	end)
+
+	local function journal(disabled)
+		local tier, inst = 1, nil
+		local raids = { [1] = { { 901, "Barrow Deeps" }, { 902, "Some Other Raid" } } }
+		local loot = { [901] = { 290001, 290002 } }
+		_G.GameRulesUtil = { EJIsDisabled = function() return disabled end }
+		_G.EJ_GetNumTiers = function() return 1 end
+		_G.EJ_GetCurrentTier = function() return tier end
+		_G.EJ_SelectTier = function(t) tier = t end
+		_G.EJ_GetInstanceByIndex = function(i, isRaid)
+			local r = isRaid and raids[tier] and raids[tier][i]
+			if r then return r[1], r[2] end
+		end
+		_G.EJ_SelectInstance = function(id) inst = id end
+		_G.EJ_GetNumLoot = function() return #(loot[inst] or {}) end
+		_G.C_EncounterJournal = { GetLootInfoByIndex = function(i) return { itemID = loot[inst][i] } end }
+	end
+
+	it("reads a raid's loot from the game's Encounter Journal when Forever turns it on", function()
+		local SK = setup()
+		journal(false)
+		SK.Reserves:ReadJournal()
+		local list = SK.Reserves.LootList(SK.Reserves:State(), "barrow")
+		assert.same({ 290001, 290002 }, list)
+		assert.same({ "Barrow Deeps", "Some Other Raid" }, SK.Reserves.journalSeen)
+	end)
+
+	it("does nothing when the game turns the journal off, or it isn't there", function()
+		local SK = setup()
+		journal(true)
+		SK.Reserves:ReadJournal()
+		assert.same({}, (SK.Reserves.LootList(SK.Reserves:State(), "barrow")))
+		assert.is_true(SK.Compat.JournalState().disabled)
+		_G.EJ_GetNumTiers = nil
+		assert.is_false(SK.Compat.JournalState().calls)
+	end)
+
+	it("the bundled list comes from tools/loot.js (wiki + Forever's item data)", function()
+		local SK = setup()
+		local ony = SK.Data.LOOT.ony
+		assert.equal("Onyxia's Lair loot (Classic)", ony.source)
+		local set = {}
+		for _, i in ipairs(ony.items) do set[i] = true end
+		assert.is_true(set[17068] and set[17064] and set[18423] and true) -- Deathbringer, Shard of the Scale, Head of Onyxia
+		assert.is_nil(set[228759]) -- not the Season of Discovery copy
+		assert.is_nil(set[21108])  -- not the quest book
+	end)
+end)

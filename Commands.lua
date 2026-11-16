@@ -463,6 +463,17 @@ function Commands.ReserveLines()
 		tostring(Compat.LootMethodName() or "not in a group"), tostring(_G.RANDOM_ROLL_RESULT),
 		yesno(_G.GetNumLootItems ~= nil and _G.GetLootSlotLink ~= nil))
 	add("Reserved-by tooltip lines (same switch as the guild lines): %s", yesno(SK.DB.settings.craftTooltips))
+	local ej = Compat.JournalState()
+	local counts = {}
+	for _, raid in ipairs(SK.Data.ShownAttunements()) do
+		local data = SK.Data.LOOT[raid.key]
+		counts[#counts + 1] = string.format("%s %d (built in %d, journal %d, learned %d)", raid.key,
+			#R.LootList(st, raid.key), data and #data.items or 0, #(R.journal[raid.key] or {}), SK.Count(st.loot[raid.key]))
+	end
+	add("Loot lists: %s", table.concat(counts, "; "))
+	add("Encounter Journal: calls %s, turned off by the game: %s, raids it lists: %s", yesno(ej.calls),
+		ej.disabled == nil and "unknown" or yesno(ej.disabled),
+		R.journalSeen and (#R.journalSeen > 0 and table.concat(R.journalSeen, ", ") or "none") or "not read yet")
 	local rs = SK.ReserveSync.stats
 	add("Sync: sent %d LE / %d LP / %d LQ, received %d / %d / %d, accepted %d, rejected %d, last reject: %s",
 		rs.sentLE, rs.sentLP, rs.sentLQ, rs.gotLE, rs.gotLP, rs.gotLQ, rs.accepted, rs.rejected,

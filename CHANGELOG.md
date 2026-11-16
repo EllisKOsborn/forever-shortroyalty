@@ -27,9 +27,12 @@ the sidebar (`/sr loot`). Nothing here has been tried in a raid yet.
   penalty can go below 0), moving points to another character or item,
   undo from the History, and **Rules** (reserves per raid, bonus, loot
   lists).
-- **Loot lists:** Onyxia's original loot is built in (Forever may change
-  it: its own data doesn't hold Onyxia's raid items yet). Barrow Deeps and
-  Hyjal Summit fill in as items drop, and officers can add items.
+- **Loot lists fill themselves in:** from the game's Encounter Journal if
+  Forever turns it on (`/sr debug` says), from warcraft.wiki.gg through
+  `tools/loot.js` (item IDs checked against Forever's item data; a weekly
+  GitHub job reruns it), and from drops the officer's addon sees. Onyxia's
+  list is the original game's for now; Barrow Deeps and Hyjal Summit have
+  no loot page yet. Officers can still add an item by hand.
 - Only officers and raid leaders can change points: every game checks the
   sender's rank on its own guild roster. `/sr debug` has a Reserve+ block
   (including which loot methods the raid allows).

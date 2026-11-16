@@ -151,3 +151,6 @@ addon read.
 40. [ ] A member who logs in later gets the points history and tonight's
     reserves within a few minutes (needs an officer online for the
     history).
+41. [ ] `/sr debug` "Encounter Journal:" line: does the game turn the
+    journal off, and which raids does it list? (If it lists Forever's raids,
+    loot lists come from the game itself.)
