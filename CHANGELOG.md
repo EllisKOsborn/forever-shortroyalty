@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.0 (not released yet): Reserve+, soft reserves with bonus points
+## v0.9.0 (16 Nov 2026): Reserve+, soft reserves with bonus points
 
 The guild's TBC loot system, inside Short Royalty: a new **Loot** page in
 the sidebar (`/sr loot`). Nothing here has been tried in a raid yet.

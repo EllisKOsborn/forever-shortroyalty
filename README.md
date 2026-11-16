@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="WoW Forever 1.60.1" src="https://img.shields.io/badge/WoW%20Forever-1.60.1%20%C2%B7%2016001-FFC000?labelColor=000000">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.8.2%20alpha-F06BB0?labelColor=000000">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.9.0%20alpha-F06BB0?labelColor=000000">
   <img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-FF6A1A?labelColor=000000">
 </p>
 
@@ -143,7 +143,7 @@ make or cancel one.
 ### 🎲 Loot (Reserve+)
 <p align="center"><img src="docs/images/loot.png" alt="Loot page: tonight's raid, its loot with your points, and who reserved what" width="100%"></p>
 
-The guild's TBC loot system, built in (not released yet, v0.9.0). You
+The guild's TBC loot system, built in (v0.9.0). You
 **soft reserve** items for a raid night. Every night you were there (or on
 the bench and online when reserves were locked) and didn't get a reserved
 item, that item gains **bonus points** (+10 to start; officers set it). Your

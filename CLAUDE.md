@@ -29,8 +29,8 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
-- **v0.9.0 Reserve+ (built 16 Nov, not released, owner: "Start building
-  these"):** soft reserves with bonus points (the guild's TBC system:
+- **v0.9.0 Reserve+ (released 16 Nov on `main`, owner: "Let's push this to
+  main"; built from "Start building these"):** soft reserves with bonus points (the guild's TBC system:
   Kerath Raidcheck + Gargul), **inside Short Royalty**, sidebar **Loot**
   (`/sr loot`). Rules/plan: `docs/proposals/loot-addon-plan.md` (owner: 1+
   reserves per raid set by officers, same item twice = double bonus one
@@ -690,7 +690,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
   (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed); **v0.5.7** (12 Nov, cooldown
-  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet). Tag only when
+  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet); **v0.8.2** (16 Nov, "No player named" fix); **v0.9.0** (16 Nov, Reserve+: soft reserves with bonus points; the weekly loot-list workflow becomes active on `main`). Tag only when
   the user asks.
 
 ## Layout
@@ -1187,7 +1187,7 @@ refer to `git show v0.6.0:TESTING.md`.
    TESTING.md 18–29.
 4. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
-5. Reserve+ (built, not released): a dungeon test run (TESTING.md 30–40)
+5. Reserve+ (released 16 Nov): a dungeon test run (TESTING.md 30–40)
    and `/sr debug` "Loot method" inside a raid group (master loot?);
    offline bench at the lock: no bonus only (built), or a penalty too?
 

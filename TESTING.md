@@ -113,7 +113,7 @@ says about your raid group.
     logging in. A Bench change shows for the others too.
 29. [ ] **Totals** with 30 / 60 / 90 days / All.
 
-## v0.9.0 Reserve+ (not released yet)
+## v0.9.0 Reserve+ (released 16 Nov)
 
 Try it in a dungeon group before the first raid (5 people are enough; an
 officer with `/sr officer` on, and a raid made on the Raids page for
