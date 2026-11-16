@@ -29,6 +29,10 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **Separate loot addon (16 Nov, planned, not built):** soft reserves with
+  bonus points (the guild's TBC system), its own repo, same look as v0.6.0.
+  Plan and owner's decisions: `docs/proposals/loot-addon-plan.md` (moves to
+  the new repo). Waiting on the owner: empty repo, name, the plan's questions.
 - **v0.8.2 (released 16 Nov on `main`, owner: "push to main"):
   "No player named X is currently playing" fix** (owner: "It appears to be
   this addon. Why?"). Cause: our WHISPERs (PR replies in BULK, RQ, AR/AQ)
@@ -1127,6 +1131,8 @@ refer to `git show v0.6.0:TESTING.md`.
    TESTING.md 18–29.
 4. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
+5. Loot addon: create the empty GitHub repo, pick the name, answer the
+   questions at the end of `docs/proposals/loot-addon-plan.md`.
 
 ## Answers already given to the guild (stay consistent)
 - **Alts:** linked automatically once each alt has logged in with the addon
