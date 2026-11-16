@@ -39,16 +39,16 @@ describe("v0.9.0 Reserve+ points", function()
 
 	it("a night adds the bonus; no cap, so points keep growing", function()
 		local nights = {}
-		for n = 1, 30 do nights[n] = { k = "n", e = "raid" .. n, b = 10, g = { [CAT] = DST } } end
+		for n = 1, 30 do nights[n] = { k = "n", e = "raid" .. n, b = 10, g = { [CAT] = { DST } } } end
 		local st = R.Replay(ledger(R, nights))
 		assert.equal(300, R.PointsOf(st, CAT, DST)) -- three phases of DST, hundreds of points
 	end)
 
 	it("the owner's healer example: points stay on the item, a new item starts at 0", function()
 		local st = R.Replay(ledger(R, {
-			{ k = "n", e = "r1", b = 10, g = { [CAT] = MACE } },
-			{ k = "n", e = "r2", b = 10, g = { [CAT] = MACE } },
-			{ k = "n", e = "r3", b = 10, g = { [CAT] = TRINKET } }, -- switched to the trinket
+			{ k = "n", e = "r1", b = 10, g = { [CAT] = { MACE } } },
+			{ k = "n", e = "r2", b = 10, g = { [CAT] = { MACE } } },
+			{ k = "n", e = "r3", b = 10, g = { [CAT] = { TRINKET } } }, -- switched to the trinket
 		}))
 		assert.equal(20, R.PointsOf(st, CAT, MACE))    -- kept for when they go back to it
 		assert.equal(10, R.PointsOf(st, CAT, TRINKET)) -- built from scratch
@@ -57,14 +57,14 @@ describe("v0.9.0 Reserve+ points", function()
 	end)
 
 	it("points belong to one character: alts don't share", function()
-		local st = R.Replay(ledger(R, { { k = "n", e = "r1", b = 10, g = { [CAT] = MACE } } }))
+		local st = R.Replay(ledger(R, { { k = "n", e = "r1", b = 10, g = { [CAT] = { MACE } } } }))
 		assert.equal(10, R.PointsOf(st, CAT, MACE))
 		assert.equal(0, R.PointsOf(st, DAN, MACE))
 	end)
 
 	it("winning sets that item to 0 and leaves the others alone", function()
 		local st = R.Replay(ledger(R, {
-			{ k = "n", e = "r1", b = 10, g = { [CAT] = MACE } },
+			{ k = "n", e = "r1", b = 10, g = { [CAT] = { MACE } } },
 			{ k = "a", g = CAT, i = TRINKET, d = 40, r = "test" },
 			{ k = "w", g = CAT, i = MACE, e = "r2" },
 		}))
@@ -74,7 +74,7 @@ describe("v0.9.0 Reserve+ points", function()
 
 	it("the bonus is editable; a change counts from then on, not backwards", function()
 		local st = R.Replay(ledger(R, {
-			{ k = "n", e = "r1", b = 10, g = { [CAT] = MACE } },
+			{ k = "n", e = "r1", b = 10, g = { [CAT] = { MACE } } },
 			{ k = "s", b = 25 },
 		}))
 		assert.equal(10, R.PointsOf(st, CAT, MACE))
@@ -84,7 +84,7 @@ describe("v0.9.0 Reserve+ points", function()
 
 	it("officers change points by hand, with a reason; a penalty can go below 0", function()
 		local st = R.Replay(ledger(R, {
-			{ k = "n", e = "r1", b = 10, g = { [CAT] = MACE } },
+			{ k = "n", e = "r1", b = 10, g = { [CAT] = { MACE } } },
 			{ k = "a", g = CAT, i = MACE, d = -30, r = "Left halfway through" },
 		}))
 		assert.equal(-20, R.PointsOf(st, CAT, MACE))
@@ -96,8 +96,8 @@ describe("v0.9.0 Reserve+ points", function()
 
 	it("a mistaken bonus is undone, wherever the undo lands in the history", function()
 		local store = ledger(R, {
-			{ k = "n", e = "r1", b = 10, g = { [CAT] = MACE, [DAN] = TRINKET } }, -- Dan wasn't there
-			{ k = "n", e = "r2", b = 10, g = { [CAT] = MACE } },
+			{ k = "n", e = "r1", b = 10, g = { [CAT] = { MACE }, [DAN] = { TRINKET } } }, -- Dan wasn't there
+			{ k = "n", e = "r2", b = 10, g = { [CAT] = { MACE } } },
 		})
 		local night1 = R.Ordered(store)[1].id
 		assert.is_true(R.Merge(store, { id = "O:" .. (NOW + 50), by = "O", c = NOW + 50, k = "x", x = night1, r = "Dan wasn't there" },
@@ -110,9 +110,9 @@ describe("v0.9.0 Reserve+ points", function()
 
 	it("moves points to an alt the guild asked them to main (all, or some)", function()
 		local st = R.Replay(ledger(R, {
-			{ k = "n", e = "r1", b = 10, g = { [CAT] = MACE } },
-			{ k = "n", e = "r2", b = 10, g = { [CAT] = MACE } },
-			{ k = "n", e = "r3", b = 10, g = { [CAT] = TRINKET } },
+			{ k = "n", e = "r1", b = 10, g = { [CAT] = { MACE } } },
+			{ k = "n", e = "r2", b = 10, g = { [CAT] = { MACE } } },
+			{ k = "n", e = "r3", b = 10, g = { [CAT] = { TRINKET } } },
 			{ k = "m", g = CAT, i = MACE, g2 = DAN, i2 = DST, all = true, r = "Now maining Dan" },
 			{ k = "m", g = CAT, i = TRINKET, g2 = DAN, i2 = TRINKET, d = 5, r = "Half" },
 		}))
@@ -129,15 +129,34 @@ describe("v0.9.0 Reserve+ points", function()
 
 	it("everyone gets the same points whatever order entries arrive in", function()
 		local a = ledger(R, {
-			{ k = "n", e = "r1", b = 10, g = { [CAT] = MACE } },
+			{ k = "n", e = "r1", b = 10, g = { [CAT] = { MACE } } },
 			{ k = "w", g = CAT, i = MACE },
-			{ k = "n", e = "r2", b = 10, g = { [CAT] = MACE } },
+			{ k = "n", e = "r2", b = 10, g = { [CAT] = { MACE } } },
 		})
 		local b = R.New()
 		local list = R.Ordered(a)
 		for n = #list, 1, -1 do assert.is_true(R.Merge(b, list[n], NOW + 1000, function() return true end)) end
 		assert.equal(10, R.PointsOf(R.Replay(b), CAT, MACE))
 		assert.equal(R.PointsOf(R.Replay(a), CAT, MACE), R.PointsOf(R.Replay(b), CAT, MACE))
+	end)
+end)
+
+describe("v0.9.0 Reserve+ reserves per raid", function()
+	it("officers set how many reserves each raid allows (1 until set)", function()
+		local SK = setup()
+		local R = SK.Reserves
+		local st = R.Replay(ledger(R, { { k = "p", raid = "hyjal", n = 2 }, { k = "p", raid = "bt", n = 4 } }))
+		assert.equal(2, R.PicksFor(st, "hyjal"))
+		assert.equal(4, R.PicksFor(st, "bt"))
+		assert.equal(1, R.PicksFor(st, "ony"))
+		local store = R.New()
+		local yes = function() return true end
+		assert.is_false((R.Merge(store, { id = "O:1", by = "O", c = 1, k = "p", raid = "ony", n = 0 }, NOW, yes)))
+		assert.is_false((R.Merge(store, { id = "O:2", by = "O", c = 2, k = "p", raid = "ony", n = R.MAX_PICKS + 1 }, NOW, yes)))
+		assert.is_false((R.Merge(store, { id = "O:3", by = "O", c = 3, k = "n", e = "r", b = 10, g = { [CAT] = { MACE, MACE } } }, NOW, yes)))
+		assert.is_false((R.Merge(store, { id = "O:4", by = "O", c = 4, k = "n", e = "r", b = 10, g = { [CAT] = {} } }, NOW, yes)))
+		assert.is_truthy(SK.Reserves:SetPicks("hyjal", 2))
+		assert.equal(2, R.PicksFor(SK.Reserves:State(), "hyjal"))
 	end)
 end)
 
@@ -156,7 +175,7 @@ describe("v0.9.0 Reserve+ the night", function()
 	local function roll(g, n, max) return { guid = g, roll = n, min = 1, max = max or 100 } end
 
 	it("roll + points on that reserve; the highest total wins", function()
-		local rows = R.Rank(MACE, { roll(CAT, 5), roll(DAN, 90) }, { [CAT] = MACE, [DAN] = MACE }, st)
+		local rows = R.Rank(MACE, { roll(CAT, 5), roll(DAN, 90) }, { [CAT] = { [MACE] = true }, [DAN] = { [MACE] = true } }, st)
 		assert.equal(CAT, rows[1].guid) -- 5 + 100 beats 90 + 10
 		assert.equal(105, rows[1].total)
 		assert.equal(100, rows[2].total)
@@ -164,14 +183,14 @@ describe("v0.9.0 Reserve+ the night", function()
 
 	it("points only count on tonight's reserve", function()
 		-- Bob has 80 on the trinket but reserved the mace tonight... and the trinket drops.
-		local rows = R.Rank(TRINKET, { roll(BOB, 50), roll(CAT, 60) }, { [BOB] = MACE, [CAT] = TRINKET }, st)
+		local rows = R.Rank(TRINKET, { roll(BOB, 50), roll(CAT, 60) }, { [BOB] = { [MACE] = true }, [CAT] = { [TRINKET] = true } }, st)
 		assert.equal(CAT, rows[1].guid) -- Cat reserved it (0 points on it) and beats a non-reserver
 		assert.equal(0, rows[2].bonus)
 		assert.is_false(rows[2].reserved)
 	end)
 
 	it("anyone can roll, but a reserver always beats a non-reserver", function()
-		local rows = R.Rank(MACE, { roll(BOB, 100), roll(DAN, 1) }, { [DAN] = MACE }, st)
+		local rows = R.Rank(MACE, { roll(BOB, 100), roll(DAN, 1) }, { [DAN] = { [MACE] = true } }, st)
 		assert.equal(DAN, rows[1].guid)
 	end)
 
@@ -190,22 +209,45 @@ describe("v0.9.0 Reserve+ the night", function()
 
 	it("equal totals: more points wins; equal points too: re-roll", function()
 		-- Cat: 10 + 100 = 110; Dan: 100 + 10 = 110. Cat has more points.
-		local rows = R.Rank(MACE, { roll(DAN, 100), roll(CAT, 10) }, { [CAT] = MACE, [DAN] = MACE }, st)
+		local rows = R.Rank(MACE, { roll(DAN, 100), roll(CAT, 10) }, { [CAT] = { [MACE] = true }, [DAN] = { [MACE] = true } }, st)
 		assert.equal(CAT, rows[1].guid)
 		assert.is_nil(rows[1].tie)
-		local rows2 = R.Rank(TRINKET, { roll(CAT, 50), roll(DAN, 50) }, { [CAT] = TRINKET, [DAN] = TRINKET }, st)
+		local rows2 = R.Rank(TRINKET, { roll(CAT, 50), roll(DAN, 50) }, { [CAT] = { [TRINKET] = true }, [DAN] = { [TRINKET] = true } }, st)
 		assert.is_true(rows2[1].tie) -- both 0 points, same roll
 	end)
 
-	it("end of night: there, boss killed, didn't win it", function()
-		local picks = { [BOB] = MACE, [CAT] = TRINKET, [DAN] = DST, ["Player-1-Z"] = MACE }
-		local present = function(g) return g ~= "Player-1-Z" end
-		local killed = function(i) return i ~= DST end -- DST's boss wasn't killed
-		local grants, skipped = R.NightGrants(picks, present, killed, { [CAT] = { [TRINKET] = true } })
-		assert.same({ [BOB] = MACE }, grants)
+	it("end of night: in the raid or on the bench, didn't win it; the boss needn't die", function()
+		local picks = {
+			[BOB] = { [MACE] = true, [DST] = true }, -- DST's boss wasn't killed: still +bonus (owner, 16 Nov)
+			[CAT] = { [TRINKET] = true },
+			[DAN] = { [MACE] = true },
+			["Player-1-Y"] = { [MACE] = true },
+			["Player-1-Z"] = { [MACE] = true },
+		}
+		local where = { [BOB] = "raid", [CAT] = "raid", [DAN] = "bench", ["Player-1-Y"] = "offline" }
+		local grants, skipped, wonItems = R.NightGrants(picks, function(g) return where[g] end, { [CAT] = { [TRINKET] = true } })
+		assert.same({ MACE, DST }, grants[BOB])
+		assert.same({ MACE }, grants[DAN]) -- benched and online: doesn't fall behind
+		assert.is_nil(grants[CAT])
 		assert.equal("won it", skipped[CAT])
-		assert.equal("boss not killed", skipped[DAN])
+		assert.same({ TRINKET }, wonItems[CAT])
+		assert.equal("on the bench but offline at the lock", skipped["Player-1-Y"])
 		assert.equal("not there", skipped["Player-1-Z"])
+	end)
+
+	it("who is on the bench, and online, when reserves are locked", function()
+		local picks = { [BOB] = { [MACE] = true }, [CAT] = { [MACE] = true }, [DAN] = { [MACE] = true } }
+		local bench = R.BenchAtLock(picks, function(g) return g == BOB end, function(g) return g == CAT end)
+		assert.same({ [CAT] = "bench", [DAN] = "offline" }, bench)
+	end)
+
+	it("several reserves: each item has its own points; only reserved items count", function()
+		local st2 = R.Replay(ledger(R, { { k = "n", e = "r1", b = 10, g = { [CAT] = { MACE, TRINKET } } } }))
+		assert.equal(10, R.PointsOf(st2, CAT, MACE))
+		assert.equal(10, R.PointsOf(st2, CAT, TRINKET))
+		local picks = { [CAT] = { [MACE] = true, [TRINKET] = true }, [DAN] = { [TRINKET] = true } }
+		local rows = R.Rank(TRINKET, { roll(CAT, 1), roll(DAN, 99) }, picks, st2)
+		assert.equal(DAN, rows[1].guid) -- 99 + 0 beats 1 + 10
 	end)
 end)
 
@@ -250,7 +292,7 @@ describe("v0.9.0 Reserve+ trust", function()
 		}
 		for n, e in ipairs(bad) do assert.is_false((R.Merge(store, e, NOW, yes)), "case " .. n) end
 		local grants = {}
-		for n = 1, R.MAX_GRANTS + 1 do grants["Player-9-" .. n] = MACE end
+		for n = 1, R.MAX_GRANTS + 1 do grants["Player-9-" .. n] = { MACE } end
 		assert.is_false((R.Merge(store, entry(BOB, NOW, { k = "n", e = "r", b = 10, g = grants }), NOW, yes)))
 		local ok = entry(BOB, NOW, { k = "s", b = 5, extra = "dropped" })
 		assert.is_true(R.Merge(store, ok, NOW, yes))
@@ -276,7 +318,7 @@ describe("v0.9.0 Reserve+ trust", function()
 		assert.is_nil((R:Undo(e.id, "again")))
 		assert.is_truthy(R:SetBonus(15))
 		assert.equal(15, R:State().bonus)
-		assert.is_truthy(R:Night("raid1", { [CAT] = MACE }))
+		assert.is_truthy(R:Night("raid1", { [CAT] = { MACE } }))
 		assert.equal(15, R.PointsOf(R:State(), CAT, MACE))
 	end)
 

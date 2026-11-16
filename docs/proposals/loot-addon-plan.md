@@ -14,12 +14,13 @@ reserve it.
 | Rule | Decision |
 |---|---|
 | Where | **Inside Short Royalty** (owner: "Great", 16 Nov). |
-| Reserves | **1** per character per raid night. |
+| Reserves | **Set per raid by officers** (owner, 16 Nov: "we used 2 in Mount Hyjal in TBC but 4 in Black Temple; it depends on how many bosses and items a raid has"). Default 1. Each reserve is a different item. |
 | Points belong to | **One character + one item.** Alts don't share. |
 | Switching items | Reserving a different item starts that item from 0. The old item **keeps** its points, and they count again the night you reserve it again. |
 | Points only count on your reserve | If you have 100 on the mace but reserved the trinket tonight and the mace drops, the 100 don't count. |
 | When you win | That item's points reset to 0. |
-| Boss not killed | **No bonus** for items from that boss. |
+| Boss not killed | **Bonus anyway** (owner changed this 16 Nov: with 10 bosses and only 8 killed, people reserving from bosses 9 and 10 mustn't fall behind). |
+| Bench | **Benched players get the bonus too**, so rotating people doesn't make them fall behind. But only if they're **online when reserves are locked** (Nuhra, 16 Nov: standby should mean standby). At the lock, officers see which benched players are online and which aren't; offline ones get no bonus that night, and officers can add a penalty by hand. |
 | Missed raid | Points stay, but don't grow. |
 | Bonus amount | Editable in the addon by officers (default +10). |
 | Cap | **None.** In TBC people reserved Dragonspine Trophy for three phases and built hundreds of points; that was intended. |
@@ -48,10 +49,10 @@ who don't raid never need to open it.
 ## How a raid night works
 
 1. **Before the raid:** the officer makes the raid night as now (Raids
-   page). Each member picks **one** item from that raid's loot list when
-   signing up. The list shows their saved points on every item, so they
+   page). Each member picks their reserves (as many as that raid allows)
+   from that raid's loot list when signing up. The list shows their saved points on every item, so they
    can go back to an item they've built points on. The officer locks
-   reserves before the pull.
+   reserves before the pull, and sees who on the bench is online.
 2. **Boss dies:** the officer's addon notes the kill (the game's "encounter
    ended" event). The loot officer clicks an item: the addon shows who
    reserved it with their bonus, and posts it to raid chat on a button
@@ -59,9 +60,10 @@ who don't raid never need to open it.
 3. **Players `/roll`.** The officer's addon reads the rolls: reservers
    first, by *roll + bonus*; then everyone else. Ties re-roll.
 4. **Award:** master loot or trade. The winner's points on that item go to 0.
-5. **End of night:** every reserver who was there, whose item's boss was
-   **killed**, and who didn't win it, gets +bonus (up to the cap). The
-   officer checks the list and confirms. It's saved in the history.
+5. **End of night:** every reserve that wasn't won gets +bonus, for
+   everyone who was in the raid or online on the bench at the lock
+   (whether the boss died or not; no cap). The officer checks the list and
+   confirms. It's saved in the history.
 
 ## Trust: why only officers can change points
 
@@ -122,15 +124,18 @@ winner.
 
 ## Build order (inside Short Royalty)
 
-1. Points history and rules: pure Lua, many tests (bonus, cap, reset on
-   win, per character + item, only your reserve counts, boss-killed rule,
-   undo).
+1. **Done 16 Nov** (`Core/Reserves.lua`, `tests/v090_reserves_spec.lua`):
+   points history and rules: bonus (no cap), reset on win, per character +
+   item, only tonight's reserves count, reserves per raid, bench at the
+   lock, changes by hand, penalties, moves, undo, ranking rolls (ties: more
+   points, then re-roll), end-of-night bonus.
 2. Loot lists: Onyxia now; the boss script ready for the patch; learning
    from drops.
 3. Reserve on sign-up, and sharing (reserves from players, points from
    officers).
 4. Loot page: Reserves, My points, History.
-5. Officer's Loot night: kills, rolls, award, end of night.
+5. Officer's Loot night: lock (with the bench check), rolls, raid check,
+   award, end of night. "Reserved by" on item tooltips.
 6. `/sr debug` checks, README, TESTING, pictures.
 
 Then a **test run** in a dungeon before 9 Dec. If it isn't tested by then,
@@ -148,23 +153,53 @@ softres.it. What it does and what we take:
 | Highest points + roll wins among reservers | Same. |
 | Equal totals: **more points wins**; equal points too: re-roll | **Adopted** (`Reserves.Rank`). |
 | Items nobody reserved: normal rolls | Same (anyone can roll; reservers come first). |
-| +10 per reserve, added when you reserve (also for that night) | Owner's rule instead: added after a night you were there, the boss died and you didn't win. |
-| 2 reserves a raid, both may go on one item (+20, one roll) | Owner's rule: 1 reserve. |
+| +10 per reserve, added when you reserve (also for that night) | Owner's rule instead: added after the night, if you were there (or online on the bench) and didn't win it. |
+| 2 reserves a raid, both may go on one item (+20, one roll) | Reserves per raid set by officers; different items each (ask the owner if doubling up should be allowed). |
 | Points live in a Google Sheet, pasted in each raid | In the addon, shared with everyone, history kept. |
 | Raid check: reservers not in the raid, raiders without a reserve | **Adopted** on Loot night (mock-up). |
-| Buff check | Not planned (owner asked for loot only). |
+| Buff check | Later: see "Replacing Gargul". |
 
 From Gargul (owner): item tooltips show who reserved the item. **Adopted**:
 on a raid night, every item tooltip (bags, loot window, AtlasLoot, NeedRoll)
-gets "Reserved by …" with points (mock-up `loot-tooltip.png`). Gargul's
-loot council, disenchanter and auto-loot aren't planned; if Gargul works in
-Forever, the guild can still use it for handing out loot.
+gets "Reserved by …" with points (mock-up `loot-tooltip.png`). Gargul (it
+supports Forever since 3 Oct) stays in use for handing out loot **for now**;
+the owner wants to replace it later: see the next section.
+
+## Replacing Gargul (later, after Reserve+)
+
+Owner, 16 Nov: "fine for now, but create a plan for us to come back to this
+as we don't want to use Gargul". Gargul is used for the first raids; these
+parts replace it one at a time, **each tested in a real raid before the
+next**. Features only, written from scratch (never Gargul's code).
+
+**Gate first (blocks parts 2–4):** an officer's `/sr debug` inside a raid
+must show which loot methods Forever allows. The client still has master
+loot (`Enum.LootMethod.Masterlooter`, `GiveMasterLoot`, `MasterLooterFrame`
+in the forever UI source), but only the game can say if raids use it. If
+it doesn't, parts 2 and 4 become "trade helpers" instead.
+
+| Part | What | Needs | Size |
+|---|---|---|---|
+| 1. Buff check | Before the pull: who's missing required buffs or consumables, who has the "bonus" world buffs (as Kerath Raidcheck). Officers pick the list. | Reading raid members' buffs inside an instance (Forever's newer restrictions: check in game). Buff spell IDs from Forever's data, verified twice. | Small |
+| 2. Hand out in one click | On Loot night, Award gives the item to the winner straight from the loot window (master loot), and records the win. Without master loot: a trade reminder and "trade this to X" when the winner opens a trade. | Master loot, or trade events. | Medium |
+| 3. Disenchanter and auto-loot rules | Officers name a disenchanter (and a banker for materials); items nobody needs, and items matching rules (e.g. all greens, all Onyxia hide bags), go to them automatically. | Master loot. | Medium |
+| 4. Loot council | For chosen items, officers vote in a small window: each candidate's reserve and points, item level of what they wear now (we already have their gear), attendance %, and past wins. The raid leader confirms. | Addon messages between officers inside the raid between pulls (check in game). | Large |
+| 5. Loot history | Who got what, when, from which boss; search and filter. | Nothing new (the win entries already exist). | Small |
+
+Gargul's other modes (GDKP gold auctions, TMB/DFT/PRIO3 lists) aren't
+planned unless the guild asks.
 
 ## Answered 16 Nov
 
 - Reserves are **visible to everyone** before the lock.
 - Starting bonus **+10 per night** (officers can change it).
 - The guild's TBC tool was **Kerath Raidcheck** with Gargul (see above).
+- 16 Nov (owner, Nuhra): reserves per raid set by officers; bonus even if
+  the boss isn't killed; benched players get it if online at the lock.
+- Still to ask: may a player put two of their reserves on the same item
+  (Kerath Raidcheck allows it: double points, one roll)? Built as "no".
+- Still to ask: "delete their points" for offline bench: no bonus that
+  night (built), or also a penalty / wipe? Officers can do either by hand.
 
 ## Mock-ups (16 Nov)
 

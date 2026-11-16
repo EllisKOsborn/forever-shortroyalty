@@ -3,21 +3,25 @@
 -- docs/proposals/loot-addon-plan.md.
 --
 -- Points belong to ONE character and ONE item. Each raid night you reserve
--- one item; if you were there, its boss was killed and you didn't get it,
--- that item gains the bonus (no cap). Winning an item sets its points to 0.
--- Points on other items wait until you reserve them again, and only your
--- reserve's points count on the night.
+-- a few items (how many is set per raid by officers: 1 by default, e.g. 2
+-- in Hyjal, 4 in a big raid). Every reserved item you didn't get that night
+-- gains the bonus (no cap) if you were in the raid, or on the bench and
+-- online when reserves were locked. Whether its boss died doesn't matter
+-- (owner, 16 Nov: people reserving from the last bosses mustn't fall
+-- behind). Winning an item sets its points to 0. Points on other items wait
+-- until you reserve them again, and only tonight's reserves' points count.
 --
 -- Points are never stored as plain numbers. They are added up from a
 -- HISTORY of changes ("ledger") that only officers and raid leaders write,
 -- so every number can be explained and any change undone:
 --
 --   entry = { id = by .. ":" .. c, by = officer GUID, c = time made, k = kind, ... }
---     k = "n"  night bonus: e = raid id, b = bonus, g = { [guid] = itemID }
+--     k = "n"  night bonus: e = raid id, b = bonus, g = { [guid] = { itemID, ... } }
 --     k = "w"  won:         g = guid, i = itemID, e = raid id (optional)
 --     k = "a"  adjust:      g = guid, i = itemID, d = +/- points, r = reason
 --     k = "m"  move:        g, i (from) -> g2, i2 (to), d = points or all = true, r
 --     k = "s"  settings:    b = bonus per night
+--     k = "p"  settings:    raid = raid key, n = reserves per player there
 --     k = "x"  undo:        x = id of the entry undone, r = reason
 --
 -- Entries never change once made (an undo is a new entry). Every player's
@@ -28,7 +32,7 @@
 --
 -- Stored per guild in guild.reserves = { ledger = { [id] = entry } }.
 -- Pure parts (tested): ValidEntry, Merge, Replay, PointsOf, ItemsOf,
--- Rank, NightGrants, Count.
+-- Rank, NightGrants, BenchAtLock, PicksFor, Count.
 local _, SK = ...
 
 local R = SK:NewModule("Reserves")
@@ -42,8 +46,10 @@ R.MAX_GRANTS = 80         -- characters in one night bonus (40-player raid + ben
 R.MAX_REASON = 80         -- characters in a reason
 R.MAX_FUTURE = 300        -- an entry dated more than 5 minutes ahead is refused
 R.ROLL_MAX = 100          -- only /roll 1-100 counts
+R.MAX_PICKS = 8           -- reserves per player per raid can be set up to this
 
-R.KIND_NAME = { n = "Night bonus", w = "Won", a = "Changed by hand", m = "Moved", s = "Bonus changed", x = "Undone" }
+R.KIND_NAME = { n = "Night bonus", w = "Won", a = "Changed by hand", m = "Moved", s = "Bonus changed",
+	p = "Reserves changed", x = "Undone" }
 
 ---------------------------------------------------------------------------
 -- Checks for anything received (untrusted)
@@ -69,9 +75,16 @@ function R.ValidEntry(e, now)
 		if not str(e.e, 80) or not int(e.b) or e.b < 0 or e.b > R.MAX_BONUS then return false, "bad night" end
 		if type(e.g) ~= "table" then return false, "bad night" end
 		local n = 0
-		for g, i in pairs(e.g) do
+		for g, items in pairs(e.g) do
 			n = n + 1
-			if n > R.MAX_GRANTS or not guid(g) or not item(i) then return false, "bad night" end
+			if n > R.MAX_GRANTS or not guid(g) or type(items) ~= "table" then return false, "bad night" end
+			local seen, c = {}, 0
+			for k2, i in pairs(items) do
+				c = c + 1
+				if c > R.MAX_PICKS or not int(k2) or k2 < 1 or k2 > R.MAX_PICKS or not item(i) or seen[i] then return false, "bad night" end
+				seen[i] = true
+			end
+			if c == 0 then return false, "bad night" end
 		end
 	elseif k == "w" then
 		if not guid(e.g) or not item(e.i) or (e.e ~= nil and not str(e.e, 80)) then return false, "bad win" end
@@ -89,6 +102,8 @@ function R.ValidEntry(e, now)
 		end
 	elseif k == "s" then
 		if not int(e.b) or e.b < 0 or e.b > R.MAX_BONUS then return false, "bad setting" end
+	elseif k == "p" then
+		if not str(e.raid, 20) or not int(e.n) or e.n < 1 or e.n > R.MAX_PICKS then return false, "bad setting" end
 	elseif k == "x" then
 		if not str(e.x, 80) or e.x == e.id then return false, "bad undo" end
 	else
@@ -100,18 +115,18 @@ end
 -- Copies only the fields its kind uses (nothing extra is stored or passed on).
 local FIELDS = {
 	n = { "e", "b", "g" }, w = { "g", "i", "e" }, a = { "g", "i", "d", "r" },
-	m = { "g", "i", "g2", "i2", "d", "all", "r" }, s = { "b" }, x = { "x", "r" },
+	m = { "g", "i", "g2", "i2", "d", "all", "r" }, s = { "b" }, p = { "raid", "n" }, x = { "x", "r" },
 }
+local function deep(v)
+	if type(v) ~= "table" then return v end
+	local t = {}
+	for a, b in pairs(v) do t[a] = deep(b) end
+	return t
+end
 local function copy(e)
 	local out = { id = e.id, by = e.by, c = e.c, k = e.k }
 	for _, f in ipairs(FIELDS[e.k]) do
-		local v = e[f]
-		if type(v) == "table" then
-			local t = {}
-			for a, b in pairs(v) do t[a] = b end
-			v = t
-		end
-		out[f] = v
+		out[f] = deep(e[f])
 	end
 	return out
 end
@@ -153,6 +168,7 @@ R.Ordered = ordered
 -- Replays the history. Returns state = {
 --   points = { [guid] = { [itemID] = points } },
 --   bonus  = bonus per night now,
+--   picks  = { [raid key] = reserves per player } (PicksFor gives the default),
 --   undone = { [id] = id of the undo },
 --   lines  = { [guid] = { [itemID] = { { id, c, k, d, r, by } ... } } } (why each number is what it is),
 -- }
@@ -165,7 +181,7 @@ function R.Replay(store)
 		local t = e.k == "x" and store.ledger[e.x]
 		if t and t.k ~= "x" then undone[e.x] = e.id end
 	end
-	local st = { points = {}, bonus = R.DEFAULT_BONUS, undone = undone, lines = {} }
+	local st = { points = {}, bonus = R.DEFAULT_BONUS, picks = {}, undone = undone, lines = {} }
 	local function add(g, i, d, e)
 		local p = st.points[g] or {}
 		st.points[g] = p
@@ -181,7 +197,9 @@ function R.Replay(store)
 	for _, e in ipairs(list) do
 		if not undone[e.id] then
 			if e.k == "n" then
-				for g, i in pairs(e.g) do add(g, i, e.b, e) end
+				for g, items in pairs(e.g) do
+					for _, i in ipairs(items) do add(g, i, e.b, e) end
+				end
 			elseif e.k == "w" then
 				add(e.g, e.i, "reset", e)
 			elseif e.k == "a" then
@@ -195,10 +213,17 @@ function R.Replay(store)
 				end
 			elseif e.k == "s" then
 				st.bonus = e.b
+			elseif e.k == "p" then
+				st.picks[e.raid] = e.n
 			end
 		end
 	end
 	return st
+end
+
+-- Reserves per player in a raid (1 until officers set it for that raid).
+function R.PicksFor(st, raidKey)
+	return st and st.picks[raidKey] or 1
 end
 
 function R.PointsOf(st, g, i)
@@ -220,7 +245,7 @@ end
 -- The night (pure)
 ---------------------------------------------------------------------------
 -- Who wins an item. rolls = list of { guid, roll, min, max } in the order
--- they were rolled; picks = { [guid] = itemID } tonight's reserves;
+-- they were rolled; picks = { [guid] = { [itemID] = true } } tonight's reserves;
 -- st = Replay state. Only the first 1-100 roll of each character counts.
 -- Reservers of this item always come first, by roll + their points on it;
 -- then everyone else by roll. Equal totals: more points wins; equal
@@ -232,7 +257,7 @@ function R.Rank(itemID, rolls, picks, st)
 		if type(r) == "table" and guid(r.guid) and int(r.roll) and r.min == 1 and r.max == R.ROLL_MAX
 			and r.roll >= 1 and r.roll <= R.ROLL_MAX and not seen[r.guid] then
 			seen[r.guid] = true
-			local reserved = picks[r.guid] == itemID
+			local reserved = picks[r.guid] ~= nil and picks[r.guid][itemID] == true
 			local bonus = reserved and R.PointsOf(st, r.guid, itemID) or 0
 			rows[#rows + 1] = { guid = r.guid, roll = r.roll, bonus = bonus, total = r.roll + bonus, reserved = reserved, order = #rows + 1 }
 		else
@@ -255,24 +280,45 @@ function R.Rank(itemID, rolls, picks, st)
 	return rows, ignored
 end
 
--- The end-of-night bonus. picks = { [guid] = itemID }; present(guid),
--- killed(itemID) -> bool (that item's boss died tonight); won = { [guid] =
--- { [itemID] = true } } (items given tonight). Returns { [guid] = itemID }
--- and, for the officer's check, the reasons the others got nothing.
-function R.NightGrants(picks, present, killed, won)
-	local grants, skipped = {}, {}
-	for g, i in pairs(picks) do
-		if not present(g) then
-			skipped[g] = "not there"
-		elseif won[g] and won[g][i] then
-			skipped[g] = "won it"
-		elseif not killed(i) then
-			skipped[g] = "boss not killed"
+-- Who was on the bench when reserves were locked. picks = tonight's
+-- reserves; inRaid(guid), online(guid) -> bool. Returns { [guid] =
+-- "bench" (online, not in the raid) | "offline" }; people in the raid
+-- aren't listed. Officers see this when they lock reserves.
+function R.BenchAtLock(picks, inRaid, online)
+	local out = {}
+	for g in pairs(picks) do
+		if not inRaid(g) then out[g] = online(g) and "bench" or "offline" end
+	end
+	return out
+end
+
+-- The end-of-night bonus. picks = { [guid] = { [itemID] = true } };
+-- where(guid) -> "raid" (was in the raid tonight), "bench" (online on the
+-- bench when reserves were locked), "offline" (on the bench but offline
+-- then) or nil (not there); won = { [guid] = { [itemID] = true } } (items
+-- given tonight). Whether the item's boss died doesn't matter (owner, 16
+-- Nov). Returns grants { [guid] = { itemID, ... } (sorted) } and, for the
+-- officer's check, skipped { [guid] = reason } for people who get nothing
+-- and wonItems { [guid] = { itemID, ... } } for reserves they won.
+function R.NightGrants(picks, where, won)
+	local grants, skipped, wonItems = {}, {}, {}
+	for g, set in pairs(picks) do
+		local w = where(g)
+		if w ~= "raid" and w ~= "bench" then
+			skipped[g] = w == "offline" and "on the bench but offline at the lock" or "not there"
 		else
-			grants[g] = i
+			local items, got = {}, {}
+			for i in pairs(set) do
+				if won[g] and won[g][i] then got[#got + 1] = i else items[#items + 1] = i end
+			end
+			table.sort(items)
+			table.sort(got)
+			if #items > 0 then grants[g] = items end
+			if #got > 0 then wonItems[g] = got end
+			if #items == 0 then skipped[g] = "won it" end
 		end
 	end
-	return grants, skipped
+	return grants, skipped, wonItems
 end
 
 ---------------------------------------------------------------------------
@@ -326,6 +372,7 @@ function R:Move(g, i, g2, i2, d, why)
 	return self:Add({ k = "m", g = g, i = i, g2 = g2, i2 = i2, d = d, r = why })
 end
 function R:SetBonus(b) return self:Add({ k = "s", b = b }) end
+function R:SetPicks(raidKey, n) return self:Add({ k = "p", raid = raidKey, n = n }) end
 function R:Won(g, i, raidID) return self:Add({ k = "w", g = g, i = i, e = raidID }) end
 function R:Night(raidID, grants)
 	local st = self:State()

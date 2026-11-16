@@ -5,9 +5,12 @@
 Being built; nothing to see in game yet.
 
 - **The points rules** (step 1 of `docs/proposals/loot-addon-plan.md`):
-  points per character and item, a bonus each night you reserve an item,
-  were there, its boss died and you didn't get it (no cap); winning sets it
-  to 0; points on other items wait until you reserve them again.
+  points per character and item. Every reserved item you didn't get gains
+  the bonus after the night (no cap), if you were in the raid, or on the
+  bench and online when reserves were locked; whether its boss died
+  doesn't matter. Winning an item sets it to 0; points on other items
+  wait until you reserve them again. Officers set how many reserves each
+  raid allows (1 until set).
 - Officers and raid leaders can change points by hand with a reason (a
   penalty can go below 0), move points to another character or item (for
   someone asked to main an alt), change the bonus, and undo any change.

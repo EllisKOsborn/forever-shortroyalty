@@ -32,9 +32,14 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
 - **v0.9.0 Reserve+ (being built, not released):** soft reserves with bonus
   points (the guild's TBC system), **inside Short Royalty** (owner, 16 Nov).
   Rules and plan: `docs/proposals/loot-addon-plan.md` (owner's table: 1
-  reserve, points per character + item, **no cap**, reset on win, no bonus
-  if the boss wasn't killed, reserver always beats non-reserver, changes by
-  hand / penalties below 0 / moves to an alt / undo). Step 1 done:
+  points per character + item, **no cap**, reset on win, reserver always
+  beats non-reserver, changes by hand / penalties below 0 / moves to an alt
+  / undo). **Changed 16 Nov:** reserves per raid set by officers (ledger
+  kind `p`, `PicksFor`, default 1); bonus even if the boss wasn't killed;
+  bench gets it if online at the lock (`BenchAtLock`, `NightGrants(picks,
+  where, won)` with where = raid | bench | offline | nil). **Replacing
+  Gargul later:** plan section "Replacing Gargul" (gate: does Forever allow
+  master loot in raids). Step 1 done:
   `Core/Reserves.lua` = officer-only **ledger** `guild.reserves.ledger[id]`
   (kinds n/w/a/m/s/x, never edited, replayed in (c, id) order; `Merge`
   checks `RaidBoard.CanLead(by)` on our roster), `Replay`, `Rank`,
@@ -1143,8 +1148,9 @@ refer to `git show v0.6.0:TESTING.md`.
    TESTING.md 18–29.
 4. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
-5. Reserve+: verdict on the mock-ups (`docs/images/loot*.png`). The guild's
-   TBC tool was Kerath Raidcheck + Gargul (compared in the plan).
+5. Reserve+: verdict on the mock-ups (`docs/images/loot*.png`); two
+   questions in the plan's "Answered 16 Nov" (two reserves on one item?
+   offline bench: no bonus only, or a penalty too?).
 
 ## Answers already given to the guild (stay consistent)
 - **Alts:** linked automatically once each alt has logged in with the addon
