@@ -45,7 +45,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   each piece's send callback). Patterns are built from the client's own
   global strings (`Compat.NotFoundName/WentOfflineName`). `Flush` →
   `SendItem`. Tests `tests/v082_offline_spec.lua`. TESTING "Still worth a
-  look" 0. Unconfirmed in game.
+  look", first item. Unconfirmed in game.
 - **v0.7.2 (released 14 Nov on `main`, owner: "Push to main"):
   Short Words on flights** (owner: "Go as that's a good idea" to: small box,
   not the whole window; closes on landing; Settings switch, default on).
