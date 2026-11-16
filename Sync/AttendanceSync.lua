@@ -30,7 +30,7 @@ AS.lastReject = nil
 function AS.Targets(guild, now)
 	local out = {}
 	for guid, m in pairs(guild and guild.members or {}) do
-		if not SK.DB.account[guid] and Board.IsLeadRank(m) and SK.Identity.Status(m, false, now) == "addon" then
+		if not SK.DB.account[guid] and Board.CanLead(guid, guild) and SK.Identity.Status(m, false, now) == "addon" then
 			out[#out + 1] = guid
 		end
 	end

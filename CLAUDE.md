@@ -29,6 +29,16 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.9.1 (not released): the creator counts as an officer** (owner, 16
+  Nov: "Just give me access to all these things. I'm the addon creator and
+  they're fine with it."). `RaidBoard.CREATORS = { ["Player-6937-001743F0"]
+  = true }` (their main; the GUID the owner-only Profit view used) →
+  `CanLead(guid)` true while a member (not `leftAt`); used by raids,
+  attendance (`AS.Targets` now uses `CanLead`), Reserve+ ledger/locks/sync
+  (receivers check the sender with `CanLead`). Still needs `/sr officer`
+  for the officer tabs. Alts aren't included (only GUIDs every game knows;
+  add an alt's GUID to the table if the owner asks). Everyone needs v0.9.1
+  for the owner's changes to be accepted. TESTING 42.
 - **v0.9.0 Reserve+ (released 16 Nov on `main`, owner: "Let's push this to
   main"; built from "Start building these"):** soft reserves with bonus points (the guild's TBC system:
   Kerath Raidcheck + Gargul), **inside Short Royalty**, sidebar **Loot**

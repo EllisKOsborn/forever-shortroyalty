@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.9.1 (not released yet): the addon's creator gets the officer tools
+
+- The addon's creator counts as an officer or raid leader (the guild
+  agreed): making raids, attendance, and Reserve+ (locking reserves, loot
+  nights, changing points, rules), after typing `/sr officer`. It's their
+  main character only, written into the addon so every player's game
+  accepts their changes; it stops if they leave the guild. Everyone needs
+  this version for the creator's changes to reach them.
+- `/sr debug` says "(addon creator)" next to "can make raids".
+
 ## v0.9.0 (16 Nov 2026): Reserve+, soft reserves with bonus points
 
 The guild's TBC loot system, inside Short Royalty: a new **Loot** page in

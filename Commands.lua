@@ -378,8 +378,9 @@ function Commands.RaidLines()
 	local officer, leader = Compat.GuildOfficerFlags()
 	local me = Compat.PlayerGUID()
 	local m = guild and me and guild.members[me]
-	add("Your rank: %q (index %s)   can make raids: %s   officer tools on: %s   game says officer=%s, guild master=%s",
+	add("Your rank: %q (index %s)   can make raids: %s%s   officer tools on: %s   game says officer=%s, guild master=%s",
 		tostring(m and m.rank), tostring(m and m.rankIndex), yesno(SK.RaidBoard.IsLeadSelf()),
+		me and SK.RaidBoard.CREATORS[me] and " (addon creator)" or "",
 		yesno(me and SK.DB.officer[me] or false), yesno(officer), yesno(leader))
 	local ranks, seen = {}, {}
 	for _, mm in pairs(guild and guild.members or {}) do

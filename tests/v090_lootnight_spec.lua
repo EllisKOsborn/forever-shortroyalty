@@ -424,3 +424,38 @@ describe("v0.9.0 loot lists without typing (journal, wiki data, drops)", functio
 		assert.is_nil(set[21108])  -- not the quest book
 	end)
 end)
+
+describe("v0.9.1 the addon creator counts as an officer", function()
+	local CREATOR = "Player-6937-001743F0"
+
+	it("everywhere a rank is checked, while in the guild; nobody else does", function()
+		local SK, W = H.load()
+		W.member("Pip", W.player.guid, { rank = "Member", rankIndex = 4 })
+		W.member("Maker Person", CREATOR, { rank = "Member", rankIndex = 4 })
+		SK.Identity:ReadRoster()
+		local B = SK.RaidBoard
+		assert.is_true(B.CanLead(CREATOR))
+		assert.is_false(B.CanLead(W.player.guid))
+		-- Their points changes are accepted by everyone else's game.
+		local R = SK.Reserves
+		local e = { by = CREATOR, c = W.now, k = "a", g = W.player.guid, i = 17064, d = 5 }
+		e.id = CREATOR .. ":" .. W.now
+		SK.Sync:OnCommReceived(SK.PREFIX, H.peerMessage(SK, "LE", { l = { e } }, CREATOR), "GUILD", "Maker Person")
+		assert.equal(5, R.PointsOf(R:State(), W.player.guid, 17064))
+		-- Not once they've left the guild.
+		SK.DBM:Guild().members[CREATOR].leftAt = W.now
+		assert.is_false(B.CanLead(CREATOR))
+	end)
+
+	it("playing on that character: officer tools work with /sr officer", function()
+		local SK, W = H.load()
+		W.player.guid = CREATOR
+		W.member("Maker Person", CREATOR, { rank = "Member", rankIndex = 4 })
+		SK.Identity:ReadRoster()
+		H.loadUI(SK)
+		SK.Commands.Run("officer")
+		assert.is_true(SK.RaidBoard.OfficerView())
+		assert.is_truthy(SK.RaidBoard:Create("ony", W.now + 3600))
+		assert.is_truthy(SK.Reserves:SetBonus(15))
+	end)
+end)
