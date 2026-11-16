@@ -27,7 +27,7 @@ local FILES = {
 local UI_FILES = {
 	"UI/Theme.lua", "UI/Motion.lua", "UI/Widgets.lua", "UI/MainFrame.lua", "UI/OverviewTab.lua", "UI/RosterTab.lua",
 	"UI/CharacterTab.lua", "UI/RaidsTab.lua", "UI/LootTab.lua",
-	"UI/CraftersTab.lua", "UI/ProfessionsTab.lua", "UI/WordsTab.lua", "UI/FlightWords.lua",
+	"UI/CraftersTab.lua", "UI/ProfessionsTab.lua", "UI/WordsTab.lua", "UI/FlightWords.lua", "UI/ReserveReminder.lua",
 	"UI/SettingsTab.lua", "UI/DebugWindow.lua",
 	"UI/Minimap.lua", "UI/Tooltip.lua", "Commands.lua",
 }

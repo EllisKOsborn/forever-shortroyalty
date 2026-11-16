@@ -382,6 +382,11 @@ function LT:Build(page)
 	self.check:SetWidth(LT.NIGHT_LEFT_W)
 	self.check:SetHeight(64)
 	self.check:SetJustifyV("BOTTOM")
+	-- v0.9.1: type the names of raiders without a reserve into raid chat.
+	self.remindBtn = W.Button(nv, "Remind in raid chat", nil, S.controlSmall, function() LT:RemindRaid() end, "quiet")
+	self.remindBtn:SetPoint("TOPRIGHT", self.check, "TOPRIGHT", 0, 0)
+	self.remindBtn.tooltip = "Types \"Not reserved yet: …\" into raid chat for you to send. " ..
+		"Players with Short Royalty also get a reminder box by themselves."
 	local rx = LT.NIGHT_LEFT_W + SP.xl
 	self.curTitle = Theme.Text(nv, "title", "text")
 	self.curTitle:SetPoint("TOPLEFT", rx, nTop - SP.xxs)
@@ -662,6 +667,11 @@ function LT:Award()
 	end
 end
 
+function LT:RemindRaid()
+	local text = SK.ReserveReminder.RaidChatText(LT.noReserve or {})
+	if text then Compat.OpenChat("/ra " .. text) end
+end
+
 function LT:Reroll()
 	local night = LT.night
 	if night and night.current then night.rolls[night.current] = {} end
@@ -840,7 +850,7 @@ function LT:RefreshNight(st, now)
 	LT.night = night
 	local store = R:Get()
 	local endMode = LT.endMode and night ~= nil
-	for _, f in ipairs({ self.dropList, self.addBox, self.addBtn, self.check, self.curTitle, self.curSub, self.postBtn,
+	for _, f in ipairs({ self.dropList, self.addBox, self.addBtn, self.check, self.remindBtn, self.curTitle, self.curSub, self.postBtn,
 		self.awardBtn, self.rerollBtn, self.rollList, self.rollNote }) do f:SetShown(night ~= nil and not endMode) end
 	for _, f in ipairs({ self.endList, self.endSum, self.saveBtn, self.endNote }) do f:SetShown(endMode) end
 	self.lockBtn:SetShown(night ~= nil)
@@ -899,6 +909,9 @@ function LT:RefreshNight(st, now)
 	local inRaid = {}
 	for _, m in ipairs(Compat.RaidMembers()) do if m.guid then inRaid[m.guid] = true end end
 	local missing, noReserve = R.RaidCheck(picks, inRaid)
+	LT.noReserve = {}
+	for _, g in ipairs(noReserve) do LT.noReserve[#LT.noReserve + 1] = (nameOf(g)) end
+	self.remindBtn:SetDisabled(#noReserve == 0)
 	local function names(list)
 		local out = {}
 		for i, g in ipairs(list) do

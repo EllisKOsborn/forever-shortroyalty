@@ -162,3 +162,10 @@ addon read.
     Attendance, Loot shows Loot night and Rules. You can then do items
     30–41 yourself (a raid made by you, reserves, lock, a dungeon group's
     loot window, rolls, award, end of night).
+43. [ ] **Reminder:** with a raid made for tonight, join a raid group
+    without reserving: a box "Reserve for …" shows at the top of the screen
+    and a line in chat. **Reserve** opens the Loot page; once you've
+    reserved, it goes away. It doesn't show once an officer has locked
+    reserves, or in combat.
+44. [ ] **Remind in raid chat** (Loot night, raid check): types the names of
+    raiders without a reserve into raid chat; you press Enter.

@@ -310,6 +310,7 @@ Theme.SIZES = {
 	key = { 26, 30 },       -- an on-screen keyboard key
 	flightBox = { 320, 56 },-- v0.7.2 "Flying? Play Short Words" box
 	flightBoxY = 140,       -- its distance from the top of the screen
+	reminderBox = { 400, 56 }, -- v0.9.1 "Reserve for <raid>" box, just under the flight box
 	titleBar = 52,          -- (v0.5) kept for older callers
 	tabBar = 32,
 	pad = 16,           -- window inner margin

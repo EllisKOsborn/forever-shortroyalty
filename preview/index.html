@@ -250,6 +250,10 @@
   .flightbox .fi { width: 20px; height: 20px; color: var(--accent); -webkit-mask-image: var(--tex-icon-words); mask-image: var(--tex-icon-words); margin-right: 2px; }
   .flightbox .ft { flex: 1; min-width: 0; font-size: 13px; color: var(--text); } .flightbox .ft .dim { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .flightbox .close { position: static; }
+  .flightbox.remind { width: 400px; }
+  .flightshot.remindshot { width: 1000px; }
+  .flightbox.remind .edge { background: var(--spark); }
+  .flightbox.remind .fi { color: var(--spark); -webkit-mask-image: var(--tex-icon-loot); mask-image: var(--tex-icon-loot); }
   .ttshot .tip { position: static; display: block; width: 330px; }
   .ttshot .cap { font: 600 12px "Chakra Petch SK", sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #fff; margin-bottom: 10px; }
 </style>
@@ -988,7 +992,7 @@ function loot() {
         : c.key === "p" ? (r.r ? pts(r.p) : DASH) : `<span class="${r === rolls[0] ? "good" : r.r ? "" : "faint"}">${r.r ? r.tot : r.roll}</span>`,
       { sel: (r) => r === rolls[0], style: `left:${RX}px;right:0;top:${t0 + 124}px;bottom:24px` }) +
     `<div class="abs dim small" style="left:${RX}px;bottom:0;line-height:1.5">Everyone who reserved it has rolled. Equal totals: more points wins.<br>Rolls of 1-1000 or a second roll don't count.</div>` +
-    `<div class="abs small" style="left:0;bottom:0;width:${LW}px;line-height:1.5"><div class="display dim" style="font-size:11px">RAID CHECK</div>
+    `<div class="abs small" style="left:0;bottom:0;width:${LW}px;line-height:1.5"><div style="display:flex;justify-content:space-between;align-items:center"><span class="display dim" style="font-size:11px">RAID CHECK</span>${btn("Remind in raid chat", "quiet small")}</div>
       <div><span class="spark">Reserved, not in the raid:</span> ${nm(M[8])}</div><div><span class="dim">In the raid, no reserve:</span> ${nm(M[13])}, ${nm(M[2])}</div></div>`;
 }
 
@@ -1055,6 +1059,12 @@ function flightShot() {
   // v0.8.0: only until today's word is played; no box after that.
   return `<div class="flightshot"><div><div class="cap">Today's word not played yet (no box once it's played)</div>${box("Today's word is waiting.")}</div></div>`;
 }
+// v0.9.1 Reserve+ reminder: in a raid group for tonight's raid without (all) reserves.
+function reminderShot() {
+  const box = (title, text) => `<div class="flightbox remind"><i class="edge"></i><i class="mask fi"></i><div class="ft"><div>${title}</div><div class="dim">${text}</div></div>${btn("Reserve", "primary")}<div class="close"><i></i></div></div>`;
+  return `<div class="flightshot remindshot"><div><div class="cap">In the raid group, nothing reserved</div>${box("Reserve for Onyxia's Lair", "Nothing reserved yet.")}</div>
+    <div><div class="cap">Two allowed, one made</div>${box("Reserve for Hyjal Summit", "1 of 2 reserved so far.")}</div></div>`;
+}
 function copyWin() {
   const lines = ["Short Royalty roster", ...rosterRows().slice(0, 30).map((m) => `${m.name}  ${m.level}  ${m.rank}  ${m.spec || "-"}  ${m.ilvl || "-"}`)];
   return `<div class="copywin"><div class="abs display" style="left:16px;top:16px;font-size:13px">Copy as text</div>
@@ -1073,6 +1083,7 @@ function render(opts = {}) {
   document.body.classList.toggle("reduce", S.reduce);
   const stage = $("#stage");
   if (SHOT === "flight") { stage.innerHTML = flightShot(); return; }
+  if (SHOT === "reminder") { stage.innerHTML = reminderShot(); return; }
   if (SHOT === "loottip") { stage.innerHTML = `<div style="position:relative;width:640px;height:240px">${lootTipShot()}</div>`; return; }
   if (SHOT === "tooltip") { stage.innerHTML = `<div style="position:relative;width:${T.sizes.windowW}px;height:440px">${tooltipShot()}</div>`; return; }
   // Window size (as in game) times a fit-to-screen factor for narrow browser windows.

@@ -157,12 +157,15 @@ reserve the same trinket for months and nobody new can take it from you.
 - **History:** every change, who made it and why: night bonuses, wins, changes by hand, moves, rule changes. Kept by everyone.
 - **Rolls:** reservers always beat everyone else; among them the highest *roll + points* wins; equal totals go to whoever has more points, then a re-roll. Only the first 1–100 roll of each player counts.
 - **Item tooltips** on a raid night: "Reserve+: Reserved by 3: Cat 120, Bob 30, Dan" (in your bags, the loot window, AtlasLoot…).
+- **Reminder** (v0.9.1): in a raid group for tonight's raid without all your reserves, a small box at the top of the screen says so, with a **Reserve** button. It comes back every 10 minutes until you reserve or an officer locks reserves. Reserve before going in: sharing pauses inside instances.
+
+<p align="center"><img src="docs/images/loot-reminder.png" alt="Reserve reminder boxes" width="80%"></p>
 
 <p align="center"><img src="docs/images/loot-night.png" alt="Loot night: drops, rolls ranked by roll plus points, raid check" width="100%"></p>
 
 **Officers** (with `/sr officer`; raid leaders, the Guild Master and the addon's creator count too) also get:
 
-- **Loot night:** lock reserves (it notes who on the bench is online), drops from the loot windows you open (or paste a link), **Post to raid chat**, the rolls read from chat and ranked, **Award** (the win goes in the history), a **raid check** (reservers not in the raid, raiders without a reserve), and **End of night**: who gets the bonus and why, leave anyone out, **Save the bonus** once.
+- **Loot night:** lock reserves (it notes who on the bench is online), drops from the loot windows you open (or paste a link), **Post to raid chat**, the rolls read from chat and ranked, **Award** (the win goes in the history), a **raid check** (reservers not in the raid, raiders without a reserve, and **Remind in raid chat** with their names), and **End of night**: who gets the bonus and why, leave anyone out, **Save the bonus** once.
 - **Points → Everyone → Change points:** add or take points with a reason (a penalty can go below 0), or **move** points to another character and item (someone asked to main an alt). Right-click a change in the History to undo it.
 - **Rules:** reserves per player for each raid, the bonus per night, and adding items to a raid's loot list (rarely needed, see below).
 

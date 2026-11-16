@@ -459,3 +459,46 @@ describe("v0.9.1 the addon creator counts as an officer", function()
 		assert.is_truthy(SK.Reserves:SetBonus(15))
 	end)
 end)
+
+describe("v0.9.1 reserve reminder", function()
+	it("warns in a raid group for tonight's raid until you've reserved or it's locked", function()
+		local SK = setup()
+		H.loadUI(SK)
+		local Rem = SK.ReserveReminder
+		local ev = { id = "x", raid = "ony" }
+		assert.is_nil(Rem.Needed(nil, {}, 1, false, true, false))              -- no raid tonight
+		assert.is_nil(Rem.Needed(ev, {}, 1, false, false, false))              -- not in a raid group
+		assert.is_nil(Rem.Needed(ev, {}, 1, false, true, true))                -- in combat
+		assert.is_nil(Rem.Needed(ev, {}, 1, true, true, false))                -- locked
+		assert.is_nil(Rem.Needed(ev, { SHARD }, 1, false, true, false))        -- done
+		local say = Rem.Needed(ev, {}, 1, false, true, false)
+		assert.equal("Reserve for Onyxia's Lair", say.title)
+		assert.equal("Nothing reserved yet.", say.text)
+		assert.equal("1 of 2 reserved so far.", Rem.Needed(ev, { SHARD }, 2, false, true, false).text)
+	end)
+
+	it("joining the raid group shows the box; reserving hides it", function()
+		local SK, W = setup()
+		H.loadUI(SK)
+		SK.DB.settings.reduceMotion = true -- boxes hide at once
+		local id = raidTonight(SK, W)
+		local Rem = SK.ReserveReminder
+		W.raid = { { name = "Pip", guid = ME }, { name = "Bob Stout", guid = BOB } }
+		W.fire("GROUP_ROSTER_UPDATE")
+		W.advance(3)
+		assert.is_truthy(Rem.box and Rem.box:IsShown())
+		assert.equal(id, Rem.raidID)
+		assert.is_true(SK.Reserves:SetMyPicks(id, { SHARD }))
+		Rem:Check(true)
+		assert.is_false(Rem.box:IsShown())
+		assert.equal(0, #SK.errors)
+	end)
+
+	it("officers can type who hasn't reserved into raid chat", function()
+		local SK = setup()
+		H.loadUI(SK)
+		assert.equal("Reserves close soon. Not reserved yet: Cat Nip, Dan Dee. Type /sr loot to reserve.",
+			SK.ReserveReminder.RaidChatText({ "Cat Nip", "Dan Dee" }))
+		assert.is_nil(SK.ReserveReminder.RaidChatText({}))
+	end)
+end)

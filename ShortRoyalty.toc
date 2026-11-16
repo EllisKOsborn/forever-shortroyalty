@@ -72,6 +72,7 @@ UI\CraftersTab.lua
 UI\ProfessionsTab.lua
 UI\WordsTab.lua
 UI\FlightWords.lua
+UI\ReserveReminder.lua
 UI\SettingsTab.lua
 UI\DebugWindow.lua
 UI\Minimap.lua

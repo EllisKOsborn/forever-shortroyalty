@@ -29,6 +29,17 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.9.1 (not released) also: reserve reminder** (guild: "if you are in
+  a raid group that you didn't do reserves to, you should get a warning").
+  `UI/ReserveReminder.lua`: pure `Rem.Needed(ev, mine, limit, locked,
+  inRaid, inCombat)` → box `ShortRoyaltyReserveReminder` (`SIZES.
+  reminderBox` 400 × 56, under the flight box; spark edge, loot icon,
+  Reserve → Loot page) + one chat line; on joining a raid group
+  (GROUP_ROSTER_UPDATE, debounced), every 60 s check, shown again after
+  `REPEAT` 600 s; hides when done/locked; never in combat. Officer
+  **Remind in raid chat** on Loot night (`LT:RemindRaid`, `Rem.RaidChatText`,
+  OpenChat "/ra …"). Picture `loot-reminder.png` (`shot=reminder`).
+  TESTING 43–44.
 - **v0.9.1 (not released): the creator counts as an officer** (owner, 16
   Nov: "Just give me access to all these things. I'm the addon creator and
   they're fine with it."). `RaidBoard.CREATORS = { ["Player-6937-001743F0"]

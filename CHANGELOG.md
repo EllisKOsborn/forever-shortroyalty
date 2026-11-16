@@ -1,6 +1,18 @@
 # Changelog
 
-## v0.9.1 (not released yet): the addon's creator gets the officer tools
+## v0.9.1 (not released yet): reserve reminders, and officer tools for the addon's creator
+
+- **Reserve reminder** (the guild asked): when you're in a raid group for
+  tonight's raid and haven't made all your reserves, a small box at the top
+  of the screen says so ("Reserve for Onyxia's Lair · Nothing reserved
+  yet"), with a **Reserve** button that opens the Loot page, plus one line
+  in chat. It comes back every 10 minutes until you reserve or an officer
+  locks reserves; never in combat. Reserve before entering the raid:
+  sharing pauses inside instances, so a reserve made inside reaches the
+  officers only after you leave.
+- **Remind in raid chat** (officers, Loot night): types "Reserves close
+  soon. Not reserved yet: …" with the names of raiders without a reserve
+  into raid chat, for you to send.
 
 - The addon's creator counts as an officer or raid leader (the guild
   agreed): making raids, attendance, and Reserve+ (locking reserves, loot
