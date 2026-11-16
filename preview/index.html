@@ -968,7 +968,9 @@ function loot() {
       (r, c) => c.key === "n" ? nm(r.m) : c.key === "s" ? (r.r ? '<span class="acc">Reserved</span>' : '<span class="faint">No reserve</span>') : c.key === "r" ? `<span class="${r.r ? "" : "faint"}">${r.roll}</span>`
         : c.key === "p" ? (r.r ? pts(r.p) : DASH) : `<span class="${r === rolls[0] ? "good" : r.r ? "" : "faint"}">${r.r ? r.tot : r.roll}</span>`,
       { sel: (r) => r === rolls[0], style: `left:${RX}px;right:0;top:${t0 + 124}px;bottom:24px` }) +
-    `<div class="abs dim small" style="left:${RX}px;bottom:0">Everyone who reserved it has rolled. Rolls of 1-1000 or a second roll don't count.</div>`;
+    `<div class="abs dim small" style="left:${RX}px;bottom:0;line-height:1.5">Everyone who reserved it has rolled. Equal totals: more points wins.<br>Rolls of 1-1000 or a second roll don't count.</div>` +
+    `<div class="abs small" style="left:0;bottom:0;width:${LW}px;line-height:1.5"><div class="display dim" style="font-size:11px">RAID CHECK</div>
+      <div><span class="spark">Reserved, not in the raid:</span> ${nm(M[8])}</div><div><span class="dim">In the raid, no reserve:</span> ${nm(M[13])}, ${nm(M[2])}</div></div>`;
 }
 
 // ---------------------------------------------------------------- window
@@ -1021,6 +1023,13 @@ function tooltipShot() {
       <div style="color:#a6a6a6">Yellow · green · grey at <span style="color:#ff0">300</span> · <span style="color:#40bf40">305</span> · <span style="color:#808080">310</span></div><div>Plans: Arcanite Reaper (drop, Upper Blackrock Spire)</div>
       <div style="color:var(--accent)">Click: crafters, reagents, Wowhead  ·  Right-click: star</div></div></div></div>`;
 }
+// v0.9.0 Reserve+: any item tooltip (bags, loot window, AtlasLoot...) during a raid night.
+function lootTipShot() {
+  return `<div class="ttshot"><div><div class="cap">Item tooltip on a raid night</div><div class="tip"><div style="color:#a335ee;font-size:15px">Deathbringer</div>
+    <div style="color:#a6a6a6">… the item, as usual …</div>
+    <div><span style="color:var(--accent)">Reserved by 4: </span><span style="color:${CLASS.MAGE}">Fizzwick</span> 120, <span style="color:${CLASS.PRIEST}">Tinkerbolt</span> 30, <span style="color:${CLASS.WARRIOR}">Thalgrim</span>, <span style="color:${CLASS.ROGUE}">Sprocket</span></div>
+    <div style="color:#a6a6a6">Your points on it: 0 (you reserved Shard of the Scale)</div></div></div></div>`;
+}
 // v0.7.2: the box shown on a flight path (Theme.SIZES.flightBox 320 x 56, 140 from the top).
 function flightShot() {
   const box = (text) => `<div class="flightbox"><i class="edge"></i><i class="mask fi"></i><div class="ft"><div>Flying? Play Short Words</div><div class="dim">${text}</div></div>${btn("Play", "primary")}<div class="close"><i></i></div></div>`;
@@ -1045,6 +1054,7 @@ function render(opts = {}) {
   document.body.classList.toggle("reduce", S.reduce);
   const stage = $("#stage");
   if (SHOT === "flight") { stage.innerHTML = flightShot(); return; }
+  if (SHOT === "loottip") { stage.innerHTML = `<div style="position:relative;width:640px;height:240px">${lootTipShot()}</div>`; return; }
   if (SHOT === "tooltip") { stage.innerHTML = `<div style="position:relative;width:${T.sizes.windowW}px;height:440px">${tooltipShot()}</div>`; return; }
   // Window size (as in game) times a fit-to-screen factor for narrow browser windows.
   const cols = S.view === "before" && (innerWidth > 1840 || SHOT === "compare") ? 2 : 1;

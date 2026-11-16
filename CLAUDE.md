@@ -38,7 +38,9 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   `Core/Reserves.lua` = officer-only **ledger** `guild.reserves.ledger[id]`
   (kinds n/w/a/m/s/x, never edited, replayed in (c, id) order; `Merge`
   checks `RaidBoard.CanLead(by)` on our roster), `Replay`, `Rank`,
-  `NightGrants`; tests `tests/v090_reserves_spec.lua`. Raid board prunes
+  `NightGrants`; tests `tests/v090_reserves_spec.lua`. Ties: more points
+  wins, then re-roll (Kerath Raidcheck's rule). Mock-ups `docs/images/loot*.png`
+  (raid check on Loot night, "Reserved by" tooltip adopted from KRC/Gargul). Raid board prunes
   raids after 7 days, so points never live on raid records. Next: loot
   lists (Onyxia now; Barrow Deeps/Hyjal aren't in game files at build
   70938 and have no published loot), reserve on sign-up, ReserveSync,
@@ -1141,8 +1143,8 @@ refer to `git show v0.6.0:TESTING.md`.
    TESTING.md 18–29.
 4. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
-5. Reserve+: verdict on the mock-ups (`docs/images/loot*.png`); confirm
-   the guild's TBC tool was Gargul.
+5. Reserve+: verdict on the mock-ups (`docs/images/loot*.png`). The guild's
+   TBC tool was Kerath Raidcheck + Gargul (compared in the plan).
 
 ## Answers already given to the guild (stay consistent)
 - **Alts:** linked automatically once each alt has logged in with the addon

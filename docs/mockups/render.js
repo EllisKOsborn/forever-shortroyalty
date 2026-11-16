@@ -47,6 +47,7 @@ const SHOTS = {
   "loot-points-officer": ["shot=1&screen=loot&data=full&officer=1&lootView=points&lootMode=all", W, H],
   "loot-history": ["shot=1&screen=loot&data=full&officer=1&lootView=history", W, H],
   "loot-night": ["shot=1&screen=loot&data=full&officer=1&lootView=night", W, H],
+  "loot-tooltip": ["shot=loottip", 640, 240],
   "loot-night-end": ["shot=1&screen=loot&data=full&officer=1&lootView=night&lootMode=end", W, H],
   "before-after": ["shot=compare&screen=overview&data=full", 880 + W + 72, H + 84],
   "before-after-professions": ["shot=compare&screen=professions&data=full", 880 + W + 72, H + 84],

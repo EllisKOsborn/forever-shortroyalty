@@ -136,12 +136,35 @@ winner.
 Then a **test run** in a dungeon before 9 Dec. If it isn't tested by then,
 run the first night by hand and switch over after.
 
+## Compared with Kerath Raidcheck (16 Nov)
+
+The guild's TBC tool was **Kerath Raidcheck** (CurseForge, Classic Era only,
+All Rights Reserved: features only, never code), used with **Gargul** and
+softres.it. What it does and what we take:
+
+| Kerath Raidcheck | Reserve+ |
+|---|---|
+| Points per character, tracked between raids | Same. |
+| Highest points + roll wins among reservers | Same. |
+| Equal totals: **more points wins**; equal points too: re-roll | **Adopted** (`Reserves.Rank`). |
+| Items nobody reserved: normal rolls | Same (anyone can roll; reservers come first). |
+| +10 per reserve, added when you reserve (also for that night) | Owner's rule instead: added after a night you were there, the boss died and you didn't win. |
+| 2 reserves a raid, both may go on one item (+20, one roll) | Owner's rule: 1 reserve. |
+| Points live in a Google Sheet, pasted in each raid | In the addon, shared with everyone, history kept. |
+| Raid check: reservers not in the raid, raiders without a reserve | **Adopted** on Loot night (mock-up). |
+| Buff check | Not planned (owner asked for loot only). |
+
+From Gargul (owner): item tooltips show who reserved the item. **Adopted**:
+on a raid night, every item tooltip (bags, loot window, AtlasLoot, NeedRoll)
+gets "Reserved by …" with points (mock-up `loot-tooltip.png`). Gargul's
+loot council, disenchanter and auto-loot aren't planned; if Gargul works in
+Forever, the guild can still use it for handing out loot.
+
 ## Answered 16 Nov
 
 - Reserves are **visible to everyone** before the lock.
 - Starting bonus **+10 per night** (officers can change it).
-- The guild's TBC tool was probably **Gargul** (owner to confirm). Read its
-  feature list only, never its code.
+- The guild's TBC tool was **Kerath Raidcheck** with Gargul (see above).
 
 ## Mock-ups (16 Nov)
 

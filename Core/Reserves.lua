@@ -223,7 +223,8 @@ end
 -- they were rolled; picks = { [guid] = itemID } tonight's reserves;
 -- st = Replay state. Only the first 1-100 roll of each character counts.
 -- Reservers of this item always come first, by roll + their points on it;
--- then everyone else by roll. Returns rows (best first), each
+-- then everyone else by roll. Equal totals: more points wins; equal
+-- totals and points: tie (re-roll). Returns rows (best first), each
 -- { guid, roll, bonus, total, reserved, tie }, and the ignored rolls.
 function R.Rank(itemID, rolls, picks, st)
 	local rows, seen, ignored = {}, {}, {}
@@ -238,14 +239,17 @@ function R.Rank(itemID, rolls, picks, st)
 			ignored[#ignored + 1] = r
 		end
 	end
+	-- Equal totals: more points wins (the guild's TBC rule, as in Kerath
+	-- Raidcheck); equal totals AND points: a tie, re-roll.
 	table.sort(rows, function(a, b)
 		if a.reserved ~= b.reserved then return a.reserved end
 		if a.total ~= b.total then return a.total > b.total end
+		if a.bonus ~= b.bonus then return a.bonus > b.bonus end
 		return a.order < b.order
 	end)
 	local top = rows[1]
 	for _, r in ipairs(rows) do
-		r.tie = top ~= nil and r ~= top and r.reserved == top.reserved and r.total == top.total or nil
+		r.tie = top ~= nil and r ~= top and r.reserved == top.reserved and r.total == top.total and r.bonus == top.bonus or nil
 		if r.tie then top.tie = true end
 	end
 	return rows, ignored

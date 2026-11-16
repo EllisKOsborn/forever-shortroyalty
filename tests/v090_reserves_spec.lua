@@ -188,6 +188,15 @@ describe("v0.9.0 Reserve+ the night", function()
 		assert.is_true(rows[2].tie)
 	end)
 
+	it("equal totals: more points wins; equal points too: re-roll", function()
+		-- Cat: 10 + 100 = 110; Dan: 100 + 10 = 110. Cat has more points.
+		local rows = R.Rank(MACE, { roll(DAN, 100), roll(CAT, 10) }, { [CAT] = MACE, [DAN] = MACE }, st)
+		assert.equal(CAT, rows[1].guid)
+		assert.is_nil(rows[1].tie)
+		local rows2 = R.Rank(TRINKET, { roll(CAT, 50), roll(DAN, 50) }, { [CAT] = TRINKET, [DAN] = TRINKET }, st)
+		assert.is_true(rows2[1].tie) -- both 0 points, same roll
+	end)
+
 	it("end of night: there, boss killed, didn't win it", function()
 		local picks = { [BOB] = MACE, [CAT] = TRINKET, [DAN] = DST, ["Player-1-Z"] = MACE }
 		local present = function(g) return g ~= "Player-1-Z" end

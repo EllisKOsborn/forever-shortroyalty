@@ -11,6 +11,8 @@ Being built; nothing to see in game yet.
 - Officers and raid leaders can change points by hand with a reason (a
   penalty can go below 0), move points to another character or item (for
   someone asked to main an alt), change the bonus, and undo any change.
+- Equal totals: more points wins; equal points too: re-roll (as in the
+  guild's TBC addon, Kerath Raidcheck).
 - Points are added up from a history every member keeps, so every number
   can be explained. Only officer and raid leader ranks (checked against
   your own guild roster) can add to it.
