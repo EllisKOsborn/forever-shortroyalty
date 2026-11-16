@@ -36,9 +36,14 @@ local DEFAULTS = {
 		attView = "raids",                        -- v0.8.0 Attendance: raids or totals
 		attDays = 30,                             -- v0.8.0 Attendance totals period (0 = all)
 		newRaid = {},                             -- v0.8.0 New raid form { raid, day, minutes }
+		lootView = "reserves",                    -- v0.9.0 Loot page tab: reserves, points, history, night, rules
+		lootPoints = "mine",                      -- v0.9.0 Points tab: mine or all
+		lootHistory = "all",                      -- v0.9.0 History tab: all, mine or hand
+		reserveTooltips = true,                   -- v0.9.0 "Reserved by" lines on item tooltips
 	},
 	officer = {},   -- [guid] = true: /sr officer turned the officer tools on for this character (v0.8.0)
 	raidRole = {},  -- [guid] = "TANK" | "HEALER" | "DPS", the role picked for raid sign-ups (v0.8.0)
+	lootNight = {}, -- [raid id] = the loot officer's night: kills, drops, rolls, wins (v0.9.0, local)
 	own = {},             -- [guid] = full profile of our own characters (never sent)
 	cooldownSpells = {},  -- [guid] = { [recipeID] = true } recipes with cooldowns
 	account = {},  -- [guid] = true for characters seen on this account

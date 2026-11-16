@@ -1046,6 +1046,68 @@ function Compat.RaidMembers()
 	return out
 end
 
+---------------------------------------------------------------------------
+-- Reserve+ loot night (v0.9.0). The loot window calls are the ones
+-- Blizzard's Forever LootFrame.lua uses (GetNumLootItems, GetLootSlotInfo,
+-- GetLootSlotLink). Rolls come from the game's "%s rolls %d (%d-%d)" system
+-- message (global RANDOM_ROLL_RESULT, so it follows the game's language).
+---------------------------------------------------------------------------
+-- The items in the open loot window: { { itemID, quality } }.
+function Compat.LootItems()
+	local out = {}
+	if not (GetNumLootItems and GetLootSlotLink) then return out end
+	local okN, n = pcall(GetNumLootItems)
+	n = okN and clean(n) or 0
+	for slot = 1, math.min(n, 40) do
+		local okL, link = pcall(GetLootSlotLink, slot)
+		link = okL and clean(link) or nil
+		local id = type(link) == "string" and tonumber(link:match("item:(%d+)"))
+		if id then
+			local quality
+			if GetLootSlotInfo then
+				local okI, _, _, _, _, q = pcall(GetLootSlotInfo, slot)
+				quality = okI and clean(q) or nil
+			end
+			out[#out + 1] = { itemID = id, quality = type(quality) == "number" and quality or nil }
+		end
+	end
+	return out
+end
+
+local rollPattern
+-- "Name rolls 57 (1-100)" -> "Name", 57, 1, 100; anything else -> nil.
+function Compat.ParseRoll(msg)
+	if type(msg) ~= "string" or Compat.IsSecret(msg) then return nil end
+	if rollPattern == nil then
+		local s = type(RANDOM_ROLL_RESULT) == "string" and RANDOM_ROLL_RESULT or "%s rolls %d (%d-%d)"
+		local escaped = s:gsub("([%^%$%(%)%.%[%]%*%+%-%?])", "%%%1")
+		escaped = escaped:gsub("%%s", "(.+)"):gsub("%%d", "(%%d+)")
+		rollPattern = "^" .. escaped .. "$"
+	end
+	local name, roll, lo, hi = msg:match(rollPattern)
+	if not name then return nil end
+	return name, tonumber(roll), tonumber(lo), tonumber(hi)
+end
+
+-- The raid's loot method name for /sr debug (master loot or not).
+function Compat.LootMethodName()
+	if not has("C_PartyInfo", "GetLootMethod") then return nil end
+	local ok, m = pcall(C_PartyInfo.GetLootMethod)
+	m = ok and clean(m) or nil
+	if m == nil then return nil end
+	local names = Enum and Enum.LootMethod
+	if type(names) == "table" then
+		for k, v in pairs(names) do if v == m then return k end end
+	end
+	return tostring(m)
+end
+
+-- Is a guild member online right now (from the guild roster)?
+function Compat.MemberOnline(guid)
+	local m = SK.Identity and SK.Identity:Member(guid)
+	return m ~= nil and m.online == true
+end
+
 -- For /sr debug only: what the game says about the player's own rank.
 function Compat.GuildOfficerFlags()
 	local officer, leader
@@ -1098,6 +1160,8 @@ Compat.PROBES = {
 	"ModelSceneMixin.GetPlayerActor", "C_CreatureInfo.GetRaceInfo", "UnitSex",
 	-- v0.8.0 raids and attendance
 	"IsInRaid", "GetNumGroupMembers", "GetRaidRosterInfo", "UnitGUID", "C_GuildInfo.IsGuildOfficer", "IsGuildLeader",
+	-- v0.9.0 Reserve+ loot night
+	"GetNumLootItems", "GetLootSlotInfo", "GetLootSlotLink", "C_PartyInfo.GetLootMethod", "GiveMasterLoot",
 }
 
 function Compat.ProbeAll()

@@ -23,6 +23,8 @@
 --     k = "m"  move:        g, i (from) -> g2, i2 (to), d = points or all = true, r
 --     k = "s"  settings:    b = bonus per night
 --     k = "p"  settings:    raid = raid key, n = reserves per player there
+--     k = "l"  loot list:   raid = raid key, i = itemID (an item officers added,
+--                           or one the officer's addon saw drop; undo removes it)
 --     k = "x"  undo:        x = id of the entry undone, r = reason
 --
 -- Entries never change once made (an undo is a new entry). Every player's
@@ -31,9 +33,19 @@
 -- shape, Merge checks against OUR OWN roster that the author is an officer
 -- or raid leader (RaidBoard.IsLeadRank).
 --
--- Stored per guild in guild.reserves = { ledger = { [id] = entry } }.
+-- Stored per guild in guild.reserves = {
+--   ledger = { [id] = entry },
+--   picks  = { [raid id] = { [guid] = { i = { itemID, ... }, u = time } } },
+--            tonight's reserves, written by each player for themselves
+--   locks  = { [raid id] = { by, u, x = true when unlocked, b = { [guid] =
+--            "bench" | "offline" }, s = { [guid] = { itemID, ... } } } },
+--            written by officers: who was on the bench at the lock, and a
+--            copy of everyone's reserves at that moment
+-- }
+-- Raid ids are the v0.8.0 raid board's events (Core/RaidBoard.lua).
 -- Pure parts (tested): ValidEntry, Merge, Replay, PointsOf, ItemsOf,
--- Rank, NightGrants, BenchAtLock, PicksFor, Count.
+-- Rank, NightGrants, BenchAtLock, PicksFor, LootList, ValidPick, MergePick,
+-- ValidLock, MergeLock, PicksOf, RaidCheck, PruneNights, Count.
 local _, SK = ...
 
 local R = SK:NewModule("Reserves")
@@ -50,7 +62,7 @@ R.ROLL_MAX = 100          -- only /roll 1-100 counts
 R.MAX_PICKS = 8           -- reserves per player per raid can be set up to this
 
 R.KIND_NAME = { n = "Night bonus", w = "Won", a = "Changed by hand", m = "Moved", s = "Bonus changed",
-	p = "Reserves changed", x = "Undone" }
+	p = "Reserves changed", l = "Loot list", x = "Undone" }
 
 ---------------------------------------------------------------------------
 -- Checks for anything received (untrusted)
@@ -104,6 +116,8 @@ function R.ValidEntry(e, now)
 		if not int(e.b) or e.b < 0 or e.b > R.MAX_BONUS then return false, "bad setting" end
 	elseif k == "p" then
 		if not str(e.raid, 20) or not int(e.n) or e.n < 1 or e.n > R.MAX_PICKS then return false, "bad setting" end
+	elseif k == "l" then
+		if not str(e.raid, 20) or not item(e.i) then return false, "bad loot item" end
 	elseif k == "x" then
 		if not str(e.x, 80) or e.x == e.id then return false, "bad undo" end
 	else
@@ -115,7 +129,7 @@ end
 -- Copies only the fields its kind uses (nothing extra is stored or passed on).
 local FIELDS = {
 	n = { "e", "b", "g" }, w = { "g", "i", "e" }, a = { "g", "i", "d", "r" },
-	m = { "g", "i", "g2", "i2", "d", "all", "r" }, s = { "b" }, p = { "raid", "n" }, x = { "x", "r" },
+	m = { "g", "i", "g2", "i2", "d", "all", "r" }, s = { "b" }, p = { "raid", "n" }, l = { "raid", "i" }, x = { "x", "r" },
 }
 local function deep(v)
 	if type(v) ~= "table" then return v end
@@ -134,7 +148,7 @@ end
 ---------------------------------------------------------------------------
 -- Merging (pure: ledger, entry, now, isLead(guid) -> bool)
 ---------------------------------------------------------------------------
-function R.New() return { ledger = {} } end
+function R.New() return { ledger = {}, picks = {}, locks = {} } end
 
 function R.Count(store)
 	return SK.Count(store.ledger)
@@ -181,7 +195,7 @@ function R.Replay(store)
 		local t = e.k == "x" and store.ledger[e.x]
 		if t and t.k ~= "x" then undone[e.x] = e.id end
 	end
-	local st = { points = {}, bonus = R.DEFAULT_BONUS, picks = {}, undone = undone, lines = {} }
+	local st = { points = {}, bonus = R.DEFAULT_BONUS, picks = {}, loot = {}, undone = undone, lines = {} }
 	local function add(g, i, d, e)
 		local p = st.points[g] or {}
 		st.points[g] = p
@@ -215,10 +229,30 @@ function R.Replay(store)
 				st.bonus = e.b
 			elseif e.k == "p" then
 				st.picks[e.raid] = e.n
+			elseif e.k == "l" then
+				st.loot[e.raid] = st.loot[e.raid] or {}
+				st.loot[e.raid][e.i] = e.id
 			end
 		end
 	end
 	return st
+end
+
+-- A raid's loot list: the bundled one (Data/Loot.lua) plus items officers
+-- added or the addon saw drop. Returns a sorted list of item IDs and a set
+-- of the ones that came from the guild ({ [itemID] = entry id }).
+function R.LootList(st, raidKey)
+	local seen, out = {}, {}
+	local data = SK.Data.LOOT and SK.Data.LOOT[raidKey]
+	for _, i in ipairs(data and data.items or {}) do
+		if not seen[i] then seen[i] = true; out[#out + 1] = i end
+	end
+	local added = st and st.loot[raidKey] or {}
+	for i in pairs(added) do
+		if not seen[i] then seen[i] = true; out[#out + 1] = i end
+	end
+	table.sort(out)
+	return out, added
 end
 
 -- Reserves per player in a raid (1 until officers set it for that raid).
@@ -329,6 +363,157 @@ function R.NightGrants(picks, where, won)
 end
 
 ---------------------------------------------------------------------------
+-- Tonight's reserves and the officer's lock (pure)
+---------------------------------------------------------------------------
+-- A player's reserves for one raid night, as received. i = list of item
+-- IDs (the same one twice = two reserves on it); an empty list = no reserve.
+function R.ValidPick(p, now)
+	if type(p) ~= "table" then return false, "not a table" end
+	if not str(p.e, 80) or not guid(p.g) then return false, "bad id" end
+	if type(p.i) ~= "table" then return false, "bad items" end
+	local n = 0
+	for k, i in pairs(p.i) do
+		n = n + 1
+		if n > R.MAX_PICKS or not int(k) or k < 1 or k > R.MAX_PICKS or not item(i) then return false, "bad items" end
+	end
+	if n ~= #p.i then return false, "bad items" end
+	if not int(p.u) or p.u > now + R.MAX_FUTURE then return false, "bad time" end
+	return true
+end
+
+-- ctx = { now, canWrite(guid) -> bool (the sender is that player, or an
+-- officer), raidExists(id) -> bool, officer = sender is an officer }.
+-- After an officer locks a raid only officers can change its reserves.
+-- Newest wins. Returns accepted, why.
+function R.MergePick(store, p, ctx)
+	local ok, why = R.ValidPick(p, ctx.now)
+	if not ok then return false, why end
+	if not ctx.canWrite(p.g) then return false, "not their reserve" end
+	if not ctx.raidExists(p.e) then return false, "unknown raid" end
+	store.picks = store.picks or {}
+	local lock = store.locks and store.locks[p.e]
+	if lock and not lock.x and p.u > lock.u and not ctx.officer then return false, "locked" end
+	local list = store.picks[p.e] or {}
+	local have = list[p.g]
+	if have and have.u >= p.u then return false, "not newer" end
+	if not have and SK.Count(list) >= SK.RaidBoard.MAX_SIGNUPS then return false, "too many reserves" end
+	local items = {}
+	for k, i in ipairs(p.i) do items[k] = i end
+	list[p.g] = { i = items, u = p.u }
+	store.picks[p.e] = list
+	return true
+end
+
+function R.ValidLock(l, now)
+	if type(l) ~= "table" then return false, "not a table" end
+	if not str(l.e, 80) or not guid(l.by) then return false, "bad id" end
+	if not int(l.u) or l.u > now + R.MAX_FUTURE then return false, "bad time" end
+	if l.x ~= nil and l.x ~= true then return false, "bad unlock" end
+	local n = 0
+	for g, v in pairs(type(l.b) == "table" and l.b or {}) do
+		n = n + 1
+		if n > SK.RaidBoard.MAX_SIGNUPS or not guid(g) or (v ~= "bench" and v ~= "offline") then return false, "bad bench" end
+	end
+	n = 0
+	for g, items in pairs(type(l.s) == "table" and l.s or {}) do
+		n = n + 1
+		if n > SK.RaidBoard.MAX_SIGNUPS or not guid(g) or type(items) ~= "table" then return false, "bad copy" end
+		local c = 0
+		for k, i in pairs(items) do
+			c = c + 1
+			if c > R.MAX_PICKS or not int(k) or k < 1 or k > R.MAX_PICKS or not item(i) then return false, "bad copy" end
+		end
+	end
+	if (l.b ~= nil and type(l.b) ~= "table") or (l.s ~= nil and type(l.s) ~= "table") then return false, "bad lock" end
+	return true
+end
+
+-- isLead(guid) -> bool for the SENDER (and l.by). Newest wins.
+function R.MergeLock(store, l, now, isLead, raidExists)
+	local ok, why = R.ValidLock(l, now)
+	if not ok then return false, why end
+	if not isLead(l.by) then return false, "not an officer or raid leader" end
+	if not raidExists(l.e) then return false, "unknown raid" end
+	store.locks = store.locks or {}
+	local have = store.locks[l.e]
+	if have and have.u >= l.u then return false, "not newer" end
+	local c = { e = l.e, by = l.by, u = l.u, x = l.x, b = {}, s = {} }
+	for g, v in pairs(l.b or {}) do c.b[g] = v end
+	for g, items in pairs(l.s or {}) do
+		local t = {}
+		for k, i in ipairs(items) do t[k] = i end
+		c.s[g] = t
+	end
+	store.locks[l.e] = c
+	return true
+end
+
+-- Tonight's reserves as { [guid] = { [itemID] = count } }: the copy taken
+-- at the lock when the raid is locked, else the live picks. `limit` (the
+-- raid's reserves per player) keeps only the first `limit` of each.
+function R.PicksOf(store, raidID, limit)
+	local lock = store.locks and store.locks[raidID]
+	local src = {}
+	if lock and not lock.x then
+		for g, items in pairs(lock.s or {}) do src[g] = items end
+	else
+		for g, p in pairs(store.picks and store.picks[raidID] or {}) do src[g] = p.i end
+	end
+	local out = {}
+	for g, items in pairs(src) do
+		local set, n = {}, 0
+		for _, i in ipairs(items) do
+			if limit and n >= limit then break end
+			n = n + 1
+			set[i] = (set[i] or 0) + 1
+		end
+		if n > 0 then out[g] = set end
+	end
+	return out
+end
+
+-- Who reserved one item: { { guid, count } }, most reserves first.
+function R.ReservedBy(picks, itemID)
+	local out = {}
+	for g, set in pairs(picks) do
+		if set[itemID] then out[#out + 1] = { guid = g, count = set[itemID] } end
+	end
+	table.sort(out, function(a, b)
+		if a.count ~= b.count then return a.count > b.count end
+		return a.guid < b.guid
+	end)
+	return out
+end
+
+-- Raid check (as in Kerath Raidcheck): reservers who aren't in the raid,
+-- and raid members without a reserve. inRaid = { [guid] = true }.
+function R.RaidCheck(picks, inRaid)
+	local missing, noReserve = {}, {}
+	for g in pairs(picks) do
+		if not inRaid[g] then missing[#missing + 1] = g end
+	end
+	for g in pairs(inRaid) do
+		if not picks[g] then noReserve[#noReserve + 1] = g end
+	end
+	table.sort(missing)
+	table.sort(noReserve)
+	return missing, noReserve
+end
+
+-- Reserves and locks of raids the raid board no longer holds (it deletes
+-- raids a week after they start). Returns how many raids were dropped.
+function R.PruneNights(store, raidExists)
+	local n = 0
+	for id in pairs(store.picks or {}) do
+		if not raidExists(id) then store.picks[id] = nil; n = n + 1 end
+	end
+	for id in pairs(store.locks or {}) do
+		if not raidExists(id) then store.locks[id] = nil end
+	end
+	return n
+end
+
+---------------------------------------------------------------------------
 -- The stored history and local actions (officers and raid leaders)
 ---------------------------------------------------------------------------
 function R:Get(guild)
@@ -336,6 +521,8 @@ function R:Get(guild)
 	if not guild then return nil end
 	guild.reserves = guild.reserves or R.New()
 	guild.reserves.ledger = guild.reserves.ledger or {}
+	guild.reserves.picks = guild.reserves.picks or {}
+	guild.reserves.locks = guild.reserves.locks or {}
 	return guild.reserves
 end
 
@@ -393,4 +580,85 @@ function R:Undo(id, why)
 	local st = self:State()
 	if st and st.undone[id] then return nil, "already undone" end
 	return self:Add({ k = "x", x = id, r = why })
+end
+function R:AddLoot(raidKey, itemID) return self:Add({ k = "l", raid = raidKey, i = itemID }) end
+
+local function raidExists(id)
+	local board = SK.RaidBoard:Get()
+	return board ~= nil and board.events[id] ~= nil
+end
+R.RaidExists = raidExists
+
+-- The raid a night belongs to (its raid board event), or nil.
+function R.Event(raidID)
+	local board = SK.RaidBoard:Get()
+	return board and board.events[raidID]
+end
+
+-- My reserves for a raid night: a list of item IDs (may be empty).
+function R:MyPicks(raidID)
+	local store, g = self:Get(), me()
+	local p = store and g and store.picks[raidID] and store.picks[raidID][g]
+	return p and p.i or {}
+end
+
+-- Sets my reserves for a raid night. items = list of item IDs (the same one
+-- twice = two reserves on it). Returns true, or nil and why.
+function R:SetMyPicks(raidID, items)
+	local store, g, now = self:Get(), me(), Compat.Now()
+	local ev = R.Event(raidID)
+	if not store or not g or not ev or ev.x then return nil, "unknown raid" end
+	local limit = R.PicksFor(self:State(), ev.raid)
+	if #items > limit then return nil, "this raid allows " .. limit .. (limit == 1 and " reserve" or " reserves") end
+	local lock = store.locks[raidID]
+	local officer = canLead(g)
+	if lock and not lock.x and not officer then return nil, "reserves are locked" end
+	local have = store.picks[raidID] and store.picks[raidID][g]
+	local p = { e = raidID, g = g, i = items, u = math.max(now, have and have.u + 1 or 0) }
+	local ok, why = R.MergePick(store, p, { now = now, canWrite = function() return true end,
+		raidExists = raidExists, officer = officer })
+	if not ok then return nil, why end
+	SK:Fire("RESERVES_UPDATED")
+	if SK.ReserveSync then SK.ReserveSync:QueuePick(raidID, g) end
+	return true
+end
+
+-- Officers: lock (or unlock) a raid night's reserves. The lock remembers
+-- who on the bench (signed up, not in the raid group) was online, and a
+-- copy of everyone's reserves. inRaid/online: guid -> bool.
+function R:Lock(raidID, unlock, inRaid, online)
+	local store, by, now = self:Get(), me(), Compat.Now()
+	if not store or not by then return nil, "no guild" end
+	if not canLead(by) then return nil, "only officers and raid leaders can lock reserves" end
+	if not raidExists(raidID) then return nil, "unknown raid" end
+	local have = store.locks[raidID]
+	local l = { e = raidID, by = by, u = math.max(now, have and have.u + 1 or 0), b = {}, s = {} }
+	if unlock then
+		l.x = true
+	else
+		local picks = store.picks[raidID] or {}
+		for g, p in pairs(picks) do
+			if #p.i > 0 then l.s[g] = p.i end
+		end
+		-- Bench: signed up (or reserved), not in the raid group.
+		local board = SK.RaidBoard:Get()
+		local signed = {}
+		for g, su in pairs(board and board.signups[raidID] or {}) do
+			if su.s == "y" or su.s == "t" then signed[g] = true end
+		end
+		for g in pairs(l.s) do signed[g] = true end
+		for g, state in pairs(R.BenchAtLock(signed, inRaid, online)) do l.b[g] = state end
+	end
+	local ok, why = R.MergeLock(store, l, now, canLead, raidExists)
+	if not ok then return nil, why end
+	SK:Fire("RESERVES_UPDATED")
+	if SK.ReserveSync then SK.ReserveSync:QueueLock(raidID) end
+	return store.locks[raidID]
+end
+
+function R:OnLogin()
+	SK.After(35, function()
+		local store = self:Get()
+		if store then R.PruneNights(store, raidExists) end
+	end)
 end

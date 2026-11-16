@@ -108,6 +108,17 @@ function W.reset()
 		if not m then return nil end
 		return m.name, 0, 1, 60, "Mage", m.class or "MAGE", "Onyxia's Lair", m.online ~= false
 	end
+	-- v0.9.0 loot window: W.loot = { { itemID, quality } } while it's open.
+	W.loot = {}
+	_G.GetNumLootItems = function() return #W.loot end
+	_G.GetLootSlotLink = function(i)
+		local it = W.loot[i]
+		return it and ("|cffa335ee|Hitem:" .. it.itemID .. "::::::::60:::::|h[Item]|h|r") or nil
+	end
+	_G.GetLootSlotInfo = function(i)
+		local it = W.loot[i]
+		if it then return 134400, "Item", 1, nil, it.quality or 4 end
+	end
 	_G.UnitFullName = function(u) if u == "player" then return W.player.name, W.player.realm end end
 	_G.UnitName = function(u) if u == "player" then return W.player.name end end
 	_G.UnitClass = function() return W.player.class, W.player.class, 8 end
