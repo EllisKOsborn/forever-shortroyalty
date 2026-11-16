@@ -1,25 +1,38 @@
 # Changelog
 
-## v0.9.0 (not released yet): Reserve+ (soft reserves with bonus points)
+## v0.9.0 (not released yet): Reserve+, soft reserves with bonus points
 
-Being built; nothing to see in game yet.
+The guild's TBC loot system, inside Short Royalty: a new **Loot** page in
+the sidebar (`/sr loot`). Nothing here has been tried in a raid yet.
 
-- **The points rules** (step 1 of `docs/proposals/loot-addon-plan.md`):
-  points per character and item. Every reserved item you didn't get gains
-  the bonus after the night (no cap), if you were in the raid, or on the
-  bench and online when reserves were locked; whether its boss died
-  doesn't matter. Winning an item sets it to 0; points on other items
-  wait until you reserve them again. Officers set how many reserves each
-  raid allows (1 until set); two reserves on the same item give double
-  points, still one roll.
-- Officers and raid leaders can change points by hand with a reason (a
-  penalty can go below 0), move points to another character or item (for
-  someone asked to main an alt), change the bonus, and undo any change.
-- Equal totals: more points wins; equal points too: re-roll (as in the
-  guild's TBC addon, Kerath Raidcheck).
-- Points are added up from a history every member keeps, so every number
-  can be explained. Only officer and raid leader ranks (checked against
-  your own guild roster) can add to it.
+- **Reserve** items for a raid night (the raids officers make on the Raids
+  page). Every reserved item you didn't get gains the **bonus** after the
+  night (+10 to start, no cap), if you were in the raid, or on the bench
+  and online when an officer locked reserves. Whether its boss died
+  doesn't matter. Winning an item sets it to 0. Points belong to one
+  character and one item; only tonight's reserves count.
+- Officers set **how many reserves** each raid allows (1 until set). Two
+  reserves on the same item give double points, still one roll.
+- **Rolls:** reservers always beat everyone else; among them the highest
+  roll + points wins; equal totals: more points wins, then a re-roll (as
+  in Kerath Raidcheck, the guild's TBC addon).
+- **Points** (yours with the reason for every change, and everyone's) and
+  a **History** of every change, kept by everyone.
+- **Item tooltips** on a raid night show who reserved the item, with their
+  points (as Gargul does).
+- **Officers** (`/sr officer`): **Loot night** (lock reserves with a bench
+  check, drops from loot windows or pasted links, post to raid chat, rolls
+  read from chat and ranked, award, raid check, end-of-night bonus saved
+  once, leave anyone out), changing points by hand with a reason (a
+  penalty can go below 0), moving points to another character or item,
+  undo from the History, and **Rules** (reserves per raid, bonus, loot
+  lists).
+- **Loot lists:** Onyxia's original loot is built in (Forever may change
+  it: its own data doesn't hold Onyxia's raid items yet). Barrow Deeps and
+  Hyjal Summit fill in as items drop, and officers can add items.
+- Only officers and raid leaders can change points: every game checks the
+  sender's rank on its own guild roster. `/sr debug` has a Reserve+ block
+  (including which loot methods the raid allows).
 
 ## v0.8.2 (16 Nov 2026): no more "No player named … is currently playing"
 

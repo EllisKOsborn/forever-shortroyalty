@@ -45,6 +45,7 @@
 | 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
 | 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals, shared between all officers |
+| 🎲 **Loot** (Reserve+) | Soft reserves with **bonus points**: reserve items for a raid night, and every night you don't get one it gains points (no cap) that are added to your roll next time; your points, everyone's, and a history of every change; for officers a **Loot night** screen (rolls ranked, award, raid check, end-of-night bonus) and **Rules** (reserves per raid, bonus, loot lists) |
 | ⚒️ **Find a crafter** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
 | 🧪 **Professions** | Three page tabs: **Guild** (every profession in the guild, then each profession's crafters and recipes), **Recipes** (**every recipe in the game**, by name, group or material) and **Cooldowns**; specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
 | 🔤 **Short Words** | A five-letter word game: **Daily** (one word a day for the whole guild) and **Free for all** (keep going), each with **Today** and **All time** guild leaderboards; today's word offered on flight paths |
@@ -138,6 +139,38 @@ make or cancel one.
 
 - **Totals** per person over 30, 60 or 90 days, or all: raids, on time, late, didn't attend, bench and attended %.
 - **Every officer sees it** (v0.8.1): when a recording ends, or Bench is ticked or unticked, the record goes by whisper to the officers and raid leaders online with the addon; officers who were offline get it when they log in. The tab says who recorded each raid. Members never receive attendance. Everything stays in the addon: there's no spreadsheet export.
+
+### 🎲 Loot (Reserve+)
+<p align="center"><img src="docs/images/loot.png" alt="Loot page: tonight's raid, its loot with your points, and who reserved what" width="100%"></p>
+
+The guild's TBC loot system, built in (not released yet, v0.9.0). You
+**soft reserve** items for a raid night. Every night you were there (or on
+the bench and online when reserves were locked) and didn't get a reserved
+item, that item gains **bonus points** (+10 to start; officers set it). Your
+points are added to your `/roll` the next time you reserve it. **No cap**:
+reserve the same trinket for months and nobody new can take it from you.
+`/sr loot` opens the page.
+
+- **Points belong to one character and one item.** Switch to another item and it starts from 0; your old item keeps its points for when you go back to it. Only tonight's reserves count. Winning an item sets its points to 0. Alts don't share.
+- **Reserves:** pick tonight's raid, click an item (your points on each are shown), **Reserve this**. Officers set how many reserves each raid allows (1 until set); two on the same item give double points, still one roll. Everyone sees who reserved what, until and after an officer locks reserves.
+- **Points:** yours, with *why* each number is what it is (night by night), and everyone's (searchable).
+- **History:** every change, who made it and why: night bonuses, wins, changes by hand, moves, rule changes. Kept by everyone.
+- **Rolls:** reservers always beat everyone else; among them the highest *roll + points* wins; equal totals go to whoever has more points, then a re-roll. Only the first 1–100 roll of each player counts.
+- **Item tooltips** on a raid night: "Reserve+: Reserved by 3: Cat 120, Bob 30, Dan" (in your bags, the loot window, AtlasLoot…).
+
+<p align="center"><img src="docs/images/loot-night.png" alt="Loot night: drops, rolls ranked by roll plus points, raid check" width="100%"></p>
+
+**Officers** (with `/sr officer`) also get:
+
+- **Loot night:** lock reserves (it notes who on the bench is online), drops from the loot windows you open (or paste a link), **Post to raid chat**, the rolls read from chat and ranked, **Award** (the win goes in the history), a **raid check** (reservers not in the raid, raiders without a reserve), and **End of night**: who gets the bonus and why, leave anyone out, **Save the bonus** once.
+- **Points → Everyone → Change points:** add or take points with a reason (a penalty can go below 0), or **move** points to another character and item (someone asked to main an alt). Right-click a change in the History to undo it.
+- **Rules:** reserves per player for each raid, the bonus per night, and adding items to a raid's loot list. Onyxia's list comes from the original game (Forever may change it); Barrow Deeps and Hyjal Summit have no published loot yet, so their lists fill in as items drop and officers add them.
+
+<p align="center"><img src="docs/images/loot-rules.png" alt="Rules: reserves per raid, bonus per night, loot lists" width="100%"></p>
+
+Only officers and raid leaders can change points, and every game checks
+the **sender's** rank against its own guild roster, so nobody can fake a
+change. Nothing here has been tried in a real raid yet.
 
 ### ⚒️ Find a crafter
 <p align="center"><img src="docs/images/crafters.png" alt="Find a crafter page" width="100%"></p>
@@ -260,7 +293,7 @@ what it does:
 
 - **The window** opens on the Overview the first time, then on your last page. Drag it by the crest or the page title; it remembers where you left it. **Esc** closes it.
 - **Automatic collection** on every character you play: gear, item level, talents, reputations, professions, recipes (when you open the profession window), cooldowns, attunements and your other characters.
-- **"Crafted by" on item tooltips:** hover any item to see "Short Royalty: Bramble (online), Dabble +2 more". Online crafters first, at most three names. Two lines at most, with who wears it.
+- **"Crafted by" on item tooltips:** hover any item to see "Short Royalty: Bramble (online), Dabble +2 more". Online crafters first, at most three names. Two lines at most, with who wears it, plus who reserved it on a raid night (v0.9.0).
 - **A welcome line** the first time Short Royalty loads, pointing to *Getting started*.
 - **Chat reminders** for profession windows still to open (and, rarely, ones to reopen after your skill went up), a newer Short Royalty, and trial accounts that can't share.
 - **`/sr debug`** opens a copyable report of what the addon can see, starting with the live-client checks and the profession checks for v0.3 (unlearned recipes, recipe categories, reagents, specialisations), and ending with the last Lua errors it caught. **Send it when something looks wrong.**
@@ -332,7 +365,8 @@ recipes are recorded (the addon reminds you), and log in on each **alt** once.
 | `/sr who <item>` | list the guildmates who wear an item (Shift-click it, or type part of its name) |
 | `/sr words` | play Short Words |
 | `/sr raids` | guild raids: sign up and see who's coming |
-| `/sr officer` | officers and raid leaders: switch New raid and Attendance on or off |
+| `/sr loot` | Reserve+: reserve items, see your points, loot nights |
+| `/sr officer` | officers and raid leaders: switch the officer tools on or off (New raid, Attendance, Loot night, Rules) |
 | `/sr reset` | put the window back in the middle of the screen |
 
 `/shortroyalty` and `/sk` work too, if another addon already uses `/sr`.
@@ -574,6 +608,9 @@ Blizzard's own UI source (mirrored at
 branch), [warcraft.wiki.gg](https://warcraft.wiki.gg/wiki/Patch_1.60.1/API_changes),
 and public notes in the [Everloot](https://github.com/Everloot/everloot/pull/49)
 and [bff-wow](https://github.com/Shtian/bff-wow/issues/3) projects.
+Reserve+ (v0.9.0) follows the guild's TBC loot rules, which used
+Kerath Raidcheck and Gargul (features only, no code); Onyxia's item IDs
+were checked on [warcraft.wiki.gg](https://warcraft.wiki.gg/wiki/Onyxia%27s_Lair_loot_(Classic)).
 
 Libraries: Ace3 (AceComm, CallbackHandler, LibStub, ChatThrottleLib),
 [LibSerialize](https://github.com/rossnichols/LibSerialize) by Ross Nichols,

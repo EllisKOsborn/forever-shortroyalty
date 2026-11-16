@@ -29,29 +29,44 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
-- **v0.9.0 Reserve+ (being built, not released):** soft reserves with bonus
-  points (the guild's TBC system), **inside Short Royalty** (owner, 16 Nov).
-  Rules and plan: `docs/proposals/loot-addon-plan.md` (owner's table: 1
-  points per character + item, **no cap**, reset on win, reserver always
-  beats non-reserver, changes by hand / penalties below 0 / moves to an alt
-  / undo). **Changed 16 Nov:** reserves per raid set by officers (ledger
-  kind `p`, `PicksFor`, default 1; the same item may be reserved twice =
-  double bonus, one roll: picks values are counts, night lists repeat it); bonus even if the boss wasn't killed;
-  bench gets it if online at the lock (`BenchAtLock`, `NightGrants(picks,
-  where, won)` with where = raid | bench | offline | nil). Officers set them on the Loot page's **Rules** tab (mock-up
-  `loot-rules.png`). **Replacing
-  Gargul later:** plan section "Replacing Gargul" (gate: does Forever allow
-  master loot in raids). Step 1 done:
-  `Core/Reserves.lua` = officer-only **ledger** `guild.reserves.ledger[id]`
-  (kinds n/w/a/m/s/x, never edited, replayed in (c, id) order; `Merge`
-  checks `RaidBoard.CanLead(by)` on our roster), `Replay`, `Rank`,
-  `NightGrants`; tests `tests/v090_reserves_spec.lua`. Ties: more points
-  wins, then re-roll (Kerath Raidcheck's rule). Mock-ups `docs/images/loot*.png`
-  (raid check on Loot night, "Reserved by" tooltip adopted from KRC/Gargul). Raid board prunes
-  raids after 7 days, so points never live on raid records. Next: loot
-  lists (Onyxia now; Barrow Deeps/Hyjal aren't in game files at build
-  70938 and have no published loot), reserve on sign-up, ReserveSync,
-  Loot page, officer Loot night.
+- **v0.9.0 Reserve+ (built 16 Nov, not released, owner: "Start building
+  these"):** soft reserves with bonus points (the guild's TBC system:
+  Kerath Raidcheck + Gargul), **inside Short Royalty**, sidebar **Loot**
+  (`/sr loot`). Rules/plan: `docs/proposals/loot-addon-plan.md` (owner: 1+
+  reserves per raid set by officers, same item twice = double bonus one
+  roll, points per character + item, **no cap**, reset on win, bonus even if
+  the boss wasn't killed, bench gets it if online at the lock, reserver
+  always beats non-reserver, ties: more points then re-roll, changes by
+  hand / penalties below 0 / moves / undo, reserves visible to all).
+  - `Core/Reserves.lua`: officer-only **ledger** `guild.reserves.ledger[id]`
+    (kinds n/w/a/m/s/p/l/x, never edited, replayed in (c, id) order;
+    `Replay` → points, bonus, picks per raid, loot lists, lines), `Rank`,
+    `NightGrants(picks, where, won)`, `BenchAtLock`, `LootList` (Data +
+    kind l), picks `guild.reserves.picks[raidId][guid] = {i, u}` (player
+    or officer writes; locked → officers only), locks `{by,u,x,b,s}`
+    (bench state + copy of reserves), `PicksOf` (lock copy if locked,
+    counts, limit), `ReservedBy`, `RaidCheck`, `PruneNights` (raid board
+    deletes raids after 7 days; points never live on raid records).
+  - `Core/LootNight.lua` (officer, local `SK.DB.lootNight`): `Tonight`
+    (3 h before to 8 h after a raid's start), CHAT_MSG_SYSTEM rolls via
+    `Compat.ParseRoll` (from `RANDOM_ROLL_RESULT`), LOOT_OPENED via
+    `Compat.LootItems` (GetNumLootItems/GetLootSlotInfo/GetLootSlotLink as
+    in Forever's LootFrame.lua; quality ≥ 3; learns unknown items as kind
+    l), ENCOUNTER_END kills, `Award` (kind w), `EndRows`, `SaveNight` once.
+  - `Sync/ReserveSync.lua`: **LE** history (accepted only if the SENDER is
+    lead rank: `by` is just text), **LP** reserves `q` + locks `k` (field
+    `q`, not `p`: p/s/v are taken by every message), **LQ** weekly
+    fingerprints. `Data/Loot.lua`: Onyxia classic IDs (wiki-checked; not
+    in Forever's ItemSparse at build 70938: raid items held back).
+  - `UI/LootTab.lua` (Reserves / Points / History / Loot night / Rules),
+    item tooltip line (`Tooltip.ReserveText`, same switch as the guild
+    lines), `/sr debug` "Reserve+" block (`Commands.ReserveLines`, incl.
+    `Compat.LootMethodName`: the gate for replacing Gargul). Tests
+    `tests/v090_reserves_spec.lua`, `tests/v090_lootnight_spec.lua`.
+    Pictures `loot*.png` (preview `screen=loot`). TESTING.md 30–40.
+  - Reserving happens on the Loot page, not the Raids sign-up (simpler).
+  - **Replacing Gargul later:** plan section "Replacing Gargul" (gate:
+    does Forever allow master loot in raids).
 - **v0.8.2 (released 16 Nov on `main`, owner: "push to main"):
   "No player named X is currently playing" fix** (owner: "It appears to be
   this addon. Why?"). Cause: our WHISPERs (PR replies in BULK, RQ, AR/AQ)
@@ -679,14 +694,18 @@ Core/     Init (events, timers, modules), Log (+ error capture: SK:Safe,
           Export (plain text for Copy), Feed (local milestones,
           never synced), Overview (numbers for the Overview tab),
           ShortWords (v0.7.0 word game: rules, results, leaderboards),
-          RaidBoard (v0.8.0 raids + sign-ups), Attendance (v0.8.0, local)
+          RaidBoard (v0.8.0 raids + sign-ups), Attendance (v0.8.0, local),
+          Reserves (v0.9.0 points ledger, reserves, locks), LootNight
+          (v0.9.0 officer's rolls, drops, awards, end of night; local)
 Data/     Professions, Recipes (GENERATED by tools/recipes.js), Attunements
           (quest IDs), Factions, Enchants, Words (GENERATED by tools/words.js),
-          Roles (v0.8.0 role guess by class and tree order, todo)
+          Roles (v0.8.0 role guess by class and tree order, todo),
+          Loot (v0.9.0 raid loot lists: Onyxia classic, others todo)
 Collect/  Character, Talents, Professions (recipe scan), Reputation,
           Attunements, Profile (full/public copies, cooldowns, main)
 Sync/     Codec (LibSerialize stable → LibDeflate), Merge (rules), Sync (protocol),
-          RaidSync (v0.8.0 RB/RD), AttendanceSync (v0.8.1 AR/AQ, officers only)
+          RaidSync (v0.8.0 RB/RD), AttendanceSync (v0.8.1 AR/AQ, officers only),
+          ReserveSync (v0.9.0 LE/LP/LQ)
 UI/       Theme (EVERY colour/font/size/spacing/motion value, the accent),
           Motion (AnimationGroups, Reduce motion), Widgets (Button,
           CloseButton, Tab, Chip, Check, Menu, SearchBox, List, TextPanel,
@@ -699,6 +718,7 @@ UI/       Theme (EVERY colour/font/size/spacing/motion value, the accent),
           (board / one profession / cooldowns), WordsTab (Short Words),
           FlightWords (v0.7.2 box offering Short Words on flight paths),
           RaidsTab (v0.8.0 raids, sign-ups, New raid, Attendance),
+          LootTab (v0.9.0 Reserve+: Reserves, Points, History, Loot night, Rules),
           SettingsTab, DebugWindow,
           Minimap, Tooltip
 Media/    Fonts.xml (Inter and Arial Narrow families + CJK fallback),
@@ -740,6 +760,9 @@ players. **Don't go back to AceComm multi-part messages.**
 | `RD` | GUILD | v0.8.0 once per session: fingerprint per raid held; answered after 2–8 s, duplicates suppressed |
 | `AR` | WHISPER | v0.8.1 one attendance record, officer/raid leader ranks only (`Sync/AttendanceSync.lua`) |
 | `AQ` | WHISPER | v0.8.1 officer to officer after login: attendance records held, answered with what's missing |
+| `LE` | GUILD | v0.9.0 points history entries (`Sync/ReserveSync.lua`); accepted only from officer/raid leader senders |
+| `LP` | GUILD | v0.9.0 reserves (`q`, from their player or an officer) and locks (`k`, officers) |
+| `LQ` | GUILD | v0.9.0 once per session: weekly history fingerprints and per-raid reserve fingerprints |
 
 Merge rules (`Sync/Merge.lua`, tested):
 - The character must be a guild member.
@@ -1150,8 +1173,9 @@ refer to `git show v0.6.0:TESTING.md`.
    TESTING.md 18–29.
 4. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
-5. Reserve+: verdict on the mock-ups (`docs/images/loot*.png`); offline
-   bench at the lock: no bonus only (built), or a penalty too?
+5. Reserve+ (built, not released): a dungeon test run (TESTING.md 30–40)
+   and `/sr debug` "Loot method" inside a raid group (master loot?);
+   offline bench at the lock: no bonus only (built), or a penalty too?
 
 ## Answers already given to the guild (stay consistent)
 - **Alts:** linked automatically once each alt has logged in with the addon

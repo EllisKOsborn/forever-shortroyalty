@@ -1,6 +1,6 @@
 # Reserve+ plan: soft reserves with bonus points
 
-Draft, 16 Nov 2026. Building inside Short Royalty as v0.9.0 (step 1 done).
+16 Nov 2026. **Built** inside Short Royalty as v0.9.0 (not released; untested in game).
 
 ## What it does
 
@@ -130,14 +130,15 @@ winner.
    item, only tonight's reserves count, reserves per raid, bench at the
    lock, changes by hand, penalties, moves, undo, ranking rolls (ties: more
    points, then re-roll), end-of-night bonus.
-2. Loot lists: Onyxia now; the boss script ready for the patch; learning
-   from drops.
-3. Reserve on sign-up, and sharing (reserves from players, points from
-   officers).
-4. Loot page: Reserves, My points, History.
-5. Officer's Loot night: lock (with the bench check), rolls, raid check,
-   award, end of night. "Reserved by" on item tooltips.
-6. `/sr debug` checks, README, TESTING, pictures.
+2. **Done 16 Nov:** loot lists (`Data/Loot.lua`: Onyxia's original loot;
+   learning from drops and officers adding items, ledger kind `l`). Not
+   done: a script for Barrow Deeps / Hyjal bosses (not in the game files
+   yet; ENCOUNTER_END gives kills anyway, and the boss rule was dropped).
+3. **Done 16 Nov:** reserving happens on the Loot page (not the Raids
+   sign-up: simpler), sharing (`Sync/ReserveSync.lua`).
+4. **Done 16 Nov:** Loot page: Reserves, Points, History.
+5. **Done 16 Nov:** Loot night, Rules, "Reserved by" on item tooltips.
+6. **Done 16 Nov:** `/sr debug` block, README, TESTING 30–40, pictures.
 
 Then a **test run** in a dungeon before 9 Dec. If it isn't tested by then,
 run the first night by hand and switch over after.

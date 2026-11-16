@@ -21,8 +21,6 @@ git history (`git show v0.6.0:TESTING.md`).
 
 ## Still worth a look
 
-- (v0.9.0, not released) **Reserve+:** nothing to test in game yet; the
-   points rules have no screen so far.
 - [ ] (v0.8.2) **No "No player named … is currently playing"** in the
    chat any more when a guildmate logs off (it came from the addon). Whisper
    an offline name yourself: that message still shows. `/sr debug` line
@@ -115,3 +113,41 @@ says about your raid group.
     logging in. A Bench change shows for the others too.
 29. [ ] **Totals** with 30 / 60 / 90 days / All.
 
+## v0.9.0 Reserve+ (not released yet)
+
+Try it in a dungeon group before the first raid (5 people are enough; an
+officer with `/sr officer` on, and a raid made on the Raids page for
+tonight). Send `/sr debug` afterwards: its "Reserve+" block says what the
+addon read.
+
+30. [ ] **Loot** is in the sidebar under Raids, with its dice icon. Members
+    see Reserves, Points and History; officers also Loot night and Rules.
+31. [ ] **Reserve:** pick tonight's raid, click an item, *Reserve this*.
+    Within a minute guildmates see it under "Who reserved what".
+32. [ ] **Rules:** set a raid to 2 reserves; members can then reserve two
+    (the same item twice works). Change the bonus; the line at the top
+    right follows.
+33. [ ] **Lock reserves** (officer, in the group): the top line says how
+    many on the bench are online and offline. Members can't change their
+    reserves any more.
+34. [ ] **Drops:** open a boss's loot window as the officer: rare and epic
+    items appear on the left. `/sr debug` "Loot method:" says which loot
+    method the group uses (**tell me whether master loot is offered in a
+    raid**: it decides whether we can replace Gargul later).
+35. [ ] **Post to raid chat** types the line into the chat box; press Enter.
+    Players `/roll`: their rolls appear, ranked (reservers first, roll +
+    points). `/sr debug` "rolls read" goes up.
+36. [ ] **Award** records the win: the winner's points on that item go to 0
+    (Points → Everyone, and the History).
+37. [ ] **End of night:** the list shows who gets +10 and why (in the raid,
+    bench online, bench offline, not there, won it). Click someone to leave
+    them out, then *Save the bonus*. Points go up for everyone within a few
+    minutes after leaving the instance.
+38. [ ] **Change points by hand** (Points → Everyone, officer): a penalty
+    (e.g. -30 with a reason) and a move to another character both show in
+    the History; right-click a line there to undo it.
+39. [ ] **Tooltips:** on a raid night, point at a reserved item (in AtlasLoot
+    or your bags): "Reserve+: Reserved by …" with points.
+40. [ ] A member who logs in later gets the points history and tonight's
+    reserves within a few minutes (needs an officer online for the
+    history).
