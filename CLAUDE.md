@@ -35,7 +35,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   points per character + item, **no cap**, reset on win, reserver always
   beats non-reserver, changes by hand / penalties below 0 / moves to an alt
   / undo). **Changed 16 Nov:** reserves per raid set by officers (ledger
-  kind `p`, `PicksFor`, default 1); bonus even if the boss wasn't killed;
+  kind `p`, `PicksFor`, default 1; the same item may be reserved twice =
+  double bonus, one roll: picks values are counts, night lists repeat it); bonus even if the boss wasn't killed;
   bench gets it if online at the lock (`BenchAtLock`, `NightGrants(picks,
   where, won)` with where = raid | bench | offline | nil). **Replacing
   Gargul later:** plan section "Replacing Gargul" (gate: does Forever allow
@@ -1148,9 +1149,8 @@ refer to `git show v0.6.0:TESTING.md`.
    TESTING.md 18–29.
 4. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
-5. Reserve+: verdict on the mock-ups (`docs/images/loot*.png`); two
-   questions in the plan's "Answered 16 Nov" (two reserves on one item?
-   offline bench: no bonus only, or a penalty too?).
+5. Reserve+: verdict on the mock-ups (`docs/images/loot*.png`); offline
+   bench at the lock: no bonus only (built), or a penalty too?
 
 ## Answers already given to the guild (stay consistent)
 - **Alts:** linked automatically once each alt has logged in with the addon

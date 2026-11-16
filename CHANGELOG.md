@@ -10,7 +10,8 @@ Being built; nothing to see in game yet.
   bench and online when reserves were locked; whether its boss died
   doesn't matter. Winning an item sets it to 0; points on other items
   wait until you reserve them again. Officers set how many reserves each
-  raid allows (1 until set).
+  raid allows (1 until set); two reserves on the same item give double
+  points, still one roll.
 - Officers and raid leaders can change points by hand with a reason (a
   penalty can go below 0), move points to another character or item (for
   someone asked to main an alt), change the bonus, and undo any change.

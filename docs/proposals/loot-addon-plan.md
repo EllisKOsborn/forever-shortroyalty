@@ -14,7 +14,7 @@ reserve it.
 | Rule | Decision |
 |---|---|
 | Where | **Inside Short Royalty** (owner: "Great", 16 Nov). |
-| Reserves | **Set per raid by officers** (owner, 16 Nov: "we used 2 in Mount Hyjal in TBC but 4 in Black Temple; it depends on how many bosses and items a raid has"). Default 1. Each reserve is a different item. |
+| Reserves | **Set per raid by officers** (owner, 16 Nov: "we used 2 in Mount Hyjal in TBC but 4 in Black Temple; it depends on how many bosses and items a raid has"). Default 1. **Several reserves may go on the same item** for a double bonus, still one roll (owner, 16 Nov, as in Kerath Raidcheck). |
 | Points belong to | **One character + one item.** Alts don't share. |
 | Switching items | Reserving a different item starts that item from 0. The old item **keeps** its points, and they count again the night you reserve it again. |
 | Points only count on your reserve | If you have 100 on the mace but reserved the trinket tonight and the mace drops, the 100 don't count. |
@@ -154,7 +154,7 @@ softres.it. What it does and what we take:
 | Equal totals: **more points wins**; equal points too: re-roll | **Adopted** (`Reserves.Rank`). |
 | Items nobody reserved: normal rolls | Same (anyone can roll; reservers come first). |
 | +10 per reserve, added when you reserve (also for that night) | Owner's rule instead: added after the night, if you were there (or online on the bench) and didn't win it. |
-| 2 reserves a raid, both may go on one item (+20, one roll) | Reserves per raid set by officers; different items each (ask the owner if doubling up should be allowed). |
+| 2 reserves a raid, both may go on one item (+20, one roll) | **Adopted**; reserves per raid set by officers. |
 | Points live in a Google Sheet, pasted in each raid | In the addon, shared with everyone, history kept. |
 | Raid check: reservers not in the raid, raiders without a reserve | **Adopted** on Loot night (mock-up). |
 | Buff check | Later: see "Replacing Gargul". |
@@ -196,8 +196,7 @@ planned unless the guild asks.
 - The guild's TBC tool was **Kerath Raidcheck** with Gargul (see above).
 - 16 Nov (owner, Nuhra): reserves per raid set by officers; bonus even if
   the boss isn't killed; benched players get it if online at the lock.
-- Still to ask: may a player put two of their reserves on the same item
-  (Kerath Raidcheck allows it: double points, one roll)? Built as "no".
+- Two reserves may go on the same item: double points, one roll (owner).
 - Still to ask: "delete their points" for offline bench: no bonus that
   night (built), or also a penalty / wipe? Officers can do either by hand.
 

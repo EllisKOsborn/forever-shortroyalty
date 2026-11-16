@@ -4,7 +4,8 @@
 --
 -- Points belong to ONE character and ONE item. Each raid night you reserve
 -- a few items (how many is set per raid by officers: 1 by default, e.g. 2
--- in Hyjal, 4 in a big raid). Every reserved item you didn't get that night
+-- in Hyjal, 4 in a big raid); several may go on the same item for a double
+-- bonus (still one roll). Every reserved item you didn't get that night
 -- gains the bonus (no cap) if you were in the raid, or on the bench and
 -- online when reserves were locked. Whether its boss died doesn't matter
 -- (owner, 16 Nov: people reserving from the last bosses mustn't fall
@@ -78,11 +79,10 @@ function R.ValidEntry(e, now)
 		for g, items in pairs(e.g) do
 			n = n + 1
 			if n > R.MAX_GRANTS or not guid(g) or type(items) ~= "table" then return false, "bad night" end
-			local seen, c = {}, 0
-			for k2, i in pairs(items) do
+			local c = 0
+			for k2, i in pairs(items) do -- the same item twice = two reserves on it (double bonus)
 				c = c + 1
-				if c > R.MAX_PICKS or not int(k2) or k2 < 1 or k2 > R.MAX_PICKS or not item(i) or seen[i] then return false, "bad night" end
-				seen[i] = true
+				if c > R.MAX_PICKS or not int(k2) or k2 < 1 or k2 > R.MAX_PICKS or not item(i) then return false, "bad night" end
 			end
 			if c == 0 then return false, "bad night" end
 		end
@@ -245,7 +245,7 @@ end
 -- The night (pure)
 ---------------------------------------------------------------------------
 -- Who wins an item. rolls = list of { guid, roll, min, max } in the order
--- they were rolled; picks = { [guid] = { [itemID] = true } } tonight's reserves;
+-- they were rolled; picks = { [guid] = { [itemID] = reserves on it (or true = 1) } };
 -- st = Replay state. Only the first 1-100 roll of each character counts.
 -- Reservers of this item always come first, by roll + their points on it;
 -- then everyone else by roll. Equal totals: more points wins; equal
@@ -257,7 +257,8 @@ function R.Rank(itemID, rolls, picks, st)
 		if type(r) == "table" and guid(r.guid) and int(r.roll) and r.min == 1 and r.max == R.ROLL_MAX
 			and r.roll >= 1 and r.roll <= R.ROLL_MAX and not seen[r.guid] then
 			seen[r.guid] = true
-			local reserved = picks[r.guid] ~= nil and picks[r.guid][itemID] == true
+			local n = picks[r.guid] and picks[r.guid][itemID]
+			local reserved = n == true or (type(n) == "number" and n > 0)
 			local bonus = reserved and R.PointsOf(st, r.guid, itemID) or 0
 			rows[#rows + 1] = { guid = r.guid, roll = r.roll, bonus = bonus, total = r.roll + bonus, reserved = reserved, order = #rows + 1 }
 		else
@@ -292,7 +293,9 @@ function R.BenchAtLock(picks, inRaid, online)
 	return out
 end
 
--- The end-of-night bonus. picks = { [guid] = { [itemID] = true } };
+-- The end-of-night bonus. picks = { [guid] = { [itemID] = reserves on it
+-- (or true = 1) } }: two reserves on one item get the bonus twice (owner,
+-- 16 Nov, as in Kerath Raidcheck), still one roll;
 -- where(guid) -> "raid" (was in the raid tonight), "bench" (online on the
 -- bench when reserves were locked), "offline" (on the bench but offline
 -- then) or nil (not there); won = { [guid] = { [itemID] = true } } (items
@@ -308,8 +311,12 @@ function R.NightGrants(picks, where, won)
 			skipped[g] = w == "offline" and "on the bench but offline at the lock" or "not there"
 		else
 			local items, got = {}, {}
-			for i in pairs(set) do
-				if won[g] and won[g][i] then got[#got + 1] = i else items[#items + 1] = i end
+			for i, n in pairs(set) do
+				if won[g] and won[g][i] then
+					got[#got + 1] = i
+				else
+					for _ = 1, (n == true and 1 or n) do items[#items + 1] = i end
+				end
 			end
 			table.sort(items)
 			table.sort(got)
