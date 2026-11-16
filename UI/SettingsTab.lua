@@ -79,7 +79,7 @@ function Settings:Build(page)
 
 	local profs = W.SettingsCard(general, Settings.COL_W, "Professions and tooltips")
 	profs:SetPoint("TOPLEFT", sharing, "BOTTOMLEFT", 0, -SP.l)
-	profs:AddSwitch("Guild lines in item tooltips", "Who can make an item, and who wears it.",
+	profs:AddSwitch("Guild lines in item tooltips", "Who can make it, who wears it, who reserved it.",
 		function() return s.craftTooltips end, function(v) s.craftTooltips = v end)
 	profs:AddSwitch("Remind me to reopen profession windows", "In chat, at most every few days.",
 		function() return s.profNudges end, function(v) s.profNudges = v end,

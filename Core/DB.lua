@@ -39,7 +39,6 @@ local DEFAULTS = {
 		lootView = "reserves",                    -- v0.9.0 Loot page tab: reserves, points, history, night, rules
 		lootPoints = "mine",                      -- v0.9.0 Points tab: mine or all
 		lootHistory = "all",                      -- v0.9.0 History tab: all, mine or hand
-		reserveTooltips = true,                   -- v0.9.0 "Reserved by" lines on item tooltips
 	},
 	officer = {},   -- [guid] = true: /sr officer turned the officer tools on for this character (v0.8.0)
 	raidRole = {},  -- [guid] = "TANK" | "HEALER" | "DPS", the role picked for raid sign-ups (v0.8.0)

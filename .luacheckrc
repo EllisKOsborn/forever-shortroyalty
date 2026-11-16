@@ -39,6 +39,7 @@ read_globals = {
 	"GetAddOnMetadata", "GetServerTime", "GetTime", "GetBuildInfo", "IsTrialAccount",
 	"IsVeteranTrialAccount", "IsRestrictedAccount", "GameLimitedMode_IsActive", "InCombatLockdown", "UnitOnTaxi",
 	"IsInRaid", "GetRaidRosterInfo", "GetNumGroupMembers", "IsGuildLeader",
+	"GetNumLootItems", "GetLootSlotLink", "GetLootSlotInfo", "RANDOM_ROLL_RESULT",
 	"IsInInstance", "UnitGUID", "UnitFullName", "UnitName", "UnitClass", "UnitRace", "UnitLevel",
 	"UnitFactionGroup", "IsInGuild", "GetGuildInfo", "GuildRoster", "GetNumGuildMembers",
 	"GetGuildRosterInfo", "GetGuildRosterLastOnline", "GetGuildRosterShowOffline",

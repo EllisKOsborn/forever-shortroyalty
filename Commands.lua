@@ -290,6 +290,10 @@ function Commands.BuildReport()
 	for _, line in ipairs(Commands.RaidLines()) do add("%s", line) end
 
 	add("")
+	add("== Reserve+ (v0.9.0) ==")
+	for _, line in ipairs(Commands.ReserveLines()) do add("%s", line) end
+
+	add("")
 	add("== Attunement quests ==")
 	for _, a in ipairs(SK.Data.ATTUNEMENTS) do
 		for _, q in ipairs(a.quests) do
@@ -423,6 +427,49 @@ function Commands.RaidLines()
 	return L
 end
 
+-- v0.9.0 Reserve+ block of /sr debug: history, reserves tonight, the loot
+-- method (master loot or not: the gate for replacing Gargul), rolls read.
+function Commands.ReserveLines()
+	local L = {}
+	local function add(fmt, ...) L[#L + 1] = select("#", ...) > 0 and string.format(fmt, ...) or fmt end
+	local R, LN = SK.Reserves, SK.LootNight
+	local store, st = R:Get(), R:State()
+	if not store or not st then
+		add("No guild data yet.")
+		return L
+	end
+	local people = 0
+	for _ in pairs(st.points) do people = people + 1 end
+	add("History: %d changes, %d undone, %d characters with points, bonus +%d a night",
+		R.Count(store), SK.Count(st.undone), people, st.bonus)
+	local now = Compat.Now()
+	local ev = LN.Tonight(SK.RaidBoard:Get(), now)
+	if ev then
+		local picks = R.PicksOf(store, ev.id, R.PicksFor(st, ev.raid))
+		local lock = store.locks[ev.id]
+		add("Tonight: %s, %d reserves of %d each, locked: %s", tostring(ev.raid), SK.Count(picks), R.PicksFor(st, ev.raid),
+			yesno(lock ~= nil and not lock.x))
+		local night = LN:Night(ev.id)
+		if night then
+			local rolls = 0
+			for _, list in pairs(night.rolls) do rolls = rolls + #list end
+			add("Loot night: %d kills, %d drops, %d rolls read, %d awards, bonus saved: %s",
+				#night.kills, #night.drops, rolls, #night.awards, yesno(night.saved ~= nil))
+		end
+	else
+		add("Tonight: no raid within 3 hours")
+	end
+	add("Loot method: %s   roll text: %q   loot window calls: %s",
+		tostring(Compat.LootMethodName() or "not in a group"), tostring(_G.RANDOM_ROLL_RESULT),
+		yesno(_G.GetNumLootItems ~= nil and _G.GetLootSlotLink ~= nil))
+	add("Reserved-by tooltip lines (same switch as the guild lines): %s", yesno(SK.DB.settings.craftTooltips))
+	local rs = SK.ReserveSync.stats
+	add("Sync: sent %d LE / %d LP / %d LQ, received %d / %d / %d, accepted %d, rejected %d, last reject: %s",
+		rs.sentLE, rs.sentLP, rs.sentLQ, rs.gotLE, rs.gotLP, rs.gotLQ, rs.accepted, rs.rejected,
+		tostring(SK.ReserveSync.lastReject))
+	return L
+end
+
 local HELP = {
 	"/sr - open or close the window (also /shortroyalty, /sk)",
 	"/sr debug - what the addon sees (copyable)",
@@ -433,6 +480,7 @@ local HELP = {
 	"/sr who <item> - who in the guild wears it (Shift-click an item, or type part of its name)",
 	"/sr words - play Short Words",
 	"/sr raids - guild raids: sign up and see who's coming",
+	"/sr loot - Reserve+: reserve items, your points, loot nights",
 }
 Commands.HELP = HELP
 
@@ -459,6 +507,8 @@ function Commands.Run(msg)
 		SK.MainFrame:Open("words", true)
 	elseif cmd == "raids" then
 		SK.MainFrame:Open("raids", true)
+	elseif cmd == "loot" then
+		SK.MainFrame:Open("loot", true)
 	elseif not (cmd == "officer" and Commands.Officer()) then
 		-- /sr officer only answers officers and raid leaders; for everyone else
 		-- it's an unknown command and the help is printed.

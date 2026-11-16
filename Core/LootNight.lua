@@ -146,6 +146,27 @@ function LN.PostText(name, reservers)
 	return string.format("%s: reserved by %s. Reservers /roll now (roll + points wins).", name, table.concat(parts, ", "))
 end
 
+-- The item tooltip line on a raid night (as Gargul shows): "Reserved by
+-- 3: Cat 120, Bob 30, Dan" with each reserver's points on it, most points
+-- first, at most `max` names. nil when nobody reserved it.
+function LN.TooltipText(st, picks, itemID, nameFn, max)
+	local list = {}
+	for _, r in ipairs(R.ReservedBy(picks, itemID)) do
+		list[#list + 1] = { name = nameFn(r.guid), points = R.PointsOf(st, r.guid, itemID), count = r.count }
+	end
+	if #list == 0 then return nil end
+	table.sort(list, function(a, b)
+		if a.points ~= b.points then return a.points > b.points end
+		return a.name < b.name
+	end)
+	local parts = {}
+	for i, r in ipairs(list) do
+		if i > (max or 5) then parts[#parts + 1] = "+" .. (#list - (max or 5)); break end
+		parts[#parts + 1] = r.name .. (r.points ~= 0 and (" " .. r.points) or "") .. (r.count > 1 and (" ×" .. r.count) or "")
+	end
+	return string.format("Reserved by %d: %s", #list, table.concat(parts, ", "))
+end
+
 function LN.AwardText(name, winner, total)
 	return string.format("%s goes to %s%s.", name, winner, total and (" (" .. total .. ")") or "")
 end

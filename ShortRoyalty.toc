@@ -32,6 +32,7 @@ Core\ShortWords.lua
 Core\RaidBoard.lua
 Core\Attendance.lua
 Core\Reserves.lua
+Core\LootNight.lua
 
 Data\Professions.lua
 Data\Recipes.lua
@@ -40,6 +41,7 @@ Data\Factions.lua
 Data\Enchants.lua
 Data\Words.lua
 Data\Roles.lua
+Data\Loot.lua
 
 Collect\Character.lua
 Collect\Talents.lua
@@ -54,6 +56,7 @@ Sync\Merge.lua
 Sync\Sync.lua
 Sync\RaidSync.lua
 Sync\AttendanceSync.lua
+Sync\ReserveSync.lua
 
 Media\Fonts.xml
 UI\Theme.lua
@@ -64,6 +67,7 @@ UI\OverviewTab.lua
 UI\RosterTab.lua
 UI\CharacterTab.lua
 UI\RaidsTab.lua
+UI\LootTab.lua
 UI\CraftersTab.lua
 UI\ProfessionsTab.lua
 UI\WordsTab.lua

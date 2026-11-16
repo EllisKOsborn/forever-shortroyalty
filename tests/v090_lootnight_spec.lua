@@ -266,3 +266,107 @@ describe("v0.9.0 the officer's loot night", function()
 		assert.is_nil(LN:Night(id))
 	end)
 end)
+
+describe("v0.9.0 the Loot page", function()
+	local SK, W, R, LT, id
+	before_each(function()
+		SK, W = setup()
+		H.loadUI(SK)
+		R, LT = SK.Reserves, SK.LootTab
+		id = raidTonight(SK, W)
+	end)
+
+	it("members see Reserves, Points and History; reserving works from the page", function()
+		SK.DB.settings.lootView = "night"
+		assert.equal("reserves", LT.View(false))
+		SK.MainFrame:Open("loot")
+		assert.equal(id, LT.raidID)
+		assert.is_false(LT.views.tabs[4]:IsShown())
+		LT.item = SHARD
+		LT:Reserve()
+		assert.same({ SHARD }, R:MyPicks(id))
+		assert.truthy(LT.mineLine:GetText():find("1 of 1", 1, true))
+		LT:ClearMine()
+		assert.same({}, R:MyPicks(id))
+		for _, v in ipairs({ "points", "history" }) do
+			SK.DB.settings.lootView = v
+			LT:Refresh()
+		end
+		SK.DB.settings.lootPoints = "all"
+		LT:Refresh()
+		assert.equal(0, #SK.errors)
+	end)
+
+	it("officers: change points by hand, lock, roll, award, end of night, rules", function()
+		SK.DB.officer[ME] = true
+		W.raid = { { name = "Pip", guid = ME }, { name = "Bob Stout", guid = BOB }, { name = "Cat Nip", guid = CAT } }
+		SK.MainFrame:Open("loot")
+		assert.is_true(LT.views.tabs[4]:IsShown())
+		-- Points → Everyone → Change points.
+		SK.DB.settings.lootPoints = "all"
+		SK.DB.settings.lootView = "points"
+		LT:Refresh()
+		LT.form.g, LT.form.i, LT.form.d, LT.form.r = CAT, SHARD, "-30", "Left halfway"
+		LT:SaveForm()
+		assert.equal(-30, R.PointsOf(R:State(), CAT, SHARD))
+		LT.form.mode, LT.form.g2, LT.form.i2, LT.form.d = "move", DAN, SHARD, ""
+		LT:SaveForm()
+		assert.equal(-30, R.PointsOf(R:State(), DAN, SHARD))
+		LT:Refresh()
+		-- Reserves from Cat and Bob, then the loot night.
+		local ctx = { now = W.now, raidExists = R.RaidExists, canWrite = function() return true end }
+		assert(R.MergePick(R:Get(), { e = id, g = CAT, i = { DEATHBRINGER }, u = W.now }, ctx))
+		assert(R.MergePick(R:Get(), { e = id, g = BOB, i = { DEATHBRINGER }, u = W.now }, ctx))
+		SK.DB.settings.lootView = "night"
+		LT:Refresh()
+		LT:ToggleLock()
+		assert.is_truthy(R:Get().locks[id])
+		LT.addText = "|cffa335ee|Hitem:" .. DEATHBRINGER .. "::::|h[Deathbringer]|h|r"
+		LT:AddDrop()
+		assert.equal(DEATHBRINGER, LT.night.current)
+		LT:Post()
+		W.fire("CHAT_MSG_SYSTEM", "Cat Nip rolls 70 (1-100)")
+		W.fire("CHAT_MSG_SYSTEM", "Bob Stout rolls 10 (1-100)")
+		LT:Refresh()
+		assert.equal(CAT, LT.winner)
+		LT:Award()
+		assert.is_truthy(LT.night.won[CAT])
+		LT.endMode = true
+		LT:Refresh()
+		LT:SaveNight()
+		assert.equal(10, R.PointsOf(R:State(), BOB, DEATHBRINGER))
+		-- History: right-click undoes.
+		SK.DB.settings.lootView = "history"
+		LT:Refresh()
+		local rows = LT.HistoryRows(R:Get(), R:State(), ME, "hand")
+		assert.is_true(#rows >= 2)
+		SK.DB.settings.lootView = "rules"
+		LT:Refresh()
+		LT.lootRaid, LT.lootText = "barrow", tostring(NEW_ITEM)
+		LT:AddLootItem()
+		assert.same({ NEW_ITEM }, (R.LootList(R:State(), "barrow")))
+		assert.equal(0, #SK.errors)
+	end)
+
+	it("item tooltips say who reserved it on a raid night", function()
+		local ctx = { now = W.now, raidExists = R.RaidExists, canWrite = function() return true end }
+		assert(R.MergePick(R:Get(), { e = id, g = CAT, i = { SHARD }, u = W.now }, ctx))
+		assert.is_truthy(R:Adjust(CAT, SHARD, 40, "seed"))
+		local text = SK.Tooltip.ReserveText(SHARD)
+		assert.truthy(text:find("Reserved by 1", 1, true))
+		assert.truthy(text:find("40", 1, true))
+		assert.is_nil(SK.Tooltip.ReserveText(DEATHBRINGER))
+	end)
+
+	it("item links and IDs typed by officers", function()
+		assert.equal(17068, LT.ParseItem("|cffa335ee|Hitem:17068::::|h[Deathbringer]|h|r"))
+		assert.equal(17068, LT.ParseItem(" 17068 "))
+		assert.is_nil(LT.ParseItem("Deathbringer"))
+	end)
+
+	it("/sr debug has a Reserve+ block", function()
+		local text = table.concat(SK.Commands.BuildReport(), "\n")
+		assert.truthy(text:find("== Reserve+ (v0.9.0) ==", 1, true))
+		assert.truthy(text:find("Tonight: ony", 1, true))
+	end)
+end)
