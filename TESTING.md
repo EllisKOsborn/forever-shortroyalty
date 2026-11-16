@@ -21,6 +21,8 @@ git history (`git show v0.6.0:TESTING.md`).
 
 ## Still worth a look
 
+- (v0.9.0, not released) **Reserve+:** nothing to test in game yet; the
+   points rules have no screen so far.
 - [ ] (v0.8.2) **No "No player named … is currently playing"** in the
    chat any more when a guildmate logs off (it came from the addon). Whisper
    an offline name yourself: that message still shows. `/sr debug` line

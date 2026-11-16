@@ -31,6 +31,7 @@ Core\Overview.lua
 Core\ShortWords.lua
 Core\RaidBoard.lua
 Core\Attendance.lua
+Core\Reserves.lua
 
 Data\Professions.lua
 Data\Recipes.lua

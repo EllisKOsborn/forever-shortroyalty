@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.9.0 (not released yet): Reserve+ (soft reserves with bonus points)
+
+Being built; nothing to see in game yet.
+
+- **The points rules** (step 1 of `docs/proposals/loot-addon-plan.md`):
+  points per character and item, a bonus each night you reserve an item,
+  were there, its boss died and you didn't get it (no cap); winning sets it
+  to 0; points on other items wait until you reserve them again.
+- Officers and raid leaders can change points by hand with a reason (a
+  penalty can go below 0), move points to another character or item (for
+  someone asked to main an alt), change the bonus, and undo any change.
+- Points are added up from a history every member keeps, so every number
+  can be explained. Only officer and raid leader ranks (checked against
+  your own guild roster) can add to it.
+
 ## v0.8.2 (16 Nov 2026): no more "No player named … is currently playing"
 
 - **Fixed:** the chat sometimes showed *No player named "X" is currently

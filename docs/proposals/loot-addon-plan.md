@@ -1,6 +1,6 @@
 # Reserve+ plan: soft reserves with bonus points
 
-Draft, 16 Nov 2026. Nothing is built yet.
+Draft, 16 Nov 2026. Building inside Short Royalty as v0.9.0 (step 1 done).
 
 ## What it does
 
@@ -13,7 +13,7 @@ reserve it.
 
 | Rule | Decision |
 |---|---|
-| Where | **Inside Short Royalty** if it isn't a big build, else a separate addon called **ReservePlus**. Recommendation below: inside. |
+| Where | **Inside Short Royalty** (owner: "Great", 16 Nov). |
 | Reserves | **1** per character per raid night. |
 | Points belong to | **One character + one item.** Alts don't share. |
 | Switching items | Reserving a different item starts that item from 0. The old item **keeps** its points, and they count again the night you reserve it again. |
@@ -21,13 +21,16 @@ reserve it.
 | When you win | That item's points reset to 0. |
 | Boss not killed | **No bonus** for items from that boss. |
 | Missed raid | Points stay, but don't grow. |
-| Bonus amount and cap | Editable in the addon by officers, e.g. +10 per night up to +50. |
+| Bonus amount | Editable in the addon by officers (default +10). |
+| Cap | **None.** In TBC people reserved Dragonspine Trophy for three phases and built hundreds of points; that was intended. |
+| Fixing points by hand | Officers and raid leaders can add or take points with a reason, e.g. a bonus given to someone who didn't show, or a **penalty** for leaving halfway. A penalty can take points below 0. Any change can be undone. |
+| Moving points | When someone is asked to main an alt, officers can move points (all or some) to another character, and to a different item if the alt needs other loot. Or simply give the alt a bonus by hand. |
 | Who can change points | Officer and Raid Leader ranks (the same rule as v0.8.0 raids). |
 | Non-reservers | May roll, but a reserver always beats them, so in practice they only win items nobody reserved. |
 
-## Inside Short Royalty or separate?
+## Why inside Short Royalty
 
-**Recommendation: inside Short Royalty.** It's about the size of the v0.8.0
+The owner agreed on 16 Nov. It's about the size of the v0.8.0
 raids update, and most of what it needs is already there:
 
 - **Raid nights** (v0.8.0): a reserve belongs to a raid the officers made.
@@ -41,10 +44,6 @@ raids update, and most of what it needs is already there:
 To avoid clutter it gets **one sidebar line, "Loot"**, with page tabs
 *Reserves*, *My points*, *History*, and for officers *Loot night*. People
 who don't raid never need to open it.
-
-If you'd still rather keep it separate, the same plan works as
-**ReservePlus**. It's more work (it can't reuse the raid nights and
-attendance) and it needs the empty repo.
 
 ## How a raid night works
 
@@ -139,10 +138,8 @@ run the first night by hand and switch over after.
 
 ## Still open
 
-1. **Inside Short Royalty, or separate as ReservePlus?** (Recommendation:
-   inside.)
-2. **Show reserves to everyone before the lock, or hide them?** Default
+1. **Show reserves to everyone before the lock, or hide them?** Default
    unless you say otherwise: shown, like softres.it.
-3. Starting numbers: **+10 per night, cap +50**? (Officers can change them.)
-4. Ask the guildmate for the **name of the TBC addon**, so we can read its
+2. Starting bonus **+10 per night**? (Officers can change it.)
+3. Ask the guildmate for the **name of the TBC addon**, so we can read its
    feature list (not its code).
