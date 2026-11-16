@@ -835,15 +835,152 @@ function raids() {
       { click: true, style: `left:${RX}px;right:0;top:${t0 + 164}px;bottom:0` });
 }
 
+// ---------------------------------------------------------------- loot (v0.9.0 Reserve+, mock-up)
+// Example items: Onyxia's loot in the original game. Forever's may differ.
+const EPIC = "#a335ee";
+const LOOT = [["Deathbringer", "Axe"], ["Vis'kag the Bloodletter", "Sword"], ["Shard of the Scale", "Trinket"], ["Sapphiron Drape", "Back"],
+  ["Ring of Binding", "Finger"], ["Eskhandar's Collar", "Neck"], ["Ancient Cornerstone Grimoire", "Off hand"], ["Netherwind Crown", "Head"],
+  ["Halo of Transcendence", "Head"], ["Crown of Wrath", "Head"], ["Mature Black Dragon Sinew", "Quest"], ["Head of Onyxia", "Quest"]];
+const itm = (i) => `<span style="color:${EPIC}">${esc(LOOT[i][0])}</span>`;
+function loot() {
+  const officer = S.officer === "1";
+  let view = S.lootView || "reserves";
+  if (!officer && view === "night") view = "reserves";
+  const tabs = [["reserves", "Reserves"], ["points", "Points"], ["history", "History"]].concat(officer ? [["night", "Loot night"]] : []);
+  const t0 = T.sizes.subTabs + T.space.m;
+  const head = subtabs(tabs, view, "data-lv") + `<div class="substatus">Bonus: <span class="acc">+10</span> a night  ·  no cap</div>`;
+  const M = G.members, nm = (m) => cls(m), me = M[0];
+  const pts = (n) => n < 0 ? `<span class="bad">${n}</span>` : n ? `<span class="acc">${n}</span>` : DASH;
+  const menu = (text, style) => `<div class="menu abs" style="${style}">${btn(text).replace("</span>", '<i class="arrow"></i></span>')}</div>`;
+  const field = (label, html, x, y, w) => `<div class="abs dim small" style="left:${x}px;top:${y}px">${label}</div><div class="abs" style="left:${x}px;top:${y + 18}px;width:${w}px">${html}</div>`;
+  const box = (text, ph) => `<div class="search"><input value="${esc(text || "")}" placeholder="${esc(ph || "")}"></div>`;
+
+  if (view === "reserves") {
+    const mine = { 0: 0, 1: 0, 2: 40, 3: 10, 4: 0, 5: 0, 6: 0, 7: 20, 8: 0, 9: 0 };
+    const by = { 0: 4, 1: 3, 2: 2, 3: 1, 5: 2, 7: 1, 8: 1, 9: 1 };
+    const items = LOOT.slice(0, 10).map((x, i) => ({ i, mine: mine[i], by: by[i] || 0 }));
+    const who = [[1, 0, 120], [5, 0, 30], [9, 0, 0], [12, 0, 0], [0, 2, 40], [7, 2, 10], [4, 1, 60], [10, 1, 20], [14, 1, 0], [3, 3, 10], [6, 5, 0], [11, 5, 0], [13, 7, 0], [2, 8, 30], [8, 9, 0]]
+      .map(([m, i, p]) => ({ m: M[m], i, p })).sort((a, b) => a.i - b.i || b.p - a.p);
+    const LW = 330, RX = LW + 20;
+    return head +
+      `<div class="abs" style="left:0;top:${t0 + 2}px;font-size:15px">Onyxia's Lair (40)  <span class="dim small">Today 20:00</span></div>
+      <div class="abs small" style="left:0;top:${t0 + 24}px">Your reserve: ${itm(2)}  <span class="acc">40 points</span>  <span class="dim">·  you can change it until an officer locks reserves</span></div>
+      <div class="abs display dim" style="left:0;top:${t0 + 54}px;font-size:11px">ONYXIA'S LAIR LOOT</div>` +
+      list([{ key: "n", t: "Item", w: 190 }, { key: "p", t: "Points", w: 74, r: 1 }, { key: "b", t: "Reserved", w: 60, r: 1 }], items,
+        (it, c) => c.key === "n" ? (it.i === 2 ? '<span class="acc">• </span>' : "") + itm(it.i) : c.key === "p" ? pts(it.mine) : it.by || DASH,
+        { click: true, sel: (it) => it.i === 2, style: `left:0;top:${t0 + 74}px;bottom:44px;width:${LW}px` }) +
+      `<div class="abs" style="left:0;bottom:0;display:flex;gap:8px;align-items:center">${btn("Reserve this", "primary")}<span class="dim small">Points only count on the item you reserve tonight.</span></div>` +
+      `<div class="abs display dim" style="left:${RX}px;top:${t0 + 54}px;font-size:11px">WHO RESERVED WHAT  <span class="faint">·  15 of 22 signed up</span></div>` +
+      list([{ key: "n", t: "Name", w: 120 }, { key: "i", t: "Reserve", w: 190 }, { key: "p", t: "Points", w: 64, r: 1 }], who,
+        (r, c) => c.key === "n" ? nm(r.m) : c.key === "i" ? itm(r.i) : pts(r.p), { style: `left:${RX}px;right:0;top:${t0 + 74}px;bottom:0` });
+  }
+
+  if (view === "points") {
+    const all = S.lootMode === "all";
+    const chips = `<div class="abs" style="left:0;top:${t0}px;display:flex;gap:4px"><span class="chip ${all ? "" : "on"}" data-lm="mine">Mine</span><span class="chip ${all ? "on" : ""}" data-lm="all">Everyone</span></div>`;
+    if (all) {
+      const rows = [[1, 0, 120, "Onyxia's Lair"], [4, 1, 60, "Onyxia's Lair"], [0, 2, 40, "Onyxia's Lair"], [5, 0, 30, "Onyxia's Lair"], [2, 8, 30, "Onyxia's Lair"],
+        [10, 1, 20, "Onyxia's Lair"], [0, 7, 20, "Onyxia's Lair"], [7, 2, 10, "Onyxia's Lair"], [3, 3, 10, "Onyxia's Lair"], [0, 3, 10, "Onyxia's Lair"], [15, 4, -20, "Onyxia's Lair"]]
+        .map(([m, i, p, r]) => ({ m: M[m], i, p, r }));
+      const LW = officer ? 444 : 744;
+      return head + chips + `<div class="search abs" style="left:150px;top:${t0 - 2}px;width:200px"><input placeholder="Search name or item"></div>` +
+        list([{ key: "n", t: "Name", w: 130 }, { key: "i", t: "Item", w: 200 }, { key: "p", t: "Points", w: 70, r: 1 }].concat(officer ? [] : [{ key: "r", t: "Raid", w: 140 }]), rows,
+          (r, c) => c.key === "n" ? nm(r.m) : c.key === "i" ? itm(r.i) : c.key === "p" ? pts(r.p) : `<span class="dim">${r.r}</span>`,
+          { click: officer, sel: officer ? (r) => r.m === M[1] : null, sort: { key: "p", desc: true }, style: `left:0;top:${t0 + 34}px;bottom:0;width:${LW}px` }) +
+        (officer ? `<div class="abs display dim" style="left:464px;top:${t0 + 34}px;font-size:11px">CHANGE POINTS</div>
+          <div class="abs" style="left:464px;top:${t0 + 52}px;display:flex;gap:4px"><span class="chip on">Add or take</span><span class="chip">Move</span></div>` +
+          field("Character", menu("Fizzwick", "position:relative;width:280px"), 464, t0 + 84, 280) +
+          field("Item", menu("Deathbringer (120)", "position:relative;width:280px"), 464, t0 + 140, 280) +
+          field("Points (minus for a penalty)", box("-30"), 464, t0 + 196, 110) +
+          field("Reason (everyone sees it)", box("Left halfway through the raid"), 464, t0 + 252, 280) +
+          `<div class="abs" style="left:464px;top:${t0 + 316}px;display:flex;gap:8px">${btn("Save", "primary")}${btn("Cancel")}</div>
+          <div class="abs dim small" style="left:464px;top:${t0 + 352}px;width:280px;line-height:1.4">Fizzwick: 120 on Deathbringer → <span class="acc">90</span>. It goes in the History with your name, and any officer can undo it.</div>` : "");
+    }
+    const rows = [[2, 40, "Tonight's reserve"], [7, 20, ""], [3, 10, ""], [0, 0, "Won 2 Dec"]].map(([i, p, n]) => ({ i, p, n }));
+    const why = [["Wed 25 Nov", "Night bonus", "Onyxia's Lair", "+10"], ["Wed 2 Dec", "Night bonus", "Onyxia's Lair", "+10"],
+      ["Fri 4 Dec", "Night bonus", "Onyxia's Lair", "+10"], ["Wed 9 Dec", "Not there (no bonus)", "", "0"], ["Fri 11 Dec", "Night bonus", "Onyxia's Lair", "+10"]];
+    return head + chips +
+      `<div class="abs dim small" style="left:150px;top:${t0 + 4}px">${nm(me)}  ·  points belong to this character and stay on each item until you win it</div>` +
+      list([{ key: "i", t: "Item", w: 210 }, { key: "p", t: "Points", w: 60, r: 1 }, { key: "n", t: "", w: 120 }], rows,
+        (r, c) => c.key === "i" ? itm(r.i) : c.key === "p" ? pts(r.p) : `<span class="${r.i === 2 ? "acc" : "dim"}">${r.n}</span>`,
+        { click: true, sel: (r) => r.i === 2, sort: { key: "p", desc: true }, style: `left:0;top:${t0 + 34}px;bottom:0;width:410px` }) +
+      `<div class="abs" style="left:430px;top:${t0 + 36}px;font-size:15px">${itm(2)}  <span class="acc">40</span></div>
+      <div class="abs dim small" style="left:430px;top:${t0 + 58}px">Why it's 40</div>` +
+      list([{ key: "d", t: "Date", w: 96 }, { key: "w", t: "What", w: 150 }, { key: "p", t: "Points", w: 50, r: 1 }], why,
+        (r, c) => c.key === "d" ? `<span class="dim">${r[0]}</span>` : c.key === "w" ? `<span class="${r[3] === "0" ? "faint" : ""}">${r[1]}</span>` : r[3] === "0" ? DASH : `<span class="good">${r[3]}</span>`,
+        { style: `left:430px;right:0;top:${t0 + 80}px;bottom:0` });
+  }
+
+  if (view === "history") {
+    const H = [["11 Dec 22:41", "Night bonus", "17 people", "", "+10", 4, "Onyxia's Lair"],
+      ["11 Dec 21:05", "Won", M[1], 0, "to 0", 4, "Was 120"],
+      ["11 Dec 19:50", "By hand", M[15], 4, "-20", 4, "Left halfway last week"],
+      ["9 Dec 23:02", "Moved", M[6], 1, "-60", 4, "To " + M[33].name + ", now their main"],
+      ["9 Dec 23:02", "Moved", M[33], 1, "+60", 4, "From Copperpot"],
+      ["9 Dec 22:30", "Undone", M[9], 2, "+10", 4, "Wasn't there", 1],
+      ["9 Dec 22:12", "Bonus changed", "", "", "+10", 4, "Starting value"]];
+    return head +
+      `<div class="abs" style="left:0;top:${t0}px;display:flex;gap:4px"><span class="chip on">All</span><span class="chip">Mine</span><span class="chip">By hand</span></div>
+      <div class="search abs" style="left:190px;top:${t0 - 2}px;width:200px"><input placeholder="Search name or item"></div>` +
+      list([{ key: "d", t: "When", w: 92 }, { key: "k", t: "Change", w: 116 }, { key: "n", t: "Who", w: 92 }, { key: "i", t: "Item", w: 168 }, { key: "p", t: "Points", w: 56, r: 1 },
+        { key: "b", t: "By", w: 56 }, { key: "r", t: "Reason", w: 164 }].concat(officer ? [{ key: "u", t: "", w: 0 }] : []), H,
+        (r, c) => {
+          const f = r[7] ? "faint" : "";
+          if (c.key === "d") return `<span class="dim">${r[0]}</span>`;
+          if (c.key === "k") return `<span class="${f || (r[1] === "By hand" || r[1] === "Moved" ? "spark" : "")}">${r[1]}</span>`;
+          if (c.key === "n") return typeof r[2] === "string" ? `<span class="dim">${r[2]}</span>` : `<span class="${f}">${r[7] ? esc(r[2].name) : nm(r[2])}</span>`;
+          if (c.key === "i") return r[3] === "" ? DASH : r[7] ? `<span class="faint">${esc(LOOT[r[3]][0])}</span>` : itm(r[3]);
+          if (c.key === "p") return `<span class="${f || (r[4].startsWith("-") ? "bad" : "")}">${r[4]}</span>`;
+          if (c.key === "b") return nm(M[r[5]]);
+          if (c.key === "r") return `<span class="dim ell" style="display:block">${esc(r[6])}</span>`;
+          return "";
+        }, { style: `left:0;top:${t0 + 34}px;bottom:28px;right:0` }) +
+      `<div class="abs dim small" style="left:0;bottom:0">Every change, kept by everyone. ${officer ? "Right-click a change to undo it." : "Only officers and raid leaders can change points."}</div>`;
+  }
+
+  // Loot night (officer)
+  const end = S.lootMode === "end";
+  const top = `<div class="abs small" style="left:0;top:${t0 + 4}px;right:240px"><span class="good">Running</span> <span class="dim">Onyxia's Lair (Today 20:00)  ·  reserves locked  ·  Onyxia killed 20:41</span></div>
+    <div class="abs" style="right:0;top:${t0}px;display:flex;gap:8px">${btn("Lock reserves", "disabled")}${btn("End of night", end ? "on" : "", 'data-lm="end"')}</div>`;
+  if (end) {
+    const rows = [[1, 0, "Won it", "acc", "Points go to 0"], [5, 0, "+10", "good", "There, boss killed"], [0, 2, "+10", "good", "There, boss killed"], [4, 1, "+10", "good", "There, boss killed"],
+      [7, 2, "+10", "good", "There, boss killed"], [10, 1, "+10", "good", "There, boss killed"],
+      [9, 0, "+10", "good", "There, boss killed"], [8, 9, "Nothing", "faint", "Not there"], [3, 3, "+10", "good", "There, boss killed"], [6, 5, "+10", "good", "There, boss killed"]].map(([m, i, r, t, w]) => ({ m: M[m], i, r, t, w }));
+    return head + top +
+      `<div class="abs" style="left:0;top:${t0 + 36}px">Check the bonus before saving: <span class="good">17 get +10</span>  ·  1 won their reserve  ·  1 wasn't there</div>` +
+      list([{ key: "n", t: "Name", w: 140 }, { key: "i", t: "Reserve", w: 230 }, { key: "r", t: "Result", w: 90 }, { key: "w", t: "Why", w: 200 }], rows,
+        (r, c) => c.key === "n" ? nm(r.m) : c.key === "i" ? itm(r.i) : c.key === "r" ? `<span class="${r.t}">${r.r}</span>` : `<span class="dim">${r.w}</span>`,
+        { style: `left:0;right:0;top:${t0 + 66}px;bottom:44px` }) +
+      `<div class="abs" style="left:0;bottom:0;display:flex;gap:8px;align-items:center">${btn("Save the bonus", "primary")}${btn("Back")}<span class="dim small">Untick someone in the list to leave them out.</span></div>`;
+  }
+  const drops = [[0, 4, "Rolling"], [5, 2, ""], [7, 1, ""], [10, 0, ""]];
+  const rolls = [[1, true, 34, 120], [5, true, 88, 30], [9, true, 61, 0], [12, true, 12, 0], [13, false, 97, 0], [2, false, 55, 0]]
+    .map(([m, r, roll, p]) => ({ m: M[m], r, roll, p, tot: roll + p }));
+  const LW = 270, RX = LW + 20;
+  return head + top +
+    list([{ key: "i", t: "Dropped", w: 190 }, { key: "r", t: "Reserved", w: 70, r: 1 }], drops,
+      (d, c) => c.key === "i" ? itm(d[0]) + (d[2] ? ' <span class="good">•</span>' : "") : d[1] || DASH,
+      { click: true, sel: (d) => d === drops[0], style: `left:0;top:${t0 + 36}px;bottom:0;width:${LW}px` }) +
+    `<div class="abs" style="left:${RX}px;top:${t0 + 38}px;font-size:15px">${itm(0)}</div>
+    <div class="abs dim small" style="left:${RX}px;top:${t0 + 60}px">Reserved by 4  ·  reservers first, highest roll + points wins</div>
+    <div class="abs" style="left:${RX}px;top:${t0 + 82}px;display:flex;gap:8px">${btn("Post to raid chat", "primary")}${btn("Award to Fizzwick")}${btn("Re-roll")}</div>` +
+    list([{ key: "n", t: "Name", w: 120 }, { key: "s", t: "", w: 100 }, { key: "r", t: "Roll", w: 50, r: 1 }, { key: "p", t: "Points", w: 60, r: 1 }, { key: "t", t: "Total", w: 60, r: 1 }], rolls,
+      (r, c) => c.key === "n" ? nm(r.m) : c.key === "s" ? (r.r ? '<span class="acc">Reserved</span>' : '<span class="faint">No reserve</span>') : c.key === "r" ? `<span class="${r.r ? "" : "faint"}">${r.roll}</span>`
+        : c.key === "p" ? (r.r ? pts(r.p) : DASH) : `<span class="${r === rolls[0] ? "good" : r.r ? "" : "faint"}">${r.r ? r.tot : r.roll}</span>`,
+      { sel: (r) => r === rolls[0], style: `left:${RX}px;right:0;top:${t0 + 124}px;bottom:24px` }) +
+    `<div class="abs dim small" style="left:${RX}px;bottom:0">Everyone who reserved it has rolled. Rolls of 1-1000 or a second roll don't count.</div>`;
+}
+
 // ---------------------------------------------------------------- window
-const TABS = [["overview", "Overview", "guild"], ["roster", "Roster", "guild"], ["character", "Character", "guild"], ["raids", "Raids", "guild"], ["crafters", "Find a crafter", "crafting"],
+const TABS = [["overview", "Overview", "guild"], ["roster", "Roster", "guild"], ["character", "Character", "guild"], ["raids", "Raids", "guild"], ["loot", "Loot", "guild"], ["crafters", "Find a crafter", "crafting"],
   ["professions", "Professions", "crafting"], ["words", "Short Words", "games"], ["settings", "Settings", "settings"]];
 const DESC = { roster: "Everyone in the guild. Click a name for their gear, talents and professions.", character: "Gear, talents, professions, cooldowns, reputations and attunements.",
   crafters: "Search an item or recipe to see who in the guild can make it, and whisper them.", professions: "Who crafts what in the guild, every recipe in the game, and cooldowns.",
   settings: "What you share, how the window looks, and reminders.",
   words: "A five-letter word in six guesses: one word a day for the whole guild, or as many as you like.",
-  raids: "Guild raids made by officers and raid leaders. Sign up here so they know who's coming." };
-const RENDER = { overview, roster, character, raids, crafters, professions, words, settings };
+  raids: "Guild raids made by officers and raid leaders. Sign up here so they know who's coming.",
+  loot: "Reserve one item a night. Every night you don't get it, it gains bonus points." };
+const RENDER = { overview, roster, character, raids, loot, crafters, professions, words, settings };
 function windowHTML() {
   const err = S.data === "error", paused = err || !G.name || S.data === "loading";
   const why = err ? "combat" : "roster not loaded";
@@ -858,6 +995,7 @@ function windowHTML() {
     }
   }
   const members = G.members.length, players = members - G.members.reduce((a, m) => a + (m.alts ? 1 : 0), 0);
+  if (S.screen === "loot" && S.officer === "1") DESC.loot = "Reserves, bonus points and loot nights (officer tools on: /sr officer turns them off)";
   if (S.screen === "raids" && S.officer === "1") DESC.raids = "Guild raids, sign-ups and attendance (officer tools on: /sr officer turns them off)";
   const desc = S.screen === "overview" ? (G.name ? `${esc(G.name)}  ·  ${plural(members, "member")}  ·  ${plural(players, "player")}  ·  ${online} online` : "No guild  ·  join a guild to see guildmates here") : DESC[S.screen];
   const title = TABS.find((t) => t[0] === S.screen)[1];
@@ -931,6 +1069,8 @@ function wire() {
   document.querySelectorAll("[data-pv]").forEach((el) => (el.onclick = () => { S.profView = el.dataset.pv; S.prof = null; S.crafter = null; render(); }));
   document.querySelectorAll("[data-wv]").forEach((el) => (el.onclick = () => { S.wordsView = el.dataset.wv; render(); }));
   document.querySelectorAll("[data-rv]").forEach((el) => (el.onclick = () => { S.raidsView = el.dataset.rv; render(); }));
+  document.querySelectorAll("[data-lv]").forEach((el) => (el.onclick = () => { S.lootView = el.dataset.lv; S.lootMode = null; render(); }));
+  document.querySelectorAll("[data-lm]").forEach((el) => (el.onclick = () => { S.lootMode = el.dataset.lm === "mine" || S.lootMode === el.dataset.lm ? null : el.dataset.lm; render(); }));
   document.querySelectorAll("[data-av]").forEach((el) => (el.onclick = () => { S.attView = el.dataset.av; render(); }));
   document.querySelectorAll("[data-wcb]").forEach((el) => (el.onclick = () => { S.wordsCB = S.wordsCB === "1" ? "0" : "1"; render(); }));
   document.querySelectorAll("[data-wb]").forEach((el) => (el.onclick = () => { S.wordsBoard = el.dataset.wb; render(); }));
@@ -1010,7 +1150,7 @@ function seg(id) {
 try { Object.assign(S, JSON.parse(localStorage.getItem("skPreview") || "{}")); } catch (e) { /* ignore */ }
 // ?screen=roster&data=worst&view=before&raid=ony  (and &shot=1 for the README pictures: window only, no chrome)
 const Q = new URLSearchParams(location.search);
-for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer"]) if (Q.get(k)) S[k] = Q.get(k);
+for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode"]) if (Q.get(k)) S[k] = Q.get(k);
 const SHOT = Q.get("shot");
 if (SHOT) {
   document.body.classList.add("shot"); S.view = SHOT === "compare" ? "before" : "after"; S.reduce = true;

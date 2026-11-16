@@ -42,11 +42,19 @@ const SHOTS = {
   "raids-new": ["shot=1&screen=raids&data=full&officer=1&raidsView=new", W, H],
   "raids-attendance": ["shot=1&screen=raids&data=full&officer=1&raidsView=attendance", W, H],
   "raids-totals": ["shot=1&screen=raids&data=full&officer=1&raidsView=attendance&attView=totals", W, H],
+  loot: ["shot=1&screen=loot&data=full", W, H],
+  "loot-points": ["shot=1&screen=loot&data=full&lootView=points", W, H],
+  "loot-points-officer": ["shot=1&screen=loot&data=full&officer=1&lootView=points&lootMode=all", W, H],
+  "loot-history": ["shot=1&screen=loot&data=full&officer=1&lootView=history", W, H],
+  "loot-night": ["shot=1&screen=loot&data=full&officer=1&lootView=night", W, H],
+  "loot-night-end": ["shot=1&screen=loot&data=full&officer=1&lootView=night&lootMode=end", W, H],
   "before-after": ["shot=compare&screen=overview&data=full", 880 + W + 72, H + 84],
   "before-after-professions": ["shot=compare&screen=professions&data=full", 880 + W + 72, H + 84],
   palette: ["shot=palette", 1200, 484],
 };
 
+// node docs/mockups/render.js loot  -> only the pictures whose name starts with "loot"
+const ONLY = process.argv[2];
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 // Pages of their own (not the preview window): name -> [file, width, height]
@@ -54,7 +62,7 @@ const PAGES = {};
 
 async function withPlaywright(chromium) {
   const browser = await chromium.launch();
-  for (const [name, [file, w, h]] of Object.entries(PAGES)) {
+  for (const [name, [file, w, h]] of Object.entries(ONLY ? {} : PAGES)) {
     const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 2 });
     await page.goto("file://" + path.join(ROOT, file));
     await page.evaluate(() => document.fonts.ready);
@@ -62,6 +70,7 @@ async function withPlaywright(chromium) {
     console.log("wrote", name + ".png");
   }
   for (const [name, [q, w, h]] of Object.entries(SHOTS)) {
+    if (ONLY && !name.startsWith(ONLY)) continue;
     const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 2 });
     await page.goto(PAGE + "?" + q);
     await page.evaluate(() => document.fonts.ready);

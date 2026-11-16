@@ -151,6 +151,8 @@ const ICONS = {
   // Raids (v0.8.0): a calendar page with a tick
   "icon-raids": [...box(5, 7, 27, 27), line([5, 13], [27, 13], W2, WHITE), line([11, 4], [11, 9], W2, WHITE),
     line([21, 4], [21, 9], W2, WHITE), line([11, 20], [15, 24], W2, WHITE), line([15, 24], [22, 17], W2, WHITE)],
+  // Loot (v0.9.0 Reserve+): a die, for /roll
+  "icon-loot": [...box(5, 5, 27, 27), circle(11, 11, 2.2, WHITE), circle(16, 16, 2.2, WHITE), circle(21, 21, 2.2, WHITE)],
   "icon-settings": [line([5, 10], [17, 10], W2, WHITE), line([24, 10], [27, 10], W2, WHITE), ring(20.5, 10, 3.2, W2, WHITE),
     line([5, 22], [8, 22], W2, WHITE), line([15, 22], [27, 22], W2, WHITE), ring(11.5, 22, 3.2, W2, WHITE)],
 };
