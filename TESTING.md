@@ -21,6 +21,11 @@ git history (`git show v0.6.0:TESTING.md`).
 
 ## Still worth a look
 
+- [ ] (v0.8.2) **No "No player named … is currently playing"** in the
+   chat any more when a guildmate logs off (it came from the addon). Whisper
+   an offline name yourself: that message still shows. `/sr debug` line
+   "Logged-off players: whispers skipped …, messages hidden …, chat filter:
+   yes".
 1. [ ] **Onyxia's Lair:** a character with the attunement quest done shows
    *done*; take the Drakefire Amulet out of your bags and the Roster's
    Onyxia view shows the orange **!**.

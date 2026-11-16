@@ -26,7 +26,7 @@ read_globals = {
 	"CreateFrame", "UIParent", "GameTooltip", "Minimap", "DEFAULT_CHAT_FRAME", "GameFontNormal",
 	"CreateColor", "BackdropTemplateMixin", "UIPanelCloseButton", "STANDARD_TEXT_FONT",
 	"PlaySound", "SOUNDKIT", "IsShiftKeyDown", "C_UI", "ReloadUI", "IsControlKeyDown", "ChatEdit_InsertLink",
-	"ChatFrame_SendTell", "ChatFrame_OpenChat", "ChatFrameUtil", "HandleModifiedItemClick", "GetCursorPosition",
+	"ChatFrame_SendTell", "ChatFrame_OpenChat", "ChatFrame_AddMessageEventFilter", "ChatFrameUtil", "HandleModifiedItemClick", "GetCursorPosition",
 	"RAID_CLASS_COLORS", "ITEM_QUALITY_COLORS", "Settings", "ToggleCalendar", "Calendar_Toggle",
 	"FACTION_BAR_COLORS", "TooltipDataProcessor", "ItemRefTooltip", "unpack", "ColorPickerFrame", "SetPortraitTexture", "GetScreenWidth", "GetScreenHeight",
 	-- C_ namespaces

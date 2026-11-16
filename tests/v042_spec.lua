@@ -105,7 +105,9 @@ describe("v0.4.2 send results", function()
 		W.member("Pocus Hocus", W.player.guid)
 		SK.Identity:ReadRoster()
 		SK.Profile:BuildSelf()
-		for i = 1, 8 do SK.Sync:Enqueue("x" .. i, "WHISPER", "Ann Gone", "NORMAL", { t = "RQ", w = {} }) end
+		-- one offline player per whisper (v0.8.2 stops whispering a player
+		-- after the first "offline")
+		for i = 1, 8 do SK.Sync:Enqueue("x" .. i, "WHISPER", "Ann Gone" .. i, "NORMAL", { t = "RQ", w = {} }) end
 		for _ = 1, 4 do SK.Sync:Flush() end
 		assert.is_true(#calls >= 8)
 		assert.equal(0, SK.Sync.stats.sendErrors or 0)

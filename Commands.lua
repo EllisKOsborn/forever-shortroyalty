@@ -153,6 +153,8 @@ function Commands.BuildReport()
 		why and ("(" .. why .. ")") or "", yesno(Compat.AddonChatFlag()))
 	add("Send errors: %d   last: %s   Whispers to players who had logged off (normal): %d",
 		SK.Sync.stats.sendErrors or 0, tostring(SK.Sync.lastSendError), SK.Sync.stats.targetOffline or 0)
+	add("Logged-off players: whispers skipped %d, \"No player named\" messages hidden %d   (chat filter: %s)",
+		SK.Sync.stats.skippedOffline or 0, SK.Sync.stats.hiddenNotFound or 0, yesno(SK.Sync.chatFilter))
 
 	add("")
 	add("== Guild ==")

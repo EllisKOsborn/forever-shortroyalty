@@ -187,10 +187,25 @@ function W.reset()
 	}
 	_G.Enum.TooltipDataType = { Item = 0, Spell = 1 }
 	W.chat = {}
+	W.chatFilters = {}
 	_G.ChatFrameUtil = {
 		SendTell = function(name) W.chat[#W.chat + 1] = { "tell", name } end,
 		OpenChat = function(text) W.chat[#W.chat + 1] = { "open", text } end,
+		AddMessageEventFilter = function(event, fn)
+			W.chatFilters[event] = W.chatFilters[event] or {}
+			table.insert(W.chatFilters[event], fn)
+		end,
 	}
+	-- Forever's English texts (GlobalStrings)
+	_G.ERR_CHAT_PLAYER_NOT_FOUND_S = "No player named '%s' is currently playing."
+	_G.ERR_FRIEND_OFFLINE_S = "%s has gone offline."
+	-- Would the chat window show this system message? (runs our filters)
+	function W.systemMessage(text)
+		for _, fn in ipairs(W.chatFilters.CHAT_MSG_SYSTEM or {}) do
+			if fn(nil, "CHAT_MSG_SYSTEM", text) then return false end
+		end
+		return true
+	end
 
 	-- Spell cooldowns: spellID -> { start, duration } (GetTime clock = W.now)
 	W.spellCD = {}

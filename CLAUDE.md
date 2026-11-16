@@ -29,6 +29,23 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.8.2 (16 Nov, on `claude/short-kings-addon-hlf0t4`, not released):
+  "No player named X is currently playing" fix** (owner: "It appears to be
+  this addon. Why?"). Cause: our WHISPERs (PR replies in BULK, RQ, AR/AQ)
+  to players who had just logged off; the game prints
+  `ERR_CHAT_PLAYER_NOT_FOUND_S` once per undeliverable piece, and the roster
+  `online` flag can be 120 s stale. `Sync.goneAt` / `IsGone` / `MarkGone`
+  (drops queued whispers to that name; `GONE_HOLD` 120 s, cleared by any
+  message from them, `MarkBack`), set by a send result "offline", by
+  "X has gone offline." (`ERR_FRIEND_OFFLINE_S`) or by the not-found line.
+  `Sync.SystemFilter` on CHAT_MSG_SYSTEM (`Compat.AddChatFilter` →
+  `ChatFrameUtil.AddMessageEventFilter`, verified in the forever source;
+  Blizzard skips filters for secret messages) hides the not-found line only
+  if we whispered that name in the last `WHISPER_HIDE` 30 s (timed from
+  each piece's send callback). Patterns are built from the client's own
+  global strings (`Compat.NotFoundName/WentOfflineName`). `Flush` →
+  `SendItem`. Tests `tests/v082_offline_spec.lua`. TESTING "Still worth a
+  look" 0. Unconfirmed in game.
 - **v0.7.2 (released 14 Nov on `main`, owner: "Push to main"):
   Short Words on flights** (owner: "Go as that's a good idea" to: small box,
   not the whole window; closes on landing; Settings switch, default on).

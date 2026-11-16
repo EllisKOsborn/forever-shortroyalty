@@ -32,6 +32,12 @@ Sync.MAX_STRIKES = 3            -- undecodable/oversized messages before a sende
 Sync.MAX_RATE_KEYS = 200        -- forget idle senders in the rate table beyond this many
 Sync.CHANNELS = { GUILD = true, WHISPER = true } -- we never send on any other
 Sync.PIECE_RATE_MAX = 1500     -- raw pieces per sender per window (a full backfill is ~1000)
+-- Whispers to players who have logged off (v0.8.2). Each one made the game
+-- print "No player named X is currently playing." in the chat.
+Sync.WHISPER_HIDE = 30         -- hide that message this long after our last whisper to X
+Sync.GONE_HOLD = 120           -- then don't whisper X for this long (the roster refresh period)
+Sync.whisperedAt = {}          -- name key -> time our last whisper to them went out
+Sync.goneAt = {}               -- name key -> time we learned they're offline
 
 Sync.queue = {}
 Sync.queued = {}               -- key -> queue item
@@ -95,6 +101,75 @@ function Sync.transport(text, dist, target, prio, callback, arg)
 end
 
 ---------------------------------------------------------------------------
+-- Players who have logged off (v0.8.2)
+---------------------------------------------------------------------------
+-- Names compare without case or a realm suffix ("First Surname-Realm").
+function Sync.NameKey(name)
+	if type(name) ~= "string" or name == "" then return nil end
+	return (name:gsub("%-.*$", "")):lower()
+end
+
+function Sync:IsGone(name, now)
+	local key = self.NameKey(name)
+	local t = key and self.goneAt[key]
+	return t ~= nil and (now or Compat.Now()) - t < self.GONE_HOLD
+end
+
+-- X is offline: forget the whispers still waiting for them. Pieces already
+-- handed to ChatThrottleLib can't be taken back; SystemFilter hides the
+-- game's message for those.
+function Sync:MarkGone(name, now)
+	local key = self.NameKey(name)
+	if not key then return 0 end
+	self.goneAt[key] = now or Compat.Now()
+	local dropped, keep = 0, {}
+	for _, item in ipairs(self.queue) do
+		if item.dist == "WHISPER" and self.NameKey(item.target) == key then
+			dropped = dropped + 1
+			if item.key then self.queued[item.key] = nil end
+		else
+			keep[#keep + 1] = item
+		end
+	end
+	self.queue = keep
+	self.stats.skippedOffline = (self.stats.skippedOffline or 0) + dropped
+	return dropped
+end
+
+-- A message from X: they're online (again).
+function Sync:MarkBack(name)
+	local key = self.NameKey(name)
+	if key then self.goneAt[key] = nil end
+end
+
+function Sync:NoteWhisper(name, now)
+	local key = self.NameKey(name)
+	if key then self.whisperedAt[key] = now or Compat.Now() end
+end
+
+-- CHAT_MSG_SYSTEM filter. Hides "No player named X is currently playing."
+-- only when our addon whispered X in the last WHISPER_HIDE seconds, so a
+-- whisper the player typed still gets its message. "X has gone offline."
+-- is shown as usual; we just stop whispering X.
+function Sync.SystemFilter(_, _, msg)
+	local name = Compat.NotFoundName(msg)
+	if name then
+		local key = Sync.NameKey(name)
+		local t = key and Sync.whisperedAt[key]
+		local now = Compat.Now()
+		if t and now - t <= Sync.WHISPER_HIDE then
+			Sync:MarkGone(name, now)
+			Sync.stats.hiddenNotFound = (Sync.stats.hiddenNotFound or 0) + 1
+			return true
+		end
+		return false
+	end
+	local gone = Compat.WentOfflineName(msg)
+	if gone then Sync:MarkGone(gone) end
+	return false
+end
+
+---------------------------------------------------------------------------
 -- Outgoing queue
 ---------------------------------------------------------------------------
 function Sync:Enqueue(key, dist, target, prio, msg)
@@ -140,10 +215,14 @@ end
 
 local function onChunkSent(item, _, _, result)
 	local outcome, reason = Sync.SendOutcome(result, item and item.dist)
+	-- Pieces can wait a while in ChatThrottleLib: time the hide window from
+	-- when each one really went out.
+	if item and item.dist == "WHISPER" then Sync:NoteWhisper(item.target) end
 	if outcome == "ok" then
 		Sync.failStreak = 0
 	elseif outcome == "offline" then
 		Sync.stats.targetOffline = (Sync.stats.targetOffline or 0) + 1
+		if item then Sync:MarkGone(item.target) end
 	elseif outcome == "failed" then
 		Sync.stats.sendErrors = (Sync.stats.sendErrors or 0) + 1
 		Sync.lastSendError = reason
@@ -162,26 +241,37 @@ local function onChunkSent(item, _, _, result)
 	end
 end
 
+function Sync:SendItem(item, now)
+	local ok, text = pcall(SK.Codec.Encode, item.msg)
+	if ok and #text > SK.Codec.MAX_ENCODED then
+		-- Receivers would drop it anyway; say so instead of failing silently.
+		SK:RecordError("send " .. tostring(item.msg.t), "message too large (" .. #text .. " bytes)")
+	elseif ok then
+		if item.dist == "WHISPER" then self:NoteWhisper(item.target, now) end
+		-- Our own numbered pieces, each one complete addon message (Frames.lua).
+		for _, wire in ipairs(SK.Frames.Split(text)) do
+			self.transport(wire, item.dist, item.target, item.prio, onChunkSent, item)
+		end
+		self.stats.sent = self.stats.sent + 1
+	else
+		SK:Debug("encode failed: %s", tostring(text))
+	end
+end
+
 function Sync:Flush()
 	if #self.queue == 0 then return end
 	if self:IsPaused() or not self:CanSend() then return end
 	local n = 0
+	local now = Compat.Now()
 	while self.queue[1] and n < self.SENDS_PER_FLUSH do
 		local item = table.remove(self.queue, 1)
 		if item.key then self.queued[item.key] = nil end
 		item.requeued = false
-		local ok, text = pcall(SK.Codec.Encode, item.msg)
-		if ok and #text > SK.Codec.MAX_ENCODED then
-			-- Receivers would drop it anyway; say so instead of failing silently.
-			SK:RecordError("send " .. tostring(item.msg.t), "message too large (" .. #text .. " bytes)")
-		elseif ok then
-			-- Our own numbered pieces, each one complete addon message (Frames.lua).
-			for _, wire in ipairs(SK.Frames.Split(text)) do
-				self.transport(wire, item.dist, item.target, item.prio, onChunkSent, item)
-			end
-			self.stats.sent = self.stats.sent + 1
+		if item.dist == "WHISPER" and self:IsGone(item.target, now) then
+			-- Logged off: don't whisper them (the game would print "No player named …").
+			self.stats.skippedOffline = (self.stats.skippedOffline or 0) + 1
 		else
-			SK:Debug("encode failed: %s", tostring(text))
+			self:SendItem(item, now)
 		end
 		n = n + 1
 	end
@@ -574,6 +664,7 @@ function Sync:OnCommReceived(prefix, wire, dist, sender)
 	if prefix ~= SK.PREFIX or not self:Enabled() then return end
 	local now = Compat.Now()
 	self.lastSender = sender
+	self:MarkBack(sender)
 	-- Strangers, other channels and ignored senders are dropped before any
 	-- piece is stored (the same checks Handle makes before decoding).
 	if not self.CHANNELS[dist] or self.blocked[sender] or not SK.Identity:KnownSender(sender) then
@@ -645,6 +736,7 @@ function Sync:OnLogin()
 	local AceComm = LibStub("AceComm-3.0")
 	AceComm:Embed(self)
 	self:RegisterComm(SK.PREFIX, "OnCommReceived")
+	self.chatFilter = Compat.AddChatFilter("CHAT_MSG_SYSTEM", Sync.SystemFilter)
 
 	local canSend, why = self:CanSend()
 	if not canSend then

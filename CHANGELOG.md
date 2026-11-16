@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.8.2 (not released yet): no more "No player named … is currently playing"
+
+- **Fixed:** the chat sometimes showed *No player named "X" is currently
+  playing.* (for example "Andreas Sham"). It came from Short Royalty: it
+  privately sends guild data to a guildmate (their profiles, attendance for
+  officers), and when that guildmate had just logged off, the game printed
+  that line for every piece it couldn't deliver. Now:
+  - when the game says someone is offline (or "X has gone offline."), the
+    addon drops everything still waiting for them and doesn't message them
+    again for 2 minutes, or until they're back online with the addon;
+  - the line is hidden when Short Royalty caused it (it messaged that player
+    in the last 30 seconds). Whispers you type yourself still show it.
+- `/sr debug` shows how many messages were skipped and hidden.
+
 ## v0.8.1 (15 Nov 2026): Attendance for every officer, no spreadsheet
 
 - **Every officer and raid leader sees every recorded raid** on the

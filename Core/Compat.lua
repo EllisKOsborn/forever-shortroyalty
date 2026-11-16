@@ -886,6 +886,53 @@ function Compat.ShowProfession(skillLine)
 	return false, "unavailable"
 end
 
+-- Chat message filters (v0.8.2). Forever's 12.x UI has
+-- ChatFrameUtil.AddMessageEventFilter (Blizzard_ChatFrameBase/Shared/
+-- ChatFrameFilters.lua); the callback gets (chatFrame, event, message, ...)
+-- and hides the message by returning true. Blizzard skips filters for
+-- secret messages (canaccessvalue), so we never see one.
+function Compat.AddChatFilter(event, fn)
+	if ChatFrameUtil and ChatFrameUtil.AddMessageEventFilter then
+		ChatFrameUtil.AddMessageEventFilter(event, fn)
+		return true
+	elseif ChatFrame_AddMessageEventFilter then
+		ChatFrame_AddMessageEventFilter(event, fn)
+		return true
+	end
+	return false
+end
+
+-- A game message with one "%s" (a player name) as a Lua pattern that
+-- captures the name. Built from the client's own text, so it follows the
+-- game's language.
+local namePatterns = {}
+local function namePattern(key)
+	if namePatterns[key] == nil then
+		local s = _G[key]
+		local pat = false
+		if type(s) == "string" and s:find("%s", 1, true) then
+			local escaped = s:gsub("([%^%$%(%)%.%[%]%*%+%-%?%%])", "%%%1")
+			pat = "^" .. escaped:gsub("%%%%s", "(.+)", 1) .. "$"
+		end
+		namePatterns[key] = pat
+	end
+	return namePatterns[key] or nil
+end
+
+local function nameIn(key, msg)
+	if type(msg) ~= "string" then return nil end
+	local pat = namePattern(key)
+	local name = pat and msg:match(pat)
+	if not name then return nil end
+	return name:match("|h%[(.-)%]|h") or name -- a player link: keep the name
+end
+
+-- "No player named 'X' is currently playing." (a whisper to someone offline,
+-- including our addon's own whispers) → "X".
+function Compat.NotFoundName(msg) return nameIn("ERR_CHAT_PLAYER_NOT_FOUND_S", msg) end
+-- "X has gone offline." (guildmates and friends) → "X".
+function Compat.WentOfflineName(msg) return nameIn("ERR_FRIEND_OFFLINE_S", msg) end
+
 -- Opens the chat box with `text` already typed. ChatFrameUtil.OpenChat is
 -- in the same Forever file; its edit box parses a leading "/g " into the
 -- guild channel (ParseText on the next frame).
