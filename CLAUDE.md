@@ -1141,9 +1141,8 @@ refer to `git show v0.6.0:TESTING.md`.
    TESTING.md 18–29.
 4. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
-5. Reserve+: the open questions at the end of
-   `docs/proposals/loot-addon-plan.md` (reserves visible before the lock?
-   +10 default bonus? name of the guild's TBC addon).
+5. Reserve+: verdict on the mock-ups (`docs/images/loot*.png`); confirm
+   the guild's TBC tool was Gargul.
 
 ## Answers already given to the guild (stay consistent)
 - **Alts:** linked automatically once each alt has logged in with the addon

@@ -136,10 +136,15 @@ winner.
 Then a **test run** in a dungeon before 9 Dec. If it isn't tested by then,
 run the first night by hand and switch over after.
 
-## Still open
+## Answered 16 Nov
 
-1. **Show reserves to everyone before the lock, or hide them?** Default
-   unless you say otherwise: shown, like softres.it.
-2. Starting bonus **+10 per night**? (Officers can change it.)
-3. Ask the guildmate for the **name of the TBC addon**, so we can read its
-   feature list (not its code).
+- Reserves are **visible to everyone** before the lock.
+- Starting bonus **+10 per night** (officers can change it).
+- The guild's TBC tool was probably **Gargul** (owner to confirm). Read its
+  feature list only, never its code.
+
+## Mock-ups (16 Nov)
+
+`docs/images/loot*.png` (preview `screen=loot`, `lootView`, `lootMode`,
+`officer=1`): Reserves, Points (mine / everyone + officer "Change points"),
+History, Loot night, End of night. Waiting for the owner's verdict.
