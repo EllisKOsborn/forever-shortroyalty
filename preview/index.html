@@ -863,13 +863,13 @@ function loot() {
       .map(([m, i, p]) => ({ m: M[m], i, p })).sort((a, b) => a.i - b.i || b.p - a.p);
     const LW = 330, RX = LW + 20;
     return head +
-      `<div class="abs" style="left:0;top:${t0 + 2}px;font-size:15px">Onyxia's Lair (40)  <span class="dim small">Today 20:00</span></div>
-      <div class="abs small" style="left:0;top:${t0 + 24}px">Your reserve: ${itm(2)}  <span class="acc">40 points</span>  <span class="dim">·  you can change it until an officer locks reserves</span></div>
+      menu("Onyxia's Lair, Today 20:00", `left:0;top:${t0}px;width:260px`) +
+      `<div class="abs" style="left:0;top:${t0 + 34}px">Your reserve (1 of 1): ${itm(2)}  <span class="dim small">·  you can change it until an officer locks reserves</span></div>
       <div class="abs display dim" style="left:0;top:${t0 + 54}px;font-size:11px">ONYXIA'S LAIR LOOT</div>` +
       list([{ key: "n", t: "Item", w: 190 }, { key: "p", t: "Points", w: 74, r: 1 }, { key: "b", t: "Reserved", w: 60, r: 1 }], items,
         (it, c) => c.key === "n" ? (it.i === 2 ? '<span class="acc">• </span>' : "") + itm(it.i) : c.key === "p" ? pts(it.mine) : it.by || DASH,
         { click: true, sel: (it) => it.i === 2, style: `left:0;top:${t0 + 74}px;bottom:44px;width:${LW}px` }) +
-      `<div class="abs" style="left:0;bottom:0;display:flex;gap:8px;align-items:center">${btn("Reserve this", "primary")}<span class="dim small">Points only count on the item you reserve tonight.</span></div>` +
+      `<div class="abs" style="left:0;bottom:0;display:flex;gap:8px;align-items:center">${btn("Reserve this", "primary disabled")}${btn("Clear mine")}<span class="dim small">To change, clear yours first.</span></div>` +
       `<div class="abs display dim" style="left:${RX}px;top:${t0 + 54}px;font-size:11px">WHO RESERVED WHAT  <span class="faint">·  1 RESERVE EACH  ·  15 OF 22</span></div>` +
       list([{ key: "n", t: "Name", w: 120 }, { key: "i", t: "Reserve", w: 190 }, { key: "p", t: "Points", w: 64, r: 1 }], who,
         (r, c) => c.key === "n" ? nm(r.m) : c.key === "i" ? itm(r.i) : pts(r.p), { style: `left:${RX}px;right:0;top:${t0 + 74}px;bottom:0` });
@@ -943,20 +943,23 @@ function loot() {
     const step = (v, w) => `<span style="display:inline-flex;align-items:center;gap:6px">${btn("−", "small", 'style="width:24px;padding:0"')}<span style="width:${w || 28}px;text-align:center" class="acc">${v}</span>${btn("+", "small", 'style="width:24px;padding:0"')}</span>`;
     const Wd = Math.floor((T.sizes.contentW - T.space.l) / 2), x2 = Wd + T.space.l, r0 = t0 + 6;
     return head
-      + setCard("Reserves per player", [{ name: "Barrow Deeps (10)", desc: "8 bosses", ctl: step(1) }, { name: "Hyjal Summit (20)", desc: "13 bosses", ctl: step(2) },
-        { name: "Onyxia's Lair (40)", desc: "1 boss", ctl: step(1) }], `left:0;top:${r0}px;width:${Wd}px`,
+      + setCard("Reserves per player", [{ name: "Barrow Deeps (10)", ctl: step(1) }, { name: "Hyjal Summit (20)", ctl: step(2) },
+        { name: "Onyxia's Lair (40)", ctl: step(1) }], `left:0;top:${r0}px;width:${Wd}px`,
         "Set it before people reserve. Two reserves may go on the same item: double points, one roll.")
-      + setCard("Points", [{ name: "Bonus per night", desc: "For each reserve you didn't get.", ctl: step(10) },
+      + setCard("Points", [{ name: "Bonus per night", desc: "For each reserve someone didn't get.", ctl: step(10) },
         { name: "Bench", desc: "Gets the bonus if online when reserves are locked.", ctl: '<span class="dim">Yes</span>' },
-        { name: "Cap", desc: "No cap: points keep growing until you win.", ctl: '<span class="dim">None</span>' }], `left:${x2}px;top:${r0}px;width:${Wd}px`,
+        { name: "Cap", desc: "None: points keep growing until you win.", ctl: '<span class="dim">None</span>' }], `left:${x2}px;top:${r0}px;width:${Wd}px`,
         "Changes count from now on, never backwards.")
-      + `<div class="abs dim small" style="left:0;right:0;bottom:0;line-height:1.5">Every change here goes in the History with your name, and everyone's addon uses the new numbers within a minute. Only officers and raid leaders see this page.</div>`;
+      + `<div class="abs display dim" style="left:0;top:${r0 + 214}px;font-size:11px">ADD AN ITEM TO A RAID'S LOOT LIST</div>`
+      + menu("Barrow Deeps", `left:0;top:${r0 + 234}px;width:200px`)
+      + `<div class="search" style="position:absolute;left:208px;top:${r0 + 234}px;width:220px"><input placeholder="Item link or ID"></div>${btn("Add", "", `style="position:absolute;left:436px;top:${r0 + 234}px;width:70px"`)}`
+      + `<div class="abs dim small" style="left:0;right:0;bottom:0;line-height:1.5">Every change here goes in the History with your name, and everyone's addon uses it once it reaches them. Shift-click an item (from your bags or AtlasLoot) into the box to paste its link. To take an item off a list, right-click its "Loot list" line in the History.</div>`;
   }
 
   // Loot night (officer)
   const end = S.lootMode === "end";
-  const top = `<div class="abs small" style="left:0;top:${t0 + 4}px;right:240px"><span class="good">Running</span> <span class="dim">Onyxia's Lair (Today 20:00)  ·  reserves locked 19:55  ·  bench: 2 online, <span class="spark">1 offline</span></span></div>
-    <div class="abs" style="right:0;top:${t0}px;display:flex;gap:8px">${btn("Lock reserves", "disabled")}${btn("End of night", end ? "on" : "", 'data-lm="end"')}</div>`;
+  const top = `<div class="abs small" style="left:0;top:${t0 + 4}px;right:240px"><span class="good">Tonight</span> <span class="dim">Onyxia's Lair (Today 20:00)  ·  reserves locked 19:55  ·  bench: 2 online, <span class="spark">1 offline</span></span></div>
+    <div class="abs" style="right:0;top:${t0}px;display:flex;gap:8px">${btn("Unlock reserves")}${btn("End of night", end ? "on" : "", 'data-lm="end"')}</div>`;
   if (end) {
     const rows = [[1, 0, "Won it", "acc", "Points go to 0"], [5, 0, "+10", "good", "In the raid"], [0, 2, "+10", "good", "In the raid"], [4, 1, "+10", "good", "In the raid"],
       [7, 2, "+10", "good", "In the raid"], [10, 1, "+10", "good", "In the raid"], [9, 0, "+10", "good", "In the raid"],
@@ -975,7 +978,8 @@ function loot() {
   return head + top +
     list([{ key: "i", t: "Dropped", w: 190 }, { key: "r", t: "Reserved", w: 70, r: 1 }], drops,
       (d, c) => c.key === "i" ? itm(d[0]) + (d[2] ? ' <span class="good">•</span>' : "") : d[1] || DASH,
-      { click: true, sel: (d) => d === drops[0], style: `left:0;top:${t0 + 36}px;bottom:0;width:${LW}px` }) +
+      { click: true, sel: (d) => d === drops[0], style: `left:0;top:${t0 + 36}px;bottom:${64 + 28 + 24}px;width:${LW}px` }) +
+    `<div class="search" style="position:absolute;left:0;bottom:${64 + 16}px;width:${LW - 78}px"><input placeholder="Item link or ID"></div>${btn("Add", "", `style="position:absolute;left:${LW - 70}px;bottom:${64 + 16}px;width:70px"`)}` +
     `<div class="abs" style="left:${RX}px;top:${t0 + 38}px;font-size:15px">${itm(0)}</div>
     <div class="abs dim small" style="left:${RX}px;top:${t0 + 60}px">Reserved by 4  ·  reservers first, highest roll + points wins</div>
     <div class="abs" style="left:${RX}px;top:${t0 + 82}px;display:flex;gap:8px">${btn("Post to raid chat", "primary")}${btn("Award to Fizzwick")}${btn("Re-roll")}</div>` +
