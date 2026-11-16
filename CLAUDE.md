@@ -29,7 +29,7 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
-- **v0.8.2 (16 Nov, on `claude/short-kings-addon-hlf0t4`, not released):
+- **v0.8.2 (released 16 Nov on `main`, owner: "push to main"):
   "No player named X is currently playing" fix** (owner: "It appears to be
   this addon. Why?"). Cause: our WHISPERs (PR replies in BULK, RQ, AR/AQ)
   to players who had just logged off; the game prints

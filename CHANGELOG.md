@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.2 (not released yet): no more "No player named … is currently playing"
+## v0.8.2 (16 Nov 2026): no more "No player named … is currently playing"
 
 - **Fixed:** the chat sometimes showed *No player named "X" is currently
   playing.* (for example "Andreas Sham"). It came from Short Royalty: it
