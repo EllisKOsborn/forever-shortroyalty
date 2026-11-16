@@ -460,27 +460,90 @@ describe("v0.9.1 the addon creator counts as an officer", function()
 	end)
 end)
 
-describe("v0.9.1 reserve reminder", function()
-	it("warns in a raid group for tonight's raid until you've reserved or it's locked", function()
+describe("v0.9.1 reserve reminders", function()
+	-- A raid at 20:00 local time, `days` from W.now's day.
+	local function raidAt(SK, W, days, signed)
+		local at = SK.RaidBoard.StartAt(SK.RaidBoard.DayStart(W.now, days), 20 * 60)
+		local board = SK.RaidBoard:Get()
+		local c = W.now + days
+		local e = { id = BOB .. ":" .. string.format("%d", c), by = BOB, c = c, raid = "ony", at = at, u = c }
+		assert(SK.RaidBoard.MergeEvent(board, e, W.now, function() return true end))
+		if signed then board.signups[e.id] = { [ME] = { s = signed, u = W.now } } end
+		return e
+	end
+
+	it("picks the gentle one for a signed-up raid this week, the urgent one on raid day", function()
 		local SK = setup()
 		H.loadUI(SK)
 		local Rem = SK.ReserveReminder
-		local ev = { id = "x", raid = "ony" }
-		assert.is_nil(Rem.Needed(nil, {}, 1, false, true, false))              -- no raid tonight
-		assert.is_nil(Rem.Needed(ev, {}, 1, false, false, false))              -- not in a raid group
-		assert.is_nil(Rem.Needed(ev, {}, 1, false, true, true))                -- in combat
-		assert.is_nil(Rem.Needed(ev, {}, 1, true, true, false))                -- locked
-		assert.is_nil(Rem.Needed(ev, { SHARD }, 1, false, true, false))        -- done
-		local say = Rem.Needed(ev, {}, 1, false, true, false)
-		assert.equal("Reserve for Onyxia's Lair", say.title)
+		local now = SK.RaidBoard.StartAt(SK.RaidBoard.DayStart(1800000000, 0), 12 * 60) -- noon
+		local today = { id = "t", raid = "ony", at = now + 8 * 3600 }      -- 20:00 today
+		local friday = { id = "f", raid = "ony", at = now + 3 * 86400 }
+		local function r(ev, signed, mine, limit, locked)
+			return { ev = ev, signed = signed, mine = mine or {}, limit = limit or 1, locked = locked }
+		end
+		-- Raid day, signed up, nothing reserved: urgent.
+		local say = Rem.Pick({ r(today, true) }, now, false, nil, false)
+		assert.equal("day", say.kind)
+		assert.equal("Raid today: Onyxia's Lair, 20:00", say.title)
 		assert.equal("Nothing reserved yet.", say.text)
-		assert.equal("1 of 2 reserved so far.", Rem.Needed(ev, { SHARD }, 2, false, true, false).text)
+		-- Signed up for a raid later this week: gentle.
+		say = Rem.Pick({ r(friday, true, { SHARD }, 2) }, now, false, nil, false)
+		assert.equal("login", say.kind)
+		assert.equal("Signed up, 1 of 2 reserved.", say.text)
+		assert.equal("Onyxia's Lair, " .. date("%a %H:%M", friday.at), say.title)
+		-- Not signed up: nothing, unless you're in tonight's raid group.
+		assert.is_nil(Rem.Pick({ r(today, false), r(friday, false) }, now, false, nil, false))
+		assert.equal("day", Rem.Pick({ r(today, false) }, now, true, "t", false).kind)
+		-- Done, locked, in combat, more than a week away: nothing.
+		assert.is_nil(Rem.Pick({ r(today, true, { SHARD }) }, now, false, nil, false))
+		assert.is_nil(Rem.Pick({ r(today, true, {}, 1, true) }, now, false, nil, false))
+		assert.is_nil(Rem.Pick({ r(today, true) }, now, false, nil, true))
+		assert.is_nil(Rem.Pick({ r({ id = "x", raid = "ony", at = now + 9 * 86400 }, true) }, now, false, nil, false))
+		-- Raid day starts at 00:01 that day, not the evening before.
+		local lateEve = SK.RaidBoard.DayStart(today.at, 0) - 3600 -- 23:00 the day before
+		assert.equal("login", Rem.Pick({ r(today, true) }, lateEve, false, nil, false).kind)
+		assert.equal("day", Rem.Pick({ r(today, true) }, SK.RaidBoard.DayStart(today.at, 0) + 120, false, nil, false).kind)
 	end)
 
-	it("joining the raid group shows the box; reserving hides it", function()
+	it("at login: the box shows; reserving hides it", function()
 		local SK, W = setup()
 		H.loadUI(SK)
 		SK.DB.settings.reduceMotion = true -- boxes hide at once
+		local ev = raidAt(SK, W, 2, "y")
+		local Rem = SK.ReserveReminder
+		Rem:Check("login")
+		assert.is_truthy(Rem.box and Rem.box:IsShown())
+		assert.equal(ev.id, Rem.raidID)
+		assert.is_true(SK.Reserves:SetMyPicks(ev.id, { SHARD }))
+		assert.is_false(Rem.box:IsShown())
+		assert.equal(0, #SK.errors)
+	end)
+
+	it("raid day comes back every 30 minutes; the gentle one only at login", function()
+		local SK, W = setup()
+		H.loadUI(SK)
+		SK.DB.settings.reduceMotion = true
+		W.now = SK.RaidBoard.StartAt(SK.RaidBoard.DayStart(W.now, 0), 12 * 60) -- noon on raid day
+		local Rem = SK.ReserveReminder
+		raidAt(SK, W, 3, "t")
+		Rem:Check("tick")
+		assert.is_falsy(Rem.box and Rem.box:IsShown()) -- gentle: not on a tick
+		raidAt(SK, W, 0, "y") -- 20:00 today
+		Rem:Check("tick")
+		assert.is_true(Rem.box:IsShown())
+		assert.truthy(Rem.box.title:GetText():find("Raid today", 1, true))
+		Rem:HideBox()
+		Rem:Check("tick")
+		assert.is_false(Rem.box:IsShown()) -- not again yet
+		W.now = W.now + Rem.REPEAT
+		Rem:Check("tick")
+		assert.is_true(Rem.box:IsShown())
+	end)
+
+	it("joining tonight's raid group shows the urgent one", function()
+		local SK, W = setup()
+		H.loadUI(SK)
 		local id = raidTonight(SK, W)
 		local Rem = SK.ReserveReminder
 		W.raid = { { name = "Pip", guid = ME }, { name = "Bob Stout", guid = BOB } }
@@ -488,10 +551,6 @@ describe("v0.9.1 reserve reminder", function()
 		W.advance(3)
 		assert.is_truthy(Rem.box and Rem.box:IsShown())
 		assert.equal(id, Rem.raidID)
-		assert.is_true(SK.Reserves:SetMyPicks(id, { SHARD }))
-		Rem:Check(true)
-		assert.is_false(Rem.box:IsShown())
-		assert.equal(0, #SK.errors)
 	end)
 
 	it("officers can type who hasn't reserved into raid chat", function()

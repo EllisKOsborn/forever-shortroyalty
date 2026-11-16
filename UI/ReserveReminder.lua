@@ -1,15 +1,18 @@
--- Reserve+ reminder (v0.9.1). The guild asked: "if you are in a raid group
--- that you didn't do reserves to, you should get a warning" (officers were
--- tired of reminding everyone before the lock). While you're in a raid
--- group for tonight's raid (the Raids page's raid, from 3 h before its
--- start) and you have fewer reserves than that raid allows, a small box at
--- the top of the screen says so, with a Reserve button that opens the Loot
--- page, plus one line in chat. It comes back every REPEAT seconds until you
--- reserve or an officer locks reserves. Never in combat.
+-- Reserve+ reminders (v0.9.1). The guild asked for two:
+--   * a gentle one at login: you're signed up (or tentative), on this
+--     character, for a raid in the next 7 days and haven't made all your
+--     reserves. Calm (accent colour), once per login.
+--   * an urgent one on raid day: from 00:01 on the day of the raid (each
+--     player's own time) until it's over, if you're signed up, or whenever
+--     you're in the raid group for tonight's raid, without all your
+--     reserves. Orange, shown at login and on joining the raid group, then
+--     again every REPEAT seconds. No sound (owner, 16 Nov).
+-- Both stop once you've reserved or an officer has locked reserves, never
+-- show in combat, and have a Reserve button that opens the Loot page (plus
+-- one chat line). Sign-ups and reserves are per character.
 --
 -- Sharing pauses inside instances, so a reserve made inside the raid only
--- reaches officers after you leave: the box shows as soon as you join the
--- group, usually still in town.
+-- reaches officers after you leave: the earlier reminders are the point.
 local _, SK = ...
 
 local Rem = SK:NewModule("ReserveReminder")
@@ -18,22 +21,52 @@ local R, LN, Board = SK.Reserves, SK.LootNight, SK.RaidBoard
 local S, SP, M = Theme.SIZES, Theme.SPACE, Theme.MOTION
 
 Rem.FRAME_NAME = "ShortRoyaltyReserveReminder"
-Rem.REPEAT = 600     -- seconds between reminders while still not reserved
-Rem.CHECK_EVERY = 60 -- seconds between checks while in a raid group
-Rem.shownAt = {}     -- [raid id] = when the box last showed (this session)
+Rem.REPEAT = 1800      -- seconds between raid-day reminders while still not reserved
+Rem.CHECK_EVERY = 60   -- seconds between checks
+Rem.AHEAD = 7 * 86400  -- the login reminder looks this far ahead
+Rem.shownAt = {}       -- [raid id] = when the raid-day box last showed (this session)
 
--- What to say, or nil. Pure; tested.
---   ev: tonight's raid (or nil); mine: my reserves for it (item IDs);
---   limit: reserves allowed there; locked: an officer locked reserves;
---   inRaid: I'm in a raid group; inCombat.
-function Rem.Needed(ev, mine, limit, locked, inRaid, inCombat)
-	if not ev or not inRaid or inCombat or locked then return nil end
-	local have = #(mine or {})
-	if have >= limit then return nil end
-	local raid = Board.Raid(ev.raid)
-	local title = "Reserve for " .. (raid and raid.name or "tonight's raid")
-	if have == 0 then return { title = title, text = "Nothing reserved yet." } end
-	return { title = title, text = string.format("%d of %d reserved so far.", have, limit) }
+-- Which reminder to show, or nil. Pure; tested.
+--   raids = { { ev, signed (yes or tentative, this character), mine (my item
+--             IDs), limit (reserves allowed), locked } }, soonest first;
+--   tonightID = the raid this raid group is for (LootNight.Tonight), or nil.
+-- Returns { kind = "day" | "login", ev, title, text }.
+function Rem.Pick(raids, now, inRaid, tonightID, inCombat)
+	if inCombat then return nil end
+	local login
+	for _, r in ipairs(raids) do
+		local ev, have = r.ev, #(r.mine or {})
+		if not r.locked and have < r.limit and not ev.x then
+			local raid = Board.Raid(ev.raid)
+			local name = raid and raid.name or "the raid"
+			local short = have == 0 and "Nothing reserved yet." or string.format("Only %d of %d reserved.", have, r.limit)
+			local raidDay = now >= Board.DayStart(ev.at) + 60 and now <= ev.at + LN.AFTER
+			if (raidDay and r.signed) or (inRaid and ev.id == tonightID) then
+				return { kind = "day", ev = ev, title = "Raid today: " .. name .. ", " .. date("%H:%M", ev.at), text = short }
+			end
+			if not login and r.signed and ev.at > now and ev.at <= now + Rem.AHEAD then
+				local tomorrow = date("%Y-%m-%d", ev.at) == date("%Y-%m-%d", now + 86400)
+				login = { kind = "login", ev = ev, title = name .. ", " .. (tomorrow and "tomorrow " or date("%a ", ev.at)) .. date("%H:%M", ev.at),
+					text = have == 0 and "Signed up, nothing reserved yet." or string.format("Signed up, %d of %d reserved.", have, r.limit) }
+			end
+		end
+	end
+	return login
+end
+
+-- The raids to look at, for Pick: upcoming ones, with this character's
+-- sign-up and reserves.
+function Rem.Raids(now, me)
+	local board, store, st = Board:Get(), R:Get(), R:State()
+	local out = {}
+	if not board or not store or not st then return out end
+	for _, ev in ipairs(Board.Upcoming(board, now)) do
+		local su = board.signups[ev.id] and board.signups[ev.id][me or ""]
+		local lock = store.locks[ev.id]
+		out[#out + 1] = { ev = ev, signed = su ~= nil and (su.s == "y" or su.s == "t"), mine = R:MyPicks(ev.id),
+			limit = R.PicksFor(st, ev.raid), locked = lock ~= nil and not lock.x }
+	end
+	return out
 end
 
 -- Officers' raid chat line: who's in the raid without a reserve. Pure; tested.
@@ -60,12 +93,12 @@ function Rem:Build()
 	edge:SetPoint("TOPLEFT", 1, -1)
 	edge:SetPoint("BOTTOMLEFT", 1, 1)
 	edge:SetWidth(SP.xxs)
-	Theme.Solid(edge, "spark")
+	f.edge = edge
 	local icon = f:CreateTexture(nil, "ARTWORK")
 	icon:SetSize(20, 20)
 	icon:SetPoint("LEFT", SP.m, 0)
 	icon:SetTexture(Theme.TEX.loot)
-	Theme.Tint(icon, "spark")
+	f.icon = icon
 	f.close = W.CloseButton(f, function() Rem:HideBox() end)
 	f.close:SetPoint("RIGHT", -SP.xs, 0)
 	f.go = W.Button(f, "Reserve", nil, S.control, function() Rem:Open() end, "primary")
@@ -84,6 +117,10 @@ end
 
 function Rem:ShowBox(say)
 	local f = self:Build()
+	-- Calm (accent) for the login reminder, orange on raid day.
+	local tone = say.kind == "day" and "spark" or "accent"
+	Theme.Solid(f.edge, tone)
+	Theme.Tint(f.icon, tone)
 	f:SetScale(SK.DB.settings.window.scale or 1)
 	f.title:SetText(say.title)
 	f.text:SetText(say.text)
@@ -104,26 +141,33 @@ end
 ---------------------------------------------------------------------------
 -- Checking
 ---------------------------------------------------------------------------
--- force: show even if it showed less than REPEAT seconds ago (joining).
-function Rem:Check(force)
+-- reason = "login" (once per login: either reminder), "joined" (joined a
+-- raid group: the raid-day one now), "tick" (raid-day one if it's been
+-- REPEAT seconds), "update" (reserves changed: hide when done).
+function Rem:Check(reason)
 	if not SK.DB or not SK.DBM:Guild() then return end
-	local now = Compat.Now()
-	local ev = LN.Tonight(Board:Get(), now)
-	local store, st = R:Get(), R:State()
-	local lock = ev and store and store.locks[ev.id]
-	local say = ev and st and Rem.Needed(ev, R:MyPicks(ev.id), R.PicksFor(st, ev.raid), lock ~= nil and not lock.x,
-		Compat.InRaidGroup(), Compat.InCombat())
+	local now, me = Compat.Now(), Compat.PlayerGUID()
+	local tonight = LN.Tonight(Board:Get(), now)
+	local say = Rem.Pick(Rem.Raids(now, me), now, Compat.InRaidGroup(), tonight and tonight.id, Compat.InCombat())
 	if not say then
 		self:HideBox()
 		return
 	end
-	self.raidID = ev.id
-	local last = Rem.shownAt[ev.id]
-	if not force and last and now - last < Rem.REPEAT then return end
+	if reason == "update" then
+		-- Still short: refresh the words if it's showing.
+		if self.box and self.box:IsShown() then self.box.title:SetText(say.title); self.box.text:SetText(say.text) end
+		return
+	end
+	if say.kind == "login" and reason ~= "login" then return end
+	if say.kind == "day" and reason == "tick" then
+		local last = Rem.shownAt[say.ev.id]
+		if last and now - last < Rem.REPEAT then return end
+	end
 	if self.box and self.box:IsShown() then return end
-	Rem.shownAt[ev.id] = now
+	self.raidID = say.ev.id
+	if say.kind == "day" then Rem.shownAt[say.ev.id] = now end
 	self:ShowBox(say)
-	SK:Print("%s: %s Type /sr loot to reserve before an officer locks reserves.", say.title, say.text)
+	SK:Print("%s. %s Type /sr loot to reserve before an officer locks reserves.", say.title, say.text)
 end
 
 local wasInRaid = false
@@ -131,23 +175,21 @@ local function groupChanged()
 	local inRaid = Compat.InRaidGroup()
 	local joined = inRaid and not wasInRaid
 	wasInRaid = inRaid
-	if inRaid then Rem:Check(joined) else Rem:HideBox() end
+	if joined then Rem:Check("joined") end
 end
 
 function Rem:OnLogin()
 	SK.After(40, function()
-		wasInRaid = false
-		groupChanged()
+		wasInRaid = Compat.InRaidGroup()
+		Rem:Check("login")
 	end)
-	self.ticker = SK.NewTicker(Rem.CHECK_EVERY, function()
-		if Compat.InRaidGroup() then Rem:Check(false) end
-	end)
+	self.ticker = SK.NewTicker(Rem.CHECK_EVERY, function() Rem:Check("tick") end)
 end
 
 SK:RegisterEvent("GROUP_ROSTER_UPDATE", function()
 	SK:Debounce("reserveremind", 2, groupChanged)
 end)
 SK:RegisterEvent("PLAYER_REGEN_ENABLED", function()
-	if Compat.InRaidGroup() then SK:Debounce("reserveremind", 3, function() Rem:Check(false) end) end
+	SK:Debounce("reserveremind", 3, function() Rem:Check("tick") end)
 end)
-SK:On("RESERVES_UPDATED", function() if Rem.box and Rem.box:IsShown() then Rem:Check(true) end end)
+SK:On("RESERVES_UPDATED", function() if Rem.box and Rem.box:IsShown() then Rem:Check("update") end end)

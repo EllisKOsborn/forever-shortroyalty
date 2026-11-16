@@ -253,6 +253,8 @@
   .flightbox.remind { width: 400px; }
   .flightshot.remindshot { width: 1000px; }
   .flightbox.remind .edge { background: var(--spark); }
+  .flightbox.remind.calm .edge { background: var(--accent); }
+  .flightbox.remind.calm .fi { color: var(--accent); }
   .flightbox.remind .fi { color: var(--spark); -webkit-mask-image: var(--tex-icon-loot); mask-image: var(--tex-icon-loot); }
   .ttshot .tip { position: static; display: block; width: 330px; }
   .ttshot .cap { font: 600 12px "Chakra Petch SK", sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #fff; margin-bottom: 10px; }
@@ -1061,9 +1063,9 @@ function flightShot() {
 }
 // v0.9.1 Reserve+ reminder: in a raid group for tonight's raid without (all) reserves.
 function reminderShot() {
-  const box = (title, text) => `<div class="flightbox remind"><i class="edge"></i><i class="mask fi"></i><div class="ft"><div>${title}</div><div class="dim">${text}</div></div>${btn("Reserve", "primary")}<div class="close"><i></i></div></div>`;
-  return `<div class="flightshot remindshot"><div><div class="cap">In the raid group, nothing reserved</div>${box("Reserve for Onyxia's Lair", "Nothing reserved yet.")}</div>
-    <div><div class="cap">Two allowed, one made</div>${box("Reserve for Hyjal Summit", "1 of 2 reserved so far.")}</div></div>`;
+  const box = (kind, title, text) => `<div class="flightbox remind ${kind}"><i class="edge"></i><i class="mask fi"></i><div class="ft"><div>${title}</div><div class="dim">${text}</div></div>${btn("Reserve", "primary")}<div class="close"><i></i></div></div>`;
+  return `<div class="flightshot remindshot"><div><div class="cap">At login: signed up for a raid this week</div>${box("calm", "Onyxia's Lair, Fri 20:00", "Signed up, nothing reserved yet.")}</div>
+    <div><div class="cap">Raid day (from 00:01), or in tonight's raid group</div>${box("", "Raid today: Hyjal Summit, 20:00", "Only 1 of 2 reserved.")}</div></div>`;
 }
 function copyWin() {
   const lines = ["Short Royalty roster", ...rosterRows().slice(0, 30).map((m) => `${m.name}  ${m.level}  ${m.rank}  ${m.spec || "-"}  ${m.ilvl || "-"}`)];

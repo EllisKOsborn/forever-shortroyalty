@@ -162,10 +162,11 @@ addon read.
     Attendance, Loot shows Loot night and Rules. You can then do items
     30–41 yourself (a raid made by you, reserves, lock, a dungeon group's
     loot window, rolls, award, end of night).
-43. [ ] **Reminder:** with a raid made for tonight, join a raid group
-    without reserving: a box "Reserve for …" shows at the top of the screen
-    and a line in chat. **Reserve** opens the Loot page; once you've
-    reserved, it goes away. It doesn't show once an officer has locked
-    reserves, or in combat.
+43. [ ] **Reminders:** sign up for a raid later this week without
+    reserving, then log in: a calm (pink) box "Onyxia's Lair, Fri 20:00 ·
+    Signed up, nothing reserved yet". On the raid's day (after midnight) an
+    orange box "Raid today: …" at login, when you join the raid group, and
+    every 30 minutes. **Reserve** opens the Loot page; once you've reserved,
+    or an officer locks reserves, they stop. Not in combat, no sound.
 44. [ ] **Remind in raid chat** (Loot night, raid check): types the names of
     raiders without a reserve into raid chat; you press Enter.

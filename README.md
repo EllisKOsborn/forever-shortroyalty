@@ -157,7 +157,7 @@ reserve the same trinket for months and nobody new can take it from you.
 - **History:** every change, who made it and why: night bonuses, wins, changes by hand, moves, rule changes. Kept by everyone.
 - **Rolls:** reservers always beat everyone else; among them the highest *roll + points* wins; equal totals go to whoever has more points, then a re-roll. Only the first 1–100 roll of each player counts.
 - **Item tooltips** on a raid night: "Reserve+: Reserved by 3: Cat 120, Bob 30, Dan" (in your bags, the loot window, AtlasLoot…).
-- **Reminder** (v0.9.1): in a raid group for tonight's raid without all your reserves, a small box at the top of the screen says so, with a **Reserve** button. It comes back every 10 minutes until you reserve or an officer locks reserves. Reserve before going in: sharing pauses inside instances.
+- **Reminders** (v0.9.1), with a **Reserve** button: a calm one at login when you're signed up for a raid this week without your reserves, and an orange one on raid day (from 00:01, and when you join tonight's raid group) that comes back every 30 minutes. Both stop once you've reserved or an officer locks reserves. Reserve before going in: sharing pauses inside instances.
 
 <p align="center"><img src="docs/images/loot-reminder.png" alt="Reserve reminder boxes" width="80%"></p>
 

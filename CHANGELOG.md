@@ -2,14 +2,20 @@
 
 ## v0.9.1 (not released yet): reserve reminders, and officer tools for the addon's creator
 
-- **Reserve reminder** (the guild asked): when you're in a raid group for
-  tonight's raid and haven't made all your reserves, a small box at the top
-  of the screen says so ("Reserve for Onyxia's Lair · Nothing reserved
-  yet"), with a **Reserve** button that opens the Loot page, plus one line
-  in chat. It comes back every 10 minutes until you reserve or an officer
-  locks reserves; never in combat. Reserve before entering the raid:
-  sharing pauses inside instances, so a reserve made inside reaches the
-  officers only after you leave.
+- **Reserve reminders** (the guild asked), each a small box at the top of
+  the screen with a **Reserve** button that opens the Loot page, plus one
+  line in chat:
+  - **At login** (calm): you're signed up or tentative for a raid in the
+    next 7 days and haven't made all your reserves ("Onyxia's Lair, Fri
+    20:00 · Signed up, nothing reserved yet").
+  - **On raid day** (orange): from 00:01 on the day of the raid if you're
+    signed up, and whenever you're in tonight's raid group ("Raid today:
+    Onyxia's Lair, 20:00 · Nothing reserved yet"). At login, on joining
+    the raid group, then every 30 minutes. No sound.
+  Both stop once you've reserved or an officer locks reserves, and never
+  show in combat. Reserve before entering the raid: sharing pauses inside
+  instances, so a reserve made inside reaches the officers only after you
+  leave.
 - **Remind in raid chat** (officers, Loot night): types "Reserves close
   soon. Not reserved yet: …" with the names of raiders without a reserve
   into raid chat, for you to send.
