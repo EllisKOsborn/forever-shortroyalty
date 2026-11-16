@@ -1,167 +1,148 @@
-# Loot addon plan: soft reserves with bonus points
+# Reserve+ plan: soft reserves with bonus points
 
-Draft, 16 Nov 2026. Moves to the new addon's own repo once it exists.
-Nothing is built yet.
+Draft, 16 Nov 2026. Nothing is built yet.
 
 ## What it does
 
-The guild's TBC system: soft reserve (SR), then main spec (MS), then
-off spec (OS). Every time you reserve an item and **don't get it** (you
-lose the roll, or it doesn't drop), that item gets **bonus points** that
-are added to your roll the next time.
+The guild's TBC system: soft reserve (SR). Every time you reserve an item
+and **don't get it** (you lose the roll, or it doesn't drop), that item
+gets **bonus points** that are added to your roll the next time you
+reserve it.
 
-Decided by the owner (16 Nov):
+## Owner's decisions (16 Nov)
 
 | Rule | Decision |
 |---|---|
-| Separate addon | Yes, its own addon, repo, release and CurseForge page, so Short Royalty doesn't get cluttered. |
-| Look | Same family as Short Royalty v0.6.0 (the Polestar/FojjiCore-inspired sidebar look). |
-| Bonus amount | Editable in the addon (officers). |
-| Bonus cap | Editable in the addon (officers), e.g. +10 per raid up to +50. |
-| Points belong to | The **item**. Reserving a different item starts that one at 0; the old item keeps its points. |
+| Where | **Inside Short Royalty** if it isn't a big build, else a separate addon called **ReservePlus**. Recommendation below: inside. |
+| Reserves | **1** per character per raid night. |
+| Points belong to | **One character + one item.** Alts don't share. |
+| Switching items | Reserving a different item starts that item from 0. The old item **keeps** its points, and they count again the night you reserve it again. |
+| Points only count on your reserve | If you have 100 on the mace but reserved the trinket tonight and the mace drops, the 100 don't count. |
 | When you win | That item's points reset to 0. |
-| Missed raid / item not reserved that week | Points stay, but don't grow. |
-| Alts | Don't share points. Every character has its own. |
-| Who can change points | Raid leader and officers. |
+| Boss not killed | **No bonus** for items from that boss. |
+| Missed raid | Points stay, but don't grow. |
+| Bonus amount and cap | Editable in the addon by officers, e.g. +10 per night up to +50. |
+| Who can change points | Officer and Raid Leader ranks (the same rule as v0.8.0 raids). |
+| Non-reservers | May roll, but a reserver always beats them, so in practice they only win items nobody reserved. |
 
-Still open: see "Questions" at the end.
+## Inside Short Royalty or separate?
+
+**Recommendation: inside Short Royalty.** It's about the size of the v0.8.0
+raids update, and most of what it needs is already there:
+
+- **Raid nights** (v0.8.0): a reserve belongs to a raid the officers made.
+  You reserve on the same screen where you sign up.
+- **Who was there** (v0.8.0/v0.8.1 attendance) decides who gets the bonus.
+- **Officer and Raid Leader ranks** are already checked.
+- **Sharing** between guild members already works, and everyone already
+  has the addon installed. A separate addon would mean a second download
+  for 50 people, a new repo and a new CurseForge page.
+
+To avoid clutter it gets **one sidebar line, "Loot"**, with page tabs
+*Reserves*, *My points*, *History*, and for officers *Loot night*. People
+who don't raid never need to open it.
+
+If you'd still rather keep it separate, the same plan works as
+**ReservePlus**. It's more work (it can't reuse the raid nights and
+attendance) and it needs the empty repo.
 
 ## How a raid night works
 
-1. **Before the raid** (in town): an officer opens a raid night and picks
-   the raid. Members pick their reserve in the addon (as with v0.8.0
-   sign-ups, people without the addon need to install it). The officer
-   locks reserves.
-2. **Boss dies, loot shows:** the loot officer clicks the item. The addon
-   shows who reserved it and their bonus, and posts the item to raid chat
-   when the officer presses the button (the game only lets addons post to
-   chat on a button press).
-3. **Players `/roll`.** The officer's addon reads the rolls and shows
-   *roll + bonus = total*, reservers first, then MS, then OS. Ties re-roll.
-4. **Officer awards** (master loot or trade). The winner's points for that
-   item go to 0.
-5. **End of night:** every reserver who was there and didn't win their item
-   gets +bonus on it (up to the cap). The officer sees the list and
-   confirms. Everything goes into the history.
-
-During the raid only the **officer's** addon has to work. Everyone else's
-addon catches up after the raid.
+1. **Before the raid:** the officer makes the raid night as now (Raids
+   page). Each member picks **one** item from that raid's loot list when
+   signing up. The list shows their saved points on every item, so they
+   can go back to an item they've built points on. The officer locks
+   reserves before the pull.
+2. **Boss dies:** the officer's addon notes the kill (the game's "encounter
+   ended" event). The loot officer clicks an item: the addon shows who
+   reserved it with their bonus, and posts it to raid chat on a button
+   press (the game allows addon chat only on a button press).
+3. **Players `/roll`.** The officer's addon reads the rolls: reservers
+   first, by *roll + bonus*; then everyone else. Ties re-roll.
+4. **Award:** master loot or trade. The winner's points on that item go to 0.
+5. **End of night:** every reserver who was there, whose item's boss was
+   **killed**, and who didn't win it, gets +bonus (up to the cap). The
+   officer checks the list and confirms. It's saved in the history.
 
 ## Trust: why only officers can change points
 
-Short Royalty treats everything another player sends as untrusted, and
-anyone could send fake data. That's fine for gear and recipes, but not for
-loot points. So:
+Anyone could send the addon fake data, so:
 
-- The points are a **history of changes** (who, when, what), not just
-  numbers. Points are added up from the history, so every number can be
-  explained and a mistake can be undone.
-- A change is accepted only if its author has an **officer or raid leader
-  rank**, checked against **our own** guild roster, never the message. This
-  uses the same rank rule as Short Royalty's raids (guild master, or a rank
-  named "Officer" / "Raid Leader").
-- Members' addons only **read**. Every member keeps a full copy, so the
-  points survive if an officer quits.
-- Settings changes (bonus, cap) are history entries too, and apply from
-  then on, not backwards.
+- Points are a **history of changes** (who, when, what). The numbers are
+  added up from the history, so every number can be explained, and an
+  officer can undo a mistake.
+- A points change is accepted only from someone with an **officer or raid
+  leader rank** in **our own** guild roster (never trust the message).
+- A **reserve** is accepted only from the character's own player, like
+  sign-ups now.
+- Every member keeps the full history, so nothing is lost if an officer
+  quits. Bonus and cap changes go into the history too and only count
+  from then on.
 
-## Working with Short Royalty
+## Loot lists (searched 16 Nov)
 
-The two addons stay separate (each works alone), with different saved
-data and message prefixes. If both are installed, the loot addon *can*
-read Short Royalty's raid list (v0.8.0), so an officer picks tonight's raid
-instead of typing it, and its attendance to decide who "was there". That's
-a later step. Version 1 records who was in the raid group at each boss
-kill by itself.
+- **Onyxia's Lair:** in the game files now; one boss (encounter 1084). The
+  loot list can be built now from public sources and checked against
+  Forever's item data.
+- **Barrow Deeps and Hyjal Summit:** brand-new raids. They are **not in the
+  game files yet** (checked build 1.60.1.70938 on wago.tools: no map, no
+  bosses), and **no loot list has been published**. Guides even disagree
+  on the boss names. So nobody can know their loot before the patch that
+  adds them.
 
-## Loot lists
+How we fill the lists anyway:
 
-Forever's game data has **no boss loot tables** (checked 16 Nov: wago.tools
-has no journal tables for the Forever build). softres.it shows no sign of
-Forever support either. So the item list comes from:
+1. When the patch lands, rerun a data script (like the recipe one) to get
+   each raid's **bosses** from Forever's own data.
+2. Once trustworthy lists appear (warcraft.wiki.gg, which allows reuse with
+   credit; checked by hand against Wowhead's Forever pages, which we may
+   link but not scrape; AtlasLoot Classic Forever and NeedRoll are
+   building lists too), add them to the addon's data in an update.
+3. **The addon learns as you raid:** items in the loot window after a boss
+   kill are added to that boss's list and shared with everyone. Officers
+   can also add an item to a boss by shift-clicking it.
 
-- officers adding items (shift-click an item link, or paste item IDs);
-- the addon **learning** every item that drops in a raid (the loot window
-  and loot messages), per raid;
-- for the first raids, an officer fills in the list once from Wowhead's
-  Forever pages by hand. We link to Wowhead but don't copy from it
-  automatically, because its terms forbid scraping.
+Honest result: **on the first night of a new raid there may be no list to
+reserve from**, unless a reliable list appears in time. From the second
+week on, the learned list works.
 
-Only three raids open on 9 Dec (Barrow Deeps, Hyjal Summit, Onyxia), so
-this is a small job.
+## Checks needed in game
 
-## Checks needed in game before we rely on it
+The Forever client still has the master-looter window
+(`Enum.LootMethod.Masterlooter`, `GiveMasterLoot`), but only the game can
+tell us if raids allow it. An officer in an instance group (a dungeon is
+enough) runs `/sr debug` and we check:
 
-From Blizzard's Forever code (16 Nov): the client still has the **master
-looter** loot method and window (`Enum.LootMethod.Masterlooter`,
-`GiveMasterLoot`, `MasterLooterFrame`), but the code can't say whether
-Forever's servers allow it in raids. Forever also has the newer chat
-restrictions inside instances. Before the first real use, an officer in a
-group inside an instance (a dungeon is enough) runs the addon's debug
-report and checks:
+1. Which loot methods the leader can pick.
+2. That the addon can read `/roll` results inside an instance.
+3. That the addon can post to raid chat from a button press.
+4. That the "encounter ended" event arrives (it does in Classic).
 
-1. Which loot methods the leader can pick (master loot? group loot?).
-2. That `/roll` results can be read by the addon inside an instance, out
-   of combat.
-3. That addon messages arrive inside an instance, out of combat. Short
-   Royalty pauses there on purpose. The loot addon only needs them between
-   pulls, and could wait until the raid ends.
-4. That an addon can post to raid chat from a button press.
+Without master loot, items are traded and the addon only records the
+winner.
 
-If master loot isn't allowed, the officer hands items over by trade, and
-the addon only records the winner.
+## Build order (inside Short Royalty)
 
-## Look
+1. Points history and rules: pure Lua, many tests (bonus, cap, reset on
+   win, per character + item, only your reserve counts, boss-killed rule,
+   undo).
+2. Loot lists: Onyxia now; the boss script ready for the patch; learning
+   from drops.
+3. Reserve on sign-up, and sharing (reserves from players, points from
+   officers).
+4. Loot page: Reserves, My points, History.
+5. Officer's Loot night: kills, rolls, award, end of night.
+6. `/sr debug` checks, README, TESTING, pictures.
 
-The same family as Short Royalty v0.6.0 (`DESIGN.md`): the 960 × 600
-window, sidebar with the crest and sections, page header with one
-sentence, page tabs with an accent underline, one accent colour, Inter,
-true black. Reusing our own Theme and widgets is faster and makes the two
-addons feel like a pair. It needs its own crest or icon (ideas welcome) and
-probably its own default accent so you can tell them apart. Polestar and
-FojjiCore stay **inspiration only**: no code or art copied (GPL / All
-Rights Reserved).
+Then a **test run** in a dungeon before 9 Dec. If it isn't tested by then,
+run the first night by hand and switch over after.
 
-## Screens
+## Still open
 
-| Sidebar | Who | What |
-|---|---|---|
-| **Reserves** | everyone | Tonight's raid, its items, my reserve and its bonus, who reserved what. |
-| **Loot** | loot officer, in raid | Current item, reservers with bonus, live roll table (roll + bonus = total, SR/MS/OS), Award button, raid-chat button. |
-| **Points** | everyone | Every character's points per item; search; "my points". |
-| **History** | everyone | Every change: who, when, why. Officers can undo an entry. |
-| **Settings** | officers edit, others read | Bonus per raid, cap, reserves per player, scale, minimap. |
-
-## Build order
-
-0. **Owner:** create the empty GitHub repo, pick the name, add the repo to
-   this Claude session. The name sets the folder, saved data and message
-   prefix, which **can't change after rollout**.
-1. **Skeleton:** TOC, CI, tests, release workflow, and the theme, widgets and
-   sending code taken from Short Royalty (our own code). Mock-ups first so
-   you can approve the screens.
-2. **Points history and rules** (pure Lua, many tests): bonus, cap, reset
-   on win, undo, settings changes.
-3. **Sharing the history** between guild members (officer-only changes).
-4. **Reserves and Points screens.**
-5. **Loot screen** (rolls, award, end of night).
-6. **Debug report** with the in-game checks above.
-
-Rough size: about as big as Short Royalty's v0.8.0 raids update. Steps 1–5
-take about a week of sessions. Then it needs a **test run** (a dungeon
-group works) before 9 Dec. If it isn't tested by then, run the first raids
-by hand and switch over after.
-
-## Questions
-
-1. **Name.** Ideas: *Royal Reserve*, *Crown Roll*, *Reserve+*. Slash
-   command to match (e.g. `/rr`).
-2. **Reserves per player per raid:** 1 or 2? (A setting, default 1?)
-3. **Item didn't drop because the boss wasn't killed** (wipe, raid ended
-   early): bonus or not? Suggestion: bonus only when the boss was killed.
-4. **Non-reservers:** can someone roll MS on an item someone else reserved?
-   (Usually not: reservers only; MS/OS only if nobody reserved it.)
-5. **Hide other people's reserves until the lock?** Some guilds do, so
-   people can't reserve tactically.
-6. Ask the guildmate for the **name of the TBC addon** they used, so we
-   can read its feature list (not its code).
+1. **Inside Short Royalty, or separate as ReservePlus?** (Recommendation:
+   inside.)
+2. **Show reserves to everyone before the lock, or hide them?** Default
+   unless you say otherwise: shown, like softres.it.
+3. Starting numbers: **+10 per night, cap +50**? (Officers can change them.)
+4. Ask the guildmate for the **name of the TBC addon**, so we can read its
+   feature list (not its code).

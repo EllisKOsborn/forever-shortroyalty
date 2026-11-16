@@ -29,10 +29,12 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
-- **Separate loot addon (16 Nov, planned, not built):** soft reserves with
-  bonus points (the guild's TBC system), its own repo, same look as v0.6.0.
-  Plan and owner's decisions: `docs/proposals/loot-addon-plan.md` (moves to
-  the new repo). Waiting on the owner: empty repo, name, the plan's questions.
+- **Reserve+ (16 Nov, planned, not built):** soft reserves with bonus
+  points (the guild's TBC system). Owner: inside Short Royalty if it isn't
+  big, else a separate addon "ReservePlus"; recommended inside (reuses
+  v0.8.0 raids, attendance, lead ranks). Rules and plan:
+  `docs/proposals/loot-addon-plan.md`. Barrow Deeps / Hyjal aren't in the
+  game files yet (build 70938) and have no published loot lists.
 - **v0.8.2 (released 16 Nov on `main`, owner: "push to main"):
   "No player named X is currently playing" fix** (owner: "It appears to be
   this addon. Why?"). Cause: our WHISPERs (PR replies in BULK, RQ, AR/AQ)
@@ -1131,8 +1133,8 @@ refer to `git show v0.6.0:TESTING.md`.
    TESTING.md 18–29.
 4. CurseForge: rename the project from "Short Kings" and archive the old
    files (owner's job, `docs/CURSEFORGE.md`).
-5. Loot addon: create the empty GitHub repo, pick the name, answer the
-   questions at the end of `docs/proposals/loot-addon-plan.md`.
+5. Reserve+: inside Short Royalty or separate, plus the open questions at
+   the end of `docs/proposals/loot-addon-plan.md`.
 
 ## Answers already given to the guild (stay consistent)
 - **Alts:** linked automatically once each alt has logged in with the addon
