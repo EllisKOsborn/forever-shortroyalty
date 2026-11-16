@@ -845,8 +845,8 @@ const itm = (i) => `<span style="color:${EPIC}">${esc(LOOT[i][0])}</span>`;
 function loot() {
   const officer = S.officer === "1";
   let view = S.lootView || "reserves";
-  if (!officer && view === "night") view = "reserves";
-  const tabs = [["reserves", "Reserves"], ["points", "Points"], ["history", "History"]].concat(officer ? [["night", "Loot night"]] : []);
+  if (!officer && (view === "night" || view === "rules")) view = "reserves";
+  const tabs = [["reserves", "Reserves"], ["points", "Points"], ["history", "History"]].concat(officer ? [["night", "Loot night"], ["rules", "Rules"]] : []);
   const t0 = T.sizes.subTabs + T.space.m;
   const head = subtabs(tabs, view, "data-lv") + `<div class="substatus">Bonus: <span class="acc">+10</span> a night  ·  no cap</div>`;
   const M = G.members, nm = (m) => cls(m), me = M[0];
@@ -936,6 +936,21 @@ function loot() {
           return "";
         }, { style: `left:0;top:${t0 + 34}px;bottom:28px;right:0` }) +
       `<div class="abs dim small" style="left:0;bottom:0">Every change, kept by everyone. ${officer ? "Right-click a change to undo it." : "Only officers and raid leaders can change points."}</div>`;
+  }
+
+  if (view === "rules") {
+    // Officers only: the numbers every guildmate's addon uses. Each change is a History entry.
+    const step = (v, w) => `<span style="display:inline-flex;align-items:center;gap:6px">${btn("−", "small", 'style="width:24px;padding:0"')}<span style="width:${w || 28}px;text-align:center" class="acc">${v}</span>${btn("+", "small", 'style="width:24px;padding:0"')}</span>`;
+    const Wd = Math.floor((T.sizes.contentW - T.space.l) / 2), x2 = Wd + T.space.l, r0 = t0 + 6;
+    return head
+      + setCard("Reserves per player", [{ name: "Barrow Deeps (10)", desc: "8 bosses", ctl: step(1) }, { name: "Hyjal Summit (20)", desc: "13 bosses", ctl: step(2) },
+        { name: "Onyxia's Lair (40)", desc: "1 boss", ctl: step(1) }], `left:0;top:${r0}px;width:${Wd}px`,
+        "Set it before people reserve. Two reserves may go on the same item: double points, one roll.")
+      + setCard("Points", [{ name: "Bonus per night", desc: "For each reserve you didn't get.", ctl: step(10) },
+        { name: "Bench", desc: "Gets the bonus if online when reserves are locked.", ctl: '<span class="dim">Yes</span>' },
+        { name: "Cap", desc: "No cap: points keep growing until you win.", ctl: '<span class="dim">None</span>' }], `left:${x2}px;top:${r0}px;width:${Wd}px`,
+        "Changes count from now on, never backwards.")
+      + `<div class="abs dim small" style="left:0;right:0;bottom:0;line-height:1.5">Every change here goes in the History with your name, and everyone's addon uses the new numbers within a minute. Only officers and raid leaders see this page.</div>`;
   }
 
   // Loot night (officer)

@@ -38,7 +38,8 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   kind `p`, `PicksFor`, default 1; the same item may be reserved twice =
   double bonus, one roll: picks values are counts, night lists repeat it); bonus even if the boss wasn't killed;
   bench gets it if online at the lock (`BenchAtLock`, `NightGrants(picks,
-  where, won)` with where = raid | bench | offline | nil). **Replacing
+  where, won)` with where = raid | bench | offline | nil). Officers set them on the Loot page's **Rules** tab (mock-up
+  `loot-rules.png`). **Replacing
   Gargul later:** plan section "Replacing Gargul" (gate: does Forever allow
   master loot in raids). Step 1 done:
   `Core/Reserves.lua` = officer-only **ledger** `guild.reserves.ledger[id]`
