@@ -43,7 +43,8 @@ raids update, and most of what it needs is already there:
   for 50 people, a new repo and a new CurseForge page.
 
 To avoid clutter it gets **one sidebar line, "Loot"**, with page tabs
-*Reserves*, *My points*, *History*, and for officers *Loot night*. People
+*Reserves*, *Points*, *History*, and for officers *Loot night* and *Rules*
+(reserves per player for each raid, bonus per night; owner, 16 Nov). People
 who don't raid never need to open it.
 
 ## How a raid night works
@@ -204,4 +205,5 @@ planned unless the guild asks.
 
 `docs/images/loot*.png` (preview `screen=loot`, `lootView`, `lootMode`,
 `officer=1`): Reserves, Points (mine / everyone + officer "Change points"),
-History, Loot night, End of night. Waiting for the owner's verdict.
+History, Loot night, End of night, Rules (`loot-rules.png`), item tooltip.
+Waiting for the owner's verdict.
