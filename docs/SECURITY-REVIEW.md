@@ -131,3 +131,14 @@ and accepted only from them, and only by a receiver who is one
 (raid key, numbers, at most 120 people, sign-ups y/t/n, Bench `{v, u}`);
 `Attendance.Copy` keeps only known fields. A rogue officer could send a
 fuller fake record; accepted risk (officers are trusted by the guild).
+
+## Addendum (18 Nov 2026, v0.9.1 Short Words witnesses)
+
+WP / WQ / WA (`Sync/WordsSync.lua`) carry only day numbers, GUIDs and colour
+patterns (`WS.Rows`: 1–6 rows of five 0/1/2, a green row only last, ≤ 41
+chars): never letters, nothing that is run, linked or put in chat. Witnesses
+store one entry per guild member who sent a WP themselves (bounded by the
+roster). WQ lists at most 20 GUIDs; WA maps are read up to 20 entries. A
+WA only changes our game for today, for a GUID on our own account, and only
+when it has more rows than ours. Accepted risk: a guildmate could answer
+with made-up colours and cost someone tries on that day's word.

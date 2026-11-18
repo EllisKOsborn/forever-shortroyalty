@@ -241,6 +241,10 @@ else) or **red** (not in the word); the keyboard keeps track.
   you've started it, your alts see that game too. **Share in guild chat**
   types "Short Words #12: 4/6 (streak 3)" into the chat box (no letters, so
   no spoilers); you press Enter.
+- **No extra tries by quitting** (v0.9.1): guildmates' addons remember the
+  colours of your daily guesses (never the letters), so guesses lost by
+  quitting without saving (Alt-F4) come back as coloured rows when you log
+  in again. Needs someone with the addon online at both times.
 - **Guild streak** (top right of the Daily page): days in a row on which at
   least 3 guildmates played the daily word, won or not. Today counts once 3
   have played ("2 of 3 played today" until then), so it never breaks while

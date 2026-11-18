@@ -155,6 +155,11 @@ function Commands.BuildReport()
 		SK.Sync.stats.sendErrors or 0, tostring(SK.Sync.lastSendError), SK.Sync.stats.targetOffline or 0)
 	add("Logged-off players: whispers skipped %d, \"No player named\" messages hidden %d   (chat filter: %s)",
 		SK.Sync.stats.skippedOffline or 0, SK.Sync.stats.hiddenNotFound or 0, yesno(SK.Sync.chatFilter))
+	local ws = SK.WordsSync and SK.WordsSync.stats
+	if ws then
+		add("Short Words guesses kept by guildmates: sent %d, asked %d, answered %d, heard %d, answers %d, brought back %d, refused %d",
+			ws.sentWP, ws.sentWQ, ws.sentWA, ws.gotWP, ws.gotWA, ws.restored, ws.rejected)
+	end
 
 	add("")
 	add("== Guild ==")

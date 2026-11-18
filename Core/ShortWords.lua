@@ -4,6 +4,10 @@
 --
 -- Saved (local, SK.DB.words):
 --   daily = { day, guid, name, rows = { { w, p } }, done, won, at }
+--           (rows brought back by guildmates after a quit, v0.9.1:
+--           { w = "", p, hidden = true })
+--   witness = { [guid] = { d, p, at } } guildmates' daily colours today
+--           (Sync/WordsSync.lua, v0.9.1)
 --           today's daily game, account-wide: once one character has started
 --           it, alts see that game instead of a fresh one (no replays).
 --   free  = { [guid] = game }  each character's current free game
@@ -102,7 +106,7 @@ end
 function SW.Keys(rows)
 	local keys = {}
 	for _, r in ipairs(rows or {}) do
-		for i = 1, SW.LEN do
+		for i = 1, r.hidden and 0 or SW.LEN do -- v0.9.1: rows brought back from guildmates have no letters
 			local l, s = r.w:sub(i, i), tonumber(r.p:sub(i, i))
 			if not keys[l] or s > keys[l] then keys[l] = s end
 		end
@@ -390,9 +394,14 @@ end
 -- finished game. Returns ok, why.
 function SW:Play(game, word, guid, name, now)
 	if game.mode == "daily" and game.guid and game.guid ~= guid then return false, "other" end
+	-- v0.9.1: after login, wait until guildmates said what they saw us play.
+	if game.mode == "daily" and SK.WordsSync and SK.WordsSync:Checking(now) then return false, "checking" end
 	local ok, why = SW.Guess(game, word, now)
 	if not ok then return false, why end
-	if game.mode == "daily" then game.guid, game.name = guid, name end
+	if game.mode == "daily" then
+		game.guid, game.name = guid, name
+		if SK.WordsSync then SK.WordsSync:SendProgress(game) end
+	end
 	if game.done then
 		local stats = SW.StatsOf(guid)
 		if game.mode == "daily" then

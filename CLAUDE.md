@@ -29,6 +29,22 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.9.1 (not released) also: Short Words Alt-F4 fix** (guild: "you can
+  do 5, alt-f4 and it doesn't save and then have more attempts"; owner:
+  "build the main fix", i.e. without the optional "not seen live" leaderboard
+  mark, which is still an idea). Addon data saves only on logout/reload, so
+  `Sync/WordsSync.lua`: WP/WQ/WA (table in "Sync protocol"); witnesses keep
+  `SK.DB.words.witness[guid] = { d, p, at }` (most rows per day, days
+  today ±1, pruned at login); the field is `c` on the wire because every
+  message's `p` is the protocol. `SW:Play` returns "checking" for the daily
+  word while `WS:Checking()` (from login until WQ + `CHECK_FOR` 10 s; not
+  when nobody can be asked). `WS:Restore` only for today, only our account's
+  GUIDs, only if more rows than the local game; rows `{ w = "", p, hidden =
+  true }` (`SW.Keys` skips them); a finished restored game is recorded and
+  published. Honours `settings.share.words` and sync pauses (limits: alone
+  online, or quitting inside an instance, still works). A griefer in the
+  guild could answer with fake colours (costs someone tries; accepted).
+  Tests `tests/v091_words_witness_spec.lua`; TESTING 45. Unconfirmed in game.
 - **v0.9.1 (not released) also: reserve reminders** (guild: a "passive
   aggressive one" at logon if signed up without reserves, a stronger one on
   raid day / in the raid group; owner: **no sound**, raid day = **from
@@ -801,6 +817,9 @@ players. **Don't go back to AceComm multi-part messages.**
 | `RD` | GUILD | v0.8.0 once per session: fingerprint per raid held; answered after 2–8 s, duplicates suppressed |
 | `AR` | WHISPER | v0.8.1 one attendance record, officer/raid leader ranks only (`Sync/AttendanceSync.lua`) |
 | `AQ` | WHISPER | v0.8.1 officer to officer after login: attendance records held, answered with what's missing |
+| `WP` | GUILD | v0.9.1 after each daily Short Words guess: `{ d = day, c = "20110,…" }` colours only (`Sync/WordsSync.lua`) |
+| `WQ` | GUILD | v0.9.1 ~12 s after login: "what did you see us play today?" `{ d, k = account GUIDs }` |
+| `WA` | GUILD | v0.9.1 answer after 2–6 s `{ q = asker, d, r = { [guid] = colours } }`, skipped if someone already answered with as many |
 | `LE` | GUILD | v0.9.0 points history entries (`Sync/ReserveSync.lua`); accepted only from officer/raid leader senders |
 | `LP` | GUILD | v0.9.0 reserves (`q`, from their player or an officer) and locks (`k`, officers) |
 | `LQ` | GUILD | v0.9.0 once per session: weekly history fingerprints and per-raid reserve fingerprints |

@@ -20,7 +20,7 @@ local FILES = {
 	"Collect/Character.lua", "Collect/Talents.lua", "Collect/Professions.lua",
 	"Collect/Reputation.lua", "Collect/Attunements.lua", "Collect/Profile.lua",
 	"Sync/Codec.lua", "Sync/Frames.lua", "Sync/Merge.lua", "Sync/Sync.lua", "Sync/RaidSync.lua",
-	"Sync/AttendanceSync.lua", "Sync/ReserveSync.lua",
+	"Sync/AttendanceSync.lua", "Sync/ReserveSync.lua", "Sync/WordsSync.lua",
 }
 
 -- UI files in TOC order (the stubbed frames are enough for them to build).

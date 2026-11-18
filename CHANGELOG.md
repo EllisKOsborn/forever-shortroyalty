@@ -28,6 +28,17 @@
   this version for the creator's changes to reach them.
 - `/sr debug` says "(addon creator)" next to "can make raids".
 
+- **Short Words: no more extra tries by quitting.** The game only saves
+  addon data when you log out or `/reload`, so quitting with Alt-F4 after
+  five guesses gave a fresh daily word. Now guildmates with the addon
+  remember the colours of your guesses today (never the letters). When you
+  log back in, the daily word waits a few seconds ("Checking today's
+  guesses with the guild…"), then any guesses you lost come back as
+  coloured rows without letters, with only the tries you had left. It
+  needs someone with the addon online when you guess and when you come
+  back; nothing is sent while sharing is paused (combat, instances) or when
+  *Share my Short Words results* is off.
+
 ## v0.9.0 (16 Nov 2026): Reserve+, soft reserves with bonus points
 
 The guild's TBC loot system, inside Short Royalty: a new **Loot** page in

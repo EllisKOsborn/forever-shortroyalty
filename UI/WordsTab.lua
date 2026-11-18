@@ -354,6 +354,7 @@ local WHY = {
 	short = "Five letters, please.",
 	notword = "Not in the word list.",
 	other = "Already played today on another character.",
+	checking = "Checking today's guesses with the guild…",
 }
 
 function Words:Submit()
@@ -434,6 +435,10 @@ function Words.MessageFor(game, typing, note, me, now)
 	end
 	if game.mode == "daily" and game.guid and game.guid ~= me then
 		return "Started on " .. (game.name or "another character") .. ": finish it there.", "dim"
+	end
+	-- v0.9.1: guildmates hand back guesses lost by quitting without saving.
+	if game.mode == "daily" and SK.WordsSync and SK.WordsSync:Checking(now) then
+		return "Checking today's guesses with the guild…", "dim"
 	end
 	if typing then return "Type a word, Enter to guess, Esc to stop typing.", "dim" end
 	return "Click the board to type, or use the keys below.", "dim"

@@ -170,3 +170,9 @@ addon read.
     or an officer locks reserves, they stop. Not in combat, no sound.
 44. [ ] **Remind in raid chat** (Loot night, raid check): types the names of
     raiders without a reserve into raid chat; you press Enter.
+45. [ ] **Short Words after Alt-F4** (needs a guildmate with this version
+    online): make 2 guesses on the daily word, quit with Alt-F4, log back
+    in. The Daily page says "Checking today's guesses with the guild…" for
+    a few seconds, then shows 2 coloured rows without letters and 4 tries
+    left, and chat says "brought back 2 guesses". `/sr debug` "Short Words
+    guesses kept by guildmates" line.
