@@ -29,7 +29,7 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
-- **v0.9.2 (not released): Milestones without Grats** (owner, 18 Nov:
+- **v0.9.2 (released 18 Nov on `main`, owner: "push to main"): Milestones without Grats** (owner, 18 Nov:
   "remove the automated messages that can be sent from the milestones
   section. as well it shows '...' as if truncating the times"). Removed the
   Grats button, `Feed.GratsText` and the `grats` field from new feed
@@ -740,7 +740,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
   (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed); **v0.5.7** (12 Nov, cooldown
-  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet); **v0.8.2** (16 Nov, "No player named" fix); **v0.9.0** (16 Nov, Reserve+: soft reserves with bonus points; the weekly loot-list workflow becomes active on `main`); **v0.9.1** (18 Nov, reserve reminders, Short Words Alt-F4 fix, creator as officer). Tag only when
+  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet); **v0.8.2** (16 Nov, "No player named" fix); **v0.9.0** (16 Nov, Reserve+: soft reserves with bonus points; the weekly loot-list workflow becomes active on `main`); **v0.9.1** (18 Nov, reserve reminders, Short Words Alt-F4 fix, creator as officer); **v0.9.2** (18 Nov, Milestones without Grats, times not cut off). Tag only when
   the user asks.
 
 ## Layout

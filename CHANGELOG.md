@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.2 (not released yet): quieter Milestones
+## v0.9.2 (18 Nov 2026): quieter Milestones
 
 - **Milestones** (Overview) no longer has the **Grats** button that typed a
   congratulation into guild chat.
