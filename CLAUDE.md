@@ -29,6 +29,13 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.9.2 (not released): Milestones without Grats** (owner, 18 Nov:
+  "remove the automated messages that can be sent from the milestones
+  section. as well it shows '...' as if truncating the times"). Removed the
+  Grats button, `Feed.GratsText` and the `grats` field from new feed
+  entries (old saved entries may still have it, unused); time column
+  `Ov.WHEN_W` 52 (was 34). Preview + overview/accent/before-after pictures
+  re-rendered.
 - **v0.9.1 (released 18 Nov on `main`, owner: "push to main") also: Short Words Alt-F4 fix** (guild: "you can
   do 5, alt-f4 and it doesn't save and then have more attempts"; owner:
   "build the main fix", i.e. without the optional "not seen live" leaderboard

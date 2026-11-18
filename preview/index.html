@@ -453,8 +453,8 @@ function overview() {
       { label: "Check your Character tab", lt: "dim", value: "done", tone: "good" }, { label: "Choose what you share (Settings)", value: "to do", tone: "spark" },
       { label: "Get guildmates to install it", value: "to do", tone: "spark" }, { text: "1 of 29 have it" }], ["Hide", "overview"], `left:${W + T.space.l}px;top:74px;width:${W}px`)
     : `<div class="card" style="left:${W + T.space.l}px;top:74px;width:${W}px"><div class="clbl display"><span>Milestones</span></div>
-      <div class="panel" style="height:${8 * T.sizes.cardRow}px;position:relative">${list([{ key: "w", w: 34 }, { key: "t", w: W - 8 - 34 - 48 - 12 }, { key: "b", w: 48 }], feed,
-        (e, c) => c.key === "w" ? `<span class="dim">${e[0]}</span>` : c.key === "t" ? cls(e[1]).replace(esc(e[1].name), esc(e[1].name.split(" ")[0])) + " " + esc(e[2]) : (e[3] ? btn("Grats", "quiet small") : ""),
+      <div class="panel" style="height:${8 * T.sizes.cardRow}px;position:relative">${list([{ key: "w", w: 52 }, { key: "t", w: W - 8 - 52 - 12 }], feed,
+        (e, c) => c.key === "w" ? `<span class="dim">${e[0]}</span>` : cls(e[1]).replace(esc(e[1].name), esc(e[1].name.split(" ")[0])) + " " + esc(e[2]),
         { header: false, click: true, tall: true, empty: "Level-ups, profession milestones, attunements and new recipes show here as your addon sees them.", style: "left:4px;right:4px;top:0;bottom:0" })}</div></div>`;
   return strip + card("Needs a look", needs, null, `left:0;top:74px;width:${W}px`)
     + card("Raids", raids, ["Attunement list", "raid"], `left:0;top:${74 + 20 + needs.length * T.sizes.cardRow + 2 + T.space.l}px;width:${W}px`) + right;

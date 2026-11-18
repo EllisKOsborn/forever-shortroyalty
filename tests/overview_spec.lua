@@ -25,8 +25,7 @@ describe("v0.2.2 milestones feed", function()
 		for _, e in ipairs(ev) do texts[#texts + 1] = e.text end
 		assert.same({ "reached level 60", "reached Tailoring 300", "is attuned to Onyxia's Lair",
 			"learned 2 new Tailoring recipes" }, texts)
-		assert.equal("level 60", ev[1].grats)
-		assert.is_nil(ev[4].grats) -- no Grats button for recipes
+		for _, e in ipairs(ev) do assert.is_nil(e.grats) end -- v0.9.2: no Grats messages
 	end)
 
 	it("reports only the highest milestone crossed, and nothing for small steps", function()
@@ -57,7 +56,7 @@ describe("v0.2.2 milestones feed", function()
 		local e = SK.Feed.Entries(SK.DBM:Guild())[1]
 		assert.equal("Bob Smith", e.name)
 		assert.equal("reached level 40", e.text)
-		assert.equal("Grats Bob on level 40!", SK.Feed.GratsText(e))
+		assert.is_nil(SK.Feed.GratsText) -- v0.9.2: removed
 		SK.Feed:Note("Player-1-B", { level = 39 }, { level = 40 }, W.now)
 		assert.equal(1, #SK.DB.feed)
 	end)
@@ -216,14 +215,20 @@ describe("v0.2.2 Overview tab", function()
 		assert.equal("/ 2", stats[3].suffix)
 	end)
 
-	it("lists milestones with a Grats button that only pre-fills guild chat", function()
+	it("lists milestones with no button that types into chat (v0.9.2)", function()
 		SK.Feed:Note("Player-1-B", { level = 59 }, { level = 60 }, W.now)
 		SK.MainFrame:Show("overview")
 		local list = SK.OverviewTab.feed.list
 		assert.equal(1, #list.items)
 		assert.is_false(SK.OverviewTab.feed.empty:IsShown())
+		-- (the test stub answers any unknown field, so check what a click does)
+		local before = #W.chat
 		local row = list.rows[1]
-		row.grats:GetScript("OnClick")(row.grats)
-		assert.same({ "open", "/g Grats Bob on level 60!" }, W.chat[#W.chat])
+		for _, w in ipairs(row.widgets or {}) do
+			local click = w.GetScript and w:GetScript("OnClick")
+			if type(click) == "function" then click(w) end
+		end
+		assert.equal(before, #W.chat) -- nothing typed into chat
+		assert.is_true(SK.OverviewTab.WHEN_W >= 50) -- room for "23h" without "…"
 	end)
 end)

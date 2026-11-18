@@ -11,6 +11,7 @@ local S, SP = Theme.SIZES, Theme.SPACE
 
 Ov.COL_W = math.floor((S.contentW - SP.l) / 2)
 Ov.FEED_ROWS = 8      -- milestones shown
+Ov.WHEN_W = 52        -- "23h", "45m", "12d", "now" without "…" (34 was too narrow)
 
 local function n(v) return tostring(v or 0) end
 
@@ -203,30 +204,18 @@ function Ov:Build(page)
 		end })
 	self.raids:SetPoint("TOPLEFT", self.needs, "BOTTOMLEFT", 0, -SP.l)
 
-	-- Milestones: a list with a quiet Grats link per row.
+	-- Milestones: when and what. (v0.9.2: the Grats button that typed a
+	-- message into guild chat was removed, owner's request; the time column
+	-- was too narrow and showed "…".)
 	local feed = W.Card(page, Ov.COL_W, "Milestones")
 	feed:SetPoint("TOPLEFT", Ov.COL_W + SP.l, top)
 	feed:SetBody(Ov.FEED_ROWS * S.cardRow)
 	self.feed = feed
-	local gratsW = 48
 	local inner = Ov.COL_W - 2 * SP.s
 	feed.list = W.List(feed.panel, {
 		header = false, rowHeight = S.cardRow,
-		columns = { { key = "when", title = "", width = 34 }, { key = "what", title = "", width = inner - 34 - gratsW - SP.m },
-			{ key = "btn", title = "", width = gratsW } },
+		columns = { { key = "when", title = "", width = Ov.WHEN_W }, { key = "what", title = "", width = inner - Ov.WHEN_W - SP.m } },
 		setCell = setFeedCell,
-		decorate = function(row)
-			row.grats = W.Button(row, "Grats", gratsW - SP.xs, S.controlSmall, function(b)
-				if b.entry then Compat.OpenChat("/g " .. SK.Feed.GratsText(b.entry)) end
-			end, "quiet")
-			row.grats:SetPoint("RIGHT", -SP.xxs, 0)
-			row.widgets[#row.widgets + 1] = row.grats
-			row.grats.tooltip = "Types a congratulation into guild chat. Press Enter to send it."
-		end,
-		update = function(row, e)
-			row.grats.entry = e
-			row.grats:SetShown(e.grats ~= nil and not SK.DB.account[e.guid])
-		end,
 		onEnter = function(row, e)
 			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
 			GameTooltip:AddLine(Theme.ClassText(e.name, e.class) .. " " .. e.text, Theme.RGB("text"))

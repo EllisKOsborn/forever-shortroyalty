@@ -148,13 +148,13 @@ describe("Security", function()
 			assert.equal(0, #W.prints)
 		end)
 
-		it("strips links and colours from profession names in a grats message", function()
+		it("strips links and colours from profession names in a milestone", function()
 			local old = profile({ profs = { [164] = { name = "Smithing", rank = 290 } } })
 			local new = profile({ profs = { [164] = { name = "|cffff0000|Hitem:1|h[Smithing]|h|r", rank = 300 } } })
 			local events = SK.Feed.Diff(old, new)
-			local text = SK.Feed.GratsText({ name = "Bob Smith", grats = events[1].grats })
+			local text = events[1].text
 			assert.is_nil(text:find("|", 1, true))
-			assert.equal("Grats Bob on [Smithing] 300!", text) -- link text kept, link removed
+			assert.equal("reached [Smithing] 300", text) -- link text kept, link removed
 		end)
 	end)
 

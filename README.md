@@ -65,7 +65,7 @@ The first page. The line under its title says your guild, members, players
 
 <p align="center"><img src="docs/images/getting-started.png" alt="Getting started" width="100%"></p>
 
-- **Milestones**: level-ups (every 10 levels), profession 75/150/225/300, Onyxia attunement and new recipes. Hover for when, click to open the character, **Grats** types "Grats Bramble on level 60!" into guild chat (you press Enter).
+- **Milestones**: level-ups (every 10 levels), profession 75/150/225/300, Onyxia attunement and new recipes. Hover for when, click to open the character.
 
 The professions summary and the recipe numbers moved to the Professions
 page (v0.6.0). Milestones are worked out by **your own addon** and kept on

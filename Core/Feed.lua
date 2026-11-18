@@ -36,13 +36,14 @@ local function profName(skillLine, pr)
 end
 
 -- Events between two copies of one character's profile. Pure; tested.
--- Returns { { kind, text, grats }, ... } where text has no name in it
--- ("reached level 60") and grats is the congratulation wording ("60").
+-- Returns { { kind, text }, ... } where text has no name in it
+-- ("reached level 60"). (The Grats button and its wording were removed in
+-- v0.9.2; older saved entries may still carry a `grats` field, unused.)
 function Feed.Diff(old, new)
 	local out = {}
 	if type(old) ~= "table" or type(new) ~= "table" then return out end
 	local lvl = crossed(Feed.LEVELS, old.level, new.level)
-	if lvl then out[#out + 1] = { kind = "level", text = "reached level " .. lvl, grats = "level " .. lvl } end
+	if lvl then out[#out + 1] = { kind = "level", text = "reached level " .. lvl } end
 
 	if type(old.profs) == "table" and type(new.profs) == "table" then
 		local ids = {}
@@ -53,7 +54,7 @@ function Feed.Diff(old, new)
 			local m = o and n and crossed(Feed.SKILLS, o.rank, n.rank)
 			if m then
 				local name = profName(id, n)
-				out[#out + 1] = { kind = "skill", text = "reached " .. name .. " " .. m, grats = name .. " " .. m }
+				out[#out + 1] = { kind = "skill", text = "reached " .. name .. " " .. m }
 			end
 		end
 	end
@@ -61,7 +62,7 @@ function Feed.Diff(old, new)
 	for _, a in ipairs(SK.Data.ShownAttunements()) do
 		if a.status ~= "none" and type(new.att) == "table" and new.att[a.key] == true
 			and type(old.att) == "table" and old.att[a.key] == false then
-			out[#out + 1] = { kind = "attune", text = "is attuned to " .. a.name, grats = a.name .. " attunement" }
+			out[#out + 1] = { kind = "attune", text = "is attuned to " .. a.name }
 		end
 	end
 
@@ -101,7 +102,7 @@ function Feed:Note(guid, old, new, now)
 			if x.guid == guid and x.text == e.text then dup = true; break end
 		end
 		if not dup then
-			table.insert(list, 1, { at = now, guid = guid, kind = e.kind, text = e.text, grats = e.grats })
+			table.insert(list, 1, { at = now, guid = guid, kind = e.kind, text = e.text })
 		end
 	end
 	while #list > Feed.MAX do table.remove(list) end
@@ -115,16 +116,10 @@ function Feed.Entries(guild, limit)
 	for _, e in ipairs(SK.DB.feed or {}) do
 		local m = guild and guild.members[e.guid]
 		if m and not m.leftAt then
-			out[#out + 1] = { at = e.at, guid = e.guid, kind = e.kind, text = e.text, grats = e.grats,
+			out[#out + 1] = { at = e.at, guid = e.guid, kind = e.kind, text = e.text,
 				name = m.name, class = m.class }
 			if limit and #out >= limit then break end
 		end
 	end
 	return out
-end
-
--- "Grats Bramble on level 60!" for guild chat (pre-filled, never sent).
-function Feed.GratsText(entry)
-	local first = (entry.name or "?"):match("^(%S+)") or entry.name
-	return "Grats " .. first .. " on " .. (entry.grats or entry.text) .. "!"
 end

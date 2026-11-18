@@ -176,3 +176,8 @@ addon read.
     a few seconds, then shows 2 coloured rows without letters and 4 tries
     left, and chat says "brought back 2 guesses". `/sr debug` "Short Words
     guesses kept by guildmates" line.
+
+## v0.9.2 (not released yet)
+
+46. [ ] **Milestones** (Overview): no Grats button; times like "2h" and
+    "13d" show in full, without "…".

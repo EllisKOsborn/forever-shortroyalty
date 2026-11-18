@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.9.2 (not released yet): quieter Milestones
+
+- **Milestones** (Overview) no longer has the **Grats** button that typed a
+  congratulation into guild chat.
+- The time next to each milestone ("2h", "3d") no longer gets cut off
+  with "…".
+
 ## v0.9.1 (18 Nov 2026): reserve reminders, Short Words Alt-F4 fix, officer tools for the addon's creator
 
 - **Reserve reminders** (the guild asked), each a small box at the top of
