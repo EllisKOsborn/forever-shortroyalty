@@ -92,6 +92,26 @@ function Commands.ProfessionProbes()
 end
 
 -- Everything someone helping you needs to know, as plain lines.
+-- v0.9.3: "Failed sends by kind" lines for /sr debug. Pure; tested.
+-- failures: { ["WHISPER PR GeneralError"] = n }, recent: newest first.
+function Commands.FailureLines(failures, recent, now)
+	local keys = {}
+	for k in pairs(failures or {}) do keys[#keys + 1] = k end
+	if #keys == 0 then return {} end
+	table.sort(keys, function(a, b)
+		if failures[a] ~= failures[b] then return failures[a] > failures[b] end
+		return a < b
+	end)
+	local parts = {}
+	for _, k in ipairs(keys) do parts[#parts + 1] = k .. " x" .. failures[k] end
+	local out = { "Failed sends by kind (channel, message, reason): " .. table.concat(parts, ", ") }
+	for _, f in ipairs(recent or {}) do
+		out[#out + 1] = string.format("  %ds ago: %s %s to %s (%s)", math.max(0, math.floor((now or 0) - (f.at or 0))),
+			tostring(f.dist), tostring(f.t), f.target and ('"' .. tostring(f.target) .. '"') or "everyone", tostring(f.reason))
+	end
+	return out
+end
+
 function Commands.BuildReport()
 	local L = {}
 	local function add(fmt, ...) L[#L + 1] = select("#", ...) > 0 and string.format(fmt, ...) or fmt end
@@ -153,6 +173,8 @@ function Commands.BuildReport()
 		why and ("(" .. why .. ")") or "", yesno(Compat.AddonChatFlag()))
 	add("Send errors: %d   last: %s   Whispers to players who had logged off (normal): %d",
 		SK.Sync.stats.sendErrors or 0, tostring(SK.Sync.lastSendError), SK.Sync.stats.targetOffline or 0)
+	-- v0.9.3: which messages fail, on which channel, and to whom.
+	for _, line in ipairs(Commands.FailureLines(SK.Sync.failures, SK.Sync.recentFails, Compat.Now())) do add(line) end
 	add("Logged-off players: whispers skipped %d, \"No player named\" messages hidden %d   (chat filter: %s)",
 		SK.Sync.stats.skippedOffline or 0, SK.Sync.stats.hiddenNotFound or 0, yesno(SK.Sync.chatFilter))
 	local ws = SK.WordsSync and SK.WordsSync.stats

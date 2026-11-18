@@ -190,6 +190,28 @@ local SUCCESS = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageRe
 local THROTTLE = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.AddonMessageThrottle or 3
 local OFFLINE = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.TargetOffline or 12
 Sync.SEND_FAIL_WARN = 5 -- tell the player after this many failures in a row
+-- v0.9.3: results that don't count towards that warning. "GeneralError" is
+-- the game's catch-all with no reason; a player's report (18 Nov, 71 of
+-- them) couldn't say what failed. /sr debug now breaks failures down
+-- (Sync.failures) so the next report can; until then, don't nag about it.
+Sync.QUIET_FAILS = { GeneralError = true }
+Sync.FAIL_KEYS = 20      -- kinds of failure remembered
+Sync.FAIL_RECENT = 5     -- last failures remembered (newest first)
+Sync.failures = {}       -- "WHISPER PR GeneralError" -> count
+Sync.recentFails = {}    -- { { at, t, dist, target, reason } }
+
+-- Remember one failed piece for /sr debug. Pure apart from the tables given.
+function Sync.NoteFailure(failures, recent, item, reason, now)
+	local t = item and item.msg and item.msg.t or "?"
+	local dist = item and item.dist or "?"
+	local key = dist .. " " .. tostring(t) .. " " .. tostring(reason)
+	local n = 0
+	for _ in pairs(failures) do n = n + 1 end
+	if failures[key] or n < Sync.FAIL_KEYS then failures[key] = (failures[key] or 0) + 1 end
+	table.insert(recent, 1, { at = now, t = t, dist = dist, target = item and item.target, reason = reason })
+	while #recent > Sync.FAIL_RECENT do table.remove(recent) end
+	return key
+end
 
 -- What happened to one sent chunk. AceComm calls us with
 -- (item, sentBytes, totalBytes, didSend): ChatThrottleLib passes AceComm
@@ -226,9 +248,12 @@ local function onChunkSent(item, _, _, result)
 	elseif outcome == "failed" then
 		Sync.stats.sendErrors = (Sync.stats.sendErrors or 0) + 1
 		Sync.lastSendError = reason
-		Sync.failStreak = (Sync.failStreak or 0) + 1
-		if Sync.failStreak == Sync.SEND_FAIL_WARN then
-			SK:Print("Sending to guildmates is failing (%s). Please send the /sr debug text.", reason)
+		Sync.NoteFailure(Sync.failures, Sync.recentFails, item, reason, Compat.Now())
+		if not Sync.QUIET_FAILS[reason] then
+			Sync.failStreak = (Sync.failStreak or 0) + 1
+			if Sync.failStreak == Sync.SEND_FAIL_WARN then
+				SK:Print("Sending to guildmates is failing (%s). Please send the /sr debug text.", reason)
+			end
 		end
 	end
 	if outcome == "lockdown" and not item.requeued then

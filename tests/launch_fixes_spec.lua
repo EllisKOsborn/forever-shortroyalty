@@ -31,14 +31,15 @@ describe("Sending is not blocked by Blizzard's 'restricted' flag", function()
 
 	it("counts real send failures and warns once after several", function()
 		local item = { tries = 0, msg = {} }
-		SK.Sync.transport = function(_, _, _, _, cb, it) cb(it, 0, 0, 9) end -- GeneralError
-		Enum.SendAddonMessageResult.GeneralError = 9
+		-- ChannelThrottle (v0.9.3: GeneralError no longer warns, see v093_send_failures_spec)
+		SK.Sync.transport = function(_, _, _, _, cb, it) cb(it, 0, 0, 8) end
+		Enum.SendAddonMessageResult.ChannelThrottle = 8
 		for _ = 1, SK.Sync.SEND_FAIL_WARN do
 			SK.Sync:Enqueue(nil, "GUILD", nil, "NORMAL", { t = "HI", c = {} })
 			SK.Sync:Flush()
 		end
 		assert.equal(SK.Sync.SEND_FAIL_WARN, SK.Sync.stats.sendErrors)
-		assert.equal("GeneralError", SK.Sync.lastSendError)
+		assert.equal("ChannelThrottle", SK.Sync.lastSendError)
 		local warned = 0
 		for _, line in ipairs(W.prints) do
 			if line:find("Sending to guildmates is failing", 1, true) then warned = warned + 1 end

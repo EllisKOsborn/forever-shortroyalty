@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.9.3 (not released yet): clearer send errors
+
+- A guildmate's game kept failing to send some messages with the game's
+  unhelpful "GeneralError", and the addon asked them for a debug report.
+  `/sr debug` now lists failed sends by kind (channel, which message, the
+  game's reason) and the last few with who they were for, so the next
+  report shows what's going wrong.
+- "GeneralError" alone no longer makes the addon ask for a debug report.
+  Other failures still do.
+
 ## v0.9.2 (18 Nov 2026): quieter Milestones
 
 - **Milestones** (Overview) no longer has the **Grats** button that typed a

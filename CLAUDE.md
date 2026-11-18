@@ -29,6 +29,19 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.9.3 (not released): clearer send errors.** A member's v0.9.0
+  `/sr debug` (18 Nov, Andreas Wlock, `Player-6945-0009889D`, level 59; the
+  "Andreas Sham" of the v0.8.2 report is likely their alt): no Lua errors,
+  receiving fine (171 received, 40 with data), but **Send errors 71, last:
+  GeneralError** (`Enum.SendAddonMessageResult` 9, the game's catch-all; no
+  hint in Blizzard's source), 67 messages sent, 0 offline. Cause unknown.
+  Also: Chakra Petch "0 texts ok, 5 failed" on their client (cosmetic).
+  Built: `Sync.NoteFailure` → `Sync.failures["DIST T reason"]` (max
+  `FAIL_KEYS` 20) + `Sync.recentFails` (last `FAIL_RECENT` 5 with target);
+  `Commands.FailureLines` in `/sr debug`; `Sync.QUIET_FAILS.GeneralError`
+  doesn't count towards the `SEND_FAIL_WARN` nag. Tests
+  `tests/v093_send_failures_spec.lua`; TESTING 47. **Next:** read their
+  next report's "Failed sends by kind" line.
 - **v0.9.2 (released 18 Nov on `main`, owner: "push to main"): Milestones without Grats** (owner, 18 Nov:
   "remove the automated messages that can be sent from the milestones
   section. as well it shows '...' as if truncating the times"). Removed the

@@ -308,7 +308,7 @@ what it does:
 - **"Crafted by" on item tooltips:** hover any item to see "Short Royalty: Bramble (online), Dabble +2 more". Online crafters first, at most three names. Two lines at most, with who wears it, plus who reserved it on a raid night (v0.9.0).
 - **A welcome line** the first time Short Royalty loads, pointing to *Getting started*.
 - **Chat reminders** for profession windows still to open (and, rarely, ones to reopen after your skill went up), a newer Short Royalty, and trial accounts that can't share.
-- **`/sr debug`** opens a copyable report of what the addon can see, starting with the live-client checks and the profession checks for v0.3 (unlearned recipes, recipe categories, reagents, specialisations), and ending with the last Lua errors it caught. **Send it when something looks wrong.**
+- **`/sr debug`** opens a copyable report of what the addon can see, starting with the live-client checks and the profession checks for v0.3 (unlearned recipes, recipe categories, reagents, specialisations), and ending with the last Lua errors it caught. Failed sends are listed by kind (channel, message, the game's reason) with the last few and who they were for. **Send it when something looks wrong.**
 
 ### 🔒 Under the hood
 - **Your own data always wins.** A copy relayed by someone else never overwrites a newer copy from the character themselves.

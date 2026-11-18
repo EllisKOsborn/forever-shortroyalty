@@ -181,3 +181,10 @@ addon read.
 
 46. [ ] **Milestones** (Overview): no Grats button; times like "2h" and
     "13d" show in full, without "…".
+
+## v0.9.3 (not released yet)
+
+47. [ ] Ask the guildmate who got the "Sending to guildmates is failing
+    (GeneralError)" message to update and, after a while, send `/sr debug`
+    again: the "Failed sends by kind" line and the lines under it say which
+    messages fail and to whom.
