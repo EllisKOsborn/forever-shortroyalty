@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.1 (not released yet): reserve reminders, and officer tools for the addon's creator
+## v0.9.1 (18 Nov 2026): reserve reminders, Short Words Alt-F4 fix, officer tools for the addon's creator
 
 - **Reserve reminders** (the guild asked), each a small box at the top of
   the screen with a **Reserve** button that opens the Loot page, plus one

@@ -29,7 +29,7 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
-- **v0.9.1 (not released) also: Short Words Alt-F4 fix** (guild: "you can
+- **v0.9.1 (released 18 Nov on `main`, owner: "push to main") also: Short Words Alt-F4 fix** (guild: "you can
   do 5, alt-f4 and it doesn't save and then have more attempts"; owner:
   "build the main fix", i.e. without the optional "not seen live" leaderboard
   mark, which is still an idea). Addon data saves only on logout/reload, so
@@ -45,7 +45,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   online, or quitting inside an instance, still works). A griefer in the
   guild could answer with fake colours (costs someone tries; accepted).
   Tests `tests/v091_words_witness_spec.lua`; TESTING 45. Unconfirmed in game.
-- **v0.9.1 (not released) also: reserve reminders** (guild: a "passive
+- **v0.9.1 (released 18 Nov on `main`, owner: "push to main") also: reserve reminders** (guild: a "passive
   aggressive one" at logon if signed up without reserves, a stronger one on
   raid day / in the raid group; owner: **no sound**, raid day = **from
   00:01** on the raid's day, local time). `UI/ReserveReminder.lua`: pure
@@ -62,7 +62,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   **Remind in raid chat** on Loot night (`LT:RemindRaid`, `Rem.RaidChatText`,
   OpenChat "/ra …"). Picture `loot-reminder.png` (`shot=reminder`).
   TESTING 43–44.
-- **v0.9.1 (not released): the creator counts as an officer** (owner, 16
+- **v0.9.1 (released 18 Nov on `main`, owner: "push to main"): the creator counts as an officer** (owner, 16
   Nov: "Just give me access to all these things. I'm the addon creator and
   they're fine with it."). `RaidBoard.CREATORS = { ["Player-6937-001743F0"]
   = true }` (their main; the GUID the owner-only Profit view used) →
@@ -733,7 +733,7 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
   (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed); **v0.5.7** (12 Nov, cooldown
-  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet); **v0.8.2** (16 Nov, "No player named" fix); **v0.9.0** (16 Nov, Reserve+: soft reserves with bonus points; the weekly loot-list workflow becomes active on `main`). Tag only when
+  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet); **v0.8.2** (16 Nov, "No player named" fix); **v0.9.0** (16 Nov, Reserve+: soft reserves with bonus points; the weekly loot-list workflow becomes active on `main`); **v0.9.1** (18 Nov, reserve reminders, Short Words Alt-F4 fix, creator as officer). Tag only when
   the user asks.
 
 ## Layout
