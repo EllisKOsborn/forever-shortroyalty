@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.4 (not released yet): transmute cooldown times
+## v0.9.4 (19 Nov 2026): transmute cooldown times
 
 - Professions → Cooldowns (and the Character page) could show long
   cooldowns such as transmutes as about **49 days** too long ("49d 19h").

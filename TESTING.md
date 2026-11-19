@@ -189,7 +189,7 @@ addon read.
     again: the "Failed sends by kind" line and the lines under it say which
     messages fail and to whom.
 
-## v0.9.4 (not released yet)
+## v0.9.4
 
 48. [ ] **Professions → Cooldowns:** no cooldown shows more than a few days
     (transmutes are at most 2 days). Jheri's transmutes that showed "49d
