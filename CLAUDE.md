@@ -42,6 +42,16 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   doesn't count towards the `SEND_FAIL_WARN` nag. Tests
   `tests/v093_send_failures_spec.lua`; TESTING 47. **Next:** read their
   next report's "Failed sends by kind" line.
+  **Owner's v0.9.2 `/sr debug` (19 Nov, Pocus Hocus, level 60):** the same
+  nag: Send errors 6 of 11 messages sent, last GeneralError; 0 Lua errors.
+  So it isn't one player. Also seen: Short Words **heard 2** WP (witnesses
+  receive in game; asked 0 = the WQ hadn't gone out yet or was skipped),
+  **whispers skipped 2** (v0.8.2 offline tracking acts), attendance AQ
+  sent 2. Guild key "Short Royalty-CAMWOWEU5Realm3PvE" for the owner vs
+  "Short Royalty" for Andreas: `GetGuildInfo`'s realm is only returned when
+  the guild's realm differs from the player's; the key is local, so this is
+  fine (it has always been this way). Unproven idea for GeneralError:
+  whispers to players on another server ID (owner 6937, Andreas 6945).
 - **v0.9.2 (released 18 Nov on `main`, owner: "push to main"): Milestones without Grats** (owner, 18 Nov:
   "remove the automated messages that can be sent from the milestones
   section. as well it shows '...' as if truncating the times"). Removed the
