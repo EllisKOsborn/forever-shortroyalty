@@ -29,6 +29,17 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.9.4 (branch `claude/short-kings-addon-hlf0t4`, not released): transmute
+  cooldowns "49d 19h"** (owner's screenshot 19 Nov, Jheri Ashur's Transmute:
+  Arcanite and Earth to Life; Data says 47 h / 23 h). Cause: `GetTime()` is
+  32-bit milliseconds and wraps every 2^32 ms = **49d 17h 2m**; a cooldown
+  started before the wrap reports `startTime` past it, so `start + duration
+  - GetTime()` was 4294967.296 s too long. Fix: `Compat.TIMER_WRAP`;
+  `SpellCooldownRemaining` subtracts it when `start > GetTime()` and clamps
+  to `duration`; `RecipeCooldown` subtracts it when the value is over half
+  a wrap; `ProfBoard.CooldownLeft(expires, now)` (Cooldowns view and the
+  Character tab) fixes copies shared by older versions. Tests
+  `tests/v094_cooldown_wrap_spec.lua`; TESTING 48.
 - **v0.9.3 (released 19 Nov on `main`, owner: "push to main"): clearer send errors.** A member's v0.9.0
   `/sr debug` (18 Nov, Andreas Wlock, `Player-6945-0009889D`, level 59; the
   "Andreas Sham" of the v0.8.2 report is likely their alt): no Lua errors,

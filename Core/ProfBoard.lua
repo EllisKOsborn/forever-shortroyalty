@@ -199,6 +199,16 @@ local function asOf(ctx, guid, p)
 	return (type(p.received) == "number" and p.received) or (type(p.updated) == "number" and p.updated) or nil
 end
 
+-- Seconds until a shared cooldown ends (0 = ready). Copies from v0.9.3 and
+-- earlier can be 49.7 days too long (Compat.TIMER_WRAP); no real cooldown
+-- is anywhere near that, so take the wrap back off. Pure; tested.
+function PB.CooldownLeft(expires, now)
+	local left = expires - now
+	local wrap = SK.Compat.TIMER_WRAP
+	if left > wrap / 2 then left = left - wrap end
+	return math.max(0, left)
+end
+
 function PB.Cooldowns(ctx)
 	local out = {}
 	eachProfile(ctx, function(guid, m, p)
@@ -208,7 +218,7 @@ function PB.Cooldowns(ctx)
 		for recipeID, expires in pairs(p.cds) do
 			-- Older versions shared every recipe as a cooldown (v0.5.7 fix).
 			if type(recipeID) == "number" and type(expires) == "number" and SK.RecipeDB.HasCooldown(recipeID) then
-				local left = math.max(0, expires - ctx.now)
+				local left = PB.CooldownLeft(expires, ctx.now)
 				out[#out + 1] = {
 					recipeID = recipeID, guid = guid, name = m.name or p.name or "?", class = m.class or p.class,
 					status = status, left = left, ready = left == 0, asOf = seen,

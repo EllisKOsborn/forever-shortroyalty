@@ -327,13 +327,15 @@ function Char.DetailSections(p, now, extra)
 	-- Cooldowns
 	local cds = {}
 	for id, expires in pairs(p.cds or {}) do
-		if SK.RecipeDB.HasCooldown(id) then cds[#cds + 1] = { id = id, at = expires } end
+		if SK.RecipeDB.HasCooldown(id) and type(expires) == "number" then
+			cds[#cds + 1] = { id = id, left = SK.ProfBoard.CooldownLeft(expires, now) }
+		end
 	end
 	if #cds > 0 then
 		rows = section("Cooldowns", 1)
-		table.sort(cds, function(a, b) return a.at < b.at end)
+		table.sort(cds, function(a, b) return a.left < b.left end)
 		for _, cd in ipairs(cds) do
-			local left = cd.at - now
+			local left = cd.left
 			local name = Compat.SpellName(cd.id) or ("Recipe " .. cd.id)
 			if left <= 0 then
 				rows[#rows + 1] = { label = name, value = "ready", tone = "good" }

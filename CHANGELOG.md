@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.9.4 (not released yet): transmute cooldown times
+
+- Professions → Cooldowns (and the Character page) could show long
+  cooldowns such as transmutes as about **49 days** too long ("49d 19h").
+  The game's timer wraps around every 49 days 17 hours, and a cooldown that
+  started before the last wrap (for example before the computer restarted)
+  came back on the wrong side of it. The addon now takes the wrap off, both
+  when it reads your cooldowns and when it shows times shared by guildmates
+  who haven't updated yet.
+
 ## v0.9.3 (19 Nov 2026): clearer send errors
 
 - A guildmate's game kept failing to send some messages with the game's

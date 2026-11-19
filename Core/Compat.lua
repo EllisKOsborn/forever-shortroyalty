@@ -615,11 +615,21 @@ function Compat.IsSpellKnown(spellID)
 	return nil, "none"
 end
 
+-- The client's GetTime() clock is milliseconds in 32 bits, so it wraps every
+-- 2^32 ms (49 days 17 hours). A long cooldown started before the last wrap
+-- (e.g. before the computer restarted) reports a start time on the far side
+-- of it, and the time left came out about 49.7 days too long (v0.9.4,
+-- owner's screenshot: transmutes "49d 19h").
+Compat.TIMER_WRAP = 2 ^ 32 / 1000
+
 -- Seconds remaining, or nil.
 function Compat.RecipeCooldown(recipeID)
 	if not has("C_TradeSkillUI", "GetRecipeCooldown") then return nil end
 	local ok, cd = pcall(C_TradeSkillUI.GetRecipeCooldown, recipeID)
-	if ok and type(cd) == "number" and cd > 0 then return cd end
+	if not ok or type(cd) ~= "number" then return nil end
+	-- Same 49.7-day timer wrap as SpellCooldownRemaining (v0.9.4).
+	if cd > Compat.TIMER_WRAP / 2 then cd = cd - Compat.TIMER_WRAP end
+	if cd > 0 then return cd end
 end
 
 ---------------------------------------------------------------------------
@@ -760,7 +770,9 @@ function Compat.SpellCooldownRemaining(spellID)
 	end
 	if not start or not duration then return nil end
 	if duration <= 1.5 or start == 0 then return 0 end
-	return math.max(0, start + duration - GetTime())
+	local now = GetTime()
+	if start > now then start = start - Compat.TIMER_WRAP end
+	return math.max(0, math.min(duration, start + duration - now))
 end
 function Compat.ItemIDFromLink(link)
 	if type(link) ~= "string" then return nil end

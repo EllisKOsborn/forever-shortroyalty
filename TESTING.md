@@ -188,3 +188,9 @@ addon read.
     (GeneralError)" message to update and, after a while, send `/sr debug`
     again: the "Failed sends by kind" line and the lines under it say which
     messages fail and to whom.
+
+## v0.9.4 (not released yet)
+
+48. [ ] **Professions → Cooldowns:** no cooldown shows more than a few days
+    (transmutes are at most 2 days). Jheri's transmutes that showed "49d
+    19h" now show a sensible time, even before Jheri updates.
