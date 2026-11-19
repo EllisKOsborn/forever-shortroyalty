@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.3 (not released yet): clearer send errors
+## v0.9.3 (19 Nov 2026): clearer send errors
 
 - A guildmate's game kept failing to send some messages with the game's
   unhelpful "GeneralError", and the addon asked them for a debug report.
