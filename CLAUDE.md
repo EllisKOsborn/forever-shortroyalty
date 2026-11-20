@@ -798,7 +798,11 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
   using `## vX.Y.Z (not released yet)` on the working branch) or an existing
   release does nothing. So **before pushing to `main`, date the
   top CHANGELOG heading**, bump the README badge, and never push a dated
-  heading to `main` that the owner hasn't asked to release. The owner no
+  heading to `main` that the owner hasn't asked to release.
+  **Run `luacheck .` on its own** before a release commit (piping it into
+  `tail` hides its exit code; v0.10.2 went out with a lint warning), and
+  don't push to `main` again until that release's tag build has finished:
+  a second push before the GitHub release exists can re-point the tag. The owner no
   longer publishes on the website. Earlier: pushing a tag `vX.Y.Z` on `main` runs `.github/workflows/release.yml`
   (BigWigs packager): it builds `ShortRoyalty-vX.Y.Z.zip` and a GitHub Release
   whose notes come from CHANGELOG.md (`.pkgmeta` manual-changelog). First
