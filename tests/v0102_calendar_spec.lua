@@ -15,7 +15,7 @@ describe("v0.10.2 raid calendar", function()
 
 	it("lays out a month from Monday, with raids on their days", function()
 		local e1 = B:Create("ony", os.time({ year = 2026, month = 12, day = 11, hour = 20 }))
-		local e2 = B:Create("hyjal", os.time({ year = 2026, month = 12, day = 11, hour = 18, min = 30 }))
+		B:Create("hyjal", os.time({ year = 2026, month = 12, day = 11, hour = 18, min = 30 }))
 		local e3 = B:Create("barrow", os.time({ year = 2026, month = 12, day = 16, hour = 20 }))
 		B:Cancel(e3.id)
 		B:SignUp(e1.id, "y")
