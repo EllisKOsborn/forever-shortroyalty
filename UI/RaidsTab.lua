@@ -82,7 +82,8 @@ RT.WEEKDAYS = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" }
 
 -- { title = "December 2026", cells = 42 x { at (local noon), day, inMonth,
 -- today, past, raids = { { id, at, text, mine, place } } } }.
-function RT.MonthGrid(year, month, board, now, me)
+-- v0.11.0: mine = my absences, guild = for how many are away each day.
+function RT.MonthGrid(year, month, board, now, me, mine, guild)
 	local first = time({ year = year, month = month, day = 1, hour = 12 })
 	local t = date("*t", first)
 	local back = (t.wday + 5) % 7 -- days since Monday
@@ -111,7 +112,8 @@ function RT.MonthGrid(year, month, board, now, me)
 				mine = su and su.s or nil, place = Board.PlaceOf(board, e.id, me or "") }
 		end
 		cells[i] = { at = at, day = d.day, inMonth = d.month == month, today = key == todayKey,
-			past = at < todayStart, raids = raids }
+			past = at < todayStart, raids = raids, away = SK.Absences.IsAway(mine, at),
+			awayCount = guild and at >= todayStart and #SK.Absences.AwayOn(guild, at) or 0 }
 	end
 	return { title = date("%B %Y", first), cells = cells }
 end
@@ -184,7 +186,7 @@ local function setLineUpCell(fs, r, col)
 	local k = col.key
 	if k == "name" then
 		fs:SetText((r.online and (SK.RosterTab.DOT.addon .. " ") or "") .. Theme.ClassText(r.name, r.class) ..
-			(r.duplicateOf and (" " .. C("spark") .. "2x|r") or ""))
+			(r.duplicateOf and (" " .. C("spark") .. "2x|r") or "") .. (r.away and (" " .. C("bad") .. "away|r") or ""))
 	elseif k == "status" then
 		fs:SetText(Theme.Paint(STATUS_TONE[r.status], r.statusName))
 	elseif k == "place" then
@@ -741,6 +743,7 @@ local MARK_TONE = { l = "spark", e = "spark", a = "bad" }
 function RT.SlotText(r)
 	if not r then return Theme.Paint("faint", "empty") end
 	local mark = r.mark and r.mark ~= "" and (" " .. Theme.Paint(MARK_TONE[r.mark], SK.RaidGroups.MARK_SHORT[r.mark])) or ""
+	if r.away then mark = mark .. " " .. Theme.Paint("bad", "away") end
 	return Theme.ClassText(r.name, r.class) .. " " .. Theme.Paint(r.roleGuess and "faint" or "dim", ROLE_LETTER[r.role or ""] or "?") .. mark
 end
 
@@ -1001,6 +1004,7 @@ function RT:RefreshGroups(now)
 	for _, k in ipairs({ "l", "e", "a" }) do
 		if L.marks[k] > 0 then marks[#marks + 1] = SK.RaidGroups.MARK_NAME[k] .. " " .. L.marks[k] end
 	end
+	if (sum.away or 0) > 0 then marks[#marks + 1] = Theme.Paint("bad", "Away " .. sum.away) end
 	self.grpCounts:SetText(Board.CountsText(sum) .. (#marks > 0 and ("  ·  " .. table.concat(marks, "  ·  ")) or ""))
 	local mine = (SK.RaidGroups.SlotOf(board, ev.id, me or ""))
 	if Board.PlaceOf(board, ev.id, me or "") ~= "i" then mine = 0 end
@@ -1051,8 +1055,22 @@ function RT:BuildCalendar(page, top)
 	self.calTitle:SetPoint("LEFT", self.calNext, "RIGHT", SP.m, 0)
 	self.calToday = W.Button(cal, "Today", nil, S.control, function() RT.calMonth = nil; RT:Refresh() end)
 	self.calToday:SetPoint("TOPRIGHT", 0, 0)
+	-- v0.11.0: weekdays you're never available.
+	self.calWeek = {}
+	local nextChip = self.calToday
+	for wd = 7, 1, -1 do
+		local c = W.Chip(cal, SK.Absences.WEEKDAYS[wd], function()
+			SK.Absences:ToggleWeekday(wd)
+			RT:Refresh()
+		end)
+		c.wd = wd
+		c.tooltip = "Away every " .. SK.Absences.WEEKDAYS[wd] .. ": you can't raid that day any week. Guildmates and officers see it."
+		c:SetPoint("RIGHT", nextChip, "LEFT", wd == 7 and -SP.m or -SP.xxs, 0)
+		self.calWeek[wd] = c
+		nextChip = c
+	end
 	self.calHint = Theme.Text(cal, "small", "dim")
-	self.calHint:SetPoint("RIGHT", self.calToday, "LEFT", -SP.m, 0)
+	self.calHint:SetPoint("RIGHT", nextChip, "LEFT", -SP.s, 0)
 	local cw = math.floor(S.contentW / 7)
 	local headY = S.control + SP.s
 	for i, name in ipairs(RT.WEEKDAYS) do
@@ -1072,6 +1090,23 @@ function RT:BuildCalendar(page, top)
 		Theme.Border(c, "line")
 		c.dayText = Theme.Text(c, "small", "dim")
 		c.dayText:SetPoint("TOPLEFT", SP.xs, -SP.xxs)
+		c.awayText = Theme.Text(c, "micro", "faint")
+		c.awayText:SetPoint("BOTTOMRIGHT", -SP.xs, SP.xxs)
+		c:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+		c:SetScript("OnEnter", function(selfC)
+			local cell = selfC.cell
+			if not cell then return end
+			GameTooltip:SetOwner(selfC, "ANCHOR_RIGHT")
+			Theme.TipLine(GameTooltip, date("%A %d %B", cell.at))
+			if cell.away then Theme.TipLine(GameTooltip, "You're away", "bad") end
+			if cell.awayCount > 0 then Theme.TipLine(GameTooltip, Theme.Count(cell.awayCount, "member") .. " away", "dim") end
+			if not cell.past then
+				Theme.TipLine(GameTooltip, "Right-click: mark yourself away (or not).", "accent")
+				if Board.OfficerView() then Theme.TipLine(GameTooltip, "Click: make a raid on this day.", "accent") end
+			end
+			GameTooltip:Show()
+		end)
+		c:SetScript("OnLeave", function() GameTooltip:Hide() end)
 		c.lines = {}
 		for j = 1, RT.CAL_PER_DAY + 1 do
 			local b = CreateFrame("Button", nil, c)
@@ -1095,7 +1130,13 @@ function RT:BuildCalendar(page, top)
 			c.lines[j] = b
 		end
 		-- Officers: clicking an empty future day starts a New raid on it.
-		c:SetScript("OnClick", function(selfC) RT:CalendarDay(selfC.cell) end)
+		c:SetScript("OnClick", function(selfC, button)
+			if button == "RightButton" then
+				if selfC.cell and not selfC.cell.past then SK.Absences:ToggleDay(selfC.cell.at) end
+				return RT:Refresh()
+			end
+			RT:CalendarDay(selfC.cell)
+		end)
 		self.calCells[i] = c
 	end
 end
@@ -1122,9 +1163,12 @@ end
 
 function RT:RefreshCalendar(now)
 	local cur = RT.calMonth or { year = tonumber(date("%Y", now)), month = tonumber(date("%m", now)) }
-	local grid = RT.MonthGrid(cur.year, cur.month, Board:Get() or Board.New(), now, Compat.PlayerGUID())
+	local grid = RT.MonthGrid(cur.year, cur.month, Board:Get() or Board.New(), now, Compat.PlayerGUID(),
+		SK.Absences:Mine(now), SK.DBM:Guild())
 	self.calTitle:SetText(grid.title)
-	self.calHint:SetText(Board.OfficerView() and "Click a day to make a raid on it" or "Click a raid to sign up")
+	self.calHint:SetText("Away every")
+	local mine = SK.Absences:Saved()
+	for wd, c in pairs(self.calWeek) do c:SetActive(mine.w[wd] == true) end
 	for i, c in ipairs(self.calCells) do
 		local cell = grid.cells[i]
 		c.cell = cell
@@ -1135,7 +1179,8 @@ function RT:RefreshCalendar(now)
 			Theme.Solid(c.bg, cell.inMonth and "surface" or "void")
 			Theme.SetBorderColor(c, "line")
 		end
-		c.dayText:SetText(tostring(cell.day))
+		c.dayText:SetText(tostring(cell.day) .. (cell.away and ("  " .. Theme.Paint("bad", "away")) or ""))
+		c.awayText:SetText(cell.awayCount > 0 and (cell.awayCount .. " away") or "")
 		c.dayText:SetTextColor(Theme.RGB(cell.today and "text" or (cell.inMonth and not cell.past) and "dim" or "faint"))
 		for j, b in ipairs(c.lines) do
 			local r = cell.raids[j]

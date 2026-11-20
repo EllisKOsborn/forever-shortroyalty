@@ -31,6 +31,7 @@ Core\Overview.lua
 Core\ShortWords.lua
 Core\RaidBoard.lua
 Core\RaidGroups.lua
+Core\Absences.lua
 Core\Attendance.lua
 Core\OfficerDir.lua
 Core\Reserves.lua

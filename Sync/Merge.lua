@@ -163,6 +163,15 @@ local FIELDS = {
 			return false
 		end)
 	end,
+	-- Absences (v0.11.0): local dates and weekdays (Monday = 1).
+	away = function(v)
+		if v == nil then return true end
+		if type(v) ~= "table" or not finite(v.u) then return false end
+		for k in pairs(v) do if k ~= "d" and k ~= "w" and k ~= "u" then return false end end
+		return each(v.d or {}, 40, function(k, x)
+			return int(k, 1, 40) and type(x) == "string" and x:match("^%d%d%d%d%-%d%d%-%d%d$") ~= nil
+		end) and each(v.w or {}, 7, function(k, x) return int(k, 1, 7) and int(x, 1, 7) end)
+	end,
 	-- Short Words daily days played (v0.7.1, guild streak): day numbers.
 	wd = function(v)
 		if v == nil then return true end

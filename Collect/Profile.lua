@@ -159,6 +159,7 @@ function Profile:BuildSelf()
 		cds = {},
 		words = SK.ShortWords and SK.ShortWords.Field(guid) or nil,
 		wd = SK.ShortWords and SK.ShortWords.DaysField(guid) or nil,
+		away = SK.Absences and SK.Absences:Mine(now) or nil, -- v0.11.0
 	}
 	-- Keep scan results for professions the character still has. The game's
 	-- profession list can come back incomplete (just after login, on a loading
@@ -206,6 +207,17 @@ function Profile:SetWords()
 	local p = SK.CopyTable(own)
 	p.words = SK.ShortWords.Field(own.guid)
 	p.wd = SK.ShortWords.DaysField(own.guid)
+	return self:Commit(guild, p, Compat.Now())
+end
+
+-- Called by Absences when the player marks a day (v0.11.0).
+function Profile:SetAway()
+	local guild = SK.DBM:Guild()
+	if guild and not self:Own() then return self:BuildSelf() end
+	local own = self:Own()
+	if not guild or not own then return false end
+	local p = SK.CopyTable(own)
+	p.away = SK.Absences:Mine(Compat.Now())
 	return self:Commit(guild, p, Compat.Now())
 end
 

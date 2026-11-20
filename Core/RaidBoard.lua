@@ -301,6 +301,7 @@ function Board.LineUp(board, ev, ctx)
 				and ctx.now - p.updated > SK.Overview.STALE_AFTER or false,
 			enchants = (p and p.gear and not gearHidden) and #SK.Data.Enchants.Missing(p.gear, p.class, p.level) or 0,
 			place = Board.PlaceOf(board, ev.id, guid), byOfficer = su.b ~= nil,
+			away = SK.Absences and SK.Absences.IsAway(SK.Absences.Of(ctx.guild, guid), ev.at) or false, -- v0.11.0
 		}
 		if p and ctx.guild then profiles[guid] = ctx.guild.profiles[guid] or p end
 	end
@@ -332,9 +333,10 @@ function Board.LineUp(board, ev, ctx)
 		roles = { TANK = 0, HEALER = 0, DPS = 0, unknown = 0 }, guesses = 0,
 		notAttuned = 0, noItem = 0, enchants = 0, stale = 0, noData = 0,
 		ilvlMin = nil, ilvlMax = nil, duplicates = dupes, size = raid and raid.size or nil,
-		placedIn = 0, placedBench = 0, inRoles = { TANK = 0, HEALER = 0, DPS = 0, unknown = 0 } }
+		placedIn = 0, placedBench = 0, inRoles = { TANK = 0, HEALER = 0, DPS = 0, unknown = 0 }, away = 0 }
 	for _, r in ipairs(rows) do
 		s[r.group] = s[r.group] + 1
+		if r.away and r.group ~= "out" then s.away = s.away + 1 end
 		if r.place == "i" then
 			s.placedIn = s.placedIn + 1
 			s.inRoles[r.role or "unknown"] = s.inRoles[r.role or "unknown"] + 1
@@ -397,6 +399,7 @@ function Board.Readiness(s)
 	local function add(text, tone) out[#out + 1] = { text = text, tone = tone or "dim" } end
 	for _, m in ipairs(s.missing) do add(m, "bad") end
 	if s.maybe > 0 then add(s.maybe .. " tentative") end
+	if (s.away or 0) > 0 then add(s.away .. " signed up but marked away that day", "spark") end
 	if s.size and s.coming > s.size then add((s.coming - s.size) .. " more than the raid holds (bench)", "spark") end
 	if s.notAttuned > 0 then add(s.notAttuned .. " not attuned", "bad") end
 	if s.noItem > 0 then add(s.noItem .. " without the amulet in their bags", "spark") end
