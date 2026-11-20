@@ -39,6 +39,7 @@ read_globals = {
 	"GetAddOnMetadata", "GetServerTime", "GetTime", "GetBuildInfo", "IsTrialAccount",
 	"IsVeteranTrialAccount", "IsRestrictedAccount", "GameLimitedMode_IsActive", "InCombatLockdown", "UnitOnTaxi",
 	"IsInRaid", "GetRaidRosterInfo", "GetNumGroupMembers", "IsGuildLeader",
+	"SetRaidSubgroup", "SwapRaidSubgroup", "UnitIsGroupLeader", "UnitIsGroupAssistant", "InviteUnit", "ConvertToRaid",
 	"GetNumLootItems", "GetLootSlotLink", "GetLootSlotInfo", "RANDOM_ROLL_RESULT",
 	"C_EncounterJournal", "EJ_GetCurrentTier", "EJ_GetInstanceByIndex", "EJ_GetNumLoot", "EJ_GetNumTiers",
 	"EJ_SelectInstance", "EJ_SelectTier", "GameRulesUtil",

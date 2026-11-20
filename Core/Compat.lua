@@ -1042,7 +1042,7 @@ function Compat.RaidMembers()
 	local okN, n = pcall(GetNumGroupMembers or function() return 0 end)
 	n = okN and clean(n) or 0
 	for i = 1, math.min(n, 40) do
-		local ok, name, _, _, _, _, fileName, _, online = pcall(GetRaidRosterInfo, i)
+		local ok, name, _, subgroup, _, _, fileName, _, online = pcall(GetRaidRosterInfo, i)
 		if ok and clean(name) then
 			local guid
 			if UnitGUID then
@@ -1052,10 +1052,72 @@ function Compat.RaidMembers()
 			-- A hidden "online" counts as online: they're in the group.
 			local on = online
 			if Compat.IsSecret(on) then on = true end
-			out[#out + 1] = { name = clean(name), class = clean(fileName), guid = guid, online = on and true or false }
+			out[#out + 1] = { name = clean(name), class = clean(fileName), guid = guid, online = on and true or false,
+				index = i, subgroup = clean(subgroup) }
 		end
 	end
 	return out
+end
+
+---------------------------------------------------------------------------
+-- Setting the raid up (v0.11.0 Invite & arrange). Forever's docs:
+-- C_PartyInfo.InviteUnit (no restriction), C_PartyInfo.ConvertToRaid
+-- (HasRestrictions: only from a button press), UnitIsGroupLeader /
+-- UnitIsGroupAssistant. SetRaidSubgroup / SwapRaidSubgroup are old globals
+-- Blizzard's own Forever raid window calls (RaidFrameSocialView.lua). All
+-- unconfirmed from an addon in game; every call is pcall'd.
+---------------------------------------------------------------------------
+-- "none" | "party" | "raid"
+function Compat.GroupState()
+	if Compat.InRaidGroup() then return "raid" end
+	local ok, n = pcall(GetNumGroupMembers or function() return 0 end)
+	n = ok and clean(n) or 0
+	return n > 0 and "party" or "none"
+end
+
+-- The party's members' names (not the player), for "already in the group".
+function Compat.PartyNames()
+	local out = {}
+	for i = 1, 4 do
+		local unit = "party" .. i
+		local ok, name, realm = pcall(UnitName or function() end, unit)
+		name = ok and clean(name) or nil
+		if name then out[#out + 1] = (clean(realm) and clean(realm) ~= "") and (name .. " " .. clean(realm)) or name end
+	end
+	return out
+end
+
+function Compat.IsLeaderOrAssist()
+	local function yes(fn)
+		if not fn then return false end
+		local ok, v = pcall(fn, "player")
+		return ok and clean(v) and true or false
+	end
+	if Compat.GroupState() == "none" then return true end -- nobody to lead yet
+	return yes(UnitIsGroupLeader) or yes(UnitIsGroupAssistant)
+end
+
+function Compat.InviteUnit(name)
+	local fn = has("C_PartyInfo", "InviteUnit") and C_PartyInfo.InviteUnit or InviteUnit
+	if not fn or not name then return false end
+	return pcall(fn, name)
+end
+
+-- Only from a button press (restricted).
+function Compat.ConvertToRaid()
+	local fn = has("C_PartyInfo", "ConvertToRaid") and C_PartyInfo.ConvertToRaid or ConvertToRaid
+	if not fn then return false end
+	return pcall(fn)
+end
+
+function Compat.SetRaidSubgroup(index, group)
+	if not SetRaidSubgroup then return false end
+	return pcall(SetRaidSubgroup, index, group)
+end
+
+function Compat.SwapRaidSubgroup(a, b)
+	if not SwapRaidSubgroup then return false end
+	return pcall(SwapRaidSubgroup, a, b)
 end
 
 ---------------------------------------------------------------------------
@@ -1235,6 +1297,8 @@ Compat.PROBES = {
 	"ModelSceneMixin.GetPlayerActor", "C_CreatureInfo.GetRaceInfo", "UnitSex",
 	-- v0.8.0 raids and attendance
 	"IsInRaid", "GetNumGroupMembers", "GetRaidRosterInfo", "UnitGUID", "C_GuildInfo.IsGuildOfficer", "IsGuildLeader",
+	-- v0.11.0 Invite & arrange
+	"SetRaidSubgroup", "SwapRaidSubgroup", "UnitIsGroupLeader", "UnitIsGroupAssistant",
 	-- v0.9.0 Reserve+ loot night
 	"GetNumLootItems", "GetLootSlotInfo", "GetLootSlotLink", "C_PartyInfo.GetLootMethod", "GiveMasterLoot",
 }

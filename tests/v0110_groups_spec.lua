@@ -159,3 +159,73 @@ describe("v0.11.0 Groups tab", function()
 		assert.equal(0, #SK.errors)
 	end)
 end)
+
+describe("v0.11.0 Invite & arrange", function()
+	local SK, W, B, RG, e
+	local function R(i) return "Player-1-R" .. i end
+	before_each(function()
+		SK, W = setup()
+		B, RG = SK.RaidBoard, SK.RaidGroups
+		e = B:Create("ony", W.now + 3600)
+		local all = {}
+		for i = 1, 12 do all[i] = R(i) end
+		signUp(B, e.id, all, W.now)
+		for i = 1, 6 do RG:Move(e.id, R(i), { kind = "group", n = 1 + (i > 5 and 1 or 0) }) end
+		W.invited = {}
+		_G.C_PartyInfo = { InviteUnit = function(name) W.invited[#W.invited + 1] = name end,
+			ConvertToRaid = function() W.converted = true end }
+		W.party = {}
+		_G.UnitName = function(u)
+			local i = tonumber(tostring(u):match("^party(%d)$"))
+			if u == "player" then return "Pip" end
+			return i and W.party[i] or nil
+		end
+		_G.UnitIsGroupLeader = function() return true end
+	end)
+
+	it("plans invites and moves without the game", function()
+		local L = RG:Plan(e.id)
+		local plan = RG.InvitePlan(L, { [R(2)] = true }, { [R(1)] = true, [R(2)] = true, [R(6)] = true }, W.player.guid)
+		assert.same({ R(1), R(6) }, { plan[1].guid, plan[2].guid })
+		local want = { a = 1, b = 1, c = 2 }
+		assert.same({ op = "set", index = 3, group = 2 },
+			RG.NextMove({ { index = 1, guid = "a", subgroup = 1 }, { index = 2, guid = "b", subgroup = 1 },
+				{ index = 3, guid = "c", subgroup = 1 } }, want))
+		-- group 2 full of people who belong elsewhere: swap
+		local members = { { index = 1, guid = "c", subgroup = 1 } }
+		for i = 2, 6 do members[i] = { index = i, guid = "x" .. i, subgroup = 2 } end
+		assert.same({ op = "swap", a = 1, b = 2 }, RG.NextMove(members, { c = 2 }))
+		assert.is_nil(RG.NextMove({ { index = 1, guid = "a", subgroup = 1 } }, { a = 1 }))
+	end)
+
+	it("one step per press: invite four, make it a raid, invite the rest, arrange", function()
+		for i = 1, 12 do SK.DBM:Guild().members[R(i)].online = true end
+		assert.truthy(RG:Setup(e.id):find("Invited 4", 1, true))
+		assert.equal(4, #W.invited)
+		W.party = { "Raider 1", "Raider 2" }
+		W.raid = nil
+		_G.GetNumGroupMembers = function() return W.raid and #W.raid or (#W.party > 0 and #W.party + 1 or 0) end
+		assert.truthy(RG:Setup(e.id):find("Made it a raid", 1, true))
+		assert.is_true(W.converted)
+		W.raid = { { name = "Pip Hocus", guid = W.player.guid }, { name = "Raider 1", guid = R(1) }, { name = "Raider 6", guid = R(6) } }
+		W.moves = {}
+		_G.SetRaidSubgroup = function(i, g) W.moves[#W.moves + 1] = { i, g } end
+		W.invited = {}
+		local msg = RG:Setup(e.id)
+		assert.truthy(msg:find("Arranging", 1, true))
+		assert.equal(4, #W.invited) -- R2-R5 (R1 and R6 are in)
+		assert.same({ 3, 2 }, W.moves[1]) -- everyone starts in group 1 here: Raider 6 (raid index 3) to group 2
+		assert.is_not_nil(RG.arranging)
+		W.combat = true
+		RG:ArrangeStep()
+		assert.is_nil(RG.arranging)
+		assert.equal(0, #SK.errors)
+	end)
+
+	it("only for officers, not in combat", function()
+		W.combat = true
+		assert.equal("Not in combat.", RG:Setup(e.id))
+		local SK2 = setup({ rank = "Member", rankIndex = 4 })
+		assert.truthy(SK2.RaidGroups:Setup(e.id):find("Only officers", 1, true))
+	end)
+end)
