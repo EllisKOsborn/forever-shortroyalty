@@ -100,7 +100,8 @@ bridged to the addon only by copy and paste.
   - Tests `tests/v0110_groups_spec.lua`, `v0110_absences_spec.lua`,
     `v0110_assign_spec.lua`, security case. Pictures `raids-groups.png`,
     `raids-assign.png` (preview `raidsView=groups|assign`). TESTING 57–62.
-    Officer guide doc not yet updated for v0.11.0.
+    Officer guide doc updated 20 Nov for v0.11.0 and the v0.12.0 bot (Groups,
+    Boss assignments, Away days, Our own Discord bot + officers picture).
 - **OXM review (20 Nov; v0.11.0 built from it):** owner: "We should do something
   exactly like this" (oxm.gg). `docs/proposals/oxm-review.md`: OXM is a free
   website + Discord bot (already supports Forever, never reads the game);
