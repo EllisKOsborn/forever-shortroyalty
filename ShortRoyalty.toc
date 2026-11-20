@@ -31,6 +31,7 @@ Core\Overview.lua
 Core\ShortWords.lua
 Core\RaidBoard.lua
 Core\Attendance.lua
+Core\OfficerDir.lua
 Core\Reserves.lua
 Core\LootNight.lua
 
@@ -56,6 +57,7 @@ Sync\Merge.lua
 Sync\Sync.lua
 Sync\RaidSync.lua
 Sync\AttendanceSync.lua
+Sync\OfficerSync.lua
 Sync\WordsSync.lua
 Sync\ReserveSync.lua
 

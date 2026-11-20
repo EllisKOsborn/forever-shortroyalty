@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.10.1 (20 Nov 2026): Officers view on the Roster
+
+- **Roster → Officers** (officers and raid leaders with `/sr officer`): every
+  member of every rank, alts under their main, with **roles**, **attendance**
+  (last 30 days) and an **officer note**. Click a name to edit:
+  - tick any of **Tank, Healer, DPS** (several allowed);
+  - link them as an **alt of** another character (for alts that never
+    logged in with the addon; the addon still links the others itself);
+  - write a **note** (up to 300 characters, plain text) and press *Save note*.
+  Right-click opens their character.
+- It's shared **only between officers and raid leaders**, by whisper:
+  changes reach the others online within a minute, and the rest when they
+  log in. Members never receive it. Everyone sending or receiving it needs
+  v0.10.1.
+- `/sr debug` → Raids has an "Officer roster" line.
+
 ## v0.10.0 (20 Nov 2026): In or Bench, and Discord by copy and paste
 
 - **In or Bench:** officers and raid leaders pick the raid from the

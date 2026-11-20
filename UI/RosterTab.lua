@@ -393,8 +393,15 @@ function Roster:Build(page)
 		}
 	end, "Group alts, copy the list")
 	self.options:SetPoint("LEFT", self.raidMenu, "RIGHT", SP.s, 0)
+	-- v0.10.1: the Officers view (officers and raid leaders with /sr officer).
+	self.officerChip = W.Chip(page, "Officers", function()
+		rs.officer = not rs.officer
+		Roster:Refresh()
+	end)
+	self.officerChip.tooltip = "Roles, notes, alts and attendance for every member. Only officers and raid leaders see it."
+	self.officerChip:SetPoint("LEFT", self.options, "RIGHT", SP.s, 0)
 	self.count = Theme.Text(page, "small", "dim")
-	self.count:SetPoint("LEFT", self.options, "RIGHT", SP.m, 0)
+	self.count:SetPoint("LEFT", self.officerChip, "RIGHT", SP.m, 0)
 	self.count:SetPoint("RIGHT", page, "TOPRIGHT", 0, -S.control / 2)
 	self.count:SetJustifyH("RIGHT")
 	self.count:SetWordWrap(false)
@@ -445,6 +452,210 @@ function Roster:Build(page)
 	self.attList = makeList(ATT_COLUMNS, Roster.SEEN_COL) -- online first
 	self.attList:SetPoint("TOPLEFT", 0, -(2 * S.control + SP.s + SP.m))
 	self.attList:Hide()
+	self:BuildOfficers(page)
+	SK:On("OFFICERDIR_UPDATED", function() if page:IsShown() then Roster:Refresh() end end)
+	SK:On("ATTENDANCE_UPDATED", function() if page:IsShown() and rs.officer then Roster:Refresh() end end)
+end
+
+---------------------------------------------------------------------------
+-- Officers view (v0.10.1): every member with officer-set roles, notes,
+-- alt links and attendance. Data: Core/OfficerDir.lua, shared between
+-- officers by Sync/OfficerSync.lua.
+---------------------------------------------------------------------------
+Roster.OFF_LIST_W = 470
+Roster.OFF_EDIT_W = S.contentW - Roster.OFF_LIST_W - SP.xl
+Roster.ATT_DAYS = 30
+Roster.OFF_COLUMNS = {
+	{ key = "name", title = "Name", width = 150, sort = function(a, b) return a.sortKey < b.sortKey end },
+	{ key = "rank", title = "Rank", width = 96, sort = function(a, b) return a.rankIndex < b.rankIndex end },
+	{ key = "roles", title = "Roles", width = 76, sort = function(a, b) return a.roles < b.roles end },
+	{ key = "pct", title = "Attend.", width = 58, align = "RIGHT",
+		sort = function(a, b) return (a.pct or -1) < (b.pct or -1) end },
+	{ key = "note", title = "Note", width = 470 - 150 - 96 - 76 - 58 - SP.m },
+}
+
+local function setOffCell(fs, r, col)
+	local k = col.key
+	if k == "name" then
+		fs:SetText((r.main and Theme.Paint("faint", "  ") or "") .. Theme.ClassText(r.name, r.class) ..
+			(r.main and Theme.Paint("faint", " alt") or ""))
+	elseif k == "rank" then
+		fs:SetText(Theme.Paint("dim", r.rank ~= "" and r.rank or "-"))
+	elseif k == "roles" then
+		fs:SetText(r.roles ~= "" and r.roles or Theme.DASH)
+	elseif k == "pct" then
+		fs:SetText(r.pct and (r.pct .. "%") or Theme.DASH)
+	elseif k == "note" then
+		fs:SetText(r.note and Theme.Paint("dim", r.note) or Theme.DASH)
+	end
+end
+
+-- The selected member's attendance line. Pure; tested.
+function Roster.AttendanceText(r, days)
+	if not r or r.raids == 0 then return "Attendance (" .. days .. " days): no recorded raids yet" end
+	return string.format("Attendance (%d days): %d%% of %d raids  ·  bench %d", days, r.pct or 0, r.raids, r.bench or 0)
+end
+
+function Roster:BuildOfficers(page)
+	local p = CreateFrame("Frame", nil, page)
+	p:SetPoint("TOPLEFT", 0, -(S.control + SP.m))
+	p:SetPoint("BOTTOMRIGHT")
+	p:Hide()
+	self.offPanel = p
+	self.offList = W.List(p, {
+		columns = Roster.OFF_COLUMNS, setCell = setOffCell,
+		onClick = function(r, button)
+			if button == "RightButton" then return SK.CharacterTab:ShowCharacter(r.guid) end
+			Roster.offSelected = r.guid
+			Roster:Refresh()
+		end,
+		onEnter = function(row, r)
+			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+			Theme.TipLine(GameTooltip, Theme.ClassText(r.name, r.class))
+			if r.main then
+				Theme.TipLine(GameTooltip, "Alt of " .. (r.mainName or "?") ..
+					(r.altHow == "auto" and " (linked by the addon)" or " (linked by an officer)"), "dim")
+			end
+			if r.note then Theme.TipLine(GameTooltip, r.note, "text", true) end
+			Theme.TipLine(GameTooltip, "Click to edit. Right-click: their character.", "accent")
+			GameTooltip:Show()
+		end,
+	})
+	self.offList:SetPoint("TOPLEFT")
+	self.offList:SetPoint("BOTTOMLEFT")
+	self.offList:SetWidth(Roster.OFF_LIST_W)
+	self.offList.sortCol = 1
+
+	local e = CreateFrame("Frame", nil, p)
+	e:SetPoint("TOPLEFT", Roster.OFF_LIST_W + SP.xl, 0)
+	e:SetPoint("BOTTOMRIGHT")
+	self.offEdit = e
+	self.offName = Theme.Text(e, "title", "text")
+	self.offName:SetPoint("TOPLEFT", 0, -SP.xxs)
+	self.offSub = Theme.Text(e, "small", "dim")
+	self.offSub:SetPoint("TOPLEFT", self.offName, "BOTTOMLEFT", 0, -SP.xs)
+	self.offSub:SetWidth(Roster.OFF_EDIT_W)
+	self.offSub:SetJustifyH("LEFT")
+	local function label(text, y)
+		local l = Theme.Text(e, "label", "dim")
+		l:SetText(text:upper())
+		l:SetPoint("TOPLEFT", 0, -y)
+		return l
+	end
+	label("Roles", 52)
+	self.offRoles = {}
+	local prev
+	for _, role in ipairs(SK.Data.ROLES) do
+		local c = W.Chip(e, SK.Data.ROLE_NAMES[role], function()
+			if Roster.offSelected then
+				local ok, why = SK.OfficerDir:ToggleRole(Roster.offSelected, role)
+				if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
+				Roster:Refresh()
+			end
+		end)
+		c.role = role
+		if prev then c:SetPoint("LEFT", prev, "RIGHT", SP.xs, 0) else c:SetPoint("TOPLEFT", 0, -(52 + W.CARD_LABEL_H)) end
+		self.offRoles[#self.offRoles + 1] = c
+		prev = c
+	end
+	label("Alt of", 112)
+	self.offAlt = W.Menu(e, {
+		width = Roster.OFF_EDIT_W,
+		items = function()
+			local out = { { value = "", text = "Not an alt (or linked by the addon)" } }
+			local guild = SK.DBM:Guild()
+			local list = {}
+			for guid, m in pairs(guild and guild.members or {}) do
+				if not m.leftAt and guid ~= Roster.offSelected then list[#list + 1] = { value = guid, text = m.name or "?" } end
+			end
+			table.sort(list, function(a, b) return a.text:lower() < b.text:lower() end)
+			for _, it in ipairs(list) do out[#out + 1] = it end
+			return out
+		end,
+		get = function() return Roster.offSelected and SK.OfficerDir.AltOf(SK.OfficerDir:Get(), Roster.offSelected) or "" end,
+		set = function(v)
+			if Roster.offSelected then
+				local ok, why = SK.OfficerDir:Set("a", Roster.offSelected, v)
+				if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
+				Roster:Refresh()
+			end
+		end,
+	})
+	self.offAlt:SetPoint("TOPLEFT", 0, -(112 + W.CARD_LABEL_H))
+	label("Officer note", 172)
+	local box = CreateFrame("Frame", nil, e)
+	box:SetPoint("TOPLEFT", 0, -(172 + W.CARD_LABEL_H))
+	box:SetSize(Roster.OFF_EDIT_W, 96)
+	Theme.Panel(box, { bg = "surface", border = "lineStrong" })
+	local note = CreateFrame("EditBox", nil, box)
+	note:SetPoint("TOPLEFT", SP.s, -SP.s)
+	note:SetPoint("BOTTOMRIGHT", -SP.s, SP.s)
+	note:SetMultiLine(true)
+	note:SetAutoFocus(false)
+	note:SetMaxLetters(SK.OfficerDir.NOTE_MAX)
+	Theme.Font(note, "small", "text")
+	note:SetScript("OnEscapePressed", function(selfBox) selfBox:ClearFocus() end)
+	self.offNote = note
+	self.offSave = W.Button(e, "Save note", nil, S.control, function() Roster:SaveNote() end, "primary")
+	self.offSave:SetPoint("TOPLEFT", box, "BOTTOMLEFT", 0, -SP.s)
+	self.offSaved = Theme.Text(e, "small", "dim")
+	self.offSaved:SetPoint("LEFT", self.offSave, "RIGHT", SP.m, 0)
+	self.offAtt = Theme.Text(e, "small", "dim")
+	self.offAtt:SetPoint("TOPLEFT", self.offSave, "BOTTOMLEFT", 0, -SP.l)
+	self.offAtt:SetWidth(Roster.OFF_EDIT_W)
+	self.offAtt:SetJustifyH("LEFT")
+	self.offAtt:SetWordWrap(true)
+	self.offHint = Theme.Text(e, "small", "faint")
+	self.offHint:SetPoint("TOPLEFT", self.offAtt, "BOTTOMLEFT", 0, -SP.m)
+	self.offHint:SetWidth(Roster.OFF_EDIT_W)
+	self.offHint:SetJustifyH("LEFT")
+	self.offHint:SetWordWrap(true)
+	self.offHint:SetText("Only officers and raid leaders see this page. Changes reach the others online within a minute, " ..
+		"and the rest when they log in.")
+end
+
+function Roster:SaveNote()
+	if not Roster.offSelected then return end
+	local ok, why = SK.OfficerDir:Set("n", Roster.offSelected, self.offNote:GetText() or "")
+	self.offNote:ClearFocus()
+	self.offSaved:SetText(ok and Theme.Paint("good", "Saved") or Theme.Paint("bad", tostring(why)))
+	Roster:Refresh()
+end
+
+function Roster:RefreshOfficers()
+	local guild = SK.DBM:Guild()
+	local dir = SK.OfficerDir:Get(guild) or {}
+	local now = SK.Compat.Now()
+	local att = {}
+	for _, t in ipairs(SK.Attendance.Totals(SK.Attendance.Sorted(SK.Attendance:Store(guild) or {},
+		now - Roster.ATT_DAYS * 86400))) do att[t.guid] = t end
+	local rows = SK.OfficerDir.Rows(guild, dir, self.filter, att)
+	local notes = 0
+	for _, r in ipairs(rows) do if r.note then notes = notes + 1 end end
+	self.count:SetText(Theme.Count(#rows, "character") .. "  ·  " .. Theme.Count(notes, "note"))
+	local found
+	for _, r in ipairs(rows) do if r.guid == Roster.offSelected then found = r end end
+	if not found then
+		found = rows[1]
+		Roster.offSelected = found and found.guid or nil
+		self.offSaved:SetText("")
+	end
+	self.offList:SetEmptyText(Roster.EmptyText(guild ~= nil, self.filter))
+	self.offList:SetItems(rows)
+	self.offList:SetSelected(function(r) return r.guid == Roster.offSelected end)
+	self.offEdit:SetShown(found ~= nil)
+	if not found then return end
+	self.offName:SetText(Theme.ClassText(found.name, found.class))
+	self.offSub:SetText(string.format("%s  ·  level %d%s", found.rank ~= "" and found.rank or "No rank", found.level,
+		found.main and ("  ·  alt of " .. (found.mainName or "?") .. (found.altHow == "auto" and " (by the addon)" or "")) or ""))
+	local roles = SK.OfficerDir.RolesOf(dir, found.guid) or {}
+	for _, c in ipairs(self.offRoles) do c:SetActive(roles[c.role] == true) end
+	self.offAlt:Refresh()
+	if not self.offNote:HasFocus() or self.offNoteFor ~= found.guid then
+		self.offNote:SetText(found.note or "")
+		self.offNoteFor = found.guid
+	end
+	self.offAtt:SetText(Roster.AttendanceText(found, Roster.ATT_DAYS))
 end
 
 -- What an empty roster says. Pure; tested.
@@ -481,6 +692,21 @@ function Roster:Refresh()
 	if not self.list then return end
 	local guild = SK.DBM:Guild()
 	local rs = SK.DB.settings.roster
+	-- v0.10.1: the Officers view replaces the lists while it's on.
+	local officer = SK.RaidBoard.OfficerView()
+	self.officerChip:SetShown(officer)
+	self.officerChip:SetActive(officer and rs.officer == true)
+	local offOn = officer and rs.officer == true
+	self.offPanel:SetShown(offOn)
+	self.raidMenu:SetShown(not offOn)
+	self.options:ClearAllPoints()
+	self.options:SetPoint("LEFT", offOn and self.search or self.raidMenu, "RIGHT", SP.s, 0)
+	if offOn then
+		self.attBar:Hide()
+		self.list:Hide()
+		self.attList:Hide()
+		return self:RefreshOfficers()
+	end
 	local raid = rs.raid and Roster.Raid(rs.raid)
 	if raid and raid.hidden then raid = nil end -- not in the first raid wave
 	if rs.raid and not raid then rs.raid = nil end

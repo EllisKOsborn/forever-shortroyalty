@@ -270,3 +270,28 @@ describe("Security: v0.10.0 In/Bench choices and imported sign-ups in RB", funct
 		assert.equal(0, #SK.errors)
 	end)
 end)
+
+describe("Security: v0.10.1 officer roster messages (OR, OQ)", function()
+	local SK, W
+	local BOB, CAT = "Player-1-B", "Player-1-C"
+	before_each(function()
+		SK, W = H.load()
+		W.member("Pip", W.player.guid, { rank = "Officer", rankIndex = 1 })
+		W.member("Bob", BOB, { rank = "Raid Leader", rankIndex = 2 })
+		W.member("Cat", CAT, { rank = "Member", rankIndex = 4 })
+		SK.Identity:ReadRoster()
+	end)
+	it("only officers' notes by whisper; links, colours and junk refused", function()
+		local function send(t, fields, sender, guid, dist)
+			SK.Sync:OnCommReceived(SK.PREFIX, H.peerMessage(SK, t, fields, guid), dist or "WHISPER", sender)
+		end
+		send("OR", { d = { ["n:" .. CAT] = { v = "x", u = W.now, by = BOB } } }, "Cat", CAT)
+		send("OR", { d = { ["n:" .. CAT] = { v = "|Hitem:1|h[x]|h", u = W.now, by = BOB } } }, "Bob", BOB)
+		send("OR", { d = { ["n:" .. CAT] = { v = string.rep("x", 5000), u = W.now, by = BOB } } }, "Bob", BOB)
+		send("OR", { d = "x" }, "Bob", BOB)
+		send("OQ", { k = { [{}] = 1 } }, "Bob", BOB)
+		assert.equal(0, SK.Count(SK.OfficerDir:Get()))
+		W.advance(20)
+		assert.equal(0, #SK.errors)
+	end)
+end)

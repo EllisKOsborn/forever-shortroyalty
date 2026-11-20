@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="WoW Forever 1.60.1" src="https://img.shields.io/badge/WoW%20Forever-1.60.1%20%C2%B7%2016001-FFC000?labelColor=000000">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.10.0%20alpha-F06BB0?labelColor=000000">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.10.1%20alpha-F06BB0?labelColor=000000">
   <img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-FF6A1A?labelColor=000000">
 </p>
 
@@ -42,7 +42,7 @@
 | | What you get |
 |---|---|
 | 🏰 **Overview** | The guild at a glance: four numbers, what needs a look, raid readiness and recent milestones |
-| 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view |
+| 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view; for officers an **Officers** view with roles, notes, alt links and attendance |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
 | 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness and who's **In** or on the **Bench**; **Copy for Discord** and **Import sign-ups from Discord**; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals, shared between all officers |
 | 🎲 **Loot** (Reserve+) | Soft reserves with **bonus points**: reserve items for a raid night, and every night you don't get one it gains points (no cap) that are added to your roll next time; your points, everyone's, and a history of every change; for officers a **Loot night** screen (rolls ranked, award, raid check, end-of-night bonus) and **Rules** (reserves per raid, bonus, loot lists) |
@@ -93,6 +93,16 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 - For Onyxia, an **Attuned** column: *yes* (quest done, or the amulet in their bags), *no*, or *unknown* (no data, or gear hidden). An orange **!** means the quest is done but the amulet isn't in their bags, and you need it there to enter.
 - Filters **All / Attuned / Not attuned / Unknown**, a count such as "23 attuned · 9 not · 6 unknown", and **Max level only** (on by default).
 - Every character gets its own row, alts included, with "alt of X" in the tooltip. Your choices are remembered.
+
+**Officers view** (v0.10.1). Officers and raid leaders with `/sr officer` get an
+**Officers** chip next to the ··· menu:
+
+<p align="center"><img src="docs/images/roster-officers.png" alt="Roster, Officers view: roles, attendance and notes, with the editor on the right" width="100%"></p>
+
+- Every member of every rank, with alts under their main (linked by an officer, or by the addon once both characters have logged in with it).
+- Columns: **Roles** (any of Tank, Healer, DPS), **Attend.** (attendance over the last 30 days, from the Attendance tab) and **Note**.
+- Click a name to edit on the right: tick their **roles**, link them as an **alt of** another character, and write an **officer note** (up to 300 characters, plain text). Right-click opens their character.
+- Shared only between officers and raid leaders, by whisper: changes reach the others online within a minute, and the rest when they log in. Members never receive any of it.
 
 ### 🛡️ Character
 <p align="center"><img src="docs/images/character.png" alt="Character tab" width="100%"></p>

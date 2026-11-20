@@ -156,3 +156,13 @@ with made-up colours and cost someone tries on that day's word.
   nothing from the paste is stored or shown except the unmatched lines,
   back to the officer who pasted them.
 
+## Addendum (20 Nov 2026, v0.10.1 officer roster)
+
+`OR` (entries) and `OQ` (what I hold), **WHISPER only**, between officer
+and raid leader ranks only (sender, receiver and each entry's `by` checked
+against the receiver's roster), like attendance. `OfficerDir.Valid`: keys
+`r|n|a:guid`; roles only T/H/D once each; notes at most 300 characters with
+no `|` or control characters (so no colours or links can be shown); alt =
+a GUID string. Newest wins; 1500 entries at most. Notes are shown only in
+the Officers view and its tooltip.
+

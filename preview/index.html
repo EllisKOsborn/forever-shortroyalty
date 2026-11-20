@@ -489,7 +489,36 @@ function rosterRows() {
   ms.sort((a, b) => (S.sort.desc ? -1 : 1) * by(a, b) || a.name.localeCompare(b.name));
   return ms;
 }
+// v0.10.1: the Officers view (officers with /sr officer).
+function rosterOfficers() {
+  const M = G.members, LW = 470, RX = LW + 20, sel = M[2];
+  const ROLES = { WARRIOR: "Tank", PRIEST: "Heal", PALADIN: "Heal DPS", DRUID: "Tank Heal", SHAMAN: "Heal" };
+  const NOTES = ["Main tank, Onyxia kill on 11 Dec", "", "Ask about the Hyjal bench", "", "Late twice this month", "", "", "Herbalism alt", ""];
+  const rows = M.slice(0, 22).map((m, i) => ({ m, alt: i % 7 === 3, roles: ROLES[m.cls] || "DPS", pct: m.hasData ? 60 + (i * 7) % 41 : null, note: NOTES[i % NOTES.length] }));
+  const chip = (t, on) => `<span class="chip ${on ? "on" : ""}">${t}</span>`;
+  return `<div class="search abs" style="left:0;top:0;width:240px"><input placeholder="Search name, profession, note" value=""></div>
+    <div class="menu abs" style="left:248px;top:0;width:28px">${btn("···", "", 'style="padding:0;width:28px;justify-content:center"')}</div>
+    <span class="chip on" style="position:absolute;left:284px;top:1px">Officers</span>
+    <div class="abs dim ell small" style="left:380px;right:0;top:6px;text-align:right">${plural(M.length, "character")}  ·  4 notes</div>
+    ${list([{ key: "n", t: "Name", w: 150 }, { key: "r", t: "Rank", w: 96 }, { key: "ro", t: "Roles", w: 76 }, { key: "p", t: "Attend.", w: 58, r: 1 }, { key: "no", t: "Note", w: 78 }], rows,
+      (r, c) => c.key === "n" ? (r.alt ? "&nbsp;&nbsp;" : "") + cls(r.m) + (r.alt ? ' <span class="faint">alt</span>' : "") : c.key === "r" ? `<span class="dim">${esc(r.m.rank)}</span>`
+        : c.key === "ro" ? r.roles : c.key === "p" ? (r.pct ? r.pct + "%" : DASH) : (r.note ? `<span class="dim">${esc(r.note)}</span>` : DASH),
+      { click: true, sel: (r) => r.m === sel, sort: { key: "n" }, style: `left:0;top:36px;bottom:0;width:${LW}px` })}
+    <div class="abs" style="left:${RX}px;top:38px;font-size:15px">${cls(sel)}</div>
+    <div class="abs dim small" style="left:${RX}px;top:60px">${esc(sel.rank)}  ·  level ${sel.level}</div>
+    <div class="abs display dim" style="left:${RX}px;top:88px;font-size:11px;letter-spacing:.08em">ROLES</div>
+    <div class="abs" style="left:${RX}px;top:108px;display:flex;gap:4px">${chip("Tank", false)}${chip("Healer", true)}${chip("DPS", true)}</div>
+    <div class="abs display dim" style="left:${RX}px;top:148px;font-size:11px;letter-spacing:.08em">ALT OF</div>
+    <div class="menu abs" style="left:${RX}px;top:168px;width:254px">${btn("Not an alt (or linked by the addon)").replace("</span>", '<i class="arrow"></i></span>')}</div>
+    <div class="abs display dim" style="left:${RX}px;top:208px;font-size:11px;letter-spacing:.08em">OFFICER NOTE</div>
+    <div class="abs small" style="left:${RX}px;top:228px;width:238px;height:80px;padding:8px;background:var(--surface);border:1px solid var(--lineStrong)">Ask about the Hyjal bench. Healer or DPS, prefers healing.</div>
+    ${btn("Save note", "primary", `style="position:absolute;left:${RX}px;top:332px"`)}<span class="abs good small" style="left:${RX + 104}px;top:337px">Saved</span>
+    <div class="abs dim small" style="left:${RX}px;top:372px;width:254px">Attendance (30 days): 86% of 7 raids  ·  bench 1</div>
+    <div class="abs faint small" style="left:${RX}px;top:400px;width:254px;line-height:1.35">Only officers and raid leaders see this page. Changes reach the others online within a minute, and the rest when they log in.</div>`;
+}
+
 function roster() {
+  if (S.rosterView === "officers") return rosterOfficers();
   const raid = S.raid === "ony";
   let rows = rosterRows();
   if (raid) { rows = rows.filter((m) => m.level === 60); if (S.attFilter !== "all") rows = rows.filter((m) => m.att === S.attFilter); }
@@ -1194,7 +1223,7 @@ function seg(id) {
 try { Object.assign(S, JSON.parse(localStorage.getItem("skPreview") || "{}")); } catch (e) { /* ignore */ }
 // ?screen=roster&data=worst&view=before&raid=ony  (and &shot=1 for the README pictures: window only, no chrome)
 const Q = new URLSearchParams(location.search);
-for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode"]) if (Q.get(k)) S[k] = Q.get(k);
+for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode", "rosterView"]) if (Q.get(k)) S[k] = Q.get(k);
 const SHOT = Q.get("shot");
 if (SHOT) {
   document.body.classList.add("shot"); S.view = SHOT === "compare" ? "before" : "after"; S.reduce = true;

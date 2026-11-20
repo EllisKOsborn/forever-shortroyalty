@@ -452,6 +452,10 @@ function Commands.RaidLines()
 	add("Attendance sharing (v0.8.1): officers online with the addon: %d, sent %d records / %d asks, received %d / %d, " ..
 		"accepted %d, rejected %d, last reject: %s", #SK.AttendanceSync.Targets(guild, now), as.sentAR, as.sentAQ,
 		as.gotAR, as.gotAQ, as.accepted, as.rejected, tostring(SK.AttendanceSync.lastReject))
+	local os_ = SK.OfficerSync.stats
+	add("Officer roster (v0.10.1): entries %d, sent %d / %d asks, received %d / %d, accepted %d, rejected %d, last reject: %s",
+		SK.Count(SK.OfficerDir:Get(guild) or {}), os_.sentOR, os_.sentOQ, os_.gotOR, os_.gotOQ, os_.accepted, os_.rejected,
+		tostring(SK.OfficerSync.lastReject))
 	return L
 end
 

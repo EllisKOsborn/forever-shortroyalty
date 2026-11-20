@@ -209,3 +209,13 @@ addon read.
     line under the box says how many were added; the names appear in the
     line-up. Tell me what it couldn't match (paste me the list).
 
+## v0.10.1 Officers view on the Roster
+
+52. [ ] With `/sr officer` on, Roster shows an **Officers** chip; a member
+    doesn't see it. Click it: every member with Rank, Roles, Attend. and
+    Note; alts under their main.
+53. [ ] Click a name: tick Tank / Healer / DPS, pick *Alt of*, write a note
+    and press **Save note**. Another officer on v0.10.1 sees the same
+    within a minute (or about 2 minutes after logging in).
+54. [ ] The *Attend.* column matches the Attendance tab's 30-day totals.
+

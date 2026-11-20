@@ -14,13 +14,14 @@ local FILES = {
 	"Core/RecipeDB.lua", "Core/Onboarding.lua",
 	"Core/Export.lua", "Core/Learn.lua",
 	"Core/GearIndex.lua", "Core/Feed.lua", "Core/Overview.lua", "Core/ShortWords.lua", "Core/RaidBoard.lua", "Core/Attendance.lua",
+	"Core/OfficerDir.lua",
 	"Core/Reserves.lua", "Core/LootNight.lua",
 	"Data/Professions.lua", "Data/Recipes.lua", "Data/Attunements.lua", "Data/Factions.lua", "Data/Enchants.lua", "Data/Words.lua",
 	"Data/Roles.lua", "Data/Loot.lua",
 	"Collect/Character.lua", "Collect/Talents.lua", "Collect/Professions.lua",
 	"Collect/Reputation.lua", "Collect/Attunements.lua", "Collect/Profile.lua",
 	"Sync/Codec.lua", "Sync/Frames.lua", "Sync/Merge.lua", "Sync/Sync.lua", "Sync/RaidSync.lua",
-	"Sync/AttendanceSync.lua", "Sync/ReserveSync.lua", "Sync/WordsSync.lua",
+	"Sync/AttendanceSync.lua", "Sync/OfficerSync.lua", "Sync/ReserveSync.lua", "Sync/WordsSync.lua",
 }
 
 -- UI files in TOC order (the stubbed frames are enough for them to build).
