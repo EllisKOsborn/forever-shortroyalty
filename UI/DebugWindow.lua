@@ -27,7 +27,9 @@ function Debug:Build()
 	title:SetPoint("TOPLEFT", SP.l, -SP.l)
 	local hint = Theme.Text(f, "small", "dim")
 	hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -SP.xs)
-	hint:SetText("Click the text, press Ctrl+A (Cmd+A on Mac) then Ctrl+C (Cmd+C) to copy it.")
+	f.hint = hint
+	Debug.COPY_HINT = "Click the text, press Ctrl+A (Cmd+A on Mac) then Ctrl+C (Cmd+C) to copy it."
+	hint:SetText(Debug.COPY_HINT)
 	local close = W.CloseButton(f, function() f:Hide() end)
 	close:SetPoint("TOPRIGHT", -SP.s, -SP.s)
 
@@ -44,7 +46,8 @@ function Debug:Build()
 	edit:SetTextInsets(SP.s, SP.s, SP.s, SP.s)
 	Theme.Font(edit, "small", "text")
 	edit:SetScript("OnEscapePressed", function(self) self:ClearFocus(); f:Hide() end)
-	edit:SetScript("OnTextChanged", function(self, user) if user then self:SetText(Debug.text or "") end end)
+	-- Read-only, except in AskText (v0.10.0: pasting sign-ups from Discord).
+	edit:SetScript("OnTextChanged", function(self, user) if user and not Debug.asking then self:SetText(Debug.text or "") end end)
 	scroll:SetScrollChild(edit)
 	scroll:EnableMouseWheel(true)
 	scroll:SetScript("OnMouseWheel", function(self, delta)
@@ -59,6 +62,17 @@ function Debug:Build()
 	local log = W.Button(f, "Show log", nil, S.control, function() Debug:Open(true) end)
 	log:SetPoint("LEFT", refresh, "RIGHT", SP.s, 0)
 	f.log = log
+	local action = W.Button(f, "Import", nil, S.control, function()
+		if Debug.onSubmit then f.result:SetText(Debug.onSubmit(f.edit:GetText() or "") or "") end
+	end, "primary")
+	action:SetPoint("BOTTOMLEFT", SP.l, SP.l)
+	action:Hide()
+	f.action = action
+	f.result = Theme.Text(f, "small", "dim")
+	f.result:SetPoint("LEFT", action, "RIGHT", SP.m, 0)
+	f.result:SetPoint("RIGHT", -SP.l, 0)
+	f.result:SetJustifyH("LEFT")
+	f.result:SetWordWrap(true)
 	self.frame = f
 	return f
 end
@@ -73,6 +87,7 @@ function Debug:Open(withLog)
 	self.text = table.concat(lines, "\n")
 	local f = self:Build()
 	f.title:SetText("SHORT ROYALTY DEBUG REPORT")
+	Debug:Reset(f)
 	f.refresh:Show()
 	f.log:Show()
 	f.edit:SetText(self.text)
@@ -80,10 +95,37 @@ function Debug:Open(withLog)
 	f:Show()
 end
 
+-- Back to a read-only copy window.
+function Debug:Reset(f)
+	self.asking, self.onSubmit = false, nil
+	f.hint:SetText(Debug.COPY_HINT)
+	f.action:Hide()
+	f.result:SetText("")
+end
+
+-- A box to paste text into (v0.10.0): onSubmit(text) returns the line to
+-- show next to the button.
+function Debug:AskText(title, hint, button, onSubmit)
+	self.text = ""
+	local f = self:Build()
+	Debug:Reset(f)
+	self.asking, self.onSubmit = true, onSubmit
+	f.title:SetText(title:upper())
+	f.hint:SetText(hint)
+	f.refresh:Hide()
+	f.log:Hide()
+	f.action:SetText(button)
+	f.action:Show()
+	f.edit:SetText("")
+	f:Show()
+	f.edit:SetFocus()
+end
+
 -- "Copy as text": the same copyable window with any plain text.
 function Debug:ShowText(title, text)
 	self.text = text
 	local f = self:Build()
+	Debug:Reset(f)
 	f.title:SetText(title:upper())
 	f.refresh:Hide()
 	f.log:Hide()

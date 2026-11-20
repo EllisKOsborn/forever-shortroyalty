@@ -142,3 +142,17 @@ roster). WQ lists at most 20 GUIDs; WA maps are read up to 20 entries. A
 WA only changes our game for today, for a GUID on our own account, and only
 when it has more rows than ours. Accepted risk: a guildmate could answer
 with made-up colours and cost someone tries on that day's word.
+
+## Addendum (20 Nov 2026, v0.10.0)
+
+- `RB` gains `pk` (In / Bench choices): kept only if `by` is an officer or
+  raid leader in the receiver's roster, the player is a member and the raid
+  is known; v must be i, b or "-"; newest wins (`Board.ValidPlace`,
+  `MergePlace`). Older versions ignore `pk`.
+- Sign-ups may carry `b` (the officer who imported them from Discord):
+  accepted only if `b` is a lead rank. Like relayed sign-ups, a forged one
+  is possible; accepted risk.
+- **Import sign-ups** only parses pasted text into GUIDs from our own roster;
+  nothing from the paste is stored or shown except the unmatched lines,
+  back to the officer who pasted them.
+

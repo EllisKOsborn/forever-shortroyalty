@@ -12,24 +12,25 @@ local S, SP = Theme.SIZES, Theme.SPACE
 
 RT.VIEWS = { { "upcoming", "Raids" }, { "new", "New raid" }, { "attendance", "Attendance" } }
 RT.OFFICER_VIEWS = { new = true, attendance = true }
-RT.LEFT_W = 290
+RT.LEFT_W = 270
 RT.RIGHT_W = S.contentW - RT.LEFT_W - SP.xl
 RT.ATT_LEFT_W = 270
 RT.ATT_RIGHT_W = S.contentW - RT.ATT_LEFT_W - SP.xl
 RT.DAYS = { { 30, "30 days" }, { 60, "60 days" }, { 90, "90 days" }, { 0, "All" } }
 
 RT.EVENT_COLUMNS = {
-	{ key = "when", title = "When", width = 124, sort = function(a, b) return a.at < b.at end },
-	{ key = "raid", title = "Raid", width = 106 },
-	{ key = "signed", title = "Signed", width = 60, align = "RIGHT" },
+	{ key = "when", title = "When", width = 130, sort = function(a, b) return a.at < b.at end },
+	{ key = "raid", title = "Raid", width = 82 },
+	{ key = "signed", title = "Signed", width = RT.LEFT_W - 130 - 82, align = "RIGHT" },
 }
 RT.LINEUP_COLUMNS = {
-	{ key = "name", title = "Name", width = 128, sort = function(a, b) return a.name:lower() < b.name:lower() end },
-	{ key = "status", title = "Status", width = 82 },
-	{ key = "role", title = "Role", width = 62 },
-	{ key = "spec", title = "Spec", width = 76 },
-	{ key = "ilvl", title = "ilvl", width = 36, align = "RIGHT", sort = function(a, b) return (a.ilvl or 0) < (b.ilvl or 0) end },
-	{ key = "att", title = "Attuned", width = RT.RIGHT_W - 128 - 82 - 62 - 76 - 36 - SP.m, align = "RIGHT" },
+	{ key = "name", title = "Name", width = 118, sort = function(a, b) return a.name:lower() < b.name:lower() end },
+	{ key = "status", title = "Status", width = 78 },
+	{ key = "place", title = "Raid", width = 48 },
+	{ key = "role", title = "Role", width = 56 },
+	{ key = "spec", title = "Spec", width = 60 },
+	{ key = "ilvl", title = "ilvl", width = 32, align = "RIGHT", sort = function(a, b) return (a.ilvl or 0) < (b.ilvl or 0) end },
+	{ key = "att", title = "Attuned", width = RT.RIGHT_W - 118 - 78 - 48 - 56 - 60 - 32 - SP.m, align = "RIGHT" },
 }
 RT.RECORD_COLUMNS = {
 	{ key = "date", title = "Date", width = 96 },
@@ -77,17 +78,21 @@ function RT.EventRows(board, now, me)
 	for _, e in ipairs(Board.Upcoming(board, now)) do
 		local raid = Board.Raid(e.raid)
 		local mine = board.signups[e.id] and board.signups[e.id][me or ""]
-		rows[#rows + 1] = { id = e.id, at = e.at, when = Board.ShortWhen(e.at, now), raidName = raid and raid.name or e.raid,
+		rows[#rows + 1] = { id = e.id, at = e.at, when = Board.ShortWhen(e.at, now), raidName = raid and (raid.short or raid.name) or e.raid,
 			size = raid and raid.size, counts = Board.Counts(board, e.id), mine = mine and mine.s, ev = e }
 	end
 	return rows
 end
 
--- "You: Signed up as Healer" / "You haven't answered yet".
-function RT.MineText(su)
-	if not su then return Theme.Paint("spark", "You haven't answered yet") end
+-- "You: Signed up as Healer  ·  You're in" / "You haven't answered yet".
+-- place = "i" | "b" | nil (v0.10.0: officers' pick, shown to everyone).
+RT.PLACE_TEXT = { i = Theme.Paint("good", "You're in"), b = Theme.Paint("accent", "You're on the bench") }
+function RT.MineText(su, place)
+	local tail = place and ("  ·  " .. RT.PLACE_TEXT[place]) or ""
+	if not su then return Theme.Paint("spark", "You haven't answered yet") .. tail end
 	local role = su.r and SK.Data.ROLE_NAMES[su.r]
 	return "You: " .. Theme.Paint(STATUS_TONE[su.s], Board.STATUS_NAME[su.s]) .. (role and su.s ~= "n" and (" as " .. role) or "")
+		.. (su.b and Theme.Paint("faint", " (added by an officer)") or "") .. tail
 end
 
 -- The line at the top of Attendance: what's being recorded, else who
@@ -130,6 +135,8 @@ local function setLineUpCell(fs, r, col)
 			(r.duplicateOf and (" " .. C("spark") .. "2x|r") or ""))
 	elseif k == "status" then
 		fs:SetText(Theme.Paint(STATUS_TONE[r.status], r.statusName))
+	elseif k == "place" then
+		fs:SetText(r.place == "i" and Theme.Paint("good", "In") or r.place == "b" and Theme.Paint("accent", "Bench") or Theme.DASH)
 	elseif k == "role" then
 		fs:SetText(r.role and Theme.Paint(r.roleGuess and "faint" or "text", SK.Data.ROLE_NAMES[r.role]) or Theme.DASH)
 	elseif k == "spec" then
@@ -277,7 +284,24 @@ function RT:Build(page)
 	self.ready:SetHeight(32)
 	self.lineup = W.List(d, {
 		columns = RT.LINEUP_COLUMNS, setCell = setLineUpCell,
-		onClick = function(r) SK.CharacterTab:ShowCharacter(r.guid) end,
+		-- Officers: click = In, Bench, undecided in turn; right-click = their
+		-- character. Everyone else: click = their character.
+		onClick = function(r, button)
+			if Board.OfficerView() and button ~= "RightButton" then return RT:CyclePlace(r) end
+			SK.CharacterTab:ShowCharacter(r.guid)
+		end,
+		onEnter = function(row, r)
+			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+			Theme.TipLine(GameTooltip, Theme.ClassText(r.name, r.class))
+			Theme.TipLine(GameTooltip, r.statusName .. (r.place and ("  ·  " .. Board.PLACE_NAME[r.place]) or "") ..
+				(r.byOfficer and "  ·  added by an officer" or ""), "dim")
+			if Board.OfficerView() then
+				Theme.TipLine(GameTooltip, "Click: In, then Bench, then undecided. Right-click: their character.", "accent", true)
+			else
+				Theme.TipLine(GameTooltip, "Click to open their character", "accent")
+			end
+			GameTooltip:Show()
+		end,
 	})
 	self.lineup:SetPoint("TOPLEFT", 0, -(44 + SP.xs + S.control + SP.s + 18 + SP.xs + 16 + SP.xs + 32 + SP.s))
 	self.lineup:SetPoint("BOTTOMRIGHT")
@@ -460,11 +484,58 @@ function RT:CreateRaid()
 	RT:Refresh()
 end
 
+-- Officers: undecided -> In -> Bench -> undecided.
+RT.NEXT_PLACE = { i = "b", b = "-" }
+function RT:CyclePlace(r)
+	if not RT.selected then return end
+	local ok, why = Board:SetPlace(RT.selected, r.guid, RT.NEXT_PLACE[r.place or ""] or "i")
+	if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
+	RT:Refresh()
+end
+
+function RT:CopyDiscord()
+	local board = Board:Get()
+	local ev = board and RT.selected and board.events[RT.selected]
+	if not ev then return end
+	local rows, sum = Board.LineUp(board, ev, RT.Ctx())
+	SK.DebugWindow:ShowText("Copy for Discord", Board.DiscordText(ev, rows, sum))
+end
+
+-- Officers: paste sign-ups from Discord.
+function RT:ImportDiscord()
+	local id = RT.selected
+	if not id then return end
+	SK.DebugWindow:AskText("Import sign-ups from Discord",
+		"Paste the sign-up list from Discord, then press Import. Names must match characters in the guild.",
+		"Import", function(text) return RT.DoImport(id, text) end)
+end
+
+-- Returns the line shown under the paste box. Pure apart from the board.
+function RT.DoImport(id, text)
+	local guild = SK.DBM:Guild()
+	local members = {}
+	for guid, m in pairs(guild and guild.members or {}) do
+		if not m.leftAt then members[guid] = { name = m.name } end
+	end
+	local parsed = Board.ParseImport(text, members)
+	local added, updated, kept = Board:Import(id, parsed.entries)
+	if not added then return Theme.Paint("bad", "Not imported: " .. tostring(updated)) end
+	local msg = string.format("Added %d, updated %d, kept %d (signed up in game themselves).", added, updated, kept)
+	if #parsed.unmatched > 0 then
+		msg = msg .. " Not matched: " .. table.concat(parsed.unmatched, "; ", 1, math.min(#parsed.unmatched, 6)) ..
+			(#parsed.unmatched > 6 and (" and " .. (#parsed.unmatched - 6) .. " more") or "")
+	end
+	RT:Refresh()
+	return msg
+end
+
 function RT:DetailOptions()
 	local items = {
 		{ text = "Copy the line-up as text", onClick = function() RT:CopyLineUp() end },
+		{ text = "Copy for Discord", onClick = function() RT:CopyDiscord() end },
 	}
 	if Board.OfficerView() and RT.selected then
+		items[#items + 1] = { text = "Import sign-ups from Discord", onClick = function() RT:ImportDiscord() end }
 		items[#items + 1] = { text = "Cancel this raid", onClick = function()
 			local ok, why = Board:Cancel(RT.selected)
 			if not ok then SK:Print("Couldn't cancel: %s.", tostring(why)) end
@@ -530,7 +601,7 @@ function RT:RefreshUpcoming(board, now, me)
 		b:Paint("rest")
 	end
 	self.role:Refresh()
-	self.mine:SetText(RT.MineText(mine))
+	self.mine:SetText(RT.MineText(mine, Board.PlaceOf(board, ev.id, me or "")))
 	local rows2, sum = Board.LineUp(board, ev, RT.Ctx())
 	self.counts:SetText(Board.CountsText(sum) .. "  ·  " .. sum.maybe .. " tentative  ·  " .. sum.out .. " can't come")
 	local parts = {}

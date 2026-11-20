@@ -817,14 +817,15 @@ function raids() {
           : c.key === "res" ? `<span class="${p.res[2]}">${p.res[1]}</span>` : c.key === "b" ? (p.bench ? '<span class="acc">yes</span>' : DASH) : p.mins,
         { click: true, style: `left:290px;right:0;top:${lt}px;bottom:0` });
   }
-  const events = [["Today 20:00", "Onyxia's Lair", 22, 40, "y"], ["Wed 16 Dec 19:30", "Hyjal Summit", 14, 20, "t"], ["Fri 18 Dec 20:00", "Barrow Deeps", 6, 10, ""], ["Wed 23 Dec 19:30", "Onyxia's Lair", 3, 40, ""]];
+  const events = [["Today 20:00", "Onyxia", 22, 40, "y"], ["Wed 16 Dec 19:30", "Hyjal", 14, 20, "t"], ["Fri 18 Dec 20:00", "Barrow", 6, 10, ""], ["Wed 23 Dec 19:30", "Onyxia", 3, 40, ""]];
   const ROLE = { WARRIOR: "Tank", PRIEST: "Healer", PALADIN: "Healer", DRUID: "Healer", SHAMAN: "Healer" };
   const lineup = M.slice(0, 27).map((m, i) => ({ m, st: i < 22 ? ["Signed up", "good"] : i < 25 ? ["Tentative", ""] : ["Can't come", "faint"],
-    role: ROLE[m.cls] || "DPS", guess: i % 4 === 3, att: i % 9 === 4 ? '<span class="bad">no</span>' : '<span class="good">yes</span>' }))
-    .sort((a, b) => ["Signed up", "Tentative", "Can't come"].indexOf(a.st[0]) - ["Signed up", "Tentative", "Can't come"].indexOf(b.st[0]) || ["Tank", "Healer", "DPS"].indexOf(a.role) - ["Tank", "Healer", "DPS"].indexOf(b.role));
-  const LW = 290, RX = LW + 20;
+    role: ROLE[m.cls] || "DPS", guess: i % 4 === 3, att: i % 9 === 4 ? '<span class="bad">no</span>' : '<span class="good">yes</span>',
+    place: i < 18 ? "i" : i < 21 ? "b" : "" }))
+    .sort((a, b) => ["i", "b", ""].indexOf(a.place) - ["i", "b", ""].indexOf(b.place) || ["Signed up", "Tentative", "Can't come"].indexOf(a.st[0]) - ["Signed up", "Tentative", "Can't come"].indexOf(b.st[0]) || ["Tank", "Healer", "DPS"].indexOf(a.role) - ["Tank", "Healer", "DPS"].indexOf(b.role));
+  const LW = 270, RX = LW + 20;
   const dotFor = (s) => s === "y" ? ' <span class="good">•</span>' : s === "t" ? " <span>•</span>" : "";
-  return head + list([{ key: "w", t: "When", w: 124 }, { key: "r", t: "Raid", w: 106 }, { key: "s", t: "Signed", w: 60, r: 1 }], events,
+  return head + list([{ key: "w", t: "When", w: 130 }, { key: "r", t: "Raid", w: 82 }, { key: "s", t: "Signed", w: 58, r: 1 }], events,
       (e, c) => c.key === "w" ? e[0] : c.key === "r" ? e[1] + dotFor(e[4]) : `${e[2]}<span class="faint"> / ${e[3]}</span>`,
       { click: true, sel: (e) => e === events[0], sort: { key: "w" }, style: `left:0;top:${t0}px;bottom:0;width:${LW}px` }) +
     `<div class="abs" style="left:${RX}px;top:${t0 + 2}px;font-size:15px">Onyxia's Lair (40)</div>
@@ -832,11 +833,12 @@ function raids() {
     ${btn("···", "", `style="position:absolute;right:0;top:${t0}px;width:28px;padding:0;justify-content:center"`)}
     <div class="abs" style="left:${RX}px;top:${t0 + 48}px;display:flex;gap:8px">${btn("Sign up", "on")}${btn("Tentative")}${btn("Can't come")}<span style="width:4px"></span>
       <span class="menu" style="width:110px">${btn("Healer").replace("</span>", '<i class="arrow"></i></span>')}</span></div>
-    <div class="abs" style="left:${RX}px;top:${t0 + 80}px">You: <span class="good">Signed up</span> as Healer</div>
-    <div class="abs dim small" style="left:${RX}px;top:${t0 + 100}px">Tanks 3  ·  Healers 6  ·  DPS 13  ·  22 / 40  ·  3 tentative  ·  2 can't come</div>
+    <div class="abs" style="left:${RX}px;top:${t0 + 80}px">You: <span class="good">Signed up</span> as Healer  ·  <span class="good">You're in</span></div>
+    <div class="abs dim small" style="left:${RX}px;top:${t0 + 100}px">In 18 / 40: Tanks 3  ·  Healers 5  ·  DPS 10  ·  Bench 3  ·  3 tentative  ·  2 can't come</div>
     <div class="abs dim small" style="left:${RX}px;right:0;top:${t0 + 120}px;line-height:1.4">3 tentative<span class="faint">  ·  </span><span class="bad">3 not attuned</span><span class="faint">  ·  </span><span class="spark">2 without the amulet in their bags</span><span class="faint">  ·  </span>Item level 52 to 75</div>` +
-    list([{ key: "n", t: "Name", w: 128 }, { key: "s", t: "Status", w: 82 }, { key: "r", t: "Role", w: 62 }, { key: "sp", t: "Spec", w: 76 }, { key: "i", t: "ilvl", w: 36, r: 1 }, { key: "a", t: "Attuned", w: 38, r: 1 }], lineup,
-      (r, c) => c.key === "n" ? (r.m.online ? dot("good") : "") + nm(r.m) : c.key === "s" ? `<span class="${r.st[1]}">${r.st[0]}</span>` : c.key === "r" ? `<span class="${r.guess ? "faint" : ""}">${r.role}</span>`
+    list([{ key: "n", t: "Name", w: 118 }, { key: "s", t: "Status", w: 78 }, { key: "p", t: "Raid", w: 48 }, { key: "r", t: "Role", w: 56 }, { key: "sp", t: "Spec", w: 60 }, { key: "i", t: "ilvl", w: 32, r: 1 }, { key: "a", t: "Attuned", w: 52, r: 1 }], lineup,
+      (r, c) => c.key === "n" ? (r.m.online ? dot("good") : "") + nm(r.m) : c.key === "s" ? `<span class="${r.st[1]}">${r.st[0]}</span>`
+        : c.key === "p" ? (r.place === "i" ? '<span class="good">In</span>' : r.place === "b" ? '<span class="acc">Bench</span>' : DASH) : c.key === "r" ? `<span class="${r.guess ? "faint" : ""}">${r.role}</span>`
         : c.key === "sp" ? `<span class="dim">${r.m.spec || "-"}</span>` : c.key === "i" ? (r.m.ilvl || DASH) : r.att,
       { click: true, style: `left:${RX}px;right:0;top:${t0 + 164}px;bottom:0` });
 }

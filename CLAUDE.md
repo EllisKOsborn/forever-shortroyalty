@@ -29,6 +29,32 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.10.0 (released 20 Nov on `main`, owner: "I need this live asap for testing"): In or Bench, Discord by copy and paste.** The
+  officers' asks (review `docs/proposals/officer-roster-and-calendar.md`);
+  owner's answers 20 Nov: Discord "shouldn't require any PC programs";
+  attendance "essentially the same thing so leave as is"; members **should
+  see** In / Bench; no raid schedule ("should be able to make them
+  whenever"); "You decide and start building. I need this live asap".
+  Order chosen: (1) this, (2) officer roster (roles, notes, alt links,
+  attendance %), (3) calendar month view.
+  - `RaidBoard`: `board.places[id][guid] = { v = i|b|-, u, by }`,
+    `ValidPlace/MergePlace` (by must be lead rank), `PlaceOf`, `SetPlace`
+    (officers), in `Digest` and `Prune`; `LineUp` rows get `place`/
+    `byOfficer`, sorted In, Bench, rest; summary `placedIn/placedBench/
+    inRoles`; `CountsText` switches to "In n / size: …  ·  Bench n".
+    Sign-ups may carry `b` (officer who imported; `MergeSignup(…, isLead)`).
+  - Discord: `DiscordText` (`<t:at:F>` timestamps, names by role, In/Bench),
+    pure `ParseImport(text, members)` (full name or unique first name ≥ 3
+    letters; role/status words on the line, else the last heading line;
+    unmatched lines returned), `Board:Import(id, entries)` (keeps a sign-up
+    without `b` = the player's own). `RaidSync` RB carries `pk`; S items
+    carry `b`; keys `P:id|guid`.
+  - UI: line-up column *Raid* (In/Bench); officers click = cycle, right-click
+    = character; `RT.MineText(su, place)`, `RT.PLACE_TEXT`; ··· menu Copy
+    for Discord (all) and Import sign-ups from Discord (officers):
+    `DebugWindow:AskText(title, hint, button, onSubmit)` (editable box,
+    `Debug.asking`), `RT.DoImport`. Overview `o.nextRaid.place`.
+  - Tests `tests/v0100_raidroster_spec.lua`, security case. TESTING 49–51.
 - **v0.9.4 (released 19 Nov on `main`, owner: "push that to main"): transmute
   cooldowns "49d 19h"** (owner's screenshot 19 Nov, Jheri Ashur's Transmute:
   Arcanite and Earth to Life; Data says 47 h / 23 h). Cause: `GetTime()` is
@@ -858,7 +884,7 @@ players. **Don't go back to AceComm multi-part messages.**
 | `PR` | WHISPER | One profile per message |
 | `SQ` | GUILD | Once per session: what I hold, and (`a`, v0.3.6) who I know runs the addon |
 | `SO` | GUILD | Backfill offer, random 2–8 s delay, suppressed if someone else offers first |
-| `RB` | GUILD | v0.8.0 raids and sign-ups (`Sync/RaidSync.lua`): after a change, and answering RD |
+| `RB` | GUILD | v0.8.0 raids and sign-ups (`Sync/RaidSync.lua`): after a change, and answering RD; v0.10.0 adds `pk` (In/Bench) and sign-up `b` |
 | `RD` | GUILD | v0.8.0 once per session: fingerprint per raid held; answered after 2–8 s, duplicates suppressed |
 | `AR` | WHISPER | v0.8.1 one attendance record, officer/raid leader ranks only (`Sync/AttendanceSync.lua`) |
 | `AQ` | WHISPER | v0.8.1 officer to officer after login: attendance records held, answered with what's missing |
@@ -1281,11 +1307,9 @@ refer to `git show v0.6.0:TESTING.md`.
 5. Reserve+ (released 16 Nov): a dungeon test run (TESTING.md 30–40)
    and `/sr debug` "Loot method" inside a raid group (master loot?);
    offline bench at the lock: no bonus only (built), or a penalty too?
-6. Officer roster + raid calendar (officer's message, 20 Nov): review and
-   proposal in `docs/proposals/officer-roster-and-calendar.md`, nothing
-   built. Waiting on its 6 questions (Discord: copy-only vs two-way via a
-   bot + companion app, which addons alone can't do; attendance "online at
-   the start"; who sees roles / in-or-bench; raid schedule; order).
+6. Officer roster + raid calendar: owner answered 20 Nov (see Start here
+   v0.10.0). Next: officer roster (roles, notes, alt links, attendance %),
+   then the calendar month view. TESTING 49–51 for v0.10.0.
 
 ## Answers already given to the guild (stay consistent)
 - **Alts:** linked automatically once each alt has logged in with the addon

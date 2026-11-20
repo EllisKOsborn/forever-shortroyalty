@@ -194,3 +194,18 @@ addon read.
 48. [ ] **Professions → Cooldowns:** no cooldown shows more than a few days
     (transmutes are at most 2 days). Jheri's transmutes that showed "49d
     19h" now show a sensible time, even before Jheri updates.
+
+## v0.10.0 In or Bench, Discord by copy and paste
+
+49. [ ] **In or Bench** (officer with `/sr officer`): on a raid, click a
+    name: *In*, again: *Bench*, again: nothing. Right-click opens their
+    character. A guildmate on v0.10.0 sees the same *Raid* column within a
+    minute, and their own "You're in" / "You're on the bench" on the Raids
+    page and on the Overview.
+50. [ ] **Copy for Discord**, paste into a Discord channel: the time shows
+    in your own time zone, names are grouped by role.
+51. [ ] **Import sign-ups from Discord**: copy a sign-up list from Discord
+    (a bot's message or names typed by hand), paste it, press Import. The
+    line under the box says how many were added; the names appear in the
+    line-up. Tell me what it couldn't match (paste me the list).
+

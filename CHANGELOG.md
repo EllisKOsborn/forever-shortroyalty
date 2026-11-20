@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.10.0 (20 Nov 2026): In or Bench, and Discord by copy and paste
+
+- **In or Bench:** officers and raid leaders pick the raid from the
+  sign-ups (Raids page, with `/sr officer` on): click a name to put them
+  **In**, click again for **Bench**, again to undecide. Right-click opens
+  their character. **Everyone sees it**: a *Raid* column in the line-up,
+  "You're in" or "You're on the bench" under the sign-up buttons and on the
+  Overview's next raid, and the counts switch to the people In
+  ("In 18 / 40: Tanks 2 · Healers 5 · DPS 11 · Bench 3").
+- **Copy for Discord** (the raid's ··· menu): a ready announcement to paste
+  into Discord: the raid, its time (Discord shows it in each reader's own
+  time zone), who's signed up by role, and In and Bench once picked.
+- **Import sign-ups from Discord** (officers, same menu): paste the sign-up
+  list from Discord and the addon signs those players up, with their role
+  and tentative or can't come. Names must match characters in the guild;
+  lines it can't match are listed. A sign-up a player made in game is never
+  overwritten. The player sees "(added by an officer)".
+- Addons can't reach the internet, so this is copy and paste: no extra
+  program, no bot.
+- Everyone needs v0.10.0 to see In and Bench (older versions ignore them).
+
 ## v0.9.4 (19 Nov 2026): transmute cooldown times
 
 - Professions → Cooldowns (and the Character page) could show long

@@ -242,3 +242,31 @@ describe("Security: v0.8.1 attendance messages (AR, AQ)", function()
 		assert.equal(0, #SK.errors)
 	end)
 end)
+
+describe("Security: v0.10.0 In/Bench choices and imported sign-ups in RB", function()
+	local SK, W
+	local BOB, CAT = "Player-1-B", "Player-1-C"
+	before_each(function()
+		SK, W = H.load()
+		W.member("Pip", W.player.guid)
+		W.member("Bob", BOB, { rank = "Officer", rankIndex = 1 })
+		W.member("Cat", CAT, { rank = "Member", rankIndex = 4 })
+		SK.Identity:ReadRoster()
+	end)
+	it("only officers' choices and officers' imports are kept", function()
+		local id = BOB .. ":" .. string.format("%d", W.now)
+		local ev = { id = id, by = BOB, c = W.now, raid = "ony", at = W.now + 3600, u = W.now }
+		local function send(fields, sender, guid)
+			SK.Sync:OnCommReceived(SK.PREFIX, H.peerMessage(SK, "RB", fields, guid), "GUILD", sender)
+		end
+		send({ e = { ev } }, "Bob", BOB)
+		send({ pk = { { e = id, g = CAT, v = "i", u = W.now, by = CAT } },
+			su = { { e = id, g = W.player.guid, s = "n", u = W.now, b = CAT } } }, "Cat", CAT)
+		local board = SK.RaidBoard:Get()
+		assert.is_nil(SK.RaidBoard.PlaceOf(board, id, CAT))
+		assert.is_nil(board.signups[id] and board.signups[id][W.player.guid])
+		send({ pk = { { e = id, g = CAT, v = string.rep("i", 500), u = W.now, by = BOB } } }, "Bob", BOB)
+		assert.is_nil(SK.RaidBoard.PlaceOf(board, id, CAT))
+		assert.equal(0, #SK.errors)
+	end)
+end)

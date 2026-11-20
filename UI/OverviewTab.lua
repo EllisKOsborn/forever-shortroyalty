@@ -120,7 +120,8 @@ function Ov.RaidRows(o)
 				if nr.more > 0 then Theme.TipLine(tt, "and " .. Theme.Count(nr.more, "more raid") .. " after it", "faint") end
 				Theme.TipLine(tt, "Click to sign up or see who's coming", "accent")
 			end }
-		rows[#rows + 1] = { text = "You: " .. (nr.mine and mine or Theme.Paint("spark", mine)), onClick = openRaid }
+		local place = nr.place and ("  ·  " .. SK.RaidsTab.PLACE_TEXT[nr.place]) or ""
+		rows[#rows + 1] = { text = "You: " .. (nr.mine and mine or Theme.Paint("spark", mine)) .. place, onClick = openRaid }
 	end
 	local function toRoster(key) return function()
 		SK.DB.settings.roster.raid = key

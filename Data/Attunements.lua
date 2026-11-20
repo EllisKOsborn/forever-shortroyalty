@@ -19,11 +19,11 @@ local _, SK = ...
 SK.Data = SK.Data or {}
 
 SK.Data.ATTUNEMENTS = {
-	{ key = "barrow", name = "Barrow Deeps", size = 10, status = "none", quests = {},
+	{ key = "barrow", name = "Barrow Deeps", short = "Barrow", size = 10, status = "none", quests = {},
 	  note = "No attunement needed (Blizzard raid overview). Opens 9 Dec 2026." },
-	{ key = "hyjal", name = "Hyjal Summit", size = 20, status = "none", quests = {},
+	{ key = "hyjal", name = "Hyjal Summit", short = "Hyjal", size = 20, status = "none", quests = {},
 	  note = "No attunement needed (Blizzard raid overview). Opens 9 Dec 2026." },
-	{ key = "ony",  name = "Onyxia's Lair", size = 40, status = "classic", faction = "Alliance",
+	{ key = "ony",  name = "Onyxia's Lair", short = "Onyxia", size = 40, status = "classic", faction = "Alliance",
 	  quests = { 6502 }, item = 16309, itemName = "Drakefire Amulet",
 	  note = "Drakefire Amulet quest (Alliance) and the amulet in your bags. Opens 9 Dec 2026." },
 	{ key = "mc",   name = "Molten Core", status = "classic", hidden = true,

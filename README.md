@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="WoW Forever 1.60.1" src="https://img.shields.io/badge/WoW%20Forever-1.60.1%20%C2%B7%2016001-FFC000?labelColor=000000">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.9.4%20alpha-F06BB0?labelColor=000000">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.10.0%20alpha-F06BB0?labelColor=000000">
   <img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-FF6A1A?labelColor=000000">
 </p>
 
@@ -44,7 +44,7 @@
 | 🏰 **Overview** | The guild at a glance: four numbers, what needs a look, raid readiness and recent milestones |
 | 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
-| 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals, shared between all officers |
+| 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness and who's **In** or on the **Bench**; **Copy for Discord** and **Import sign-ups from Discord**; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals, shared between all officers |
 | 🎲 **Loot** (Reserve+) | Soft reserves with **bonus points**: reserve items for a raid night, and every night you don't get one it gains points (no cap) that are added to your roll next time; your points, everyone's, and a history of every change; for officers a **Loot night** screen (rolls ranked, award, raid check, end-of-night bonus) and **Rules** (reserves per raid, bonus, loot lists) |
 | ⚒️ **Find a crafter** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
 | 🧪 **Professions** | Three page tabs: **Guild** (every profession in the guild, then each profession's crafters and recipes), **Recipes** (**every recipe in the game**, by name, group or material) and **Cooldowns**; specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
@@ -118,7 +118,9 @@ people who were offline get them when they log in. `/sr raids` opens the page.
 - **Upcoming raids** on the left (when, which raid, how many signed up out of its size; a dot shows your own answer).
 - **Sign up**, **Tentative** or **Can't come** with one click, and your **role** (Tank, Healer or DPS: remembered, and guessed from your talents until you pick).
 - **Who's coming:** name (green dot = online), answer, role (greyed when guessed), spec, item level and attuned, coming first and by role. **Role counts** ("Tanks 3 · Healers 6 · DPS 13 · 22 / 40") and a **readiness** line: no tanks or healers yet, tentatives, more sign-ups than the raid holds, not attuned, amulet not in bags, item-level range, missing enchants, old data, and anyone signed up on two characters.
-- The ··· menu copies the line-up as text (for Discord).
+- **In or Bench** (v0.10.0): officers pick the raid from the sign-ups, and **everyone sees it**: a *Raid* column (In / Bench), "You're in" or "You're on the bench" under the buttons and on the Overview, and the counts switch to the people In ("In 18 / 40: Tanks 2 · Healers 5 · DPS 11 · Bench 3"). Officers click a name to put them In, then Bench, then undecided again; right-click opens their character.
+- **Discord, without any program** (v0.10.0): addons can't reach the internet, so it's copy and paste. The ··· menu has **Copy for Discord**: a ready announcement (raid, time shown in each reader's own time zone, who's signed up by role, In and Bench) to paste into a Discord channel. Officers also get **Import sign-ups from Discord**: paste the sign-up list from Discord (any bot's list, or names typed by hand) and the addon signs those players up, by role and tentative / can't come. Names must match characters in the guild (a full name, or a first name only one member has); lines it can't match are listed. A sign-up a player made themselves in game is never overwritten.
+- The ··· menu also copies the line-up as plain text.
 
 **Officer tools.** Officers, raid leaders and the Guild Master type
 `/sr officer` to switch on two more tabs (per character; type it again to
@@ -441,6 +443,17 @@ Open **Raids** (`/sr raids`, or click the next raid on the Overview), pick
 the raid on the left and press **Sign up**, **Tentative** or **Can't come**.
 Pick your role in the menu next to them. Officers and raid leaders see your
 answer within a minute. You need Short Royalty to see guild raids.
+Once officers pick the raid, the same page says **You're in** or **You're
+on the bench**.
+</details>
+
+<details>
+<summary><b>Can sign-ups sync with Discord?</b></summary>
+
+Not by themselves: WoW addons can't reach the internet. Officers copy a
+ready announcement from the raid's ··· menu (**Copy for Discord**) into
+Discord, and paste sign-ups made in Discord back with **Import sign-ups
+from Discord**. No extra program needed.
 </details>
 
 <details>

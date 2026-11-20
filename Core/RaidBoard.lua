@@ -102,13 +102,27 @@ function Board.ValidSignup(s, now)
 	if not Board.STATUS_NAME[s.s] then return false, "bad status" end
 	if s.r ~= nil and not ROLE_ORDER[s.r] then return false, "bad role" end
 	if not finite(s.u) or s.u > now + Board.MAX_FUTURE then return false, "bad time" end
+	if s.b ~= nil and not str(s.b, 64) then return false, "bad officer" end
+	return true
+end
+
+-- v0.10.0 raid roster: an officer puts a signed-up player In or on the
+-- Bench ("-" = undecided again). Everyone sees it.
+--   place = { e = raid id, g = player, v = "i" | "b" | "-", u = changed, by = officer }
+Board.PLACE_NAME = { i = "In", b = "Bench" }
+local PLACE_ORDER = { i = 1, b = 2 }
+function Board.ValidPlace(p, now)
+	if type(p) ~= "table" then return false, "not a table" end
+	if not str(p.e, 80) or not str(p.g, 64) or not str(p.by, 64) then return false, "bad id" end
+	if p.v ~= "i" and p.v ~= "b" and p.v ~= "-" then return false, "bad place" end
+	if not finite(p.u) or p.u > now + Board.MAX_FUTURE then return false, "bad time" end
 	return true
 end
 
 ---------------------------------------------------------------------------
 -- Merging (pure: board, item, now, roster checks)
 ---------------------------------------------------------------------------
-function Board.New() return { events = {}, signups = {} } end
+function Board.New() return { events = {}, signups = {}, places = {} } end
 
 -- isLead(guid) -> bool. Returns accepted, reason.
 function Board.MergeEvent(board, e, now, isLead)
@@ -122,11 +136,14 @@ function Board.MergeEvent(board, e, now, isLead)
 	return true
 end
 
--- isMember(guid) -> bool. A sign-up needs its raid.
-function Board.MergeSignup(board, s, now, isMember)
+-- isMember(guid) -> bool. A sign-up needs its raid. `b` = the officer who
+-- added it for the player (v0.10.0 import from Discord): must be a lead
+-- rank (isLead); a player's own sign-up has no `b`.
+function Board.MergeSignup(board, s, now, isMember, isLead)
 	local ok, why = Board.ValidSignup(s, now)
 	if not ok then return false, why end
 	if not isMember(s.g) then return false, "not a member" end
+	if s.b and not (isLead and isLead(s.b)) then return false, "not an officer or raid leader" end
 	if not board.events[s.e] then return false, "unknown raid" end
 	local list = board.signups[s.e]
 	if not list then
@@ -136,8 +153,34 @@ function Board.MergeSignup(board, s, now, isMember)
 	local have = list[s.g]
 	if have and have.u >= s.u then return false, "not newer" end
 	if not have and SK.Count(list) >= Board.MAX_SIGNUPS then return false, "raid full of sign-ups" end
-	list[s.g] = { s = s.s, r = s.r, u = s.u }
+	list[s.g] = { s = s.s, r = s.r, u = s.u, b = s.b }
 	return true
+end
+
+-- An officer's In / Bench choice (v0.10.0). Newest wins.
+function Board.MergePlace(board, p, now, isMember, isLead)
+	local ok, why = Board.ValidPlace(p, now)
+	if not ok then return false, why end
+	if not isLead(p.by) then return false, "not an officer or raid leader" end
+	if not isMember(p.g) then return false, "not a member" end
+	if not board.events[p.e] then return false, "unknown raid" end
+	board.places = board.places or {}
+	local list = board.places[p.e]
+	if not list then
+		list = {}
+		board.places[p.e] = list
+	end
+	local have = list[p.g]
+	if have and have.u >= p.u then return false, "not newer" end
+	if not have and SK.Count(list) >= Board.MAX_SIGNUPS then return false, "too many" end
+	list[p.g] = { v = p.v, u = p.u, by = p.by }
+	return true
+end
+
+-- "i", "b" or nil.
+function Board.PlaceOf(board, id, guid)
+	local p = board.places and board.places[id] and board.places[id][guid]
+	return p and PLACE_ORDER[p.v] and p.v or nil
 end
 
 -- Delete raids that started more than KEEP_AFTER ago (attendance records
@@ -152,6 +195,9 @@ function Board.Prune(board, now)
 	end
 	for id in pairs(board.signups) do
 		if not board.events[id] then board.signups[id] = nil end
+	end
+	for id in pairs(board.places or {}) do
+		if not board.events[id] then board.places[id] = nil end
 	end
 	return n
 end
@@ -194,6 +240,11 @@ function Board.Digest(board)
 		for guid in pairs(board.signups[id] or {}) do guids[#guids + 1] = guid end
 		table.sort(guids)
 		for _, guid in ipairs(guids) do parts[#parts + 1] = guid .. "=" .. string.format("%d", board.signups[id][guid].u) end
+		-- v0.10.0: In / Bench choices count too.
+		local placed = {}
+		for guid in pairs(board.places and board.places[id] or {}) do placed[#placed + 1] = guid end
+		table.sort(placed)
+		for _, guid in ipairs(placed) do parts[#parts + 1] = "P" .. guid .. "=" .. string.format("%d", board.places[id][guid].u) end
 		out[id] = hash(table.concat(parts, ","))
 	end
 	return out
@@ -241,6 +292,7 @@ function Board.LineUp(board, ev, ctx)
 			stale = p ~= nil and not ctx.isOwn(guid) and type(p.updated) == "number"
 				and ctx.now - p.updated > SK.Overview.STALE_AFTER or false,
 			enchants = (p and p.gear and not gearHidden) and #SK.Data.Enchants.Missing(p.gear, p.class, p.level) or 0,
+			place = Board.PlaceOf(board, ev.id, guid), byOfficer = su.b ~= nil,
 		}
 		if p and ctx.guild then profiles[guid] = ctx.guild.profiles[guid] or p end
 	end
@@ -260,6 +312,8 @@ function Board.LineUp(board, ev, ctx)
 	end
 
 	table.sort(rows, function(a, b)
+		local pa, pb = PLACE_ORDER[a.place or ""] or 3, PLACE_ORDER[b.place or ""] or 3
+		if pa ~= pb then return pa < pb end
 		if a.group ~= b.group then return GROUP_ORDER[a.group] < GROUP_ORDER[b.group] end
 		local ra, rb = ROLE_ORDER[a.role or ""] or 4, ROLE_ORDER[b.role or ""] or 4
 		if ra ~= rb then return ra < rb end
@@ -269,9 +323,16 @@ function Board.LineUp(board, ev, ctx)
 	local s = { coming = 0, maybe = 0, out = 0,
 		roles = { TANK = 0, HEALER = 0, DPS = 0, unknown = 0 }, guesses = 0,
 		notAttuned = 0, noItem = 0, enchants = 0, stale = 0, noData = 0,
-		ilvlMin = nil, ilvlMax = nil, duplicates = dupes, size = raid and raid.size or nil }
+		ilvlMin = nil, ilvlMax = nil, duplicates = dupes, size = raid and raid.size or nil,
+		placedIn = 0, placedBench = 0, inRoles = { TANK = 0, HEALER = 0, DPS = 0, unknown = 0 } }
 	for _, r in ipairs(rows) do
 		s[r.group] = s[r.group] + 1
+		if r.place == "i" then
+			s.placedIn = s.placedIn + 1
+			s.inRoles[r.role or "unknown"] = s.inRoles[r.role or "unknown"] + 1
+		elseif r.place == "b" then
+			s.placedBench = s.placedBench + 1
+		end
 		if r.group == "coming" then
 			local k = r.role or "unknown"
 			s.roles[k] = s.roles[k] + 1
@@ -305,8 +366,17 @@ function Board.Ctx()
 	}
 end
 
--- "Tanks 2 · Healers 6 · DPS 18 · 26 / 40"
+-- "Tanks 2 · Healers 6 · DPS 18 · 26 / 40"; once officers have put people
+-- In (v0.10.0): "In 18 / 40: Tanks 2 · Healers 5 · DPS 11 · Bench 3".
 function Board.CountsText(s)
+	if (s.placedIn or 0) > 0 then
+		local r = s.inRoles
+		local parts = { (s.size and ("In " .. s.placedIn .. " / " .. s.size) or ("In " .. s.placedIn)) .. ": Tanks " .. r.TANK,
+			"Healers " .. r.HEALER, "DPS " .. r.DPS }
+		if r.unknown > 0 then parts[#parts + 1] = "Role unknown " .. r.unknown end
+		parts[#parts + 1] = "Bench " .. s.placedBench
+		return table.concat(parts, "  ·  ")
+	end
 	local parts = { "Tanks " .. s.roles.TANK, "Healers " .. s.roles.HEALER, "DPS " .. s.roles.DPS }
 	if s.roles.unknown > 0 then parts[#parts + 1] = "Role unknown " .. s.roles.unknown end
 	parts[#parts + 1] = s.size and (s.coming .. " / " .. s.size) or (s.coming .. " coming")
@@ -338,6 +408,7 @@ function Board.Text(ev, rows, s)
 	L[#L + 1] = ""
 	for _, r in ipairs(rows) do
 		local parts = { r.name, r.statusName }
+		if r.place then parts[#parts + 1] = Board.PLACE_NAME[r.place] end
 		if r.role then parts[#parts + 1] = SK.Data.ROLE_NAMES[r.role] .. (r.roleGuess and " (guess)" or "") end
 		if r.spec then parts[#parts + 1] = (r.tree and (r.tree .. " ") or "") .. r.spec end
 		if r.ilvl then parts[#parts + 1] = string.format("ilvl %.0f", r.ilvl) end
@@ -345,6 +416,104 @@ function Board.Text(ev, rows, s)
 		L[#L + 1] = table.concat(parts, " · ")
 	end
 	return SK.Export.Plain(table.concat(L, "\n"))
+end
+
+---------------------------------------------------------------------------
+-- Discord, without any program (v0.10.0; owner: "It shouldn't require any
+-- PC programs"). Addons can't reach the internet, so the bridge is copy and
+-- paste: an announcement to paste into Discord, and sign-ups pasted back
+-- from Discord. Pure.
+---------------------------------------------------------------------------
+local function plainName(n) return (tostring(n or "?"):gsub("[%*_~`|>]", "")) end
+
+-- The announcement. <t:...> shows each reader the time in their own zone.
+function Board.DiscordText(ev, rows, s)
+	local raid = Board.Raid(ev.raid)
+	local at = string.format("%d", ev.at)
+	local L = { string.format("**%s (%d)**: <t:%s:F> (<t:%s:R>)", raid and raid.name or "Raid", raid and raid.size or 0, at, at),
+		"Sign up in game: /sr raids (Short Royalty addon)", Board.CountsText(s), "" }
+	local function names(filter)
+		local out = {}
+		for _, r in ipairs(rows) do if filter(r) then out[#out + 1] = plainName(r.name) end end
+		return out
+	end
+	local function add(title, list)
+		if #list > 0 then L[#L + 1] = string.format("**%s (%d):** %s", title, #list, table.concat(list, ", ")) end
+	end
+	local picked = (s.placedIn or 0) > 0
+	for _, role in ipairs(SK.Data.ROLES) do
+		add((picked and "In, " or "") .. SK.Data.ROLE_NAMES[role] .. (role == "DPS" and "" or "s"), names(function(r)
+			return r.role == role and (picked and r.place == "i" or (not picked and r.group == "coming"))
+		end))
+	end
+	add(picked and "In, role unknown" or "Role unknown", names(function(r)
+		return not r.role and (picked and r.place == "i" or (not picked and r.group == "coming"))
+	end))
+	if picked then
+		add("Bench", names(function(r) return r.place == "b" end))
+		add("Signed up, not picked yet", names(function(r) return not r.place and r.group == "coming" end))
+	end
+	add("Tentative", names(function(r) return r.group == "maybe" and not r.place end))
+	add("Can't come", names(function(r) return r.group == "out" end))
+	return SK.Export.Plain(table.concat(L, "\n"))
+end
+
+local ROLE_WORDS = { tank = "TANK", tanks = "TANK", heal = "HEALER", heals = "HEALER", healer = "HEALER",
+	healers = "HEALER", healing = "HEALER", dps = "DPS", damage = "DPS", melee = "DPS", ranged = "DPS" }
+local STATUS_WORDS = { tentative = "t", maybe = "t", absence = "n", absent = "n", absences = "n", declined = "n",
+	decline = "n", cant = "n", cannot = "n", no = "n", bench = "y", late = "y", signed = "y", accepted = "y",
+	confirmed = "y", yes = "y" }
+
+-- Sign-ups pasted from Discord (any bot's list, or names typed by hand).
+-- Each line's guild member names count; a line's own words (tank, healer,
+-- dps, tentative, absence...) say how, else the last heading above it.
+-- members = { [guid] = { name = "First Surname" } }.
+-- Returns { entries = { { guid, s, r } }, unmatched = { line... } }.
+function Board.ParseImport(text, members)
+	local full, first = {}, {}
+	for guid, m in pairs(members or {}) do
+		local n = type(m.name) == "string" and m.name:lower() or nil
+		if n then
+			full[n] = guid
+			local w = n:match("^(%S+)")
+			if w and #w >= 3 then first[w] = (first[w] == nil) and guid or false end
+		end
+	end
+	local entries, order, unmatched = {}, {}, {}
+	local sectionRole, sectionStatus = nil, "y"
+	for raw in tostring(text or ""):gmatch("[^\r\n]+") do
+		local line = raw:lower():gsub("<[^>]*>", " "):gsub(":[%w_]+:", " ")
+		line = line:gsub("can't", " cant "):gsub("can%s?not", " cannot ")
+		local words = {}
+		for w in line:gsub("[%p%d]", " "):gmatch("%S+") do words[#words + 1] = w end
+		local role, status
+		for _, w in ipairs(words) do
+			role = role or ROLE_WORDS[w]
+			status = status or STATUS_WORDS[w]
+		end
+		local found, used = {}, {}
+		for i = 1, #words - 1 do
+			local g = full[words[i] .. " " .. words[i + 1]]
+			if g and not used[g] then found[#found + 1], used[g], used[i], used[i + 1] = g, true, true, true end
+		end
+		for i, w in ipairs(words) do
+			local g = not used[i] and not ROLE_WORDS[w] and not STATUS_WORDS[w] and (full[w] or first[w])
+			if g and not used[g] then found[#found + 1], used[g] = g, true end
+		end
+		if #found == 0 then
+			if role then sectionRole, sectionStatus = role, "y"
+			elseif status then sectionRole, sectionStatus = nil, status
+			elseif raw:find("%a") and #unmatched < 20 then unmatched[#unmatched + 1] = raw:sub(1, 60) end
+		else
+			for _, g in ipairs(found) do
+				if not entries[g] then order[#order + 1] = g end
+				entries[g] = { guid = g, s = status or sectionStatus, r = role or sectionRole }
+			end
+		end
+	end
+	local out = {}
+	for _, g in ipairs(order) do out[#out + 1] = entries[g] end
+	return { entries = out, unmatched = unmatched }
 end
 
 ---------------------------------------------------------------------------
@@ -371,6 +540,7 @@ function Board:Get(guild)
 	guild.raidBoard = guild.raidBoard or Board.New()
 	guild.raidBoard.events = guild.raidBoard.events or {}
 	guild.raidBoard.signups = guild.raidBoard.signups or {}
+	guild.raidBoard.places = guild.raidBoard.places or {}
 	return guild.raidBoard
 end
 
@@ -435,6 +605,47 @@ function Board:SignUp(id, status, role)
 	if role and ROLE_ORDER[role] then SK.DB.raidRole[guid] = role end
 	changed({ "S:" .. id .. "|" .. guid })
 	return true
+end
+
+-- Officers: put a signed-up player In ("i"), on the Bench ("b") or back
+-- to undecided ("-"). Everyone sees it (v0.10.0).
+function Board:SetPlace(id, guid, v)
+	local board, officer, now = self:Get(), Compat.PlayerGUID(), Compat.Now()
+	if not board or not board.events[id] then return false, "unknown raid" end
+	if not Board.CanLead(officer) then return false, "only officers and raid leaders can pick the raid" end
+	if v ~= "i" and v ~= "b" and v ~= "-" then return false, "bad place" end
+	local list = board.places[id] or {}
+	board.places[id] = list
+	local have = list[guid]
+	list[guid] = { v = v, u = math.max(now, have and have.u + 1 or 0), by = officer }
+	changed({ "P:" .. id .. "|" .. guid })
+	return true
+end
+
+-- Officers: sign-ups pasted from Discord (ParseImport's entries). A sign-up
+-- the player made themselves in game is kept. Returns added, updated, kept.
+function Board:Import(id, entries)
+	local board, officer, now = self:Get(), Compat.PlayerGUID(), Compat.Now()
+	local e = board and board.events[id]
+	if not e or e.x then return nil, "unknown raid" end
+	if not Board.CanLead(officer) then return nil, "only officers and raid leaders can import sign-ups" end
+	local list = board.signups[id] or {}
+	board.signups[id] = list
+	local added, updated, kept, keys = 0, 0, 0, {}
+	for _, x in ipairs(entries or {}) do
+		local have = list[x.guid]
+		if have and not have.b then
+			kept = kept + 1
+		elseif not have and SK.Count(list) >= Board.MAX_SIGNUPS then
+			kept = kept + 1
+		elseif not have or have.s ~= x.s or (x.r and have.r ~= x.r) then
+			list[x.guid] = { s = x.s, r = x.r or (have and have.r), u = math.max(now, have and have.u + 1 or 0), b = officer }
+			if have then updated = updated + 1 else added = added + 1 end
+			keys[#keys + 1] = "S:" .. id .. "|" .. x.guid
+		end
+	end
+	if #keys > 0 then changed(keys) end
+	return added, updated, kept
 end
 
 -- My role for sign-ups: the last one picked, else a guess from talents.
