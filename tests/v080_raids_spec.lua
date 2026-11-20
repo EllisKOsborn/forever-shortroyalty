@@ -491,6 +491,10 @@ describe("v0.8.0 recording", function()
 	end)
 end)
 
+local function tabOf(RT, key)
+	for _, t in ipairs(RT.views.tabs) do if t.key == key then return t end end
+end
+
 describe("v0.8.0 /sr officer and the page", function()
 	it("/sr officer answers only officers and raid leaders", function()
 		local SK, W = setup({ rank = "Member", rankIndex = 4 })
@@ -517,13 +521,13 @@ describe("v0.8.0 /sr officer and the page", function()
 		SK.MainFrame:Open("raids")
 		local RT = SK.RaidsTab
 		assert.equal(e.id, RT.selected)
-		assert.is_false(RT.views.tabs[3]:IsShown())
+		assert.is_false(tabOf(RT, "attendance"):IsShown())
 		RT.signButtons[1]:GetScript("OnClick")(RT.signButtons[1])
 		assert.equal("y", SK.RaidBoard:Get().signups[e.id][ME].s)
 		assert.truthy(RT.mine:GetText():find("Signed up", 1, true))
 		SK.DB.officer[ME] = true
 		RT:Refresh()
-		assert.is_true(RT.views.tabs[3]:IsShown())
+		assert.is_true(tabOf(RT, "attendance"):IsShown())
 		assert.is_true(RT.attPage:IsShown())
 		SK.DB.settings.attView = "totals"
 		RT:Refresh()

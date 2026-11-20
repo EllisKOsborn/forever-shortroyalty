@@ -10,7 +10,8 @@ local Theme, W, Compat = SK.Theme, SK.Widgets, SK.Compat
 local Board, Att = SK.RaidBoard, SK.Attendance
 local S, SP = Theme.SIZES, Theme.SPACE
 
-RT.VIEWS = { { "upcoming", "Raids" }, { "calendar", "Calendar" }, { "new", "New raid" }, { "attendance", "Attendance" } }
+RT.VIEWS = { { "upcoming", "Raids" }, { "groups", "Groups" }, { "calendar", "Calendar" }, { "new", "New raid" },
+	{ "attendance", "Attendance" } }
 RT.OFFICER_VIEWS = { new = true, attendance = true }
 RT.LEFT_W = 270
 RT.RIGHT_W = S.contentW - RT.LEFT_W - SP.xl
@@ -68,7 +69,7 @@ local RESULT_TONE = { full = "good", late = "spark", missed = "bad", declined = 
 function RT.View(officer)
 	local v = SK.DB.settings.raidsView
 	if RT.OFFICER_VIEWS[v] and not officer then return "upcoming" end
-	if v ~= "new" and v ~= "attendance" and v ~= "calendar" then return "upcoming" end
+	if v ~= "new" and v ~= "attendance" and v ~= "calendar" and v ~= "groups" then return "upcoming" end
 	return v
 end
 
@@ -134,10 +135,12 @@ function RT.EventRows(board, now, me)
 end
 
 -- "You: Signed up as Healer  ·  You're in" / "You haven't answered yet".
--- place = "i" | "b" | nil (v0.10.0: officers' pick, shown to everyone).
+-- place = "i" | "b" | nil (v0.10.0: officers' pick, shown to everyone);
+-- group = 1..8 when they're In with a group (v0.11.0).
 RT.PLACE_TEXT = { i = Theme.Paint("good", "You're in"), b = Theme.Paint("accent", "You're on the bench") }
-function RT.MineText(su, place)
-	local tail = place and ("  ·  " .. RT.PLACE_TEXT[place]) or ""
+function RT.MineText(su, place, group)
+	local tail = place and ("  ·  " .. RT.PLACE_TEXT[place] ..
+		((place == "i" and group and group > 0) and Theme.Paint("good", ", group " .. group) or "")) or ""
 	if not su then return Theme.Paint("spark", "You haven't answered yet") .. tail end
 	local role = su.r and SK.Data.ROLE_NAMES[su.r]
 	return "You: " .. Theme.Paint(STATUS_TONE[su.s], Board.STATUS_NAME[su.s]) .. (role and su.s ~= "n" and (" as " .. role) or "")
@@ -429,6 +432,7 @@ function RT:Build(page)
 	self.createResult:SetJustifyH("LEFT")
 
 	self:BuildCalendar(page, top)
+	self:BuildGroups(page, top)
 
 	-------------------------------------------------------------------------
 	-- Attendance (officers)
@@ -652,7 +656,7 @@ function RT:RefreshUpcoming(board, now, me)
 		b:Paint("rest")
 	end
 	self.role:Refresh()
-	self.mine:SetText(RT.MineText(mine, Board.PlaceOf(board, ev.id, me or "")))
+	self.mine:SetText(RT.MineText(mine, Board.PlaceOf(board, ev.id, me or ""), (SK.RaidGroups.SlotOf(board, ev.id, me or ""))))
 	local rows2, sum = Board.LineUp(board, ev, RT.Ctx())
 	self.counts:SetText(Board.CountsText(sum) .. "  ·  " .. sum.maybe .. " tentative  ·  " .. sum.out .. " can't come")
 	local parts = {}
@@ -704,9 +708,13 @@ function RT:Refresh()
 	self.newPage:SetShown(view == "new")
 	self.attPage:SetShown(view == "attendance")
 	self.calPage:SetShown(view == "calendar")
+	self.grpPage:SetShown(view == "groups")
+	if view ~= "groups" then RT:CancelCarry() end
 	local now = Compat.Now()
 	if view == "upcoming" then
 		self:RefreshUpcoming(Board:Get(), now, Compat.PlayerGUID())
+	elseif view == "groups" then
+		self:RefreshGroups(now)
 	elseif view == "calendar" then
 		self:RefreshCalendar(now)
 	elseif view == "new" then
@@ -714,6 +722,303 @@ function RT:Refresh()
 	else
 		self:RefreshAttendance(now)
 	end
+end
+
+---------------------------------------------------------------------------
+-- Groups page (v0.11.0): the raid's groups of five. Officers drag a name
+-- (or click it, then click where it goes) into a group, onto the Bench or
+-- back to Available; dropping on someone swaps the two. Right-click marks
+-- late, leaving early, absent. Everyone else sees it read-only.
+---------------------------------------------------------------------------
+RT.GRP_SIDE_W = 200
+RT.GRP_W = S.contentW - RT.GRP_SIDE_W - SP.l
+RT.GRP_COLS = 4
+RT.GRP_ROW = 18
+local ROLE_LETTER = { TANK = "T", HEALER = "H", DPS = "D" }
+local MARK_TONE = { l = "spark", e = "spark", a = "bad" }
+
+-- One player's line: name in class colour, role letter, mark. Pure.
+function RT.SlotText(r)
+	if not r then return Theme.Paint("faint", "empty") end
+	local mark = r.mark and r.mark ~= "" and (" " .. Theme.Paint(MARK_TONE[r.mark], SK.RaidGroups.MARK_SHORT[r.mark])) or ""
+	return Theme.ClassText(r.name, r.class) .. " " .. Theme.Paint(r.roleGuess and "faint" or "dim", ROLE_LETTER[r.role or ""] or "?") .. mark
+end
+
+-- What the line under the menu says.
+function RT.GroupsHint(officer, mine)
+	if officer then
+		return "Drag a name into a group, onto the Bench or back to Available (or click it, then click where it goes). " ..
+			"Right-click: late, leaving early, absent."
+	end
+	if mine and mine > 0 then return "You're in group " .. mine .. "." end
+	return "Officers and raid leaders arrange the groups; you'll see yours here."
+end
+
+local function dropTarget(frame, target)
+	frame.drop = target
+	RT.dropTargets[#RT.dropTargets + 1] = frame
+end
+
+function RT:BuildGroups(page, top)
+	local gp = CreateFrame("Frame", nil, page)
+	gp:SetPoint("TOPLEFT", 0, top)
+	gp:SetPoint("BOTTOMRIGHT")
+	gp:Hide()
+	self.grpPage = gp
+	RT.dropTargets = {}
+	self.grpMenu = W.Menu(gp, {
+		width = 260,
+		items = function()
+			local out, now = {}, Compat.Now()
+			for _, e in ipairs(Board.Upcoming(Board:Get() or Board.New(), now)) do
+				local raid = Board.Raid(e.raid)
+				out[#out + 1] = { value = e.id, text = Board.ShortWhen(e.at, now) .. "  " .. (raid and raid.name or e.raid) }
+			end
+			return out
+		end,
+		get = function() return RT.selected end,
+		set = function(v) RT.selected = v; RT:Refresh() end,
+	})
+	self.grpMenu:SetPoint("TOPLEFT", 0, 0)
+	self.grpCounts = Theme.Text(gp, "small", "dim")
+	self.grpCounts:SetPoint("LEFT", self.grpMenu, "RIGHT", SP.m, 0)
+	self.grpCounts:SetPoint("RIGHT", 0, 0)
+	self.grpCounts:SetJustifyH("RIGHT")
+	self.grpCounts:SetWordWrap(false)
+	self.grpHint = Theme.Text(gp, "small", "faint")
+	self.grpHint:SetPoint("TOPLEFT", 0, -(S.control + SP.s))
+	self.grpHint:SetPoint("RIGHT", 0, 0)
+	self.grpHint:SetJustifyH("LEFT")
+	self.grpHint:SetWordWrap(false)
+	local y0 = S.control + SP.s + 16 + SP.s
+	local colW = math.floor(RT.GRP_W / RT.GRP_COLS)
+	local boxH = RT.GRP_ROW * (SK.RaidGroups.SIZE + 1) + SP.xs
+	self.grpBoxes = {}
+	for g = 1, SK.RaidGroups.MAX_GROUPS do
+		local box = CreateFrame("Frame", nil, gp)
+		box:SetSize(colW - SP.xs, boxH)
+		box:SetPoint("TOPLEFT", ((g - 1) % RT.GRP_COLS) * colW, -(y0 + math.floor((g - 1) / RT.GRP_COLS) * (boxH + SP.s)))
+		Theme.Panel(box, { bg = "surface", border = "line" })
+		box:EnableMouse(true)
+		box.title = Theme.Text(box, "label", "dim")
+		box.title:SetPoint("TOPLEFT", SP.s, -SP.xxs - 1)
+		box.title:SetText(("Group " .. g):upper())
+		box:SetScript("OnMouseUp", function(selfBox, button)
+			if button == "LeftButton" and RT.carry then RT:DropOn(selfBox.drop) end
+		end)
+		dropTarget(box, { kind = "group", n = g })
+		box.slots = {}
+		for i = 1, SK.RaidGroups.SIZE do
+			local b = CreateFrame("Button", nil, box)
+			b:SetHeight(RT.GRP_ROW)
+			b:SetPoint("TOPLEFT", SP.xs, -(RT.GRP_ROW * i))
+			b:SetPoint("RIGHT", -SP.xs, 0)
+			b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+			b:RegisterForDrag("LeftButton")
+			b.hl = b:CreateTexture(nil, "BACKGROUND")
+			b.hl:SetAllPoints()
+			Theme.Solid(b.hl, "accent", Theme.ALPHA.selected)
+			b.hl:Hide()
+			b.text = Theme.Text(b, "small", "text")
+			b.text:SetPoint("LEFT", SP.xs, 0)
+			b.text:SetPoint("RIGHT", -SP.xxs, 0)
+			b.text:SetJustifyH("LEFT")
+			b.text:SetWordWrap(false)
+			b:SetScript("OnClick", function(selfB, button) RT:SlotClick(selfB.item, selfB.drop, button) end)
+			b:SetScript("OnDragStart", function(selfB) if selfB.item then RT:StartCarry(selfB.item, true) end end)
+			b:SetScript("OnDragStop", function() RT:StopDrag() end)
+			b:SetScript("OnEnter", function(selfB) RT:SlotTip(selfB, selfB.item) end)
+			b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+			b.item = false
+			dropTarget(b, { kind = "group", n = g, slot = true })
+			box.slots[i] = b
+		end
+		self.grpBoxes[g] = box
+	end
+	-- Right side: Available (signed up, not placed) and Bench.
+	local side = CreateFrame("Frame", nil, gp)
+	side:SetPoint("TOPLEFT", RT.GRP_W + SP.l, -y0)
+	side:SetPoint("BOTTOMRIGHT")
+	local function sideList(title, kind)
+		local l = W.List(side, {
+			columns = { { key = "name", title = title, width = RT.GRP_SIDE_W - SP.m } },
+			setCell = function(fs, r) fs:SetText(RT.SlotText(r)) end,
+			onClick = function(r, button) RT:SlotClick(r, { kind = kind }, button) end,
+			onEnter = function(row, r) RT:SlotTip(row, r) end,
+			decorate = function(row)
+				row:RegisterForDrag("LeftButton")
+				row:SetScript("OnDragStart", function(selfRow) if selfRow.item then RT:StartCarry(selfRow.item, true) end end)
+				row:SetScript("OnDragStop", function() RT:StopDrag() end)
+			end,
+		})
+		l:EnableMouse(true)
+		l:SetScript("OnMouseUp", function(selfL, button) if button == "LeftButton" and RT.carry then RT:DropOn(selfL.drop) end end)
+		dropTarget(l, { kind = kind })
+		return l
+	end
+	self.grpAvail = sideList("Available", "available")
+	self.grpAvail:SetPoint("TOPLEFT")
+	self.grpAvail:SetPoint("TOPRIGHT")
+	self.grpAvail:SetHeight(230)
+	self.grpBench = sideList("Bench", "bench")
+	self.grpBench:SetPoint("TOPLEFT", self.grpAvail, "BOTTOMLEFT", 0, -SP.s)
+	self.grpBench:SetPoint("BOTTOMRIGHT")
+	self.grpEmpty = Theme.Text(gp, "body", "dim")
+	self.grpEmpty:SetPoint("TOPLEFT", 0, -y0)
+	self.grpEmpty:SetWidth(RT.GRP_W)
+	self.grpEmpty:SetJustifyH("LEFT")
+	self.grpEmpty:SetWordWrap(true)
+	-- The name that follows the cursor while dragging.
+	local drag = CreateFrame("Frame", nil, UIParent)
+	drag:SetSize(160, RT.GRP_ROW)
+	drag:SetFrameStrata("TOOLTIP")
+	Theme.Panel(drag, { bg = "raised", border = "accent" })
+	drag.text = Theme.Text(drag, "small", "text")
+	drag.text:SetPoint("LEFT", SP.xs, 0)
+	drag:Hide()
+	drag:SetScript("OnUpdate", function(selfD)
+		local x, y = GetCursorPosition()
+		local sc = UIParent:GetEffectiveScale()
+		selfD:ClearAllPoints()
+		selfD:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x / sc + 12, y / sc - 8)
+	end)
+	self.grpDrag = drag
+	gp:SetScript("OnHide", function() RT:CancelCarry() end)
+end
+
+function RT:SlotTip(owner, r)
+	if not r then return end
+	GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+	Theme.TipLine(GameTooltip, Theme.ClassText(r.name, r.class))
+	Theme.TipLine(GameTooltip, r.statusName .. (r.role and ("  ·  " .. SK.Data.ROLE_NAMES[r.role]) or "") ..
+		(r.mark and r.mark ~= "" and ("  ·  " .. SK.RaidGroups.MARK_NAME[r.mark]) or ""), "dim")
+	if r.ilvl then Theme.TipLine(GameTooltip, string.format("Item level %.0f%s", r.ilvl, r.tree and ("  ·  " .. r.tree) or ""), "dim") end
+	if Board.OfficerView() then
+		Theme.TipLine(GameTooltip, "Drag (or click) to move. Right-click: late, leaving early, absent.", "accent", true)
+	end
+	GameTooltip:Show()
+end
+
+-- Officers: pick a player up (drag, or a click), put them down on a click.
+function RT:StartCarry(r, dragging)
+	if not Board.OfficerView() or not RT.selected then return end
+	RT.carry = { guid = r.guid, name = r.name }
+	RT.dragging = dragging and true or false
+	if dragging then
+		self.grpDrag.text:SetText(RT.SlotText(r))
+		self.grpDrag:Show()
+	end
+	RT:Refresh()
+end
+
+function RT:CancelCarry()
+	RT.carry, RT.dragging = nil, false
+	if self.grpDrag then self.grpDrag:Hide() end
+end
+
+-- Drag ended: drop on whatever is under the cursor (a filled slot first,
+-- so dropping on a player swaps), else nothing.
+function RT:StopDrag()
+	if not RT.carry then return end
+	self.grpDrag:Hide()
+	local best
+	for _, f in ipairs(RT.dropTargets) do
+		if f:IsVisible() and f:IsMouseOver() and (not best or (f.drop.slot and not best.drop.slot)) then best = f end
+	end
+	if best then
+		RT:DropOn(best.drop, type(best.item) == "table" and best.item.guid or nil)
+	else
+		RT:CancelCarry()
+		RT:Refresh()
+	end
+end
+
+function RT:DropOn(target, onto)
+	local carry = RT.carry
+	RT:CancelCarry()
+	if not carry or not target or not RT.selected then return RT:Refresh() end
+	local t = { kind = target.kind, n = target.n }
+	local ok, why = SK.RaidGroups:Move(RT.selected, carry.guid, t, onto ~= carry.guid and onto or nil)
+	if not ok then SK:Print("Couldn't move %s: %s.", tostring(carry.name), tostring(why)) end
+	RT:Refresh()
+end
+
+-- A click on a player or a slot.
+function RT:SlotClick(r, target, button)
+	if button == "RightButton" then
+		if r and Board.OfficerView() and RT.selected then
+			local ok, why = SK.RaidGroups:CycleMark(RT.selected, r.guid)
+			if not ok then SK:Print("Couldn't mark them: %s.", tostring(why)) end
+			RT:Refresh()
+		elseif r then
+			SK.CharacterTab:ShowCharacter(r.guid)
+		end
+		return
+	end
+	if not Board.OfficerView() then
+		if r then SK.CharacterTab:ShowCharacter(r.guid) end
+		return
+	end
+	if RT.carry then
+		if r and r.guid == RT.carry.guid then RT:CancelCarry(); return RT:Refresh() end
+		return RT:DropOn(target, r and r.guid or nil)
+	end
+	if r then RT:StartCarry(r, false) end
+end
+
+function RT:RefreshGroups(now)
+	local board = Board:Get() or Board.New()
+	local me = Compat.PlayerGUID()
+	local up = Board.Upcoming(board, now)
+	local found = false
+	for _, e in ipairs(up) do if e.id == RT.selected then found = true end end
+	if not found then RT.selected = up[1] and up[1].id or nil end
+	self.grpMenu:Refresh()
+	local ev = RT.selected and board.events[RT.selected]
+	local officer = Board.OfficerView()
+	for _, box in ipairs(self.grpBoxes) do box:Hide() end
+	self.grpAvail:SetShown(ev ~= nil)
+	self.grpBench:SetShown(ev ~= nil)
+	self.grpEmpty:SetShown(ev == nil)
+	if not ev then
+		self.grpCounts:SetText("")
+		self.grpHint:SetText("")
+		self.grpEmpty:SetText("No raids yet. When one is made, its groups show here.")
+		return
+	end
+	local rows, sum = Board.LineUp(board, ev, RT.Ctx())
+	local L = SK.RaidGroups.Layout(board, ev, rows)
+	local marks = {}
+	for _, k in ipairs({ "l", "e", "a" }) do
+		if L.marks[k] > 0 then marks[#marks + 1] = SK.RaidGroups.MARK_NAME[k] .. " " .. L.marks[k] end
+	end
+	self.grpCounts:SetText(Board.CountsText(sum) .. (#marks > 0 and ("  ·  " .. table.concat(marks, "  ·  ")) or ""))
+	local mine = (SK.RaidGroups.SlotOf(board, ev.id, me or ""))
+	if Board.PlaceOf(board, ev.id, me or "") ~= "i" then mine = 0 end
+	self.grpHint:SetText(RT.carry and Theme.Paint("accent", "Moving " .. RT.carry.name ..
+		": click a group, the Bench or Available. Click them again to stop.") or RT.GroupsHint(officer, mine))
+	for g = 1, L.count do
+		local box = self.grpBoxes[g]
+		box:Show()
+		local list = L.groups[g]
+		box.title:SetText(("Group " .. g):upper() .. "  " .. #list .. "/" .. SK.RaidGroups.SIZE)
+		Theme.SetBorderColor(box, (g == mine) and "accent" or "line")
+		for i, b in ipairs(box.slots) do
+			local r = list[i]
+			b.item = r or false -- false, not nil: an empty slot
+			b.text:SetText(RT.SlotText(r))
+			b.hl:SetShown(r ~= nil and RT.carry ~= nil and r.guid == RT.carry.guid)
+		end
+	end
+	local avail = {}
+	for _, r in ipairs(L.unplaced) do avail[#avail + 1] = r end
+	for _, r in ipairs(L.available) do avail[#avail + 1] = r end
+	self.grpAvail:SetItems(avail)
+	self.grpAvail:SetEmptyText(#rows == 0 and "Nobody has signed up yet." or "Everyone signed up is placed.")
+	self.grpAvail:SetSelected(function(r) return RT.carry ~= nil and r.guid == RT.carry.guid end)
+	self.grpBench:SetItems(L.bench)
+	self.grpBench:SetEmptyText("Nobody on the bench.")
+	self.grpBench:SetSelected(function(r) return RT.carry ~= nil and r.guid == RT.carry.guid end)
 end
 
 ---------------------------------------------------------------------------

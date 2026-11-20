@@ -30,6 +30,7 @@ Core\Feed.lua
 Core\Overview.lua
 Core\ShortWords.lua
 Core\RaidBoard.lua
+Core\RaidGroups.lua
 Core\Attendance.lua
 Core\OfficerDir.lua
 Core\Reserves.lua

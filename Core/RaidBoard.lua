@@ -122,7 +122,7 @@ end
 ---------------------------------------------------------------------------
 -- Merging (pure: board, item, now, roster checks)
 ---------------------------------------------------------------------------
-function Board.New() return { events = {}, signups = {}, places = {} } end
+function Board.New() return { events = {}, signups = {}, places = {}, slots = {} } end
 
 -- isLead(guid) -> bool. Returns accepted, reason.
 function Board.MergeEvent(board, e, now, isLead)
@@ -199,6 +199,9 @@ function Board.Prune(board, now)
 	for id in pairs(board.places or {}) do
 		if not board.events[id] then board.places[id] = nil end
 	end
+	for id in pairs(board.slots or {}) do
+		if not board.events[id] then board.slots[id] = nil end
+	end
 	return n
 end
 
@@ -245,6 +248,11 @@ function Board.Digest(board)
 		for guid in pairs(board.places and board.places[id] or {}) do placed[#placed + 1] = guid end
 		table.sort(placed)
 		for _, guid in ipairs(placed) do parts[#parts + 1] = "P" .. guid .. "=" .. string.format("%d", board.places[id][guid].u) end
+		-- v0.11.0: groups and marks too.
+		local grouped = {}
+		for guid in pairs(board.slots and board.slots[id] or {}) do grouped[#grouped + 1] = guid end
+		table.sort(grouped)
+		for _, guid in ipairs(grouped) do parts[#parts + 1] = "G" .. guid .. "=" .. string.format("%d", board.slots[id][guid].u) end
 		out[id] = hash(table.concat(parts, ","))
 	end
 	return out
@@ -541,6 +549,7 @@ function Board:Get(guild)
 	guild.raidBoard.events = guild.raidBoard.events or {}
 	guild.raidBoard.signups = guild.raidBoard.signups or {}
 	guild.raidBoard.places = guild.raidBoard.places or {}
+	guild.raidBoard.slots = guild.raidBoard.slots or {}
 	return guild.raidBoard
 end
 

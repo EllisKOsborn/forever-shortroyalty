@@ -2,7 +2,8 @@
 -- guild addon channel, on top of Sync's queue, pause rules and limits.
 --
 --   RB  GUILD  raids and sign-ups { e = {event...}, su = {signup...},
---              pk = {In/Bench choice...} (v0.10.0; older versions ignore pk) }
+--              pk = {In/Bench choice...} (v0.10.0; older versions ignore pk),
+--              gs = {group and mark...} (v0.11.0; older versions ignore gs) }
 --              sent a few seconds after a change, and in answer to RD
 --   RD  GUILD  "the raids I hold" { d = { [id] = fingerprint } }, once per
 --              session after login. Anyone holding a raid that differs
@@ -41,6 +42,11 @@ local function wireItem(board, key)
 		local e = board.events[id]
 		return e and "e", e and { id = e.id, by = e.by, c = e.c, raid = e.raid, at = e.at, u = e.u, x = e.x, eb = e.eb }
 	end
+	local gid, gguid = key:match("^G:(.+)|(.+)$")
+	if gid then
+		local s = board.slots and board.slots[gid] and board.slots[gid][gguid]
+		return s and "gs", s and { e = gid, g = gguid, n = s.n, m = s.m, u = s.u, by = s.by }
+	end
 	local pid, pguid = key:match("^P:(.+)|(.+)$")
 	if pid then
 		local p = board.places and board.places[pid] and board.places[pid][pguid]
@@ -56,6 +62,7 @@ local function raidKeys(board, id)
 	local keys = { eventKey(id) }
 	for guid in pairs(board.signups[id] or {}) do keys[#keys + 1] = signupKey(id, guid) end
 	for guid in pairs(board.places and board.places[id] or {}) do keys[#keys + 1] = "P:" .. id .. "|" .. guid end
+	for guid in pairs(board.slots and board.slots[id] or {}) do keys[#keys + 1] = "G:" .. id .. "|" .. guid end
 	return keys
 end
 RS.raidKeys = raidKeys
@@ -79,13 +86,13 @@ function RS:SendPending()
 	for k in pairs(self.pending) do keys[#keys + 1] = k end
 	table.sort(keys) -- raids ("E:") before sign-ups ("S:")
 	self.pending = {}
-	local msg, count, sentMsgs = { t = "RB", e = {}, su = {}, pk = {} }, 0, 0
+	local msg, count, sentMsgs = { t = "RB", e = {}, su = {}, pk = {}, gs = {} }, 0, 0
 	local function flush()
 		if count == 0 then return end
 		sentMsgs = sentMsgs + 1
 		self.stats.sentRB = self.stats.sentRB + 1
 		SK.Sync:Enqueue("RB:" .. tostring(Compat.Now()) .. ":" .. sentMsgs .. ":" .. math.random(1e6), "GUILD", nil, "NORMAL", msg)
-		msg, count = { t = "RB", e = {}, su = {}, pk = {} }, 0
+		msg, count = { t = "RB", e = {}, su = {}, pk = {}, gs = {} }, 0
 	end
 	for _, k in ipairs(keys) do
 		local kind, item = wireItem(board, k)
@@ -161,6 +168,16 @@ function RS:HandleRB(msg, from)
 		elseif why ~= "not newer" then self.stats.rejected = self.stats.rejected + 1; self.lastReject = why end
 		if type(p) == "table" and type(p.e) == "string" and type(p.g) == "string" and (ok or why == "not newer") then
 			note("P:" .. p.e .. "|" .. p.g, p.u, board.places[p.e] and board.places[p.e][p.g])
+		end
+	end
+	for _, s in ipairs(type(msg.gs) == "table" and msg.gs or {}) do
+		n = n + 1
+		if n > RS.MAX_ITEMS then break end
+		local ok, why = SK.RaidGroups.MergeSlot(board, s, now, isMember, isLead)
+		if ok then changed = true; self.stats.accepted = self.stats.accepted + 1
+		elseif why ~= "not newer" then self.stats.rejected = self.stats.rejected + 1; self.lastReject = why end
+		if type(s) == "table" and type(s.e) == "string" and type(s.g) == "string" and (ok or why == "not newer") then
+			note("G:" .. s.e .. "|" .. s.g, s.u, board.slots[s.e] and board.slots[s.e][s.g])
 		end
 	end
 	if #ours > 0 then self:Queue(ours, "answer") end
