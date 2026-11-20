@@ -3,7 +3,8 @@
 --
 --   RB  GUILD  raids and sign-ups { e = {event...}, su = {signup...},
 --              pk = {In/Bench choice...} (v0.10.0; older versions ignore pk),
---              gs = {group and mark...} (v0.11.0; older versions ignore gs) }
+--              gs = {group and mark...} (v0.11.0; older versions ignore gs),
+--              as = {boss assignment block...} (v0.11.0) }
 --              sent a few seconds after a change, and in answer to RD
 --   RD  GUILD  "the raids I hold" { d = { [id] = fingerprint } }, once per
 --              session after login. Anyone holding a raid that differs
@@ -42,6 +43,12 @@ local function wireItem(board, key)
 		local e = board.events[id]
 		return e and "e", e and { id = e.id, by = e.by, c = e.c, raid = e.raid, at = e.at, u = e.u, x = e.x, eb = e.eb }
 	end
+	local aid, akey = key:match("^A:(.+)|(.+)$")
+	if aid then
+		local b = board.assign and board.assign[aid] and board.assign[aid][akey]
+		return b and "as", b and { e = aid, k = akey, name = b.name, o = b.o, lines = SK.RaidAssign.CopyLines(b.lines),
+			u = b.u, by = b.by, x = b.x }
+	end
 	local gid, gguid = key:match("^G:(.+)|(.+)$")
 	if gid then
 		local s = board.slots and board.slots[gid] and board.slots[gid][gguid]
@@ -63,6 +70,7 @@ local function raidKeys(board, id)
 	for guid in pairs(board.signups[id] or {}) do keys[#keys + 1] = signupKey(id, guid) end
 	for guid in pairs(board.places and board.places[id] or {}) do keys[#keys + 1] = "P:" .. id .. "|" .. guid end
 	for guid in pairs(board.slots and board.slots[id] or {}) do keys[#keys + 1] = "G:" .. id .. "|" .. guid end
+	for k in pairs(board.assign and board.assign[id] or {}) do keys[#keys + 1] = "A:" .. id .. "|" .. k end
 	return keys
 end
 RS.raidKeys = raidKeys
@@ -86,13 +94,13 @@ function RS:SendPending()
 	for k in pairs(self.pending) do keys[#keys + 1] = k end
 	table.sort(keys) -- raids ("E:") before sign-ups ("S:")
 	self.pending = {}
-	local msg, count, sentMsgs = { t = "RB", e = {}, su = {}, pk = {}, gs = {} }, 0, 0
+	local msg, count, sentMsgs = { t = "RB", e = {}, su = {}, pk = {}, gs = {}, as = {} }, 0, 0
 	local function flush()
 		if count == 0 then return end
 		sentMsgs = sentMsgs + 1
 		self.stats.sentRB = self.stats.sentRB + 1
 		SK.Sync:Enqueue("RB:" .. tostring(Compat.Now()) .. ":" .. sentMsgs .. ":" .. math.random(1e6), "GUILD", nil, "NORMAL", msg)
-		msg, count = { t = "RB", e = {}, su = {}, pk = {}, gs = {} }, 0
+		msg, count = { t = "RB", e = {}, su = {}, pk = {}, gs = {}, as = {} }, 0
 	end
 	for _, k in ipairs(keys) do
 		local kind, item = wireItem(board, k)
@@ -178,6 +186,16 @@ function RS:HandleRB(msg, from)
 		elseif why ~= "not newer" then self.stats.rejected = self.stats.rejected + 1; self.lastReject = why end
 		if type(s) == "table" and type(s.e) == "string" and type(s.g) == "string" and (ok or why == "not newer") then
 			note("G:" .. s.e .. "|" .. s.g, s.u, board.slots[s.e] and board.slots[s.e][s.g])
+		end
+	end
+	for _, b in ipairs(type(msg.as) == "table" and msg.as or {}) do
+		n = n + 1
+		if n > RS.MAX_ITEMS then break end
+		local ok, why = SK.RaidAssign.MergeBlock(board, b, now, isLead)
+		if ok then changed = true; self.stats.accepted = self.stats.accepted + 1
+		elseif why ~= "not newer" then self.stats.rejected = self.stats.rejected + 1; self.lastReject = why end
+		if type(b) == "table" and type(b.e) == "string" and type(b.k) == "string" and (ok or why == "not newer") then
+			note("A:" .. b.e .. "|" .. b.k, b.u, board.assign[b.e] and board.assign[b.e][b.k])
 		end
 	end
 	if #ours > 0 then self:Queue(ours, "answer") end

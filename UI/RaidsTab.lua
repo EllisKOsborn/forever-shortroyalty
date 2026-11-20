@@ -10,8 +10,8 @@ local Theme, W, Compat = SK.Theme, SK.Widgets, SK.Compat
 local Board, Att = SK.RaidBoard, SK.Attendance
 local S, SP = Theme.SIZES, Theme.SPACE
 
-RT.VIEWS = { { "upcoming", "Raids" }, { "groups", "Groups" }, { "calendar", "Calendar" }, { "new", "New raid" },
-	{ "attendance", "Attendance" } }
+RT.VIEWS = { { "upcoming", "Raids" }, { "groups", "Groups" }, { "assign", "Assignments" }, { "calendar", "Calendar" },
+	{ "new", "New raid" }, { "attendance", "Attendance" } }
 RT.OFFICER_VIEWS = { new = true, attendance = true }
 RT.LEFT_W = 270
 RT.RIGHT_W = S.contentW - RT.LEFT_W - SP.xl
@@ -69,7 +69,7 @@ local RESULT_TONE = { full = "good", late = "spark", missed = "bad", declined = 
 function RT.View(officer)
 	local v = SK.DB.settings.raidsView
 	if RT.OFFICER_VIEWS[v] and not officer then return "upcoming" end
-	if v ~= "new" and v ~= "attendance" and v ~= "calendar" and v ~= "groups" then return "upcoming" end
+	if v ~= "new" and v ~= "attendance" and v ~= "calendar" and v ~= "groups" and v ~= "assign" then return "upcoming" end
 	return v
 end
 
@@ -140,9 +140,12 @@ end
 -- place = "i" | "b" | nil (v0.10.0: officers' pick, shown to everyone);
 -- group = 1..8 when they're In with a group (v0.11.0).
 RT.PLACE_TEXT = { i = Theme.Paint("good", "You're in"), b = Theme.Paint("accent", "You're on the bench") }
-function RT.MineText(su, place, group)
+function RT.MineText(su, place, group, jobs)
 	local tail = place and ("  ·  " .. RT.PLACE_TEXT[place] ..
 		((place == "i" and group and group > 0) and Theme.Paint("good", ", group " .. group) or "")) or ""
+	if jobs and #jobs > 0 then
+		tail = tail .. "  ·  " .. Theme.Paint("accent", jobs[1] .. (#jobs > 1 and (" +" .. (#jobs - 1)) or ""))
+	end
 	if not su then return Theme.Paint("spark", "You haven't answered yet") .. tail end
 	local role = su.r and SK.Data.ROLE_NAMES[su.r]
 	return "You: " .. Theme.Paint(STATUS_TONE[su.s], Board.STATUS_NAME[su.s]) .. (role and su.s ~= "n" and (" as " .. role) or "")
@@ -435,6 +438,7 @@ function RT:Build(page)
 
 	self:BuildCalendar(page, top)
 	self:BuildGroups(page, top)
+	self:BuildAssign(page, top)
 
 	-------------------------------------------------------------------------
 	-- Attendance (officers)
@@ -658,7 +662,8 @@ function RT:RefreshUpcoming(board, now, me)
 		b:Paint("rest")
 	end
 	self.role:Refresh()
-	self.mine:SetText(RT.MineText(mine, Board.PlaceOf(board, ev.id, me or ""), (SK.RaidGroups.SlotOf(board, ev.id, me or ""))))
+	self.mine:SetText(RT.MineText(mine, Board.PlaceOf(board, ev.id, me or ""), (SK.RaidGroups.SlotOf(board, ev.id, me or "")),
+		SK.RaidAssign.JobsOf(board, ev.id, me or "")))
 	local rows2, sum = Board.LineUp(board, ev, RT.Ctx())
 	self.counts:SetText(Board.CountsText(sum) .. "  ·  " .. sum.maybe .. " tentative  ·  " .. sum.out .. " can't come")
 	local parts = {}
@@ -711,12 +716,15 @@ function RT:Refresh()
 	self.attPage:SetShown(view == "attendance")
 	self.calPage:SetShown(view == "calendar")
 	self.grpPage:SetShown(view == "groups")
+	self.asgPage:SetShown(view == "assign")
 	if view ~= "groups" then RT:CancelCarry() end
 	local now = Compat.Now()
 	if view == "upcoming" then
 		self:RefreshUpcoming(Board:Get(), now, Compat.PlayerGUID())
 	elseif view == "groups" then
 		self:RefreshGroups(now)
+	elseif view == "assign" then
+		self:RefreshAssign(now)
 	elseif view == "calendar" then
 		self:RefreshCalendar(now)
 	elseif view == "new" then
@@ -757,6 +765,16 @@ function RT.GroupsHint(officer, mine)
 	return "Officers and raid leaders arrange the groups; you'll see yours here."
 end
 
+-- The upcoming raids, for the Groups and Assignments menus.
+function RT.RaidItems()
+	local out, now = {}, Compat.Now()
+	for _, e in ipairs(Board.Upcoming(Board:Get() or Board.New(), now)) do
+		local raid = Board.Raid(e.raid)
+		out[#out + 1] = { value = e.id, text = Board.ShortWhen(e.at, now) .. "  " .. (raid and raid.name or e.raid) }
+	end
+	return out
+end
+
 local function dropTarget(frame, target)
 	frame.drop = target
 	RT.dropTargets[#RT.dropTargets + 1] = frame
@@ -771,14 +789,7 @@ function RT:BuildGroups(page, top)
 	RT.dropTargets = {}
 	self.grpMenu = W.Menu(gp, {
 		width = 260,
-		items = function()
-			local out, now = {}, Compat.Now()
-			for _, e in ipairs(Board.Upcoming(Board:Get() or Board.New(), now)) do
-				local raid = Board.Raid(e.raid)
-				out[#out + 1] = { value = e.id, text = Board.ShortWhen(e.at, now) .. "  " .. (raid and raid.name or e.raid) }
-			end
-			return out
-		end,
+		items = RT.RaidItems,
 		get = function() return RT.selected end,
 		set = function(v) RT.selected, RT.setupMsg = v, nil; RT:Refresh() end,
 	})
@@ -1034,6 +1045,200 @@ function RT:RefreshGroups(now)
 	self.grpBench:SetItems(L.bench)
 	self.grpBench:SetEmptyText("Nobody on the bench.")
 	self.grpBench:SetSelected(function(r) return RT.carry ~= nil and r.guid == RT.carry.guid end)
+end
+
+---------------------------------------------------------------------------
+-- Assignments page (v0.11.0): bosses on the left, the picked boss's jobs
+-- in the middle, the players In on the right. Officers: type a boss name
+-- and Add boss, add a task line, click a line then click names to put
+-- them on it (click again to take them off). Right-click deletes.
+---------------------------------------------------------------------------
+RT.ASG_BOSS_W = 190
+RT.ASG_IN_W = 190
+RT.ASG_MID_W = S.contentW - RT.ASG_BOSS_W - RT.ASG_IN_W - 2 * SP.l
+
+-- A line's players as text. Pure apart from the roster.
+function RT.LinePlayers(l, guild)
+	local names = {}
+	for _, g in ipairs(l.g) do
+		local m = guild and guild.members[g]
+		names[#names + 1] = m and Theme.ClassText(m.name, m.class) or "?"
+	end
+	return #names > 0 and table.concat(names, ", ") or Theme.Paint("faint", "nobody yet")
+end
+
+function RT:BuildAssign(page, top)
+	local ap = CreateFrame("Frame", nil, page)
+	ap:SetPoint("TOPLEFT", 0, top)
+	ap:SetPoint("BOTTOMRIGHT")
+	ap:Hide()
+	self.asgPage = ap
+	self.asgMenu = W.Menu(ap, {
+		width = 240,
+		items = RT.RaidItems,
+		get = function() return RT.selected end,
+		set = function(v) RT.selected, RT.asgBlock, RT.asgLine = v, nil, nil; RT:Refresh() end,
+	})
+	self.asgMenu:SetPoint("TOPLEFT", 0, 0)
+	-- Officers: boss name box, Add boss, Copy from last raid.
+	local box = CreateFrame("EditBox", nil, ap)
+	box:SetSize(150, S.control)
+	box:SetAutoFocus(false)
+	box:SetMaxLetters(SK.RaidAssign.NAME_MAX)
+	box:SetTextInsets(SP.s, SP.s, 0, 0)
+	Theme.Font(box, "body", "text")
+	Theme.Panel(box, { bg = "surface", border = "lineStrong" })
+	box:SetPoint("LEFT", self.asgMenu, "RIGHT", SP.m, 0)
+	box:SetScript("OnEnterPressed", function() RT:AddBoss() end)
+	box:SetScript("OnEscapePressed", function(selfB) selfB:ClearFocus() end)
+	self.asgName = box
+	self.asgAdd = W.Button(ap, "Add boss", nil, S.control, function() RT:AddBoss() end, "primary")
+	self.asgAdd:SetPoint("LEFT", box, "RIGHT", SP.s, 0)
+	self.asgAdd.tooltip = "Type the boss's name (or Trash) in the box, then Add boss."
+	self.asgCopy = W.Button(ap, "Copy last raid", nil, S.control, function()
+		local n, why = SK.RaidAssign:CopyLast(RT.selected)
+		RT.asgMsg = n > 0 and ("Copied " .. Theme.Count(n, "boss", "bosses") .. " from the last raid.") or tostring(why)
+		RT:Refresh()
+	end)
+	self.asgCopy:SetPoint("LEFT", self.asgAdd, "RIGHT", SP.s, 0)
+	self.asgCopy.tooltip = "Copies the bosses and jobs from the last raid of the same kind. " ..
+		"Players stay on a job only if they're In this raid."
+	self.asgHint = Theme.Text(ap, "small", "faint")
+	self.asgHint:SetPoint("TOPLEFT", 0, -(S.control + SP.s))
+	self.asgHint:SetPoint("RIGHT", 0, 0)
+	self.asgHint:SetJustifyH("LEFT")
+	self.asgHint:SetWordWrap(false)
+	local y0 = S.control + SP.s + 16 + SP.s
+	self.asgBosses = W.List(ap, {
+		columns = { { key = "name", title = "Bosses", width = RT.ASG_BOSS_W - SP.m } },
+		setCell = function(fs, b) fs:SetText(b.name .. Theme.Paint("faint", "  " .. #b.lines)) end,
+		onClick = function(b, button)
+			if button == "RightButton" and Board.OfficerView() then
+				SK.RaidAssign:DeleteBlock(RT.selected, b.key)
+				RT.asgBlock = nil
+			else
+				RT.asgBlock, RT.asgLine = b.key, nil
+			end
+			RT:Refresh()
+		end,
+	})
+	self.asgBosses:SetPoint("TOPLEFT", 0, -y0)
+	self.asgBosses:SetPoint("BOTTOMLEFT")
+	self.asgBosses:SetWidth(RT.ASG_BOSS_W)
+	local mid = CreateFrame("Frame", nil, ap)
+	mid:SetPoint("TOPLEFT", RT.ASG_BOSS_W + SP.l, -y0)
+	mid:SetSize(RT.ASG_MID_W, 10)
+	mid:SetPoint("BOTTOM")
+	self.asgTask = W.Menu(mid, {
+		width = 170,
+		items = function()
+			local out = { { value = "", text = "Add a job…" } }
+			for _, t in ipairs(SK.RaidAssign.TASKS) do out[#out + 1] = { value = t[1], text = t[2] } end
+			return out
+		end,
+		get = function() return "" end,
+		set = function(v)
+			if v ~= "" and RT.asgBlock then
+				local ok, why = SK.RaidAssign:AddLine(RT.selected, RT.asgBlock, v)
+				if not ok then SK:Print("Couldn't add it: %s.", tostring(why)) end
+				RT:Refresh()
+			end
+		end,
+	})
+	self.asgTask:SetPoint("TOPLEFT")
+	self.asgLines = W.List(mid, {
+		columns = { { key = "task", title = "Job", width = 100 }, { key = "who", title = "Who", width = RT.ASG_MID_W - 100 - SP.m } },
+		setCell = function(fs, l, col)
+			if col.key == "task" then fs:SetText(SK.RaidAssign.TASK_NAME[l.t]) else fs:SetText(RT.LinePlayers(l, SK.DBM:Guild())) end
+		end,
+		onClick = function(l, button)
+			if not Board.OfficerView() then return end
+			if button == "RightButton" then
+				SK.RaidAssign:RemoveLine(RT.selected, RT.asgBlock, l.index)
+				RT.asgLine = nil
+			else
+				RT.asgLine = (RT.asgLine ~= l.index) and l.index or nil
+			end
+			RT:Refresh()
+		end,
+	})
+	self.asgLines:SetPoint("TOPLEFT", 0, -(S.control + SP.s))
+	self.asgLines:SetPoint("BOTTOMRIGHT")
+	self.asgIn = W.List(ap, {
+		columns = { { key = "name", title = "In this raid", width = RT.ASG_IN_W - SP.m } },
+		setCell = function(fs, r) fs:SetText(RT.SlotText(r)) end,
+		onClick = function(r)
+			if not (Board.OfficerView() and RT.asgBlock and RT.asgLine) then return end
+			local ok, why = SK.RaidAssign:TogglePlayer(RT.selected, RT.asgBlock, RT.asgLine, r.guid)
+			if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
+			RT:Refresh()
+		end,
+	})
+	self.asgIn:SetPoint("TOPRIGHT", 0, -y0)
+	self.asgIn:SetPoint("BOTTOMRIGHT")
+	self.asgIn:SetWidth(RT.ASG_IN_W)
+end
+
+function RT:AddBoss()
+	local key, why = SK.RaidAssign:AddBlock(RT.selected, self.asgName:GetText() or "")
+	if key then
+		RT.asgBlock, RT.asgLine = key, nil
+		self.asgName:SetText("")
+		self.asgName:ClearFocus()
+		RT.asgMsg = nil
+	else
+		RT.asgMsg = tostring(why)
+	end
+	RT:Refresh()
+end
+
+function RT:RefreshAssign(now)
+	local board = Board:Get() or Board.New()
+	local up = Board.Upcoming(board, now)
+	local found = false
+	for _, e in ipairs(up) do if e.id == RT.selected then found = true end end
+	if not found then RT.selected = up[1] and up[1].id or nil end
+	self.asgMenu:Refresh()
+	local ev = RT.selected and board.events[RT.selected]
+	local officer = Board.OfficerView() and ev ~= nil
+	for _, f in ipairs({ self.asgName, self.asgAdd, self.asgCopy, self.asgTask }) do f:SetShown(officer) end
+	local blocks = ev and SK.RaidAssign.Blocks(board, ev.id) or {}
+	local block
+	for _, b in ipairs(blocks) do if b.key == RT.asgBlock then block = b end end
+	if not block then block = blocks[1]; RT.asgBlock = block and block.key or nil; RT.asgLine = nil end
+	self.asgBosses:SetItems(blocks)
+	self.asgBosses:SetSelected(function(b) return b.key == RT.asgBlock end)
+	self.asgBosses:SetEmptyText(not ev and "No raids yet." or officer and "Type a boss name above and press Add boss."
+		or "No assignments yet.")
+	local lines = {}
+	for i, l in ipairs(block and block.lines or {}) do lines[i] = { t = l.t, g = l.g, index = i } end
+	if RT.asgLine and not lines[RT.asgLine] then RT.asgLine = nil end
+	self.asgLines:SetItems(lines)
+	self.asgLines:SetSelected(function(l) return l.index == RT.asgLine end)
+	self.asgLines:SetEmptyText(block and (officer and "Add a job with the menu above." or "No jobs for this boss yet.") or "")
+	self.asgTask:SetShown(officer and block ~= nil)
+	self.asgTask:Refresh()
+	local inRows = {}
+	if ev then
+		local rows = Board.LineUp(board, ev, RT.Ctx())
+		for _, r in ipairs(rows) do if r.place == "i" then inRows[#inRows + 1] = r end end
+	end
+	self.asgIn:SetItems(inRows)
+	self.asgIn:SetEmptyText("Nobody is In yet (Groups or the Raids tab).")
+	local onLine = {}
+	if block and RT.asgLine and block.lines[RT.asgLine] then
+		for _, g in ipairs(block.lines[RT.asgLine].g) do onLine[g] = true end
+	end
+	self.asgIn:SetSelected(function(r) return onLine[r.guid] == true end)
+	local jobs = ev and SK.RaidAssign.JobsOf(board, ev.id, Compat.PlayerGUID() or "") or {}
+	local hint
+	if RT.asgMsg then hint = Theme.Paint("text", RT.asgMsg)
+	elseif officer and RT.asgLine then
+		hint = Theme.Paint("accent", "Click names on the right to put them on this job (click again to take them off).")
+	elseif officer then hint = "Click a job, then names on the right. Right-click a job or a boss to delete it."
+	elseif #jobs > 0 then hint = "Your jobs: " .. table.concat(jobs, ", ")
+	else hint = ev and "You have no jobs in this raid." or "" end
+	self.asgHint:SetText(hint)
 end
 
 ---------------------------------------------------------------------------

@@ -14,7 +14,7 @@ local FILES = {
 	"Core/RecipeDB.lua", "Core/Onboarding.lua",
 	"Core/Export.lua", "Core/Learn.lua",
 	"Core/GearIndex.lua", "Core/Feed.lua", "Core/Overview.lua", "Core/ShortWords.lua", "Core/RaidBoard.lua",
-	"Core/RaidGroups.lua", "Core/Absences.lua", "Core/Attendance.lua",
+	"Core/RaidGroups.lua", "Core/Absences.lua", "Core/RaidAssign.lua", "Core/Attendance.lua",
 	"Core/OfficerDir.lua",
 	"Core/Reserves.lua", "Core/LootNight.lua",
 	"Data/Professions.lua", "Data/Recipes.lua", "Data/Attunements.lua", "Data/Factions.lua", "Data/Enchants.lua", "Data/Words.lua",
