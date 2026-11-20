@@ -219,3 +219,11 @@ addon read.
     within a minute (or about 2 minutes after logging in).
 54. [ ] The *Attend.* column matches the Attendance tab's 30-day totals.
 
+## v0.10.2 Raid calendar
+
+55. [ ] **Raids → Calendar**: this month, weeks from Monday, today outlined,
+    each raid on the right day at the right time for you. Click a raid: it
+    opens on the Raids tab. **<** / **>** / **Today** work.
+56. [ ] Officers: click an empty day in the next two weeks: New raid opens
+    with that day picked.
+

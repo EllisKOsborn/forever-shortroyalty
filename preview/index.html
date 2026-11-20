@@ -805,13 +805,34 @@ function words() {
 function raids() {
   const officer = S.officer === "1";
   let view = S.raidsView || "upcoming";
-  if (!officer && view !== "upcoming") view = "upcoming";
-  const tabs = [["upcoming", "Raids"]].concat(officer ? [["new", "New raid"], ["attendance", "Attendance"]] : []);
+  if (!officer && view !== "upcoming" && view !== "calendar") view = "upcoming";
+  const tabs = [["upcoming", "Raids"], ["calendar", "Calendar"]].concat(officer ? [["new", "New raid"], ["attendance", "Attendance"]] : []);
   const t0 = T.sizes.subTabs + T.space.m;
   const head = subtabs(tabs, view, "data-rv");
   const menu = (text, style) => `<div class="menu abs" style="${style}">${btn(text).replace("</span>", '<i class="arrow"></i></span>')}</div>`;
   const M = G.members;
   const nm = (m) => cls(m);
+  if (view === "calendar") {
+    // v0.10.2: December 2026 starts on a Tuesday; today = Wed 2 Dec.
+    const CW = Math.floor(T.sizes.contentW / 7), gy = t0 + 24 + 8 + 20;
+    const CH = Math.floor((600 - 60 - 4 - 16 - 30 - 12 - (24 + 8 + 20)) / 6);
+    const RAIDS = { 4: [["20:00 Onyxia", "good"]], 9: [["19:30 Barrow", ""]], 11: [["18:30 Hyjal", "acc"], ["20:00 Onyxia", "good"]], 16: [["19:30 Hyjal", ""]],
+      18: [["20:00 Onyxia", "faint"]], 23: [["19:30 Barrow", ""]], 30: [["20:00 Onyxia", ""]] };
+    let cells = "";
+    for (let i = 0; i < 42; i++) {
+      const day = i === 0 ? 30 : i <= 31 ? i : i - 31, inMonth = i >= 1 && i <= 31, today = i === 2, past = i < 2;
+      const rs = inMonth ? (RAIDS[day] || []) : [];
+      cells += `<div class="abs" style="left:${(i % 7) * CW}px;top:${gy + Math.floor(i / 7) * CH}px;width:${CW - 4}px;height:${CH - 4}px;border:1px solid var(--${today ? "accent" : "line"});background:${today ? "var(--accent-selected)" : inMonth ? "var(--surface)" : "var(--void)"}">
+        <div class="small ${today ? "" : inMonth && !past ? "dim" : "faint"}" style="padding:1px 4px">${day}</div>
+        ${rs.map((r) => `<div class="${r[1]}" style="font-size:11px;padding:0 4px;white-space:nowrap;overflow:hidden">${r[0]}</div>`).join("")}</div>`;
+    }
+    return head + `${btn("<", "", `style="position:absolute;left:0;top:${t0}px;width:32px;padding:0;justify-content:center"`)}${btn(">", "", `style="position:absolute;left:36px;top:${t0}px;width:32px;padding:0;justify-content:center"`)}
+      <div class="abs" style="left:80px;top:${t0 + 3}px;font-size:15px">December 2026</div>
+      <div class="abs dim small" style="right:72px;top:${t0 + 5}px">${officer ? "Click a day to make a raid on it" : "Click a raid to sign up"}</div>
+      ${btn("Today", "", `style="position:absolute;right:0;top:${t0}px"`)}
+      ${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => `<div class="abs display dim" style="left:${i * CW + 4}px;top:${t0 + 32}px;font-size:11px;letter-spacing:.08em">${d.toUpperCase()}</div>`).join("")}
+      ${cells}`;
+  }
   if (view === "new") {
     const field = (label, text, y) => `<div class="abs display dim" style="left:0;top:${t0 + y}px;font-size:11px;letter-spacing:.08em">${label.toUpperCase()}</div>${menu(text, `left:0;top:${t0 + y + 20}px;width:240px`)}`;
     return head + field("Raid", "Onyxia's Lair (40)", 0) + field("Day", "Friday 11 December", 60) + field("Start time (your time)", "20:00", 120) +

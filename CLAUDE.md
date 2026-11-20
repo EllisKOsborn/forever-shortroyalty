@@ -29,6 +29,16 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.10.2 (released 20 Nov on `main`, same go-ahead): raid calendar**
+  (step 3, last of the officers' asks we're building; automatic scheduling
+  dropped by the owner). `UI/RaidsTab.lua`: view `calendar` (everyone),
+  pure `RT.MonthGrid(year, month, board, now, me)` (42 cells from Monday,
+  raids per local day, cancelled left out, `mine`/`place`) and
+  `RT.ShiftMonth`; `BuildCalendar/RefreshCalendar` (cells, up to
+  `CAL_PER_DAY` 3 raid lines + "+N more"), `RT.calMonth` (nil = this
+  month), `RT:CalendarDay` (officers: a day 0–13 days ahead → New raid with
+  `newRaid.day`). Tests `tests/v0102_calendar_spec.lua`; picture
+  `raids-calendar.png`. TESTING 55–56.
 - **v0.10.1 (released 20 Nov on `main`, same go-ahead as v0.10.0): Officers view on the Roster**
   (step 2 of the officers' asks). `Core/OfficerDir.lua`:
   `guild.officerDir["r|n|a:" .. guid] = { v, u, by }` (roles "THD" subset,
@@ -1328,8 +1338,8 @@ refer to `git show v0.6.0:TESTING.md`.
    and `/sr debug` "Loot method" inside a raid group (master loot?);
    offline bench at the lock: no bonus only (built), or a penalty too?
 6. Officer roster + raid calendar: owner answered 20 Nov (see Start here
-   v0.10.0). Officer roster built (v0.10.1); next: the calendar month
-   view. TESTING 49–54.
+   v0.10.0). Built and released 20 Nov: v0.10.0 In/Bench + Discord copy
+   and paste, v0.10.1 officer roster, v0.10.2 calendar. TESTING 49–56.
 
 ## Answers already given to the guild (stay consistent)
 - **Alts:** linked automatically once each alt has logged in with the addon

@@ -10,7 +10,7 @@ local Theme, W, Compat = SK.Theme, SK.Widgets, SK.Compat
 local Board, Att = SK.RaidBoard, SK.Attendance
 local S, SP = Theme.SIZES, Theme.SPACE
 
-RT.VIEWS = { { "upcoming", "Raids" }, { "new", "New raid" }, { "attendance", "Attendance" } }
+RT.VIEWS = { { "upcoming", "Raids" }, { "calendar", "Calendar" }, { "new", "New raid" }, { "attendance", "Attendance" } }
 RT.OFFICER_VIEWS = { new = true, attendance = true }
 RT.LEFT_W = 270
 RT.RIGHT_W = S.contentW - RT.LEFT_W - SP.xl
@@ -68,8 +68,57 @@ local RESULT_TONE = { full = "good", late = "spark", missed = "bad", declined = 
 function RT.View(officer)
 	local v = SK.DB.settings.raidsView
 	if RT.OFFICER_VIEWS[v] and not officer then return "upcoming" end
-	if v ~= "new" and v ~= "attendance" then return "upcoming" end
+	if v ~= "new" and v ~= "attendance" and v ~= "calendar" then return "upcoming" end
 	return v
+end
+
+---------------------------------------------------------------------------
+-- Calendar (v0.10.2): a month grid, weeks from Monday, raids on their days
+-- (cancelled ones left out). Pure apart from the clock; tested.
+---------------------------------------------------------------------------
+RT.CAL_PER_DAY = 3 -- raids shown in a day; more says "+N more"
+RT.WEEKDAYS = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" }
+
+-- { title = "December 2026", cells = 42 x { at (local noon), day, inMonth,
+-- today, past, raids = { { id, at, text, mine, place } } } }.
+function RT.MonthGrid(year, month, board, now, me)
+	local first = time({ year = year, month = month, day = 1, hour = 12 })
+	local t = date("*t", first)
+	local back = (t.wday + 5) % 7 -- days since Monday
+	local byDay = {}
+	for _, e in pairs(board and board.events or {}) do
+		if not e.x then
+			local k = date("%Y-%m-%d", e.at)
+			byDay[k] = byDay[k] or {}
+			table.insert(byDay[k], e)
+		end
+	end
+	local todayKey = date("%Y-%m-%d", now)
+	local todayStart = Board.DayStart(now, 0)
+	local cells = {}
+	for i = 1, 42 do
+		local at = time({ year = year, month = month, day = 1 - back + (i - 1), hour = 12 })
+		local d = date("*t", at)
+		local key = date("%Y-%m-%d", at)
+		local raids = {}
+		local list = byDay[key] or {}
+		table.sort(list, function(a, b) return a.at < b.at end)
+		for _, e in ipairs(list) do
+			local raid = Board.Raid(e.raid)
+			local su = board.signups[e.id] and board.signups[e.id][me or ""]
+			raids[#raids + 1] = { id = e.id, at = e.at, text = date("%H:%M", e.at) .. " " .. (raid and (raid.short or raid.name) or e.raid),
+				mine = su and su.s or nil, place = Board.PlaceOf(board, e.id, me or "") }
+		end
+		cells[i] = { at = at, day = d.day, inMonth = d.month == month, today = key == todayKey,
+			past = at < todayStart, raids = raids }
+	end
+	return { title = date("%B %Y", first), cells = cells }
+end
+
+-- The month shown, moved by delta months.
+function RT.ShiftMonth(year, month, delta)
+	local m = month + delta
+	return year + math.floor((m - 1) / 12), (m - 1) % 12 + 1
 end
 
 -- Rows for the left list of raids.
@@ -379,6 +428,8 @@ function RT:Build(page)
 	self.createResult:SetWidth(460)
 	self.createResult:SetJustifyH("LEFT")
 
+	self:BuildCalendar(page, top)
+
 	-------------------------------------------------------------------------
 	-- Attendance (officers)
 	-------------------------------------------------------------------------
@@ -652,13 +703,143 @@ function RT:Refresh()
 	self.upcoming:SetShown(view == "upcoming")
 	self.newPage:SetShown(view == "new")
 	self.attPage:SetShown(view == "attendance")
+	self.calPage:SetShown(view == "calendar")
 	local now = Compat.Now()
 	if view == "upcoming" then
 		self:RefreshUpcoming(Board:Get(), now, Compat.PlayerGUID())
+	elseif view == "calendar" then
+		self:RefreshCalendar(now)
 	elseif view == "new" then
 		self.raidMenu:Refresh(); self.dayMenu:Refresh(); self.timeMenu:Refresh()
 	else
 		self:RefreshAttendance(now)
+	end
+end
+
+---------------------------------------------------------------------------
+-- Calendar page
+---------------------------------------------------------------------------
+local RAID_TONE = { y = "good", t = "text", n = "faint" }
+
+function RT:BuildCalendar(page, top)
+	local cal = CreateFrame("Frame", nil, page)
+	cal:SetPoint("TOPLEFT", 0, top)
+	cal:SetPoint("BOTTOMRIGHT")
+	cal:Hide()
+	self.calPage = cal
+	self.calPrev = W.Button(cal, "<", S.control + SP.s, S.control, function() RT:MoveMonth(-1) end)
+	self.calPrev:SetPoint("TOPLEFT", 0, 0)
+	self.calNext = W.Button(cal, ">", S.control + SP.s, S.control, function() RT:MoveMonth(1) end)
+	self.calNext:SetPoint("LEFT", self.calPrev, "RIGHT", SP.xs, 0)
+	self.calTitle = Theme.Text(cal, "title", "text")
+	self.calTitle:SetPoint("LEFT", self.calNext, "RIGHT", SP.m, 0)
+	self.calToday = W.Button(cal, "Today", nil, S.control, function() RT.calMonth = nil; RT:Refresh() end)
+	self.calToday:SetPoint("TOPRIGHT", 0, 0)
+	self.calHint = Theme.Text(cal, "small", "dim")
+	self.calHint:SetPoint("RIGHT", self.calToday, "LEFT", -SP.m, 0)
+	local cw = math.floor(S.contentW / 7)
+	local headY = S.control + SP.s
+	for i, name in ipairs(RT.WEEKDAYS) do
+		local l = Theme.Text(cal, "label", "dim")
+		l:SetPoint("TOPLEFT", (i - 1) * cw + SP.xs, -headY)
+		l:SetText(name:upper())
+	end
+	local gridY = headY + W.CARD_LABEL_H
+	local ch = math.floor((S.window[2] - S.pageHead - SP.xs - SP.l - S.subTabs - SP.m - gridY) / 6)
+	self.calCells = {}
+	for i = 1, 42 do
+		local c = CreateFrame("Button", nil, cal)
+		c:SetSize(cw - SP.xxs, ch - SP.xxs)
+		c:SetPoint("TOPLEFT", ((i - 1) % 7) * cw, -(gridY + math.floor((i - 1) / 7) * ch))
+		c.bg = c:CreateTexture(nil, "BACKGROUND")
+		c.bg:SetAllPoints()
+		Theme.Border(c, "line")
+		c.dayText = Theme.Text(c, "small", "dim")
+		c.dayText:SetPoint("TOPLEFT", SP.xs, -SP.xxs)
+		c.lines = {}
+		for j = 1, RT.CAL_PER_DAY + 1 do
+			local b = CreateFrame("Button", nil, c)
+			b:SetHeight(14)
+			b:SetPoint("TOPLEFT", SP.xs, -(SP.xxs + 15 + (j - 1) * 14))
+			b:SetPoint("RIGHT", -SP.xxs, 0)
+			b.text = Theme.Text(b, "micro", "text")
+			b.text:SetPoint("LEFT")
+			b.text:SetPoint("RIGHT")
+			b.text:SetJustifyH("LEFT")
+			b.text:SetWordWrap(false)
+			b:SetScript("OnClick", function(selfB) if selfB.id then RT:ShowRaid(selfB.id) end end)
+			b:SetScript("OnEnter", function(selfB)
+				if not selfB.tip then return end
+				GameTooltip:SetOwner(selfB, "ANCHOR_RIGHT")
+				Theme.TipLine(GameTooltip, selfB.tip)
+				Theme.TipLine(GameTooltip, "Click to open the raid", "accent")
+				GameTooltip:Show()
+			end)
+			b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+			c.lines[j] = b
+		end
+		-- Officers: clicking an empty future day starts a New raid on it.
+		c:SetScript("OnClick", function(selfC) RT:CalendarDay(selfC.cell) end)
+		self.calCells[i] = c
+	end
+end
+
+function RT:MoveMonth(delta)
+	local now = Compat.Now()
+	local cur = RT.calMonth or { year = tonumber(date("%Y", now)), month = tonumber(date("%m", now)) }
+	local y, m = RT.ShiftMonth(cur.year, cur.month, delta)
+	RT.calMonth = { year = y, month = m }
+	RT:Refresh()
+end
+
+-- Officers: a day from today up to New raid's last day opens New raid on it.
+function RT:CalendarDay(cell)
+	if not cell or not Board.OfficerView() then return end
+	local now = Compat.Now()
+	local offset = math.floor((Board.DayStart(cell.at, 0) - Board.DayStart(now, 0)) / 86400 + 0.5)
+	if offset < 0 or offset >= Board.DAYS_SHOWN then return end
+	SK.DB.settings.newRaid = SK.DB.settings.newRaid or {}
+	SK.DB.settings.newRaid.day = offset
+	SK.DB.settings.raidsView = "new"
+	RT:Refresh()
+end
+
+function RT:RefreshCalendar(now)
+	local cur = RT.calMonth or { year = tonumber(date("%Y", now)), month = tonumber(date("%m", now)) }
+	local grid = RT.MonthGrid(cur.year, cur.month, Board:Get() or Board.New(), now, Compat.PlayerGUID())
+	self.calTitle:SetText(grid.title)
+	self.calHint:SetText(Board.OfficerView() and "Click a day to make a raid on it" or "Click a raid to sign up")
+	for i, c in ipairs(self.calCells) do
+		local cell = grid.cells[i]
+		c.cell = cell
+		if cell.today then
+			Theme.Solid(c.bg, "accent", Theme.ALPHA.selected)
+			Theme.SetBorderColor(c, "accent")
+		else
+			Theme.Solid(c.bg, cell.inMonth and "surface" or "void")
+			Theme.SetBorderColor(c, "line")
+		end
+		c.dayText:SetText(tostring(cell.day))
+		c.dayText:SetTextColor(Theme.RGB(cell.today and "text" or (cell.inMonth and not cell.past) and "dim" or "faint"))
+		for j, b in ipairs(c.lines) do
+			local r = cell.raids[j]
+			if j > RT.CAL_PER_DAY and #cell.raids > RT.CAL_PER_DAY then
+				b.id, b.tip = cell.raids[RT.CAL_PER_DAY + 1].id, nil
+				b.text:SetText(Theme.Paint("dim", "+" .. (#cell.raids - RT.CAL_PER_DAY) .. " more"))
+				b:Show()
+			elseif r and j <= RT.CAL_PER_DAY then
+				b.id = r.id
+				local status = r.place == "i" and "You're in" or r.place == "b" and "You're on the bench"
+					or r.mine and Board.STATUS_NAME[r.mine] or "Not signed up"
+				b.tip = r.text .. "  ·  " .. status
+				local tone = r.place == "i" and "good" or r.place == "b" and "accent" or r.mine and RAID_TONE[r.mine] or "text"
+				b.text:SetText(Theme.Paint(cell.past and "faint" or tone, r.text))
+				b:Show()
+			else
+				b.id, b.tip = nil, nil
+				b:Hide()
+			end
+		end
 	end
 end
 

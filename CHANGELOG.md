@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.10.2 (20 Nov 2026): raid calendar
+
+- **Raids → Calendar**: a month view like the game's calendar, weeks from
+  Monday, with each guild raid on its day ("20:00 Onyxia"). Green = you
+  signed up or you're in, pink = you're on the bench, grey = can't come.
+  Click a raid to open it and sign up. **<** and **>** change month,
+  **Today** comes back.
+- Officers (with `/sr officer`): click a day in the next two weeks to make a
+  raid on it (New raid opens with that day picked).
+
 ## v0.10.1 (20 Nov 2026): Officers view on the Roster
 
 - **Roster → Officers** (officers and raid leaders with `/sr officer`): every

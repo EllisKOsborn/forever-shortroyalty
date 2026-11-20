@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/EllisKOsborn/forever-shortroyalty/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="WoW Forever 1.60.1" src="https://img.shields.io/badge/WoW%20Forever-1.60.1%20%C2%B7%2016001-FFC000?labelColor=000000">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.10.1%20alpha-F06BB0?labelColor=000000">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.10.2%20alpha-F06BB0?labelColor=000000">
   <img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-FF6A1A?labelColor=000000">
 </p>
 
@@ -131,6 +131,9 @@ people who were offline get them when they log in. `/sr raids` opens the page.
 - **In or Bench** (v0.10.0): officers pick the raid from the sign-ups, and **everyone sees it**: a *Raid* column (In / Bench), "You're in" or "You're on the bench" under the buttons and on the Overview, and the counts switch to the people In ("In 18 / 40: Tanks 2 · Healers 5 · DPS 11 · Bench 3"). Officers click a name to put them In, then Bench, then undecided again; right-click opens their character.
 - **Discord, without any program** (v0.10.0): addons can't reach the internet, so it's copy and paste. The ··· menu has **Copy for Discord**: a ready announcement (raid, time shown in each reader's own time zone, who's signed up by role, In and Bench) to paste into a Discord channel. Officers also get **Import sign-ups from Discord**: paste the sign-up list from Discord (any bot's list, or names typed by hand) and the addon signs those players up, by role and tentative / can't come. Names must match characters in the guild (a full name, or a first name only one member has); lines it can't match are listed. A sign-up a player made themselves in game is never overwritten.
 - The ··· menu also copies the line-up as plain text.
+- **Calendar** (v0.10.2): a month view with each raid on its day, coloured by your answer (green signed up or in, pink bench). Click a raid to open it; officers click a day in the next two weeks to make a raid on it. **<** / **>** change month, **Today** comes back.
+
+<p align="center"><img src="docs/images/raids-calendar.png" alt="Raids calendar: December with raids on their days" width="100%"></p>
 
 **Officer tools.** Officers, raid leaders and the Guild Master type
 `/sr officer` to switch on two more tabs (per character; type it again to

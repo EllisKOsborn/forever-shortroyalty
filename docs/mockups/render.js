@@ -39,6 +39,7 @@ const SHOTS = {
   "short-words-flight": ["shot=flight", 840, 180],
   "short-words-free": ["shot=1&screen=words&data=full&wordsView=free&wordsBoard=all", W, H],
   raids: ["shot=1&screen=raids&data=full", W, H],
+  "raids-calendar": ["shot=1&screen=raids&data=full&raidsView=calendar", W, H],
   "roster-officers": ["shot=1&screen=roster&data=full&officer=1&rosterView=officers", W, H],
   "raids-new": ["shot=1&screen=raids&data=full&officer=1&raidsView=new", W, H],
   "raids-attendance": ["shot=1&screen=raids&data=full&officer=1&raidsView=attendance", W, H],
