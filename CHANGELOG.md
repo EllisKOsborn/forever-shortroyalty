@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.11.0 (not released yet): groups, invites, absences and boss jobs
+## v0.11.0 (20 Nov 2026): groups, invites, absences and boss jobs
 
 Ideas from OXM (a raid website), built our own way inside the addon.
 
