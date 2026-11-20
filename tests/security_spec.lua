@@ -295,3 +295,34 @@ describe("Security: v0.10.1 officer roster messages (OR, OQ)", function()
 		assert.equal(0, #SK.errors)
 	end)
 end)
+
+describe("Security: v0.11.0 groups, assignments and absences", function()
+	local SK, W
+	local BOB, CAT = "Player-1-B", "Player-1-C"
+	before_each(function()
+		SK, W = H.load()
+		W.member("Pip", W.player.guid)
+		W.member("Bob", BOB, { rank = "Officer", rankIndex = 1 })
+		W.member("Cat", CAT, { rank = "Member", rankIndex = 4 })
+		SK.Identity:ReadRoster()
+	end)
+	it("only officers' groups and assignments; junk refused without errors", function()
+		local id = BOB .. ":" .. string.format("%d", W.now)
+		local function send(fields, sender, guid)
+			SK.Sync:OnCommReceived(SK.PREFIX, H.peerMessage(SK, "RB", fields, guid), "GUILD", sender)
+		end
+		send({ e = { { id = id, by = BOB, c = W.now, raid = "ony", at = W.now + 3600, u = W.now } } }, "Bob", BOB)
+		send({ gs = { { e = id, g = CAT, n = 1, m = "", u = W.now, by = CAT } },
+			as = { { e = id, k = "c", name = "x", o = 1, lines = {}, u = W.now, by = CAT } } }, "Cat", CAT)
+		local board = SK.RaidBoard:Get()
+		assert.equal(0, (SK.RaidGroups.SlotOf(board, id, CAT)))
+		assert.equal(0, #SK.RaidAssign.Blocks(board, id))
+		send({ gs = { { e = id, g = CAT, n = "1", m = {}, u = W.now, by = BOB } },
+			as = { { e = id, k = "b", name = string.rep("x", 200), o = 1, lines = {}, u = W.now, by = BOB },
+				{ e = id, k = "b2", name = "ok", o = 1, lines = { [1] = { t = "mt", g = {} }, [5] = { t = "mt", g = {} } },
+					u = W.now, by = BOB } } }, "Bob", BOB)
+		assert.equal(0, #SK.RaidAssign.Blocks(board, id))
+		W.advance(20)
+		assert.equal(0, #SK.errors)
+	end)
+end)

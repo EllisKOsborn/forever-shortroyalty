@@ -44,7 +44,7 @@
 | 🏰 **Overview** | The guild at a glance: four numbers, what needs a look, raid readiness and recent milestones |
 | 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view; for officers an **Officers** view with roles, notes, alt links and attendance |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
-| 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness and who's **In** or on the **Bench**; **Copy for Discord** and **Import sign-ups from Discord**; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals, shared between all officers |
+| 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness and who's **In** or on the **Bench**; **Groups** of five (drag and drop, **Auto-fill**, **Invite & arrange**), **boss assignments**, **away days** on a calendar; **Copy for Discord** and **Import sign-ups from Discord**; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals, shared between all officers |
 | 🎲 **Loot** (Reserve+) | Soft reserves with **bonus points**: reserve items for a raid night, and every night you don't get one it gains points (no cap) that are added to your roll next time; your points, everyone's, and a history of every change; for officers a **Loot night** screen (rolls ranked, award, raid check, end-of-night bonus) and **Rules** (reserves per raid, bonus, loot lists) |
 | ⚒️ **Find a crafter** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
 | 🧪 **Professions** | Three page tabs: **Guild** (every profession in the guild, then each profession's crafters and recipes), **Recipes** (**every recipe in the game**, by name, group or material) and **Cooldowns**; specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
@@ -134,6 +134,17 @@ people who were offline get them when they log in. `/sr raids` opens the page.
 - **Calendar** (v0.10.2): a month view with each raid on its day, coloured by your answer (green signed up or in, pink bench). Click a raid to open it; officers click a day in the next two weeks to make a raid on it. **<** / **>** change month, **Today** comes back.
 
 <p align="center"><img src="docs/images/raids-calendar.png" alt="Raids calendar: December with raids on their days" width="100%"></p>
+
+- **Away days** (v0.11.0): right-click a day on the Calendar to mark yourself away, or tick **Away every** for a weekday. It counts for all your characters, answers *Can't come* to raids you'd signed up for that day, and officers see "away" on the calendar, in the line-up and in the groups.
+- **Groups** (v0.11.0): the raid as groups of five, with **Available** and **Bench** beside them. Everyone sees the groups ("You're in group 3"). Officers drag a name into a group, onto the Bench or back to Available (or click, then click where it goes); a full group swaps the two players; right-click marks **late**, **leaving early** or **absent**.
+  - **Auto-fill** fills the empty spots from the sign-ups (signed up before tentative, then attendance and item level), with enough tanks and healers, healers spread over the groups and nobody marked away. What's already placed stays.
+  - **Invite & arrange** (while leading the group) invites everyone In who's online, makes it a raid, invites the rest and moves everyone into their group. Press it again after each step: the game only makes a raid on a button press.
+
+<p align="center"><img src="docs/images/raids-groups.png" alt="Groups: eight groups of five, Available and Bench" width="100%"></p>
+
+- **Assignments** (v0.11.0): officers add a boss (a name they type, or "Trash") and jobs from a list (Main tank, Off tank, Tank healer, Raid healer, Interrupt, Dispel, Decurse, Kite, Cooldowns, Soak, Marks, Pull), each with up to five players; **Copy last raid** brings the last raid's jobs over. Everyone sees them, and your own jobs show on the Raids page.
+
+<p align="center"><img src="docs/images/raids-assign.png" alt="Assignments: bosses, jobs and who does them" width="100%"></p>
 
 **Officer tools.** Officers, raid leaders and the Guild Master type
 `/sr officer` to switch on two more tabs (per character; type it again to

@@ -1,5 +1,39 @@
 # Changelog
 
+## v0.11.0 (not released yet): groups, invites, absences and boss jobs
+
+Ideas from OXM (a raid website), built our own way inside the addon.
+
+- **Raids → Groups**: the raid as groups of five (Onyxia 8, Hyjal 4,
+  Barrow 2), with **Available** (signed up, not placed) and **Bench** on
+  the right. Officers drag a name into a group, onto the Bench or back to
+  Available, or click a name and then click where it goes. A full group
+  swaps the two players. Right-click marks someone **late**, **leaving
+  early** or **absent**. Putting someone in a group puts them **In**.
+  **Everyone sees the groups**, and "You're in group 3" shows on the
+  Raids page.
+- **Auto-fill** (officers): fills the empty spots from the sign-ups:
+  signed up before tentative, then attendance (last 60 days) and item
+  level; enough tanks and healers for the raid size; healers spread over
+  the groups, melee together, casters together. Nobody marked away. What
+  you've already placed stays; the rest go on the Bench. Move anyone after.
+- **Invite & arrange** (officers, leading the group): one button, pressed
+  a few times: invites everyone In who's online, makes it a raid (the game
+  needs a button press for that), invites the rest, then moves everyone
+  into their planned group. Never in combat.
+- **Away days** (everyone): on the Calendar, right-click a day to mark
+  yourself away, or tick **Away every** Mon … Sun. It covers all your
+  characters, answers *Can't come* to raids you'd signed up for that day,
+  and officers see "away" on the day, in the line-up and in the groups.
+- **Raids → Assignments**: officers add a boss (type its name, or
+  "Trash"), then jobs from a list (Main tank, Off tank, Tank healer, Raid
+  healer, Interrupt, Dispel, Decurse, Kite, Cooldowns, Soak, Marks, Pull)
+  with up to five players each. **Copy last raid** brings the last raid's
+  jobs over. Everyone sees them, and your own jobs show on the Raids page
+  ("Interrupt on Onyxia").
+- Everyone needs v0.11.0 to see groups, jobs and away days; older versions
+  simply don't show them.
+
 ## v0.10.2 (20 Nov 2026): raid calendar
 
 - **Raids → Calendar**: a month view like the game's calendar, weeks from

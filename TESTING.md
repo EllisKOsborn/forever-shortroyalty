@@ -227,3 +227,27 @@ addon read.
 56. [ ] Officers: click an empty day in the next two weeks: New raid opens
     with that day picked.
 
+## v0.11.0 Groups, Invite & arrange, away days, assignments
+
+57. [ ] **Raids → Groups** (officer with `/sr officer`): drag a name from
+    Available into a group, from a group onto the Bench, and back. Also
+    click a name, then click a group. Dropping on a full group swaps the
+    two. A guildmate on v0.11.0 sees the same groups within a minute and
+    "You're in group N" on the Raids page.
+58. [ ] Right-click a name in a group: late, then leaving early, then
+    absent, then nothing. The mark shows for everyone.
+59. [ ] **Auto-fill** on a raid with sign-ups: the line under the buttons
+    says how many were placed and benched; each group has a healer; tanks
+    fill the first groups; people already placed didn't move.
+60. [ ] **Invite & arrange** while leading (not in a group yet): it invites
+    4. Press again once one joined: it becomes a raid. Press again: the
+    rest are invited and, as they join, moved into their groups ("Raid
+    groups arranged." in chat). Tell me any red error text from the game.
+61. [ ] **Away days**: Calendar → right-click a day: "away" shows on it. Tick
+    **Away every** Tue: every Tuesday shows away. If you'd signed up for a
+    raid that day, your answer becomes *Can't come*. An officer sees "N
+    away" on that day and "away" next to your name in Groups.
+62. [ ] **Assignments** (officer): type "Onyxia", Add boss; pick "Main tank"
+    from *Add a job…*; click the job, then names on the right. A member sees
+    the jobs and "Main tank on Onyxia" on their Raids page. **Copy last
+    raid** on the next Onyxia brings them over.

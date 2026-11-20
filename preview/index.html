@@ -805,13 +805,48 @@ function words() {
 function raids() {
   const officer = S.officer === "1";
   let view = S.raidsView || "upcoming";
-  if (!officer && view !== "upcoming" && view !== "calendar") view = "upcoming";
-  const tabs = [["upcoming", "Raids"], ["calendar", "Calendar"]].concat(officer ? [["new", "New raid"], ["attendance", "Attendance"]] : []);
+  if (!officer && !["upcoming", "calendar", "groups", "assign"].includes(view)) view = "upcoming";
+  const tabs = [["upcoming", "Raids"], ["groups", "Groups"], ["assign", "Assignments"], ["calendar", "Calendar"]].concat(officer ? [["new", "New raid"], ["attendance", "Attendance"]] : []);
   const t0 = T.sizes.subTabs + T.space.m;
   const head = subtabs(tabs, view, "data-rv");
   const menu = (text, style) => `<div class="menu abs" style="${style}">${btn(text).replace("</span>", '<i class="arrow"></i></span>')}</div>`;
   const M = G.members;
   const nm = (m) => cls(m);
+  const RL = { WARRIOR: "T", PRIEST: "H", PALADIN: "H", DRUID: "H", SHAMAN: "H" };
+  const slot = (m, extra) => m ? `${cls(m)} <span class="dim">${RL[m.cls] || "D"}</span>${extra || ""}` : '<span class="faint">empty</span>';
+  if (view === "groups") {
+    // v0.11.0: Onyxia's Lair, 8 groups of five; Available and Bench on the right.
+    const GW = T.sizes.contentW - 200 - 16, CW = Math.floor(GW / 4), RH = 18, BH = RH * 6 + 4, y0 = t0 + 24 + 8 + 16 + 8;
+    let boxes = "";
+    for (let g = 0; g < 8; g++) {
+      const from = Math.min(g, 6) * 5, ms = M.slice(from, from + (g < 6 ? 5 : g === 6 ? 3 : 0));
+      boxes += `<div class="abs" style="left:${(g % 4) * CW}px;top:${y0 + Math.floor(g / 4) * (BH + 8)}px;width:${CW - 4}px;height:${BH}px;background:var(--surface);border:1px solid var(--${g === 1 ? "accent" : "line"})">
+        <div class="display dim" style="font-size:11px;letter-spacing:.08em;padding:2px 8px">GROUP ${g + 1}  ${ms.length}/5</div>
+        ${[0, 1, 2, 3, 4].map((i) => `<div class="small" style="height:${RH}px;line-height:${RH}px;padding:0 6px;white-space:nowrap;overflow:hidden">${slot(ms[i], g === 3 && i === 1 ? ' <span class="spark">late</span>' : g === 5 && i === 0 ? ' <span class="bad">away</span>' : "")}</div>`).join("")}</div>`;
+    }
+    const avail = M.slice(33, 40), bench = M.slice(40, 43);
+    return head + `<div class="menu abs" style="left:0;top:${t0}px;width:260px">${btn("Today 20:00  Onyxia's Lair").replace("</span>", '<i class="arrow"></i></span>')}</div>
+      <div class="abs dim small ell" style="left:272px;right:${officer ? 250 : 0}px;top:${t0 + 5}px;text-align:right">In 33 / 40: Tanks 4  ·  Healers 9  ·  DPS 20  ·  Bench 3  ·  Late 1</div>
+      ${officer ? btn("Auto-fill", "", `style="position:absolute;right:140px;top:${t0}px"`) + btn("Invite & arrange", "primary", `style="position:absolute;right:0;top:${t0}px"`) : ""}
+      <div class="abs faint small ell" style="left:0;right:0;top:${t0 + 32}px">${officer ? "Drag a name into a group, onto the Bench or back to Available (or click it, then click where it goes). Right-click: late, leaving early, absent." : "You're in group 2."}</div>
+      ${boxes}
+      ${list([{ key: "n", t: "Available", w: 188 }], avail, (m) => slot(m), { click: true, style: `left:${GW + 16}px;right:0;top:${y0}px;height:230px` })}
+      ${list([{ key: "n", t: "Bench", w: 188 }], bench, (m) => slot(m), { click: true, style: `left:${GW + 16}px;right:0;top:${y0 + 238}px;bottom:0` })}`;
+  }
+  if (view === "assign") {
+    const y0 = t0 + 24 + 8 + 16 + 8, BW = 190, IW = 190, MW = T.sizes.contentW - BW - IW - 32;
+    const bosses = [["Onyxia", 5], ["Trash", 2]];
+    const IN = M.slice(0, 20), T_ = IN.filter((m) => RL[m.cls] === "T"), H_ = IN.filter((m) => RL[m.cls] === "H"), D_ = IN.filter((m) => !RL[m.cls]);
+    const lines = [["Main tank", [T_[0]]], ["Off tank", [T_[1]]], ["Tank healer", [H_[0], H_[1]]], ["Raid healer", [H_[2], H_[3], H_[4]]], ["Interrupt", [D_[0], D_[1]]]];
+    return head + `<div class="menu abs" style="left:0;top:${t0}px;width:240px">${btn("Today 20:00  Onyxia's Lair").replace("</span>", '<i class="arrow"></i></span>')}</div>
+      ${officer ? `<div class="abs small" style="left:252px;top:${t0}px;width:150px;height:22px;background:var(--surface);border:1px solid var(--lineStrong)"></div>${btn("Add boss", "primary", `style="position:absolute;left:410px;top:${t0}px"`)}${btn("Copy last raid", "", `style="position:absolute;left:500px;top:${t0}px"`)}` : ""}
+      <div class="abs faint small ell" style="left:0;right:0;top:${t0 + 32}px">${officer ? "Click a job, then names on the right. Right-click a job or a boss to delete it." : "Your jobs: Tank healer on Onyxia"}</div>
+      ${list([{ key: "n", t: "Bosses", w: BW - 12 }], bosses, (b) => `${b[0]}<span class="faint">  ${b[1]}</span>`, { click: true, sel: (b) => b === bosses[0], style: `left:0;top:${y0}px;bottom:0;width:${BW}px` })}
+      ${officer ? `<div class="menu abs" style="left:${BW + 16}px;top:${y0}px;width:170px">${btn("Add a job…").replace("</span>", '<i class="arrow"></i></span>')}</div>` : ""}
+      ${list([{ key: "t", t: "Job", w: 100 }, { key: "w", t: "Who", w: MW - 112 }], lines, (l, c) => c.key === "t" ? l[0] : l[1].map(cls).join(", "),
+        { click: true, sel: (l) => l === lines[2], style: `left:${BW + 16}px;top:${y0 + (officer ? 32 : 0)}px;bottom:0;width:${MW}px` })}
+      ${list([{ key: "n", t: "In this raid", w: IW - 12 }], M.slice(0, 20), (m) => slot(m), { click: true, sel: (m) => lines[2][1].includes(m), style: `right:0;top:${y0}px;bottom:0;width:${IW}px` })}`;
+  }
   if (view === "calendar") {
     // v0.10.2: December 2026 starts on a Tuesday; today = Wed 2 Dec.
     const CW = Math.floor(T.sizes.contentW / 7), gy = t0 + 24 + 8 + 20;
@@ -823,13 +858,14 @@ function raids() {
       const day = i === 0 ? 30 : i <= 31 ? i : i - 31, inMonth = i >= 1 && i <= 31, today = i === 2, past = i < 2;
       const rs = inMonth ? (RAIDS[day] || []) : [];
       cells += `<div class="abs" style="left:${(i % 7) * CW}px;top:${gy + Math.floor(i / 7) * CH}px;width:${CW - 4}px;height:${CH - 4}px;border:1px solid var(--${today ? "accent" : "line"});background:${today ? "var(--accent-selected)" : inMonth ? "var(--surface)" : "var(--void)"}">
-        <div class="small ${today ? "" : inMonth && !past ? "dim" : "faint"}" style="padding:1px 4px">${day}</div>
+        <div class="small ${today ? "" : inMonth && !past ? "dim" : "faint"}" style="padding:1px 4px">${day}${inMonth && (day === 8 || day === 15 || day === 22 || day === 29 || day === 19) ? ' <span class="bad">away</span>' : ""}</div>
+        ${inMonth && (day === 11 || day === 18) ? `<div class="faint" style="position:absolute;right:4px;bottom:1px;font-size:11px">${day === 11 ? 3 : 1} away</div>` : ""}
         ${rs.map((r) => `<div class="${r[1]}" style="font-size:11px;padding:0 4px;white-space:nowrap;overflow:hidden">${r[0]}</div>`).join("")}</div>`;
     }
     return head + `${btn("<", "", `style="position:absolute;left:0;top:${t0}px;width:32px;padding:0;justify-content:center"`)}${btn(">", "", `style="position:absolute;left:36px;top:${t0}px;width:32px;padding:0;justify-content:center"`)}
       <div class="abs" style="left:80px;top:${t0 + 3}px;font-size:15px">December 2026</div>
-      <div class="abs dim small" style="right:72px;top:${t0 + 5}px">${officer ? "Click a day to make a raid on it" : "Click a raid to sign up"}</div>
       ${btn("Today", "", `style="position:absolute;right:0;top:${t0}px"`)}
+      <div class="abs" style="right:72px;top:${t0 + 1}px;display:flex;gap:2px;align-items:center"><span class="dim small" style="margin-right:6px">Away every</span>${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => `<span class="chip ${d === "Tue" ? "on" : ""}">${d}</span>`).join("")}</div>
       ${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => `<div class="abs display dim" style="left:${i * CW + 4}px;top:${t0 + 32}px;font-size:11px;letter-spacing:.08em">${d.toUpperCase()}</div>`).join("")}
       ${cells}`;
   }

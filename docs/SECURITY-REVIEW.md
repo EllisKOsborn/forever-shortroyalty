@@ -166,3 +166,22 @@ no `|` or control characters (so no colours or links can be shown); alt =
 a GUID string. Newest wins; 1500 entries at most. Notes are shown only in
 the Officers view and its tooltip.
 
+
+## Addendum (20 Nov 2026, v0.11.0 groups, assignments, away days)
+
+- `RB` gains `gs` (group slots) and `as` (boss assignments). Both are kept
+  only if `by` is an officer or raid leader in the receiver's roster and
+  the raid is known; newest wins. Slots: group a number 0 to the raid's
+  group count, mark one of l/e/a or empty, the player a member
+  (`RaidGroups.ValidSlot`, `MergeSlot`). Assignments: the boss name is the
+  only typed text: at most 30 characters, no `|` or control characters
+  (no colours or links); tasks only from a fixed list; at most 12 lines of
+  5 GUID strings; at most 24 blocks per raid (`RaidAssign.ValidBlock`,
+  `MergeBlock`). Older versions ignore both.
+- Profile field `away` (`Merge.FIELDS.away`): only `d` (at most 40
+  strings shaped YYYY-MM-DD), `w` (at most 7 whole numbers 1 to 7) and `u`
+  (a finite number). Anyone can say they're away on their own profile
+  (that is the point); a forged copy goes through the usual profile hash
+  and owner-copy rules.
+- **Invite & arrange** only invites and moves names from our own roster and
+  the game's own raid list; nothing received is passed to the game as text.
