@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.12.0 (not released yet): our own Discord bot
+## v0.12.0 (20 Nov 2026): our own Discord bot
 
 - **Short Royalty's own Discord bot** (code in `discord-bot/`, runs free on
   Cloudflare, no PC program). Setup once: `docs/DISCORD-BOT.md`.
