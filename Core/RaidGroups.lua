@@ -298,3 +298,129 @@ function RG:OnLogin()
 		if self.arranging then SK:Debounce("arrange", 0.3, function() self:ArrangeStep() end) end
 	end)
 end
+
+---------------------------------------------------------------------------
+-- Auto-fill (v0.11.0): fill the empty spots from the sign-ups. Keeps what
+-- officers already placed; skips players marked away and a second
+-- character of the same player; signed up before tentative, then higher
+-- attendance (officers' records), then item level. Aims for TARGETS tanks
+-- and healers; healers one per group first, tanks in the first groups,
+-- then melee, ranged and casters together. Whoever doesn't fit: Bench.
+---------------------------------------------------------------------------
+RG.TARGETS = { [10] = { TANK = 2, HEALER = 3 }, [20] = { TANK = 2, HEALER = 5 }, [40] = { TANK = 4, HEALER = 10 } }
+local MELEE = { WARRIOR = true, ROGUE = true, PALADIN = true }
+local RANGED = { HUNTER = true }
+local HYBRID_MELEE = { Feral = true, ["Feral Combat"] = true, Enhancement = true }
+
+-- "melee" | "ranged" | "caster" for a DPS row. Pure.
+function RG.DpsKind(r)
+	if MELEE[r.class or ""] then return "melee" end
+	if RANGED[r.class or ""] then return "ranged" end
+	if (r.class == "DRUID" or r.class == "SHAMAN") and HYBRID_MELEE[r.tree or ""] then return "melee" end
+	return "caster"
+end
+
+-- L = Layout(…); pct = { [guid] = attendance % }.
+-- Returns moves = { { guid, kind = "group", n } | { guid, kind = "bench" } }. Pure.
+function RG.AutoFill(L, raidKey, pct)
+	local raid = SK.RaidBoard.Raid(raidKey)
+	local size = raid and raid.size or L.count * RG.SIZE
+	local target = RG.TARGETS[size] or { TANK = math.max(1, math.floor(size / 10)), HEALER = math.ceil(size / 4) }
+	pct = pct or {}
+	-- What's already decided.
+	local filled, have = {}, { TANK = 0, HEALER = 0, DPS = 0 }
+	for n = 1, L.count do
+		filled[n] = #L.groups[n]
+		for _, r in ipairs(L.groups[n]) do have[r.role or "DPS"] = (have[r.role or "DPS"] or 0) + 1 end
+	end
+	local moves, free = {}, 0
+	for n = 1, L.count do free = free + (RG.SIZE - filled[n]) end
+	-- Candidates: In without a group first (officers chose them), then Available.
+	local pool = {}
+	local function consider(r, chosen)
+		if r.away or r.duplicateOf then return end -- away, or the same player's second character
+		r.chosen = chosen
+		pool[#pool + 1] = r
+	end
+	for _, r in ipairs(L.unplaced) do consider(r, true) end
+	for _, r in ipairs(L.available) do consider(r, false) end
+	table.sort(pool, function(a, b)
+		if a.chosen ~= b.chosen then return a.chosen end
+		if a.status ~= b.status then return a.status == "y" end
+		local pa, pb = pct[a.guid] or -1, pct[b.guid] or -1
+		if pa ~= pb then return pa > pb end
+		if (a.ilvl or 0) ~= (b.ilvl or 0) then return (a.ilvl or 0) > (b.ilvl or 0) end
+		return a.name:lower() < b.name:lower()
+	end)
+	-- Pick by role: chosen always; tanks and healers up to their targets; then DPS.
+	local picked, bench = {}, {}
+	local function take(r)
+		if free <= 0 then bench[#bench + 1] = r return end
+		picked[#picked + 1] = r
+		free = free - 1
+		local role = r.role or "DPS"
+		have[role] = (have[role] or 0) + 1
+	end
+	local rest = {}
+	for _, r in ipairs(pool) do if r.chosen then take(r) else rest[#rest + 1] = r end end
+	for _, role in ipairs({ "TANK", "HEALER" }) do
+		local left = {}
+		for _, r in ipairs(rest) do
+			if (r.role or "DPS") == role and have[role] < target[role] and free > 0 then take(r) else left[#left + 1] = r end
+		end
+		rest = left
+	end
+	for _, r in ipairs(rest) do
+		if (r.role or "DPS") ~= "TANK" and (r.role or "DPS") ~= "HEALER" then take(r) else bench[#bench + 1] = r end
+	end
+	-- Groups: healers round-robin, tanks from group 1, then DPS by kind.
+	local function firstOpen(from)
+		for n = from or 1, L.count do if filled[n] < RG.SIZE then return n end end
+		for n = 1, L.count do if filled[n] < RG.SIZE then return n end end
+	end
+	local function put(r, n)
+		filled[n] = filled[n] + 1
+		moves[#moves + 1] = { guid = r.guid, kind = "group", n = n }
+	end
+	local heal, tank, dps = {}, {}, {}
+	for _, r in ipairs(picked) do
+		if r.role == "HEALER" then heal[#heal + 1] = r elseif r.role == "TANK" then tank[#tank + 1] = r else dps[#dps + 1] = r end
+	end
+	local rr = 1
+	for _, r in ipairs(heal) do
+		local n = firstOpen(rr)
+		put(r, n)
+		rr = rr % L.count + 1
+	end
+	for _, r in ipairs(tank) do put(r, firstOpen(1)) end
+	local order = { melee = 1, ranged = 2, caster = 3 }
+	table.sort(dps, function(a, b)
+		local ka, kb = order[RG.DpsKind(a)], order[RG.DpsKind(b)]
+		if ka ~= kb then return ka < kb end
+		return a.name:lower() < b.name:lower()
+	end)
+	for _, r in ipairs(dps) do put(r, firstOpen(1)) end
+	for _, r in ipairs(bench) do moves[#moves + 1] = { guid = r.guid, kind = "bench" } end
+	return moves
+end
+
+-- The button. Returns how many players it placed and benched.
+function RG:Fill(id)
+	local B = SK.RaidBoard
+	if not B.CanLead(Compat.PlayerGUID()) then return nil, "only officers and raid leaders can fill the raid" end
+	local board = B:Get()
+	local ev = board and board.events[id]
+	if not ev then return nil, "unknown raid" end
+	local rows = B.LineUp(board, ev, B.Ctx())
+	local L = RG.Layout(board, ev, rows)
+	local pct = {}
+	local A = SK.Attendance
+	for _, t in ipairs(A.Totals(A.Sorted(A:Store() or {}, Compat.Now() - 60 * 86400))) do pct[t.guid] = t.pct end
+	local placed, benched = 0, 0
+	for _, m in ipairs(RG.AutoFill(L, ev.raid, pct)) do
+		if self:Move(id, m.guid, { kind = m.kind, n = m.n }) then
+			if m.kind == "bench" then benched = benched + 1 else placed = placed + 1 end
+		end
+	end
+	return placed, benched
+end

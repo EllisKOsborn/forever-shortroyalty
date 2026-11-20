@@ -800,11 +800,20 @@ function RT:BuildGroups(page, top)
 		RT:Refresh()
 	end, "primary")
 	self.grpSetup:SetPoint("TOPRIGHT", 0, 0)
+	self.grpFill = W.Button(gp, "Auto-fill", nil, S.control, function()
+		local placed, benched = SK.RaidGroups:Fill(RT.selected)
+		RT.setupMsg = placed and string.format("Auto-fill: %s placed, %d on the bench. Move anyone you like.",
+			Theme.Count(placed, "player"), benched) or tostring(benched)
+		RT:Refresh()
+	end)
+	self.grpFill:SetPoint("RIGHT", self.grpSetup, "LEFT", -SP.s, 0)
+	self.grpFill.tooltip = "Fills the empty spots from the sign-ups: signed up before tentative, then attendance and " ..
+		"item level; enough tanks and healers; nobody marked away. What you've placed stays."
 	self.grpSetup.tooltip = "Invites everyone In who is online, makes it a raid, then moves everyone into their group. " ..
 		"Press it again after each step (the game asks for a press to make a raid)."
 	self.grpCounts = Theme.Text(gp, "small", "dim")
 	self.grpCounts:SetPoint("LEFT", self.grpMenu, "RIGHT", SP.m, 0)
-	self.grpCounts:SetPoint("RIGHT", self.grpSetup, "LEFT", -SP.m, 0)
+	self.grpCounts:SetPoint("RIGHT", self.grpFill, "LEFT", -SP.m, 0)
 	self.grpCounts:SetJustifyH("RIGHT")
 	self.grpCounts:SetWordWrap(false)
 	self.grpHint = Theme.Text(gp, "small", "faint")
@@ -1004,6 +1013,7 @@ function RT:RefreshGroups(now)
 	self.grpEmpty:SetShown(ev == nil)
 	if not ev then
 		self.grpSetup:Hide()
+		self.grpFill:Hide()
 		self.grpCounts:SetText("")
 		self.grpHint:SetText("")
 		self.grpEmpty:SetText("No raids yet. When one is made, its groups show here.")
@@ -1020,6 +1030,7 @@ function RT:RefreshGroups(now)
 	local mine = (SK.RaidGroups.SlotOf(board, ev.id, me or ""))
 	if Board.PlaceOf(board, ev.id, me or "") ~= "i" then mine = 0 end
 	self.grpSetup:SetShown(officer)
+	self.grpFill:SetShown(officer)
 	self.grpHint:SetText(RT.carry and Theme.Paint("accent", "Moving " .. RT.carry.name ..
 		": click a group, the Bench or Available. Click them again to stop.")
 		or (officer and RT.setupMsg and Theme.Paint("text", RT.setupMsg)) or RT.GroupsHint(officer, mine))

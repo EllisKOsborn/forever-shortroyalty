@@ -229,3 +229,39 @@ describe("v0.11.0 Invite & arrange", function()
 		assert.truthy(SK2.RaidGroups:Setup(e.id):find("Only officers", 1, true))
 	end)
 end)
+
+describe("v0.11.0 Auto-fill", function()
+	it("fills tanks, healers and DPS, keeps officers' picks, skips the away, benches the rest", function()
+		local SK, W = H.load()
+		W.member("Pip Hocus", W.player.guid, { rank = "Officer", rankIndex = 1 })
+		local classes = { "WARRIOR", "WARRIOR", "WARRIOR", "PRIEST", "PRIEST", "PRIEST", "PRIEST", "MAGE", "ROGUE", "HUNTER",
+			"MAGE", "ROGUE", "MAGE" }
+		local roles = { "TANK", "TANK", "TANK", "HEALER", "HEALER", "HEALER", "HEALER", "DPS", "DPS", "DPS", "DPS", "DPS", "DPS" }
+		for i = 1, #classes do W.member("Raider " .. i, "Player-1-R" .. i, { class = classes[i] }) end
+		SK.Identity:ReadRoster()
+		SK.Profile:BuildSelf()
+		local B, RG = SK.RaidBoard, SK.RaidGroups
+		local e = B:Create("barrow", W.now + 3600)
+		local list = {}
+		for i = 1, #classes do list["Player-1-R" .. i] = { s = i == 13 and "t" or "y", r = roles[i], u = W.now } end
+		B:Get().signups[e.id] = list
+		SK.DBM:Guild().profiles["Player-1-R11"] = { guid = "Player-1-R11", away = { d = { os.date("%Y-%m-%d", e.at) }, u = 1 } }
+		RG:Move(e.id, "Player-1-R12", { kind = "group", n = 2 }) -- an officer's pick stays
+		local placed, benched = RG:Fill(e.id)
+		assert.equal(9, placed)
+		local L = RG.Layout(B:Get(), e, B.LineUp(B:Get(), e, B.Ctx()))
+		local roleCount = { TANK = 0, HEALER = 0, DPS = 0 }
+		for n = 1, 2 do
+			assert.equal(5, #L.groups[n])
+			for _, r in ipairs(L.groups[n]) do roleCount[r.role] = roleCount[r.role] + 1 end
+		end
+		assert.same({ TANK = 2, HEALER = 3, DPS = 5 }, roleCount)
+		assert.equal(2, (RG.SlotOf(B:Get(), e.id, "Player-1-R12")))
+		assert.is_nil(B.PlaceOf(B:Get(), e.id, "Player-1-R11")) -- away: left out
+		assert.equal("b", B.PlaceOf(B:Get(), e.id, "Player-1-R3")) -- third tank: bench
+		assert.is_true(benched >= 2)
+		assert.equal("melee", RG.DpsKind({ class = "SHAMAN", tree = "Enhancement" }))
+		assert.equal("caster", RG.DpsKind({ class = "SHAMAN", tree = "Elemental" }))
+		assert.equal(0, #SK.errors)
+	end)
+end)
