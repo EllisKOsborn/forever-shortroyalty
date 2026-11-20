@@ -29,6 +29,13 @@ talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
 
 ## Start here (handover, 14 Nov 2026)
+- **OXM review (20 Nov, nothing built):** owner: "We should do something
+  exactly like this" (oxm.gg). `docs/proposals/oxm-review.md`: OXM is a free
+  website + Discord bot (already supports Forever, never reads the game);
+  most of it can't run in an addon; proposed A (use OXM for Discord) and/or
+  B1–B6 in-addon (split roster with groups, set groups in game, absences,
+  assignments, auto-split, BiS). Never copy OXM's code, design or art.
+  Waiting on the owner's choice.
 - **v0.10.2 (released 20 Nov on `main`, same go-ahead): raid calendar**
   (step 3, last of the officers' asks we're building; automatic scheduling
   dropped by the owner). `UI/RaidsTab.lua`: view `calendar` (everyone),
