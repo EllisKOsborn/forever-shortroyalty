@@ -4,6 +4,8 @@ Our own bot (code in `discord-bot/`). It runs on **Cloudflare Workers'
 free plan**, so there's no PC program and no server to keep switched on.
 Discord sends each command and button press to it. GitHub deploys it.
 
+![How it works: post the raid from the addon, sign up in Discord, import back into the game](images/discord-bot.png)
+
 ## What it does
 
 - **`/raid-post`** (officers): in game, open the raid's **···** menu and pick
@@ -20,6 +22,10 @@ Discord sends each command and button press to it. GitHub deploys it.
 - **Copy for the addon** (button): the Discord sign-ups as a list. In game:
   the raid's ··· menu → **Import sign-ups from Discord** → paste → Import.
   A sign-up someone made in game themselves is never overwritten.
+
+![Posting a raid: copy the code in game, /raid-post in Discord, import the sign-ups](images/discord-bot-officers.png)
+
+![The raid post with its sign-up buttons](images/discord-bot-post.png)
 
 ## What it can't do
 

@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discord bot pictures</title>
+<!-- Mock-ups of Short Royalty's own Discord bot (v0.12.0) for the README and
+     the officers. Rendered by docs/mockups/render.js (?shot=flow|post|officers).
+     The chat is drawn in our own colours: it shows what the bot posts, it is
+     not a copy of Discord's app. Names are made up. -->
+<link rel="stylesheet" href="../../preview/theme.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #000; color: var(--text); font: 14px/1.45 "Inter SK", system-ui, sans-serif; }
+  .shot { display: none; position: relative; overflow: hidden; }
+  body[data-shot="flow"] #flow, body[data-shot="post"] #post, body[data-shot="officers"] #officers { display: block; }
+  .display { font-family: "Chakra Petch SK", sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .dim { color: var(--dim); } .faint { color: var(--faint); } .acc { color: var(--accent); } .good { color: var(--good); }
+
+  /* ---------- chat (our colours) ---------- */
+  .chat { background: #17171b; border: 1px solid #2a2a30; border-radius: 10px; overflow: hidden; }
+  .chan { height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid #26262c; color: #e4e4e8; font-weight: 600; }
+  .chan .hash { color: #8a8a94; font-size: 20px; font-weight: 400; }
+  .msg { display: flex; gap: 14px; padding: 14px 16px 6px; }
+  .ava { width: 40px; height: 40px; border-radius: 50%; background: #0b0b0d url(../../preview/img/crest.png) center/26px no-repeat; flex: none; }
+  .ava.user { background: #3b3b44; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #cfcfd6; }
+  .who { display: flex; align-items: baseline; gap: 6px; }
+  .who b { color: var(--accentLit); font-weight: 600; }
+  .who b.plain { color: #e4e4e8; }
+  .tag { font-size: 10px; font-weight: 700; background: var(--accent); color: #000; border-radius: 3px; padding: 1px 4px; position: relative; top: -1px; }
+  .when { font-size: 12px; color: #8a8a94; }
+  .embed { margin-top: 6px; background: #1f1f25; border-left: 4px solid var(--accent); border-radius: 4px; padding: 12px 16px 12px 14px; max-width: 560px; }
+  .embed h3 { margin: 0 0 6px; font-size: 16px; color: #f2f2f5; }
+  .embed p { margin: 0; color: #d6d6dc; }
+  .ts { background: #2b2b33; border-radius: 3px; padding: 0 3px; }
+  .code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; background: #2b2b33; border-radius: 3px; padding: 0 3px; }
+  .field { margin-top: 10px; }
+  .field b { display: block; color: #f2f2f5; font-size: 13.5px; }
+  .field span { color: #d6d6dc; font-size: 13.5px; }
+  .foot { margin-top: 12px; font-size: 12px; color: #8a8a94; display: flex; align-items: center; gap: 6px; }
+  .foot i { width: 16px; height: 16px; border-radius: 50%; background: #0b0b0d url(../../preview/img/crest.png) center/11px no-repeat; }
+  .btns { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .btn { height: 32px; padding: 0 16px; border-radius: 4px; background: #3a3a44; color: #f2f2f5; font-weight: 500; display: inline-flex; align-items: center; font-size: 14px; }
+  .btn.red { background: #c93a40; }
+  .btn.hot { box-shadow: 0 0 0 2px var(--accent); }
+  .eph { margin: 8px 16px 14px 70px; background: #1c1c22; border-radius: 6px; padding: 8px 12px; color: #d6d6dc; font-size: 13.5px; }
+  .eph small { display: block; color: #8a8a94; font-size: 11.5px; margin-top: 4px; }
+  .input { margin: 0 16px 16px; height: 44px; background: #222228; border-radius: 8px; display: flex; align-items: center; padding: 0 14px; color: #8a8a94; }
+  .modal { background: #1f1f25; border-radius: 8px; padding: 18px; border: 1px solid #2e2e36; }
+  .modal h4 { margin: 0 0 14px; font-size: 18px; color: #f2f2f5; }
+  .modal label { display: block; font-size: 12px; font-weight: 700; color: #b8b8c0; text-transform: uppercase; letter-spacing: .02em; margin-bottom: 8px; }
+  .area { background: #121216; border-radius: 4px; padding: 10px 12px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; color: #d6d6dc; white-space: pre; line-height: 1.55; }
+  .mbtns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+  .mbtns span { padding: 8px 18px; border-radius: 4px; font-weight: 600; }
+
+  /* ---------- the addon (Theme tokens) ---------- */
+  .win { background: var(--void); border: 1px solid var(--line); }
+  .wtitle { height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-bottom: 1px solid var(--line); }
+  .wtitle i { width: 22px; height: 22px; background: url(../../preview/img/crest.png) center/contain no-repeat; }
+  .wtitle .display { font-size: 15px; }
+  .row { height: 30px; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  .pop { background: var(--surface); border: 1px solid var(--lineStrong); }
+  .pop .row { border: 0; height: 30px; }
+  .pop .row.on { background: var(--accent); color: var(--onAccent); }
+  .abtn { height: 28px; padding: 0 14px; display: inline-flex; align-items: center; border: 1px solid var(--lineStrong); background: var(--raised); }
+  .abtn.primary { background: var(--accent); color: var(--onAccent); border-color: var(--accent); }
+  .box { background: var(--surface); border: 1px solid var(--lineStrong); padding: 10px 12px; font: 12px/1.6 ui-monospace, Menlo, Consolas, monospace; color: var(--text); white-space: pre; overflow: hidden; }
+
+  /* ---------- flow page ---------- */
+  #flow { width: 1200px; height: 680px; background: #000; padding: 34px 40px; }
+  .hero { display: flex; align-items: center; gap: 16px; }
+  .hero i { width: 52px; height: 52px; background: url(../../preview/img/crest-large.png) center/contain no-repeat; }
+  .hero .display { font-size: 30px; line-height: 1; }
+  .hero p { margin: 6px 0 0; color: var(--dim); font-size: 15px; }
+  .cols { display: grid; grid-template-columns: 0.95fr 40px 1.4fr 40px 0.95fr; margin-top: 30px; align-items: start; }
+  .col h5 { margin: 0 0 4px; display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; }
+  .num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #000; display: inline-flex; align-items: center; justify-content: center; font: 600 14px "Chakra Petch SK", sans-serif; }
+  .col .where { color: var(--dim); font-size: 13px; margin: 0 0 12px 36px; }
+  .arrow { align-self: center; justify-self: center; color: var(--accent); font-size: 30px; margin-top: 40px; }
+  .mini .embed { max-width: none; padding: 10px 12px; }
+  .mini .embed h3 { font-size: 14.5px; }
+  .mini .field b, .mini .field span, .mini .embed p { font-size: 12.5px; }
+  .mini .btn { height: 26px; padding: 0 9px; font-size: 12px; }
+  .mini .btns { gap: 6px; flex-wrap: nowrap; }
+  .mini .msg { padding: 10px 12px 4px; gap: 10px; }
+  .mini .ava { width: 32px; height: 32px; background-size: 21px; }
+  .bridge { margin-top: 26px; display: flex; gap: 14px; }
+  .pill { border: 1px solid var(--line); background: var(--surface); padding: 10px 14px; color: var(--dim); font-size: 13px; flex: 1; }
+  .pill b { color: var(--text); font-weight: 600; }
+
+  /* ---------- post page ---------- */
+  #post { width: 760px; height: 830px; background: #0e0e11; padding: 20px; }
+  #post .chat { height: 100%; display: flex; flex-direction: column; }
+  #post .grow { flex: 1; }
+
+  /* ---------- officers page ---------- */
+  #officers { width: 1200px; height: 560px; background: #000; padding: 30px 36px; }
+  .steps { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 24px; }
+  .step h5 { margin: 0 0 10px; display: flex; gap: 10px; align-items: center; font-size: 15px; font-weight: 600; }
+  .step .note { color: var(--dim); font-size: 12.5px; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<!-- ======================= flow ======================= -->
+<section class="shot" id="flow">
+  <div class="hero">
+    <i></i>
+    <div><div class="display">Short Royalty × Discord</div>
+      <p>Our own bot: raids posted from the addon, sign-up buttons in Discord, sign-ups back into the game.</p></div>
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <h5><span class="num">1</span>Post the raid</h5>
+      <div class="where">Officer, in game: the raid's ··· menu</div>
+      <div class="win">
+        <div class="wtitle"><i></i><span class="display">Raids</span></div>
+        <div style="padding:12px">
+          <div class="dim" style="font-size:12.5px;margin-bottom:8px">Fri 20:00 · Onyxia's Lair · 22 / 40</div>
+          <div class="pop">
+            <div class="row">Copy the line-up as text</div>
+            <div class="row">Copy for Discord</div>
+            <div class="row on">Post with the Discord bot</div>
+            <div class="row">Import sign-ups from Discord</div>
+            <div class="row">Cancel this raid</div>
+          </div>
+          <div class="box" style="margin-top:10px;font-size:11px">SR1;Player-…;ony;Onyxia's Lair;40;…
+Pip Cogsworth;y;TANK;i;…
+Fizzwick Gearle;y;HEALER;i;…</div>
+        </div>
+      </div>
+      <div class="where" style="margin:10px 0 0">Copy → in Discord <span class="code" style="color:var(--text)">/raid-post</span> → paste</div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="col">
+      <h5><span class="num">2</span>Everyone signs up</h5>
+      <div class="where">Members, in Discord (once: <span class="code" style="color:var(--text)">/link Your Name</span>)</div>
+      <div class="chat mini">
+        <div class="msg"><div class="ava"></div><div style="flex:1">
+          <div class="who"><b>Short Royalty</b><span class="tag">BOT</span><span class="when">Today at 18:02</span></div>
+          <div class="embed">
+            <h3>Onyxia's Lair (40)</h3>
+            <p><span class="ts">Friday, 4 December 2026 20:00</span> (<span class="ts">in 2 days</span>)</p>
+            <p>Signed up 22 / 40 · Tentative 3 · Can't come 2</p>
+            <div class="field"><b>Tanks (3)</b><span>Pip Cogsworth, Dorna Stonebrow, Thalgrim Ashfoot</span></div>
+            <div class="field"><b>Healers (6)</b><span>Fizzwick Gearle, Merrin Dale, Elowen Brook, …</span></div>
+            <div class="field"><b>DPS (13)</b><span>Brambletoe Fen, Gimbleflax Sprocket, Nixa Vale, …</span></div>
+          </div>
+          <div class="btns"><span class="btn">Tank</span><span class="btn">Healer</span><span class="btn hot">DPS</span><span class="btn">Tentative</span><span class="btn red">Can't come</span></div>
+          <div class="btns" style="margin-bottom:10px"><span class="btn">Copy for the addon</span></div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="col">
+      <h5><span class="num">3</span>Bring them into the game</h5>
+      <div class="where">Officer: <b style="color:var(--text);font-weight:600">Copy for the addon</b> → Import</div>
+      <div class="win">
+        <div class="wtitle"><i></i><span class="display">Import sign-ups</span></div>
+        <div style="padding:12px">
+          <div class="box" style="font-size:11px">Onyxia's Lair sign-ups from Discord
+Brambletoe Fen signed up dps
+Elowen Brook tentative healer
+Nixa Vale signed up dps
+Thalgrim Ashfoot cant come tank</div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px"><span class="abtn primary">Import</span></div>
+          <div class="good" style="font-size:12.5px;margin-top:10px">Added 3, updated 1, kept 0 (signed up in game themselves).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bridge">
+    <div class="pill"><b>Our own bot.</b> It runs free on Cloudflare and needs no PC program. The code lives in this repo.</div>
+    <div class="pill"><b>Two pastes are the bridge.</b> Game addons can't go online, so the game and Discord never talk directly.</div>
+    <div class="pill"><b>Safe by design.</b> Only officers post raids, and the bot never pings anyone.</div>
+  </div>
+</section>
+
+<!-- ======================= post ======================= -->
+<section class="shot" id="post">
+  <div class="chat">
+    <div class="chan"><span class="hash">#</span>raid-signups</div>
+    <div class="msg"><div class="ava"></div><div style="flex:1">
+      <div class="who"><b>Short Royalty</b><span class="tag">BOT</span><span class="when">Today at 18:02</span></div>
+      <div class="embed">
+        <h3>Onyxia's Lair (40)</h3>
+        <p><span class="ts">Friday, 4 December 2026 20:00</span> (<span class="ts">in 2 days</span>)</p>
+        <p>In 18 / 40 · Bench 3</p>
+        <p>&nbsp;</p>
+        <p>Sign up with the buttons below (once: <span class="code">/link</span> your character), or in game with <span class="code">/sr raids</span>.</p>
+        <div class="field"><b>In, Tanks (2)</b><span>Dorna Stonebrow, Pip Cogsworth</span></div>
+        <div class="field"><b>In, Healers (5)</b><span>Copperpot Wick, Elowen Brook, Fizzwick Gearle, Merrin Dale, Wobblegear Finch</span></div>
+        <div class="field"><b>In, DPS (11)</b><span>Brambletoe Fen, Gimbleflax Sprocket, Kettlewhit Moss, Lunabelle Thorn, Nixa Vale, Oswin Pike, Pockets Rumble, Rivetta Cole, Sprocket Hale, Stoutmug Barrow, Tinkerbolt Ash</span></div>
+        <div class="field"><b>Bench (3)</b><span>Dimbly Crook, Emberly Wynn, Fennick Rowe</span></div>
+        <div class="field"><b>Tentative (2)</b><span>Quillon Mere, Umberly Shaw</span></div>
+        <div class="foot"><i></i>Short Royalty · game list updated · Today at 17:58</div>
+      </div>
+      <div class="btns"><span class="btn">Tank</span><span class="btn">Healer</span><span class="btn hot">DPS</span><span class="btn">Tentative</span><span class="btn red">Can't come</span></div>
+      <div class="btns"><span class="btn">Copy for the addon</span></div>
+    </div></div>
+    <div class="eph">Linked to <b>Nixa Vale</b>. The sign-up buttons now sign up Nixa Vale. Use <span class="code">/link</span> again to change it.<small>Only you can see this</small></div>
+    <div class="grow"></div>
+    <div class="input">/link Nixa Vale</div>
+  </div>
+</section>
+
+<!-- ======================= officers ======================= -->
+<section class="shot" id="officers">
+  <div class="hero">
+    <i></i>
+    <div><div class="display">Posting a raid to Discord</div>
+      <p>For officers and raid leaders. Takes about 20 seconds.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <h5><span class="num">1</span>In game: copy the code</h5>
+      <div class="win">
+        <div class="wtitle"><i></i><span class="display">Post with the Discord bot</span></div>
+        <div style="padding:12px"><div class="box" style="height:236px;font-size:11px;background:var(--pressed)">In Discord: type /raid-post, paste all of
+this into the box, then Submit.
+SR1;Player-6937-0011AB:1795990000;ony;
+  Onyxia's Lair;40;1796040000;1795999000
+Pip Cogsworth;y;TANK;i;1795990100
+Dorna Stonebrow;y;TANK;i;1795990160
+Fizzwick Gearle;y;HEALER;i;1795990200
+Merrin Dale;y;HEALER;b;1795990260
+Nixa Vale;t;DPS;;1795990300
+…</div></div>
+      </div>
+      <div class="note">Raids page → pick the raid → <b style="color:var(--text)">···</b> → <b style="color:var(--text)">Post with the Discord bot</b>. The text is already selected: press Ctrl+C.</div>
+    </div>
+    <div class="step">
+      <h5><span class="num">2</span>In Discord: /raid-post and paste</h5>
+      <div class="modal">
+        <h4>Post a raid from the addon</h4>
+        <label>Code from the addon (raid ··· menu)</label>
+        <div class="area">In Discord: type /raid-post, paste all…
+SR1;Player-6937-0011AB:1795990000;ony;…
+Pip Cogsworth;y;TANK;i;1795990100
+Dorna Stonebrow;y;TANK;i;1795990160
+Fizzwick Gearle;y;HEALER;i;1795990200
+…</div>
+        <div class="mbtns"><span style="color:#d6d6dc">Cancel</span><span style="background:var(--accent);color:#000">Submit</span></div>
+      </div>
+      <div class="note">The bot posts the raid with sign-up buttons. Posting it again from the same channel <b style="color:var(--text)">updates the same post</b> (new sign-ups, In and Bench).</div>
+    </div>
+    <div class="step">
+      <h5><span class="num">3</span>Back in game: import</h5>
+      <div class="chat" style="padding-bottom:6px">
+        <div class="eph" style="margin:12px">Copy this, then in game: the raid's ··· menu → <i>Import sign-ups from Discord</i> → paste → Import.
+<div class="area" style="margin-top:8px;background:#121216">Onyxia's Lair sign-ups from Discord
+Brambletoe Fen signed up dps
+Elowen Brook tentative healer
+Thalgrim Ashfoot cant come tank</div><small>Only you can see this</small></div>
+      </div>
+      <div class="note">Press <b style="color:var(--text)">Copy for the addon</b> under the post, copy the list, then in game: ··· → <b style="color:var(--text)">Import sign-ups from Discord</b> → paste → Import. Sign-ups players made in game themselves are never overwritten.</div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.body.dataset.shot = new URLSearchParams(location.search).get("shot") || "flow";
+</script>
+</body>
+</html>

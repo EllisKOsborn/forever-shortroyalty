@@ -64,14 +64,20 @@ const SHOTS = {
 const ONLY = process.argv[2];
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-// Pages of their own (not the preview window): name -> [file, width, height]
-const PAGES = {};
+// Pages of their own (not the preview window): name -> [file?query, width, height]
+const PAGES = {
+  "discord-bot": ["docs/mockups/discord-bot.html?shot=flow", 1200, 680],
+  "discord-bot-post": ["docs/mockups/discord-bot.html?shot=post", 760, 830],
+  "discord-bot-officers": ["docs/mockups/discord-bot.html?shot=officers", 1200, 560],
+};
 
 async function withPlaywright(chromium) {
   const browser = await chromium.launch();
-  for (const [name, [file, w, h]] of Object.entries(ONLY ? {} : PAGES)) {
+  for (const [name, [file, w, h]] of Object.entries(PAGES)) {
+    if (ONLY && !name.startsWith(ONLY)) continue;
+    const [p, q] = file.split("?");
     const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 2 });
-    await page.goto("file://" + path.join(ROOT, file));
+    await page.goto("file://" + path.join(ROOT, p) + (q ? "?" + q : ""));
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: path.join(OUT, name + ".png") });
     console.log("wrote", name + ".png");
