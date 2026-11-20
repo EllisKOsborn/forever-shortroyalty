@@ -30,3 +30,4 @@ ignore:
   - tools
   - PRODUCT.md
   - DESIGN.md
+  - discord-bot

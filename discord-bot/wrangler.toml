@@ -1,0 +1,11 @@
+# Cloudflare Worker for Short Royalty's Discord bot. Deployed by
+# .github/workflows/discord-bot.yml, which fills in database_id.
+name = "shortroyalty-bot"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "shortroyalty-bot"
+database_id = "FILLED_IN_BY_THE_WORKFLOW"
+migrations_dir = "migrations"

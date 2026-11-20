@@ -185,3 +185,26 @@ the Officers view and its tooltip.
   and owner-copy rules.
 - **Invite & arrange** only invites and moves names from our own roster and
   the game's own raid list; nothing received is passed to the game as text.
+
+## Addendum (20 Nov 2026, v0.12.0 Discord bot)
+
+- `discord-bot/` is a Cloudflare Worker; the addon still never goes online.
+  Every request must carry Discord's Ed25519 signature (checked before the
+  body is read as JSON); unsigned requests get 401.
+- The only input from the game is the code an officer pastes into
+  `/raid-post`: one header and at most 150 lines, each field checked (raid
+  id `[\w:-]{3,80}`, raid key lower-case letters, size 1–40, times in a sane
+  range, status y/t/n, role TANK/HEALER/DPS, place i/b). Names keep only
+  letters, spaces, apostrophes and hyphens (no mentions, markup or links),
+  40 characters at most. All bot messages send `allowed_mentions: { parse:
+  [] }`.
+- `/raid-post` is limited by Discord to Manage Events by default, and the
+  bot checks again (Manage Events / Manage Server / Administrator or a role
+  in `OFFICER_ROLES`). Sign-up buttons need a `/link`ed character; anyone
+  can link any name (accepted: the officer importing sees the list, and a
+  player's own in-game sign-up is never overwritten by an import).
+- Secrets (bot token, public key, Cloudflare token) live only in GitHub
+  secrets and the Worker's secrets; the workflow pins its actions to SHAs
+  and wrangler to an exact version.
+- Data kept: Discord user IDs, linked character names, sign-ups; raids and
+  sign-ups are deleted 14 days after the start.

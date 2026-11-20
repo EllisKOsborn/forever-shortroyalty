@@ -1,0 +1,11 @@
+{
+  "name": "shortroyalty-bot",
+  "private": true,
+  "type": "module",
+  "description": "Short Royalty's Discord bot: raid posts with sign-up buttons, bridged to the addon by copy and paste.",
+  "scripts": {
+    "test": "node --test --no-warnings test/*.test.js",
+    "register": "node scripts/register.js"
+  },
+  "wrangler": "4.160.0 (run with npx by the workflow; nothing to install)"
+}

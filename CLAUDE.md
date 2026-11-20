@@ -27,8 +27,42 @@ A World of Warcraft: **Forever** addon for the guild **Short Royalty**
 (Alliance, PvE, about 50 members). Members browse each other's gear,
 talents, professions, recipes, attunements and reputations in game. Data is
 shared only over the guild **addon channel**: no website, no server, no uploads.
+The addon itself never goes online. The one exception outside the game is
+our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
+bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.12.0 (built 20 Nov on the branch, NOT released): our own Discord
+  bot** (owner: "I want it to be our own rather than something we use
+  externally"; earlier: Discord "shouldn't require any PC programs"). Setup
+  and owner steps: `docs/DISCORD-BOT.md` (Discord app, free Cloudflare
+  account, 5 GitHub secrets, run the workflow, add the bot). **Not deployed:
+  needs the owner's accounts.**
+  - `discord-bot/` (plain JS, no runtime deps, Node 22 tests `npm test` with
+    `node:test` + `node:sqlite` as a D1 stand-in): `src/index.js` (fetch →
+    Ed25519 check `src/verify.js` → `handle(interaction, deps)`), `/link
+    character` (`links` table), `/raid-post` (officers: Manage Events /
+    Manage Server / Admin or `OFFICER_ROLES`; opens a modal, deferred reply,
+    posts or PATCHes the same message), buttons `su:y:TANK|HEALER|DPS`,
+    `su:t`, `su:n`, `copy` (raid found by message id; closed 3 h after the
+    start). `src/code.js` parses the addon's code (**";"-separated** because
+    the game's EditBox reads "|" as escapes): `SR1;id;key;name;size;at;sent`
+    + `Name;y|t|n;ROLE;i|b|;u` lines; `cleanName` keeps letters/space/'/-.
+    `src/post.js`: `mergeRows` (newest u wins per character; In/Bench only
+    from game), `fields`, `buildPost` (allowed_mentions none), `addonText`
+    ("Name signed up tank" lines for `Board.ParseImport`). D1 schema
+    `migrations/0001_init.sql`; raids pruned 14 days after the start.
+  - `.github/workflows/discord-bot.yml`: on main pushes to `discord-bot/**`
+    or by hand; tests, then (if the secrets exist) creates/finds the D1
+    database, fills `database_id` in wrangler.toml, applies migrations,
+    `wrangler@4.160.0 deploy`, puts Worker secrets, `scripts/register.js`
+    (commands, `interactions_endpoint_url` = the workers.dev URL, invite
+    link). ci.yml has a `bot` job. `.pkgmeta` ignores `discord-bot`.
+  - Addon: `Board.BotCode(ev, rows, signups, now)`, raid ··· menu **Post with
+    the Discord bot** (officers, `RT:CopyBot`). Tests
+    `tests/v0120_bot_spec.lua`. TESTING 63–66.
+  - Not built: automatic posting/scheduling, reminders before the raid,
+    raids created from Discord (the addon stays the source of truth).
 - **v0.11.0 (released 20 Nov on `main`, owner: "push to main"; built from "Do that
   but without BiS lists"): OXM-inspired raid tools** (our own build; never
   copy OXM's code/design/art). Steps 1–5 of the OXM review, no BiS.
@@ -931,6 +965,7 @@ Media/    Fonts.xml (Inter and Arial Narrow families + CJK fallback),
           Fonts/ (Chakra Petch, Inter, both OFL), Textures/ (crest, sidebar
           icons, pill, chevron, arrow, close, dot, ring, star .tga)
 preview/  browser mock-up of every window (theme.css/js generated)
+discord-bot/ v0.12.0 our Discord bot (Cloudflare Worker, D1; docs/DISCORD-BOT.md)
 tools/    textures.js (draws Media/Textures), preview-tokens.js, recipes.js
           (Data/Recipes.lua from wago.tools), words.js (Data/Words.lua)
 Libs/     vendored Ace3 bits, LibSerialize, LibDeflate; LDB + LibDBIcon via .pkgmeta

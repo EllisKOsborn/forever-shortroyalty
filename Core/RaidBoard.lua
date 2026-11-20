@@ -476,6 +476,25 @@ function Board.DiscordText(ev, rows, s)
 	return SK.Export.Plain(table.concat(L, "\n"))
 end
 
+-- v0.12.0: the code for Short Royalty's own Discord bot (discord-bot/,
+-- /raid-post). Fields are split by ";" because the game's text boxes read
+-- "|" as a colour code. The bot checks every line. Pure.
+--   SR1;id;raid key;raid name;size;start;made
+--   Character Name;y|t|n;TANK|HEALER|DPS|;i|b|;changed
+function Board.BotCode(ev, rows, signups, now)
+	local raid = Board.Raid(ev.raid)
+	local function clean(s) return (tostring(s or ""):gsub("[;|%c]", "")) end
+	local L = { "In Discord: type /raid-post, paste all of this into the box, then Submit.",
+		string.format("SR1;%s;%s;%s;%d;%d;%d", clean(ev.id), clean(ev.raid), clean(raid and raid.name or "Raid"),
+			raid and raid.size or 40, ev.at, now) }
+	for _, r in ipairs(rows) do
+		local su = signups and signups[r.guid] or {}
+		L[#L + 1] = string.format("%s;%s;%s;%s;%d", clean(r.name), su.s or r.status or "y", r.role or "",
+			r.place or "", tonumber(su.u) or 0)
+	end
+	return table.concat(L, "\n")
+end
+
 local ROLE_WORDS = { tank = "TANK", tanks = "TANK", heal = "HEALER", heals = "HEALER", healer = "HEALER",
 	healers = "HEALER", healing = "HEALER", dps = "DPS", damage = "DPS", melee = "DPS", ranged = "DPS" }
 local STATUS_WORDS = { tentative = "t", maybe = "t", absence = "n", absent = "n", absences = "n", declined = "n",

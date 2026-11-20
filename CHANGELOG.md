@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.12.0 (not released yet): our own Discord bot
+
+- **Short Royalty's own Discord bot** (code in `discord-bot/`, runs free on
+  Cloudflare, no PC program). Setup once: `docs/DISCORD-BOT.md`.
+  - Officers: the raid's ··· menu → **Post with the Discord bot** → copy →
+    in Discord `/raid-post` → paste. The bot posts the raid (time in each
+    reader's time zone, who's coming by role, In / Bench). Doing it again
+    updates the same post.
+  - Everyone: `/link` your character once, then sign up with the post's
+    buttons: Tank, Healer, DPS, Tentative, Can't come.
+  - **Copy for the addon** on the post gives the Discord sign-ups; paste them
+    into the raid's *Import sign-ups from Discord* in game.
+  - Addons can't use the internet, so the game and the bot never talk
+    directly: those two pastes are the bridge.
+
 ## v0.11.0 (20 Nov 2026): groups, invites, absences and boss jobs
 
 Ideas from OXM (a raid website), built our own way inside the addon.

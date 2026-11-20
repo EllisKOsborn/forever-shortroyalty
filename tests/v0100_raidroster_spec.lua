@@ -225,7 +225,8 @@ describe("v0.10.0 Discord without a program", function()
 		assert.is_false(D.asking)
 		local names = {}
 		for _, it in ipairs(RT:DetailOptions()) do names[#names + 1] = it.text end
-		assert.same({ "Copy the line-up as text", "Copy for Discord", "Import sign-ups from Discord", "Cancel this raid" }, names)
+		assert.same({ "Copy the line-up as text", "Copy for Discord", "Post with the Discord bot",
+			"Import sign-ups from Discord", "Cancel this raid" }, names)
 		RT:CopyDiscord()
 		assert.equal(0, #SK.errors)
 	end)

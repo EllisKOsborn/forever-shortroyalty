@@ -251,3 +251,15 @@ addon read.
     from *Add a job…*; click the job, then names on the right. A member sees
     the jobs and "Main tank on Onyxia" on their Raids page. **Copy last
     raid** on the next Onyxia brings them over.
+
+## v0.12.0 Discord bot (after the setup in docs/DISCORD-BOT.md)
+
+63. [ ] The **Discord bot** workflow run is green, and its last step printed
+    an "Add the bot" link that worked.
+64. [ ] In game (officer): raid ··· menu → **Post with the Discord bot** →
+    copy all. In Discord: `/raid-post`, paste, Submit: the raid appears with
+    the right time and names. Do it again: the same post updates.
+65. [ ] A member presses **DPS** without linking: the bot asks them to
+    `/link`. After `/link Their Name`, the button puts them on the post.
+66. [ ] **Copy for the addon** → in game *Import sign-ups from Discord* →
+    paste → Import: those players appear in the line-up.

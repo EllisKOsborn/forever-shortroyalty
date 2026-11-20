@@ -562,12 +562,22 @@ function RT:CopyDiscord()
 	SK.DebugWindow:ShowText("Copy for Discord", Board.DiscordText(ev, rows, sum))
 end
 
+-- Officers (v0.12.0): the code for Short Royalty's Discord bot.
+function RT:CopyBot()
+	local board = Board:Get()
+	local ev = board and RT.selected and board.events[RT.selected]
+	if not ev then return end
+	local rows = Board.LineUp(board, ev, RT.Ctx())
+	SK.DebugWindow:ShowText("Post with the Discord bot", Board.BotCode(ev, rows, board.signups[ev.id], Compat.Now()))
+end
+
 -- Officers: paste sign-ups from Discord.
 function RT:ImportDiscord()
 	local id = RT.selected
 	if not id then return end
 	SK.DebugWindow:AskText("Import sign-ups from Discord",
-		"Paste the sign-up list from Discord, then press Import. Names must match characters in the guild.",
+		"Paste the sign-up list from Discord (the bot's Copy for the addon, or any list), then press Import. " ..
+			"Names must match characters in the guild.",
 		"Import", function(text) return RT.DoImport(id, text) end)
 end
 
@@ -596,6 +606,7 @@ function RT:DetailOptions()
 		{ text = "Copy for Discord", onClick = function() RT:CopyDiscord() end },
 	}
 	if Board.OfficerView() and RT.selected then
+		items[#items + 1] = { text = "Post with the Discord bot", onClick = function() RT:CopyBot() end }
 		items[#items + 1] = { text = "Import sign-ups from Discord", onClick = function() RT:ImportDiscord() end }
 		items[#items + 1] = { text = "Cancel this raid", onClick = function()
 			local ok, why = Board:Cancel(RT.selected)
