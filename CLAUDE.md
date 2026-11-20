@@ -521,6 +521,10 @@ shared only over the guild **addon channel**: no website, no server, no uploads.
 - **Skill-up colours checked 11 Nov**: 102 match; the 13 differences were all
   a skill-0 read (fixed in v0.4.7, released 11 Nov; TESTING 161). The
   route planner can build on the colours; confirm 0 differ after v0.4.7.
+- **Officer roster + raid calendar (20 Nov, proposal only):**
+  `docs/proposals/officer-roster-and-calendar.md` (what exists vs the
+  officers' asks; Discord two-way sync needs an outside bot + companion
+  program; proposed order 1–6). Waiting on the owner/officers.
 - **Open questions for the owner:** see "Waiting on the user" below.
 - Handover prompt used to start the next chat: `docs/prompts/next-chat.md`.
 
@@ -1277,6 +1281,11 @@ refer to `git show v0.6.0:TESTING.md`.
 5. Reserve+ (released 16 Nov): a dungeon test run (TESTING.md 30–40)
    and `/sr debug` "Loot method" inside a raid group (master loot?);
    offline bench at the lock: no bonus only (built), or a penalty too?
+6. Officer roster + raid calendar (officer's message, 20 Nov): review and
+   proposal in `docs/proposals/officer-roster-and-calendar.md`, nothing
+   built. Waiting on its 6 questions (Discord: copy-only vs two-way via a
+   bot + companion app, which addons alone can't do; attendance "online at
+   the start"; who sees roles / in-or-bench; raid schedule; order).
 
 ## Answers already given to the guild (stay consistent)
 - **Alts:** linked automatically once each alt has logged in with the addon
