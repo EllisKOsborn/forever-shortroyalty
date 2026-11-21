@@ -517,84 +517,101 @@ function rosterOfficers() {
     <div class="abs faint small" style="left:${RX}px;top:400px;width:254px;line-height:1.35">Only officers and raid leaders see this page. Changes reach the others online within a minute, and the rest when they log in.</div>`;
 }
 
-// v0.13.0 (proposal): the raid roster planner (officers). Made-up names; the
-// scenario mirrors the officers' examples (a main tank away for the first
-// reset, DPS who can heal as backups, a backup raider who plays anything).
+// v0.13.0 (proposal v2): the raid roster planner (officers). One row per
+// person, like the officers' spreadsheet: role cells (Main / Backup) edited
+// in the list, live level, gear and attunement from the addon. Made-up names;
+// the scenario mirrors the officers' examples.
 function rosterPlanner() {
   const C = (cls, name) => ({ cls, name });
-  // [who, status, roles {T,H,D: m|b}, level, levelGain7d, ilvl, attuned, missing enchants, attendance %, note, away first reset]
+  // [who, spec, status, roles {T,H,D: m|b}, level, gain7d, ilvl, attuned, enchMissing, seenDays, note, noteBy, away wk1, alts, rank]
   const P = [
-    [C("WARRIOR", "Brannoc"), "Core", { T: "m" }, 60, 0, 66, "yes", 0, 94, "Main tank. Misses the first reset (holiday).", true],
-    [C("WARRIOR", "Mazgrul"), "Core", { T: "m", D: "b" }, 60, 0, 63, "yes", 1, 88, "", false],
-    [C("DRUID", "Jumpwick"), "Core", { T: "b", D: "m" }, 58, 4, 54, "no", 2, 80, "Feral. Building a bear set.", false],
-    [C("WARRIOR", "Plopper"), "Trial", { T: "b" }, 52, 6, 49, "no", 3, null, "Joined via Kettle. Keen to tank.", false],
-    [C("PRIEST", "Elowen"), "Core", { H: "m" }, 60, 0, 64, "yes", 0, 100, "", false],
-    [C("PALADIN", "Fizzwick"), "Core", { H: "m" }, 60, 0, 61, "yes", 0, 92, "", false],
-    [C("DRUID", "Merrin"), "Core", { H: "m" }, 60, 0, 59, "no", 1, 86, "Amulet quest on Thursday.", false],
-    [C("SHAMAN", "Wobblegear"), "Core", { H: "m" }, 59, 2, 57, "no", 2, 75, "", false],
-    [C("PALADIN", "Torvin"), "Core", { D: "m", H: "b" }, 60, 0, 62, "yes", 0, 90, "Ret main, has a healing set.", false],
-    [C("PRIEST", "Procella"), "Core", { D: "m", H: "b" }, 57, 3, 55, "no", 2, 83, "Shadow. Needs healing gear.", false],
-    [C("SHAMAN", "Mirrel"), "Backup", { T: "b", H: "b", D: "b" }, 60, 0, 65, "yes", 0, null, "Great raider, plays any role. Can't commit to a schedule: ask on the day.", false],
-    [C("MAGE", "Nixa"), "Core", { D: "m" }, 60, 0, 68, "yes", 0, 97, "", false],
-    [C("ROGUE", "Brambletoe"), "Core", { D: "m" }, 60, 0, 60, "yes", 1, 91, "", false],
-    [C("HUNTER", "Gimbleflax"), "Core", { D: "m" }, 56, 5, 52, "no", 3, 70, "", false],
-    [C("WARLOCK", "Tinkerbolt"), "Trial", { D: "m" }, 49, 7, 45, "no", 3, null, "Friend of Nixa.", false],
+    [C("WARRIOR", "Brannoc"), "Prot", "Core", { T: "m" }, 60, 0, 66, 1, 0, 0, "Main tank. Misses the first reset (holiday).", "Pocus", 1, 1, "Officer"],
+    [C("WARRIOR", "Mazgrul"), "Prot", "Core", { T: "m", D: "b" }, 60, 0, 63, 1, 1, 0, "", "", 0, 0, "Raider"],
+    [C("DRUID", "Jumpwick"), "Feral", "Core", { T: "b", D: "m" }, 58, 4, 54, 0, 2, 1, "Building a bear set.", "Kerath", 0, 0, "Raider"],
+    [C("WARRIOR", "Plopper"), "Arms", "Trial", { T: "b" }, 52, 6, 49, 0, 3, 0, "Friend of Kettle. Keen to tank.", "Kerath", 0, 0, "Member"],
+    [C("SHAMAN", "Mirrel"), "Resto", "Backup", { T: "b", H: "b", D: "b" }, 60, 0, 65, 1, 0, 2, "Great raider, any role. Can't commit: ask on the day.", "Pocus", 0, 2, "Social"],
+    [C("PRIEST", "Elowen"), "Holy", "Core", { H: "m" }, 60, 0, 64, 1, 0, 0, "", "", 0, 0, "Raider"],
+    [C("PALADIN", "Fizzwick"), "Holy", "Core", { H: "m" }, 60, 0, 61, 1, 0, 0, "", "", 0, 0, "Raider"],
+    [C("DRUID", "Merrin"), "Resto", "Core", { H: "m" }, 60, 0, 59, 0, 1, 0, "Amulet quest on Thursday.", "Nura", 0, 0, "Raider"],
+    [C("SHAMAN", "Wobblegear"), "Resto", "Core", { H: "m" }, 59, 2, 57, 0, 2, 4, "", "", 0, 0, "Raider"],
+    [C("PRIEST", "Lunabelle"), "Disc", "", {}, 58, 6, 52, 0, 2, 0, "", "", 0, 0, "Member", "H"],
+    [C("PALADIN", "Torvin"), "Ret", "Core", { D: "m", H: "b" }, 60, 0, 62, 1, 0, 0, "Has a healing set.", "Pocus", 0, 0, "Raider"],
+    [C("PRIEST", "Procella"), "Shadow", "Core", { D: "m", H: "b" }, 57, 3, 55, 0, 2, 9, "Needs healing gear.", "Nura", 0, 0, "Raider"],
+    [C("HUNTER", "Gimbleflax"), "MM", "", {}, 56, 5, 52, 0, 3, 0, "", "", 0, 0, "Member"],
+    [C("WARLOCK", "Tinkerbolt"), "Affli", "", {}, 49, 7, 45, 0, 3, 3, "", "", 0, 0, "Member"],
+    [C("ROGUE", "Quillon"), "Combat", "", {}, 60, 0, 61, 1, 0, 0, "", "", 0, 1, "Member"],
+    [C("WARRIOR", "Thalgrim"), "Prot", "", {}, 59, 3, 57, 0, 1, 0, "", "", 0, 0, "Member", "T"],
+    [C("DRUID", "Dorna"), "Feral", "", {}, 55, 5, 50, 0, 2, 1, "", "", 0, 0, "Member", "T"],
   ];
-  const badge = (r, k) => {
-    const t = r[2][k];
-    const st = t === "m" ? "background:var(--accent);color:var(--onAccent);border-color:var(--accent)"
-      : t === "b" ? "color:var(--accent);border-color:var(--accent)" : "color:var(--faint);border-color:var(--line)";
-    return `<span style="display:inline-flex;width:16px;height:16px;align-items:center;justify-content:center;border:1px solid;font-size:10px;margin-right:3px;box-sizing:border-box;${st}">${k}</span>`;
+  const filter = S.planRole || "T";
+  const roleCell = (r, k) => {
+    const t = r[3][k];
+    if (t === "m") return `<span style="display:inline-block;width:44px;text-align:center;background:var(--accent);color:var(--onAccent);font-size:11px;line-height:17px">Main</span>`;
+    if (t === "b") return `<span style="display:inline-block;width:44px;text-align:center;border:1px solid var(--accent);color:var(--accentLit);font-size:11px;line-height:15px;box-sizing:border-box">Backup</span>`;
+    return `<span class="faint" style="display:inline-block;width:44px;text-align:center">·</span>`;
   };
-  const lvl = (r) => r[3] === 60 ? `<span class="good">60</span>` : `${r[3]}${r[4] ? ` <span class="good small">+${r[4]}</span>` : ""}`;
-  const att = (r) => r[6] === "yes" ? `<span class="good">yes</span>` : `<span class="faint">no</span>`;
-  const ench = (r) => r[7] ? `<span class="spark">${r[7]}</span>` : `<span class="faint">0</span>`;
-  const W = { n: 104, s: 64, r: 80, l: 58, i: 40, a: 42, e: 48, p: 56 };
-  if (S.planSel) { delete W.p; }
-  const NW = S.planSel ? 0 : 744 - Object.values(W).reduce((a, b) => a + b, 0) - 16;
+  const W = { n: 96, sp: 52, st: 62, T: 62, H: 62, D: 62, l: 52, i: 34, a: 38, e: 40, seen: 42 };
+  if (S.planSel) { delete W.seen; delete W.e; delete W.sp; delete W.i; }
+  const NW = S.planSel ? 0 : 744 - Object.values(W).reduce((a, b) => a + b, 0) - 14;
   const cell = (w, html, r) => `<span class="cell ${r ? "r" : ""}" style="width:${w}px">${html}</span>`;
-  const row = (r) => `<div class="row click ${S.planSel && r[0].name === "Mirrel" ? "sel" : ""}">${cell(W.n, cls(r[0]) + (r[10] ? ' <span class="bad small">away</span>' : ""))}${cell(W.s, `<span class="${r[1] === "Core" ? "" : r[1] === "Backup" ? "acc" : "dim"}">${r[1]}</span>`)}${cell(W.r, badge(r, "T") + badge(r, "H") + badge(r, "D"))}${cell(W.l, lvl(r), 1)}${cell(W.i, r[5], 1)}${cell(W.a, att(r), 1)}${cell(W.e, ench(r), 1)}${S.planSel ? "" : cell(W.p, r[8] ? r[8] + "%" : DASH, 1) + cell(NW, r[9] ? `<span class="dim">${esc(r[9])}</span>` : DASH)}</div>`;
-  const section = (title, rs) => `<div class="row" style="height:22px;background:var(--rule)"><span class="display dim" style="font-size:10.5px;letter-spacing:.08em;padding-left:2px">${title}  <span class="faint">${rs.length}</span></span></div>` + rs.map(row).join("");
-  const has = (k, t) => P.filter((r) => r[2][k] === t);
-  const body = section("TANKS · MAIN", has("T", "m")) + section("TANKS · BACKUP", has("T", "b")) + section("HEALERS · MAIN", has("H", "m"))
-    + section("HEALERS · BACKUP", has("H", "b")) + section("DPS · MAIN", has("D", "m").slice(0, 6));
-  const head = `<div class="lhead">${[["n", "Name"], ["s", "Status"], ["r", "Roles"], ["l", "Level", 1], ["i", "iLvl", 1], ["a", "Ony", 1], ["e", "Ench.", 1], ["p", "Attend.", 1]].filter(([k]) => W[k]).map(([k, t, r]) => `<span class="${r ? "r" : ""}" style="width:${W[k]}px">${t}</span>`).join("")}${S.planSel ? "" : `<span style="width:${NW}px">Note</span>`}</div>`;
-  // Coverage for the chosen raid: ready = 60 and attuned, close = 55+, levelling = below 55, away = can't make it.
-  const covCard = (title, need, main, backup, segs, line) => `<div style="width:180px;height:84px;box-sizing:border-box;border:1px solid var(--line);background:var(--surface);padding:7px 10px">
-      <div class="display dim" style="font-size:11px;letter-spacing:.08em">${title}</div>
-      <div style="display:flex;align-items:baseline;gap:5px;margin-top:1px;white-space:nowrap"><span style="font-size:19px">${main}<span class="dim" style="font-size:13px"> / ${need}</span></span><span class="dim small">main</span><span class="dim small" style="margin-left:auto">+${backup} backup</span></div>
-      <div style="display:flex;height:6px;margin:6px 0 5px;gap:2px">${segs.map(([n, c]) => `<i style="flex:${n};background:var(--${c})"></i>`).join("")}</div>
-      <div class="small ${line[1] || "dim"}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${line[0]}</div></div>`;
-  const cov = `<div class="abs" style="left:0;right:0;top:36px;display:flex;gap:8px">
-      ${covCard("TANKS", 4, 2, 3, [[2, "good"], [1, "accent"], [1, "faint"], [1, "bad"]], ["Brannoc away 9 Dec", "spark"])}
-      ${covCard("HEALERS", 10, 4, 3, [[4, "good"], [3, "accent"], [0.4, "faint"]], ["6 short of 10", "spark"])}
-      ${covCard("DPS", 26, 21, 3, [[14, "good"], [7, "accent"], [3, "faint"]], ["On track", "good"])}
-      <div style="width:180px;height:84px;box-sizing:border-box;border:1px solid var(--line);background:var(--surface);padding:7px 10px">
-        <div class="display dim" style="font-size:11px;letter-spacing:.08em">EVERYONE</div>
-        <div class="small" style="margin-top:2px;line-height:1.4;white-space:nowrap"><span class="good">31</span> level 60 <span class="dim">(+6 this week)</span><br><span class="acc">8</span> level 55–59<br><span class="good">22</span> attuned to Onyxia<br><span class="spark">11</span> missing enchants</div></div></div>`;
-  const legend = `<div class="abs small dim" style="left:0;top:128px;display:flex;gap:14px;align-items:center">
-      <span><i style="display:inline-block;width:8px;height:8px;background:var(--good)"></i> Ready (60, attuned)</span><span><i style="display:inline-block;width:8px;height:8px;background:var(--accent)"></i> Close (55+)</span>
-      <span><i style="display:inline-block;width:8px;height:8px;background:var(--faint)"></i> Levelling</span><span><i style="display:inline-block;width:8px;height:8px;background:var(--bad)"></i> Away</span>
-      <span style="margin-left:8px">${badge({ 2: { T: "m" } }, "T")}main ${badge({ 2: { T: "b" } }, "T")}backup</span></div>`;
-  const top = `<div class="menu abs" style="left:0;top:0;width:264px">${btn("Planning for: Onyxia (40), Wed 9 Dec").replace("</span>", '<i class="arrow"></i></span>')}</div>
-    <div class="abs" style="left:276px;top:1px;display:flex;gap:4px">${["By role", "Everyone", "Gaps"].map((t, i) => `<span class="chip ${i === 0 ? "on" : ""}">${t}</span>`).join("")}</div>
-    <div class="search" style="position:absolute;left:574px;top:0;width:170px"><input placeholder="Search name or note" value=""></div>`;
-  const listW = S.planSel ? 744 - 292 : 744;
-  const lst = `<div class="list" style="left:0;top:150px;bottom:0;width:${listW}px">${head}<div class="lbody" style="top:var(--sz-header)">${body}</div></div>`;
+  const row = (r, idx) => {
+    const away = r[12] ? ' <span class="bad small">away wk 1</span>' : "";
+    const cells = [cell(W.n, cls(r[0]) + (r[13] ? ` <span class="faint small">+${r[13]}</span>` : "")),
+      W.sp ? cell(W.sp, `<span class="dim">${r[1]}</span>`) : "",
+      cell(W.st, r[2] ? `<span class="${r[2] === "Core" ? "dim" : "acc"}">${r[2] === "Backup" ? "Backup" : r[2]}</span>` : `<span class="spark">New</span>`),
+      cell(W.T, roleCell(r, "T")), cell(W.H, roleCell(r, "H")), cell(W.D, roleCell(r, "D")),
+      cell(W.l, r[4] === 60 ? `<span class="good">60</span>` : `${r[4]}${r[5] ? ` <span class="good small">+${r[5]}</span>` : ""}`, 1),
+      W.i ? cell(W.i, r[6], 1) : "", cell(W.a, r[7] ? `<span class="good">yes</span>` : `<span class="faint">no</span>`, 1)];
+    if (W.e) cells.push(cell(W.e, r[8] ? `<span class="spark">${r[8]}</span>` : `<span class="faint">0</span>`, 1));
+    if (W.seen) cells.push(cell(W.seen, r[9] >= 7 ? `<span class="spark">${r[9]}d</span>` : r[9] ? `${r[9]}d` : `<span class="good">now</span>`, 1));
+    if (!S.planSel) cells.push(cell(NW, r[10] ? `<span class="dim">${esc(r[10])}</span>${away}` : (away || DASH)));
+    return `<div class="row click ${S.planSel && r[0].name === "Mirrel" ? "sel" : ""}">${cells.join("")}</div>`;
+  };
+  const shown = filter === "N" ? P.filter((r) => !r[2]) : P.filter((r) => r[3][filter]).sort((a, b) => (a[3][filter] === "m" ? 0 : 1) - (b[3][filter] === "m" ? 0 : 1));
+  const sep = (t) => `<div class="row" style="height:20px;background:var(--rule)"><span class="display faint" style="font-size:10px;letter-spacing:.08em;padding-left:4px">${t}</span></div>`;
+  let body = "";
+  if (filter === "N") body = shown.map(row).join("");
+  else {
+    const mains = shown.filter((r) => r[3][filter] === "m"), backs = shown.filter((r) => r[3][filter] === "b");
+    body = mains.map(row).join("") + sep("BACKUP") + backs.map(row).join("") + sep("NOT SORTED YET, SPEC FITS")
+      + P.filter((r) => !r[2] && r[15] === filter).map(row).join("");
+  }
+  const headCols = [["n", "Name"], ["sp", "Spec"], ["st", "Status"], ["T", "Tank"], ["H", "Healer"], ["D", "DPS"], ["l", "Level", 1], ["i", "iLvl", 1], ["a", "Att.", 1], ["e", "Ench.", 1], ["seen", "Seen", 1]];
+  const head = `<div class="lhead">${headCols.filter(([k]) => W[k]).map(([k, t, r]) => `<span class="${r ? "r" : ""} ${k === filter ? "sorted" : ""}" style="width:${W[k]}px;${"THD".includes(k) && k.length === 1 ? "justify-content:center" : ""}">${t}</span>`).join("")}${S.planSel ? "" : `<span style="width:${NW}px">Note</span>`}</div>`;
+  // Coverage pills: click one to show that role (mains, then backups). Bar: ready (60 + attuned) / close (55+) / levelling / away.
+  const pill = (k, title, big, sub, segs, line, tone) => `<div style="width:180px;height:58px;box-sizing:border-box;border:1px solid var(--${filter === k ? "accent" : "line"});background:${filter === k ? "var(--accent-selected)" : "var(--surface)"};padding:5px 9px;cursor:pointer">
+      <div style="display:flex;align-items:baseline;gap:6px;white-space:nowrap"><span class="display dim" style="font-size:11px;letter-spacing:.08em">${title}</span><span style="font-size:15px;margin-left:auto">${big}</span><span class="dim small">${sub}</span></div>
+      <div style="display:flex;height:5px;margin:5px 0 4px;gap:2px">${segs.map(([n, c]) => `<i style="flex:${n};background:var(--${c})"></i>`).join("")}</div>
+      <div class="small ${tone}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${line}</div></div>`;
+  const cov = `<div class="abs" style="left:0;right:0;top:34px;display:flex;gap:8px">
+      ${pill("T", "TANKS", "1/4", "mains", [[1, "good"], [1, "bad"], [1, "good"], [1, "accent"], [1, "faint"]], "Brannoc away week 1", "spark")}
+      ${pill("H", "HEALERS", "8/10", "mains", [[6, "good"], [2, "accent"], [2, "good"], [1, "accent"]], "2 short, 1 backup ready", "spark")}
+      ${pill("D", "DPS", "25/26", "mains", [[17, "good"], [6, "accent"], [2, "faint"], [3, "good"]], "On track", "good")}
+      ${pill("N", "NOT SORTED", "12", "people", [[5, "good"], [4, "accent"], [3, "faint"]], "Start here", "spark")}</div>`;
+  const legend = `<div class="abs small dim" style="left:0;top:100px;display:flex;gap:12px;align-items:center;white-space:nowrap">
+      <span><i style="display:inline-block;width:8px;height:8px;background:var(--good)"></i> ready (60, attuned)</span><span><i style="display:inline-block;width:8px;height:8px;background:var(--accent)"></i> 55+</span>
+      <span><i style="display:inline-block;width:8px;height:8px;background:var(--faint)"></i> levelling</span><span><i style="display:inline-block;width:8px;height:8px;background:var(--bad)"></i> away</span>
+      <span class="faint" style="margin-left:auto">Click a role cell: none, Backup, Main. Click a name for status, weeks away and notes.</span></div>`;
+  const top = `<div class="menu abs" style="left:0;top:0;width:268px">${btn("Planning for: Onyxia (40), week 1 (9 Dec)").replace("</span>", '<i class="arrow"></i></span>')}</div>
+    <div class="abs" style="left:280px;top:1px;display:flex;gap:4px">${["All", "Needs a look 9", "Core", "Backup", "Trial"].map((t, i) => `<span class="chip">${t}</span>`).join("")}</div>
+    <div class="search" style="position:absolute;left:604px;top:0;width:140px"><input placeholder="Search" value=""></div>`;
+  const listW = S.planSel ? 744 - 290 : 744;
+  const lst = `<div class="list" style="left:0;top:122px;bottom:0;width:${listW}px">${head}<div class="lbody" style="top:var(--sz-header)">${body}</div></div>`;
   let drawer = "";
   if (S.planSel) {
-    const seg = (opts, on) => `<span style="display:inline-flex;border:1px solid var(--lineStrong)">${opts.map((o) => `<span style="padding:2px 8px;font-size:12px;${o === on ? "background:var(--accent);color:var(--onAccent)" : "color:var(--dim)"}">${o}</span>`).join("")}</span>`;
+    const seg = (opts, on) => `<span style="display:inline-flex;border:1px solid var(--lineStrong)">${opts.map((o) => `<span style="padding:2px 7px;font-size:12px;${o === on ? "background:var(--accent);color:var(--onAccent)" : "color:var(--dim)"}">${o}</span>`).join("")}</span>`;
     const lbl = (t, y) => `<div class="abs display dim" style="left:14px;top:${y}px;font-size:10.5px;letter-spacing:.08em">${t}</div>`;
-    drawer = `<div class="abs" style="right:0;top:150px;bottom:0;width:284px;background:var(--surface);border:1px solid var(--lineStrong)">
-      <div class="abs" style="left:14px;top:8px;font-size:15px">${cls(C("SHAMAN", "Mirrel"))}</div>
-      <div class="abs dim small" style="left:14px;top:28px">Level 60  ·  iLvl 65  ·  attuned  ·  0 enchants missing</div>
-      ${lbl("STATUS", 50)}<div class="abs" style="left:14px;top:66px">${seg(["Core", "Backup", "Trial", "Not raiding"], "Backup")}</div>
-      ${lbl("ROLES", 96)}
-      ${["Tank", "Healer", "DPS"].map((r, i) => `<div class="abs small" style="left:14px;top:${112 + i * 24}px;width:60px;line-height:22px">${r}</div><div class="abs" style="left:76px;top:${112 + i * 24}px">${seg(["-", "Backup", "Main"], "Backup")}</div>`).join("")}
-      ${lbl("CAN'T MAKE (OFFICER-SET)", 190)}<div class="abs" style="left:14px;top:206px;display:flex;gap:4px;width:256px">${["Wed 9 Dec", "Fri 11 Dec", "Wed 16 Dec"].map((d, i) => `<span class="chip ${i === 1 ? "on" : ""}">${d}</span>`).join("")}</div>
-      ${lbl("OFFICER NOTE", 240)}<div class="abs small" style="left:14px;top:256px;width:256px;height:50px;padding:5px 8px;box-sizing:border-box;background:var(--void);border:1px solid var(--lineStrong);line-height:1.35">Great raider, plays any role. Can't commit to a schedule: ask on the day.</div>
-      <div class="abs" style="left:14px;top:314px">${btn("Save note", "primary")} ${btn("Character")}</div>
-      <div class="abs faint small" style="left:14px;top:348px;width:256px">Last 7 days: no change. Seen 2 h ago.</div></div>`;
+    drawer = `<div class="abs" style="right:0;top:122px;bottom:0;width:282px;background:var(--surface);border:1px solid var(--lineStrong)">
+      <div class="abs" style="left:14px;top:8px;font-size:15px">${cls(C("SHAMAN", "Mirrel"))} <span class="dim small">Social</span></div>
+      <div class="abs dim small" style="left:14px;top:28px;width:256px;line-height:1.4">Resto (0/21/30)  ·  level 60  ·  iLvl 65  ·  attuned<br>Alts: <span style="color:#F48CBA">Mirrelia</span> 60 Holy, Mirrbank 12</div>
+      ${lbl("STATUS", 66)}<div class="abs" style="left:14px;top:82px">${seg(["Core", "Backup", "Trial", "Not raiding"], "Backup")}</div>
+      ${lbl("AWAY (RESET WEEKS)", 112)}<div class="abs" style="left:14px;top:128px;display:flex;gap:4px">${["Wk 1 · 9 Dec", "Wk 2", "Wk 3", "Wk 4"].map((d, i) => `<span class="chip ${i === 1 ? "on" : ""}">${d}</span>`).join("")}</div>
+      ${lbl("NOTES", 160)}
+      <div class="abs small" style="left:14px;top:176px;width:256px;line-height:1.35"><span class="dim">Pocus, 2 days ago:</span> Great raider, plays any role. Can't commit to a schedule: ask on the day.</div>
+      <div class="abs small" style="left:14px;top:226px;width:256px;line-height:1.35"><span class="dim">Nura, today:</span> Said yes to week 1 as healer.</div>
+      <div class="abs small faint" style="left:14px;top:262px;width:256px;height:30px;padding:6px 8px;box-sizing:border-box;background:var(--void);border:1px solid var(--lineStrong)">Add a note…</div>
+      <div class="abs" style="left:14px;top:300px">${btn("Add note", "primary")} ${btn("Character")}</div>
+      <div class="abs faint small" style="left:14px;top:334px;width:256px">Last 7 days: no change  ·  seen 2 days ago.</div></div>`;
   }
   return top + cov + legend + lst + drawer;
 }
@@ -1363,7 +1380,7 @@ function seg(id) {
 try { Object.assign(S, JSON.parse(localStorage.getItem("skPreview") || "{}")); } catch (e) { /* ignore */ }
 // ?screen=roster&data=worst&view=before&raid=ony  (and &shot=1 for the README pictures: window only, no chrome)
 const Q = new URLSearchParams(location.search);
-for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode", "rosterView", "planSel"]) if (Q.get(k)) S[k] = Q.get(k);
+for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode", "rosterView", "planSel", "planRole"]) if (Q.get(k)) S[k] = Q.get(k);
 const SHOT = Q.get("shot");
 if (SHOT) {
   document.body.classList.add("shot"); S.view = SHOT === "compare" ? "before" : "after"; S.reduce = true;
