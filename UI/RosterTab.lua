@@ -390,15 +390,19 @@ function Roster:Build(page)
 				Roster:Refresh()
 			end },
 			{ text = "Copy the list as text", onClick = function() Roster:CopyText() end },
+			{ text = "Taller window", checked = function() return SK.MainFrame.TallH() > 0 end, onClick = function()
+				SK.MainFrame:SetTall(SK.MainFrame.TallH() == 0)
+			end },
 		}
-	end, "Group alts, copy the list")
+	end, "Group alts, copy the list, taller window")
 	self.options:SetPoint("LEFT", self.raidMenu, "RIGHT", SP.s, 0)
 	-- v0.10.1: the Officers view (officers and raid leaders with /sr officer).
 	self.officerChip = W.Chip(page, "Officers", function()
 		rs.officer = not rs.officer
 		Roster:Refresh()
 	end)
-	self.officerChip.tooltip = "Roles, notes, alts and attendance for every member. Only officers and raid leaders see it."
+	self.officerChip.tooltip = "The raid roster planner: Raider or Backup, Main or Backup per role, level, gear, " ..
+		"attunement and officers' notes for every player. Only officers and raid leaders see it."
 	self.officerChip:SetPoint("LEFT", self.options, "RIGHT", SP.s, 0)
 	self.count = Theme.Text(page, "small", "dim")
 	self.count:SetPoint("LEFT", self.officerChip, "RIGHT", SP.m, 0)
@@ -458,204 +462,444 @@ function Roster:Build(page)
 end
 
 ---------------------------------------------------------------------------
--- Officers view (v0.10.1): every member with officer-set roles, notes,
--- alt links and attendance. Data: Core/OfficerDir.lua, shared between
--- officers by Sync/OfficerSync.lua.
+-- Officers view: the raid roster planner (v0.13.0; it replaced the v0.10.1
+-- roles/notes editor). One row per player with officer-set status and
+-- Main / Backup per role, level, gear, attunement and officers' notes.
+-- Data: Core/OfficerDir.lua (shared between officers by
+-- Sync/OfficerSync.lua) and Core/RosterPlan.lua (rows, groups, summary).
 ---------------------------------------------------------------------------
-Roster.OFF_LIST_W = 470
-Roster.OFF_EDIT_W = S.contentW - Roster.OFF_LIST_W - SP.xl
+local RP = SK.RosterPlan
 Roster.ATT_DAYS = 30
-Roster.OFF_COLUMNS = {
-	{ key = "name", title = "Name", width = 150, sort = function(a, b) return a.sortKey < b.sortKey end },
-	{ key = "rank", title = "Rank", width = 96, sort = function(a, b) return a.rankIndex < b.rankIndex end },
-	{ key = "roles", title = "Roles", width = 76, sort = function(a, b) return a.roles < b.roles end },
-	{ key = "pct", title = "Attend.", width = 58, align = "RIGHT",
-		sort = function(a, b) return (a.pct or -1) < (b.pct or -1) end },
-	{ key = "note", title = "Note", width = 470 - 150 - 96 - 76 - 58 - SP.m },
+
+local function nameOf(guid)
+	local guild = SK.DBM:Guild()
+	local m = guild and guild.members[guid]
+	return m and m.name or nil
+end
+Roster.PILL_W = 46
+
+local function ageSort(a, b) return (a.age or 1e12) < (b.age or 1e12) end
+local function tierRank(role) return function(a, b)
+	local ra = ({ m = 1, b = 2 })[a.tiers[role] or ""] or 3
+	local rb = ({ m = 1, b = 2 })[b.tiers[role] or ""] or 3
+	if ra ~= rb then return ra < rb end
+	return a.name:lower() < b.name:lower()
+end end
+
+Roster.PLAN_COLUMNS = {
+	{ key = "name", title = "Name", width = 104, sort = function(a, b) return a.name:lower() < b.name:lower() end },
+	{ key = "spec", title = "Spec", width = 62, sort = function(a, b) return (a.spec or "~") < (b.spec or "~") end },
+	{ key = "status", title = "Status", width = 58, click = true, sort = RP.DefaultOrder },
+	{ key = "TANK", title = "Tank", width = 54, click = true, sort = tierRank("TANK") },
+	{ key = "HEALER", title = "Healer", width = 54, click = true, sort = tierRank("HEALER") },
+	{ key = "DPS", title = "DPS", width = 54, click = true, sort = tierRank("DPS") },
+	{ key = "level", title = "Level", width = 52, align = "RIGHT", sort = function(a, b) return a.level < b.level end },
+	{ key = "ilvl", title = "iLvl", width = 44, align = "RIGHT", sort = function(a, b) return (a.ilvl or 0) < (b.ilvl or 0) end },
+	{ key = "att", title = "Ony", width = 38, align = "RIGHT",
+		sort = function(a, b) return (a.att == "yes" and 1 or 0) < (b.att == "yes" and 1 or 0) end },
+	{ key = "ench", title = "Ench.", width = 38, align = "RIGHT", sort = function(a, b) return (a.ench or 99) < (b.ench or 99) end },
+	{ key = "seen", title = "Seen", width = 48, align = "RIGHT", sort = ageSort },
+	{ key = "note", title = "Note", width = S.contentW - SP.m - 606, click = true },
 }
 
-local function setOffCell(fs, r, col)
+local SIGNED_TEXT = { y = { "good", "Yes" }, t = { "accent", "Maybe" }, n = { "bad", "No" } }
+
+-- One cell's text (the clickable cells draw on their own buttons).
+local function setPlanCell(fs, r, col)
 	local k = col.key
+	if r.section or col.click then return fs:SetText("") end
 	if k == "name" then
-		fs:SetText((r.main and Theme.Paint("faint", "  ") or "") .. Theme.ClassText(r.name, r.class) ..
-			(r.main and Theme.Paint("faint", " alt") or ""))
-	elseif k == "rank" then
-		fs:SetText(Theme.Paint("dim", r.rank ~= "" and r.rank or "-"))
-	elseif k == "roles" then
-		fs:SetText(r.roles ~= "" and r.roles or Theme.DASH)
-	elseif k == "pct" then
-		fs:SetText(r.pct and (r.pct .. "%") or Theme.DASH)
-	elseif k == "note" then
-		fs:SetText(r.note and Theme.Paint("dim", r.note) or Theme.DASH)
+		local extra = #r.alts > 0 and Theme.Paint("faint", " +" .. #r.alts) or ""
+		if r.awayNow then extra = extra .. Theme.Paint("bad", " away") end
+		fs:SetText(Theme.ClassText(r.name, r.class) .. extra)
+	elseif k == "spec" then
+		fs:SetText(r.spec and Theme.Paint("dim", r.spec) or Theme.DASH)
+	elseif k == "level" then
+		local lvl = r.level >= RP.MAX_LEVEL and Theme.Paint("good", tostring(r.level)) or tostring(r.level)
+		fs:SetText(lvl .. (r.levelGain and Theme.Paint("good", " +" .. r.levelGain) or ""))
+	elseif k == "ilvl" then
+		fs:SetText(r.ilvl and (string.format("%d", r.ilvl) .. (r.ilvlGain and Theme.Paint("good", " +" .. math.floor(r.ilvlGain + 0.5)) or ""))
+			or Theme.DASH)
+	elseif k == "att" then
+		fs:SetText(r.att == "yes" and Theme.Paint("good", "yes") or (r.att == "no" and Theme.Paint("faint", "no") or Theme.DASH))
+	elseif k == "ench" then
+		fs:SetText(r.ench == nil and Theme.DASH or (r.ench > 0 and Theme.Paint("spark", tostring(r.ench)) or Theme.Paint("faint", "0")))
+	elseif k == "seen" then
+		if Roster.signupsFor then
+			local t = SIGNED_TEXT[r.signed or ""]
+			fs:SetText(t and Theme.Paint(t[1], t[2]) or Theme.DASH)
+		else
+			local text = RP.AgeText(r.age)
+			fs:SetText(not r.age and Theme.Paint("spark", "none") or (r.age > RP.STALE and Theme.Paint("spark", text))
+				or (r.age < 3600 and Theme.Paint("good", text)) or text)
+		end
 	end
 end
 
--- The selected member's attendance line. Pure; tested.
-function Roster.AttendanceText(r, days)
-	if not r or r.raids == 0 then return "Attendance (" .. days .. " days): no recorded raids yet" end
-	return string.format("Attendance (%d days): %d%% of %d raids  ·  bench %d", days, r.pct or 0, r.raids, r.bench or 0)
+-- The menu for a status or role cell.
+function Roster.CellItems(r, key)
+	local OD = SK.OfficerDir
+	local function done(ok, why)
+		if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
+		Roster:Refresh()
+	end
+	if key == "status" then
+		return {
+			{ text = "Raider", checked = r.status == "r", onClick = function() done(OD:SetStatus(r.guid, "r")) end },
+			{ text = "Backup", checked = r.status == "b", onClick = function() done(OD:SetStatus(r.guid, "b")) end },
+			{ text = "Not set", checked = r.status == nil, onClick = function() done(OD:SetStatus(r.guid, nil)) end },
+		}
+	end
+	local t = r.tiers[key]
+	return {
+		{ text = "Main", checked = t == "m", onClick = function() done(OD:SetTier(r.guid, key, "m")) end },
+		{ text = "Backup", checked = t == "b", onClick = function() done(OD:SetTier(r.guid, key, "b")) end },
+		{ text = "No", checked = t == nil, onClick = function() done(OD:SetTier(r.guid, key, nil)) end },
+	}
+end
+
+local function rowTooltip(row, r)
+	if r.section then return end
+	GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+	Theme.TipLine(GameTooltip, Theme.ClassText(r.name, r.class) .. Theme.Paint("dim", "  " .. (r.rank ~= "" and r.rank or "")))
+	if #r.alts > 0 then Theme.TipLine(GameTooltip, "Alts: " .. table.concat(r.alts, ", "), "dim", true) end
+	local away = {}
+	for w in pairs(r.away) do away[#away + 1] = w end
+	table.sort(away)
+	if #away > 0 then Theme.TipLine(GameTooltip, "Away: week " .. table.concat(away, ", "), "bad", true) end
+	for _, n in ipairs(r.notes) do
+		local who = nameOf(n.by) or "?"
+		Theme.TipLine(GameTooltip, Theme.Paint("dim", who .. ": ") .. n.text, "text", true)
+	end
+	Theme.TipLine(GameTooltip, "Click: their character page.", "accent")
+	GameTooltip:Show()
+end
+
+-- Clickable cells: a pill for status and roles, the note text for notes.
+local function decoratePlanRow(row)
+	row.span = Theme.Text(row, "small", "dim")
+	row.span:SetPoint("LEFT", SP.s, 0)
+	row.span:SetPoint("RIGHT", -SP.s, 0)
+	row.span:SetJustifyH("LEFT")
+	row.span:SetWordWrap(false)
+	row.span:Hide()
+	row.band = row:CreateTexture(nil, "BACKGROUND", nil, 0)
+	row.band:SetAllPoints()
+	Theme.Solid(row.band, "rule")
+	row.band:Hide()
+	row.hits = {}
+	local x = 0
+	for _, col in ipairs(Roster.PLAN_COLUMNS) do
+		if col.click then
+			local b = CreateFrame("Button", nil, row)
+			b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+			local w = col.key == "note" and (col.width - SP.s) or Roster.PILL_W
+			b:SetSize(w, S.row - 6)
+			b:SetPoint("LEFT", x + (col.key == "note" and SP.xs or math.floor((col.width - w) / 2)), 0)
+			b.fill = b:CreateTexture(nil, "BACKGROUND")
+			b.fill:SetAllPoints()
+			Theme.Solid(b.fill, "accent")
+			b.fill:Hide()
+			if col.key ~= "note" then Theme.Border(b, "accent") end
+			b.label = Theme.Text(b, col.key == "note" and "body" or "small", "text")
+			b.label:SetPoint("LEFT", col.key == "note" and SP.xs or 0, 0)
+			b.label:SetPoint("RIGHT", col.key == "note" and -SP.xs or 0, 0)
+			b.label:SetJustifyH(col.key == "note" and "LEFT" or "CENTER")
+			b.label:SetWordWrap(false)
+			b.key = col.key
+			b:SetScript("OnClick", function(self)
+				local r = row.item
+				if not r or r.section then return end
+				if self.key == "note" then return Roster:OpenNotes(r, self) end
+				Roster.cellMenu:Open(self, Roster.CellItems(r, self.key))
+			end)
+			b:SetScript("OnEnter", function(self)
+				local r = row.item
+				if not r or r.section then return end
+				GameTooltip:SetOwner(self, "ANCHOR_TOP")
+				if self.key == "note" then
+					if #r.notes == 0 then Theme.TipLine(GameTooltip, "No notes yet.", "dim") end
+					for _, n in ipairs(r.notes) do
+						Theme.TipLine(GameTooltip, Theme.Paint("dim", (nameOf(n.by) or "?") .. ": ") .. n.text, "text", true)
+					end
+					Theme.TipLine(GameTooltip, "Click to read or add notes.", "accent")
+				elseif self.key == "status" then
+					Theme.TipLine(GameTooltip, "Raider or Backup (not their guild rank). Click to change.", "accent", true)
+				else
+					Theme.TipLine(GameTooltip, SK.Data.ROLE_NAMES[self.key] .. ": Main, Backup or no. Click to change.", "accent", true)
+				end
+				GameTooltip:Show()
+			end)
+			b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+			row.hits[#row.hits + 1] = b
+		end
+		x = x + col.width
+	end
+end
+
+local function pill(b, tone, text)
+	b.fill:SetShown(tone == "fill")
+	Theme.SetBorderColor(b, "accent", (tone == "fill" or tone == "line") and 1 or 0)
+	b.label:SetText(tone == "fill" and Theme.Paint("onAccent", text) or text)
+end
+
+local function updatePlanRow(row, r)
+	local sec = r.section == true
+	row.span:SetShown(sec)
+	row.band:SetShown(sec)
+	if sec then row.span:SetText(r.text .. (r.away and ("  ·  " .. Theme.Paint("bad", r.away)) or "")) end
+	for _, b in ipairs(row.hits) do
+		b:SetShown(not sec)
+		if not sec then
+			if b.key == "note" then
+				local n = #r.notes
+				b.label:SetText(n == 0 and Theme.Paint("faint", "add") or (Theme.Paint("dim", r.note or "") ..
+					(n > 1 and Theme.Paint("faint", " (+" .. (n - 1) .. ")") or "")))
+			elseif b.key == "status" then
+				if r.status then pill(b, "plain", Theme.Paint(r.status == "b" and "accent" or "dim", RP.STATUS_NAME[r.status]))
+				else pill(b, "plain", Theme.Paint("spark", "Not set")) end
+			else
+				local t = r.tiers[b.key]
+				if t == "m" then pill(b, "fill", "Main")
+				elseif t == "b" then pill(b, "line", Theme.Paint("accentLit", "Backup"))
+				else pill(b, "plain", Theme.Paint("faint", "·")) end
+			end
+		end
+	end
 end
 
 function Roster:BuildOfficers(page)
+	local ps = SK.DB.settings.planner
 	local p = CreateFrame("Frame", nil, page)
 	p:SetPoint("TOPLEFT", 0, -(S.control + SP.m))
 	p:SetPoint("BOTTOMRIGHT")
 	p:Hide()
 	self.offPanel = p
-	self.offList = W.List(p, {
-		columns = Roster.OFF_COLUMNS, setCell = setOffCell,
-		onClick = function(r, button)
-			if button == "RightButton" then return SK.CharacterTab:ShowCharacter(r.guid) end
-			Roster.offSelected = r.guid
-			Roster:Refresh()
-		end,
-		onEnter = function(row, r)
-			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
-			Theme.TipLine(GameTooltip, Theme.ClassText(r.name, r.class))
-			if r.main then
-				Theme.TipLine(GameTooltip, "Alt of " .. (r.mainName or "?") ..
-					(r.altHow == "auto" and " (linked by the addon)" or " (linked by an officer)"), "dim")
-			end
-			if r.note then Theme.TipLine(GameTooltip, r.note, "text", true) end
-			Theme.TipLine(GameTooltip, "Click to edit. Right-click: their character.", "accent")
-			GameTooltip:Show()
-		end,
-	})
-	self.offList:SetPoint("TOPLEFT")
-	self.offList:SetPoint("BOTTOMLEFT")
-	self.offList:SetWidth(Roster.OFF_LIST_W)
-	self.offList.sortCol = 1
-
-	local e = CreateFrame("Frame", nil, p)
-	e:SetPoint("TOPLEFT", Roster.OFF_LIST_W + SP.xl, 0)
-	e:SetPoint("BOTTOMRIGHT")
-	self.offEdit = e
-	self.offName = Theme.Text(e, "title", "text")
-	self.offName:SetPoint("TOPLEFT", 0, -SP.xxs)
-	self.offSub = Theme.Text(e, "small", "dim")
-	self.offSub:SetPoint("TOPLEFT", self.offName, "BOTTOMLEFT", 0, -SP.xs)
-	self.offSub:SetWidth(Roster.OFF_EDIT_W)
-	self.offSub:SetJustifyH("LEFT")
-	local function label(text, y)
-		local l = Theme.Text(e, "label", "dim")
-		l:SetText(text:upper())
-		l:SetPoint("TOPLEFT", 0, -y)
-		return l
-	end
-	label("Roles", 52)
-	self.offRoles = {}
+	-- Row 1: role chips with counts, then status filters.
+	self.roleChips = {}
 	local prev
-	for _, role in ipairs(SK.Data.ROLES) do
-		local c = W.Chip(e, SK.Data.ROLE_NAMES[role], function()
-			if Roster.offSelected then
-				local ok, why = SK.OfficerDir:ToggleRole(Roster.offSelected, role)
-				if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
-				Roster:Refresh()
-			end
+	for _, k in ipairs({ "A", "T", "H", "D", "N" }) do
+		local c = W.Chip(p, k, function()
+			ps.role = k
+			Roster:Refresh()
 		end)
-		c.role = role
-		if prev then c:SetPoint("LEFT", prev, "RIGHT", SP.xs, 0) else c:SetPoint("TOPLEFT", 0, -(52 + W.CARD_LABEL_H)) end
-		self.offRoles[#self.offRoles + 1] = c
+		c.value = k
+		if prev then c:SetPoint("LEFT", prev, "RIGHT", SP.xs, 0) else c:SetPoint("TOPLEFT", 0, 0) end
+		self.roleChips[#self.roleChips + 1] = c
 		prev = c
 	end
-	label("Alt of", 112)
-	self.offAlt = W.Menu(e, {
-		width = Roster.OFF_EDIT_W,
+	self.statusChips = {}
+	for i, st in ipairs({ { "r", "Raider" }, { "b", "Backup" } }) do
+		local c = W.Chip(p, st[2], function()
+			ps.status = ps.status ~= st[1] and st[1] or nil
+			Roster:Refresh()
+		end)
+		c.value = st[1]
+		c:SetPoint("LEFT", prev, "RIGHT", i == 1 and SP.l or SP.xs, 0)
+		self.statusChips[#self.statusChips + 1] = c
+		prev = c
+	end
+	self.needsChip = W.Chip(p, "Needs a look", function()
+		ps.needs = not ps.needs
+		Roster:Refresh()
+	end)
+	self.needsChip.tooltip = "Not level 60, not attuned to Onyxia, missing enchants, no addon, or data a week old."
+	self.needsChip:SetPoint("LEFT", prev, "RIGHT", SP.xs, 0)
+	-- Row 2: the summary (or a hint) and the sign-ups menu.
+	self.signupMenu = W.Menu(p, {
+		width = 200,
 		items = function()
-			local out = { { value = "", text = "Not an alt (or linked by the addon)" } }
-			local guild = SK.DBM:Guild()
-			local list = {}
-			for guid, m in pairs(guild and guild.members or {}) do
-				if not m.leftAt and guid ~= Roster.offSelected then list[#list + 1] = { value = guid, text = m.name or "?" } end
+			local out = { { value = "", text = "Sign-ups: none" } }
+			local board = SK.RaidBoard:Get()
+			for _, e in ipairs(board and SK.RaidBoard.Upcoming(board, SK.Compat.Now()) or {}) do
+				local raid = SK.RaidBoard.Raid(e.raid)
+				out[#out + 1] = { value = e.id, text = "Sign-ups: " .. date("%a %d %b", e.at) .. " " .. ((raid and raid.short) or e.raid) }
 			end
-			table.sort(list, function(a, b) return a.text:lower() < b.text:lower() end)
-			for _, it in ipairs(list) do out[#out + 1] = it end
 			return out
 		end,
-		get = function() return Roster.offSelected and SK.OfficerDir.AltOf(SK.OfficerDir:Get(), Roster.offSelected) or "" end,
+		get = function() return Roster.signupsFor or "" end,
 		set = function(v)
-			if Roster.offSelected then
-				local ok, why = SK.OfficerDir:Set("a", Roster.offSelected, v)
-				if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
-				Roster:Refresh()
-			end
+			Roster.signupsFor = v ~= "" and v or nil
+			Roster:Refresh()
 		end,
 	})
-	self.offAlt:SetPoint("TOPLEFT", 0, -(112 + W.CARD_LABEL_H))
-	label("Officer note", 172)
-	local box = CreateFrame("Frame", nil, e)
-	box:SetPoint("TOPLEFT", 0, -(172 + W.CARD_LABEL_H))
-	box:SetSize(Roster.OFF_EDIT_W, 96)
-	Theme.Panel(box, { bg = "surface", border = "lineStrong" })
-	local note = CreateFrame("EditBox", nil, box)
-	note:SetPoint("TOPLEFT", SP.s, -SP.s)
-	note:SetPoint("BOTTOMRIGHT", -SP.s, SP.s)
-	note:SetMultiLine(true)
-	note:SetAutoFocus(false)
-	note:SetMaxLetters(SK.OfficerDir.NOTE_MAX)
-	Theme.Font(note, "small", "text")
-	note:SetScript("OnEscapePressed", function(selfBox) selfBox:ClearFocus() end)
-	self.offNote = note
-	self.offSave = W.Button(e, "Save note", nil, S.control, function() Roster:SaveNote() end, "primary")
-	self.offSave:SetPoint("TOPLEFT", box, "BOTTOMLEFT", 0, -SP.s)
-	self.offSaved = Theme.Text(e, "small", "dim")
-	self.offSaved:SetPoint("LEFT", self.offSave, "RIGHT", SP.m, 0)
-	self.offAtt = Theme.Text(e, "small", "dim")
-	self.offAtt:SetPoint("TOPLEFT", self.offSave, "BOTTOMLEFT", 0, -SP.l)
-	self.offAtt:SetWidth(Roster.OFF_EDIT_W)
-	self.offAtt:SetJustifyH("LEFT")
-	self.offAtt:SetWordWrap(true)
-	self.offHint = Theme.Text(e, "small", "faint")
-	self.offHint:SetPoint("TOPLEFT", self.offAtt, "BOTTOMLEFT", 0, -SP.m)
-	self.offHint:SetWidth(Roster.OFF_EDIT_W)
-	self.offHint:SetJustifyH("LEFT")
-	self.offHint:SetWordWrap(true)
-	self.offHint:SetText("Only officers and raid leaders see this page. Changes reach the others online within a minute, " ..
-		"and the rest when they log in.")
+	self.signupMenu.tooltip = "Pick a raid to see who signed up for it (in the last column)."
+	self.signupMenu:SetPoint("TOPRIGHT", 0, -(S.control + SP.s))
+	self.planSummary = Theme.Text(p, "small", "dim")
+	self.planSummary:SetPoint("TOPLEFT", 0, -(S.control + SP.s + 5))
+	self.planSummary:SetPoint("RIGHT", self.signupMenu, "LEFT", -SP.m, 0)
+	self.planSummary:SetJustifyH("LEFT")
+	self.planSummary:SetWordWrap(false)
+	-- The table.
+	self.cellMenu = W.PopMenu(p, 120)
+	self.offList = W.List(p, {
+		columns = Roster.PLAN_COLUMNS, setCell = setPlanCell, decorate = decoratePlanRow, update = updatePlanRow,
+		onClick = function(r)
+			if r.section then return end
+			SK.CharacterTab:ShowCharacter(r.guid)
+		end,
+		onEnter = rowTooltip,
+	})
+	self.offList:SetPoint("TOPLEFT", 0, -(2 * S.control + SP.s + SP.m))
+	self.offList:SetPoint("BOTTOMRIGHT")
+	self:BuildNotes(p)
 end
 
-function Roster:SaveNote()
-	if not Roster.offSelected then return end
-	local ok, why = SK.OfficerDir:Set("n", Roster.offSelected, self.offNote:GetText() or "")
-	self.offNote:ClearFocus()
-	self.offSaved:SetText(ok and Theme.Paint("good", "Saved") or Theme.Paint("bad", tostring(why)))
-	Roster:Refresh()
+-- The notes box: everyone's notes on one player, and mine to write.
+function Roster:BuildNotes(p)
+	local box = CreateFrame("Frame", nil, p)
+	box:SetSize(330, 170)
+	box:SetFrameStrata("FULLSCREEN_DIALOG")
+	box:EnableMouse(true)
+	Theme.Panel(box, { bg = "raised", border = "accent" })
+	box:Hide()
+	self.noteBox = box
+	box.title = Theme.Text(box, "body", "text")
+	box.title:SetPoint("TOPLEFT", SP.m, -SP.s)
+	box.close = W.CloseButton(box, function() Roster:CloseNotes() end)
+	box.close:SetPoint("TOPRIGHT", -SP.xs, -SP.xs)
+	box.list = Theme.Text(box, "small", "text")
+	box.list:SetPoint("TOPLEFT", SP.m, -(SP.s + 22))
+	box.list:SetPoint("RIGHT", -SP.m, 0)
+	box.list:SetJustifyH("LEFT")
+	box.list:SetJustifyV("TOP")
+	box.list:SetWordWrap(true)
+	local field = CreateFrame("Frame", nil, box)
+	field:SetPoint("BOTTOMLEFT", SP.m, SP.m + S.control + SP.s)
+	field:SetPoint("BOTTOMRIGHT", -SP.m, SP.m + S.control + SP.s)
+	field:SetHeight(S.control)
+	Theme.Panel(field, { bg = "void", border = "lineStrong" })
+	local edit = CreateFrame("EditBox", nil, field)
+	edit:SetPoint("TOPLEFT", SP.s, 0)
+	edit:SetPoint("BOTTOMRIGHT", -SP.s, 0)
+	edit:SetAutoFocus(false)
+	edit:SetMaxLetters(SK.OfficerDir.NOTE_MAX)
+	Theme.Font(edit, "small", "text")
+	edit:SetScript("OnEscapePressed", function() Roster:CloseNotes() end)
+	edit:SetScript("OnEnterPressed", function() Roster:SaveMyNote() end)
+	box.edit = edit
+	box.save = W.Button(box, "Save my note", nil, S.control, function() Roster:SaveMyNote() end, "primary")
+	box.save:SetPoint("BOTTOMLEFT", SP.m, SP.m)
+	box.remove = W.Button(box, "Remove mine", nil, S.control, function()
+		box.edit:SetText("")
+		Roster:SaveMyNote()
+	end)
+	box.remove:SetPoint("LEFT", box.save, "RIGHT", SP.s, 0)
+	box.hint = Theme.Text(box, "small", "faint")
+	box.hint:SetPoint("LEFT", box.remove, "RIGHT", SP.m, 0)
+	box.hint:SetPoint("RIGHT", -SP.m, 0)
+	box.hint:SetText("Officers only")
+end
+
+function Roster.NotesText(notes)
+	if #notes == 0 then return Theme.Paint("dim", "No notes yet. Write the first one below.") end
+	local lines = {}
+	for i, n in ipairs(notes) do
+		if i > 4 then
+			lines[#lines + 1] = Theme.Paint("faint", "+" .. (#notes - 4) .. " more (hover the note cell)")
+			break
+		end
+		lines[#lines + 1] = Theme.Paint("dim", (nameOf(n.by) or "?") .. ", " .. Theme.Ago(n.u, SK.Compat.Now()) ..
+			(Theme.Ago(n.u, SK.Compat.Now()) == "now" and "" or " ago") .. ": ") .. n.text
+	end
+	return table.concat(lines, "\n")
+end
+
+function Roster:OpenNotes(r, anchor)
+	local box = self.noteBox
+	if box:IsShown() and self.notesFor == r.guid then return self:CloseNotes() end
+	self.notesFor = r.guid
+	box:ClearAllPoints()
+	box:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT", 0, -SP.xxs)
+	box.title:SetText(Theme.ClassText(r.name, r.class) .. Theme.Paint("dim", "  notes"))
+	box.list:SetText(Roster.NotesText(r.notes))
+	local mine
+	for _, n in ipairs(r.notes) do if n.mine then mine = n.text end end
+	box.edit:SetText(mine or "")
+	box.remove:SetShown(mine ~= nil)
+	box:Show()
+	box.edit:SetFocus()
+end
+
+function Roster:CloseNotes()
+	self.noteBox:Hide()
+	self.noteBox.edit:ClearFocus()
+	self.notesFor = nil
+end
+
+function Roster:SaveMyNote()
+	local guid = self.notesFor
+	if not guid then return end
+	local ok, why = SK.OfficerDir:SetMyNote(guid, self.noteBox.edit:GetText() or "")
+	if not ok then SK:Print("Couldn't save the note: %s.", tostring(why)) end
+	self:CloseNotes()
+	self:Refresh()
+end
+
+function Roster:PlanRows()
+	local guild = SK.DBM:Guild()
+	local now = SK.Compat.Now()
+	local signups
+	if self.signupsFor then
+		local board = SK.RaidBoard:Get(guild)
+		signups = {}
+		for guid, su in pairs(board and board.signups[self.signupsFor] or {}) do signups[guid] = su.s end
+	end
+	local rows = RP.Build({ guild = guild, dir = SK.OfficerDir:Get(guild) or {}, now = now, me = SK.Compat.PlayerGUID(),
+		progress = SK.DB.rosterProgress, signups = signups,
+		profile = function(g) return SK.Profile:Get(g, guild) end,
+		isOwn = function(g) return SK.DB.account[g] == true end })
+	RP.Record(SK.DB.rosterProgress, rows, now)
+	return rows, guild, now
 end
 
 function Roster:RefreshOfficers()
-	local guild = SK.DBM:Guild()
-	local dir = SK.OfficerDir:Get(guild) or {}
-	local now = SK.Compat.Now()
-	local att = {}
-	for _, t in ipairs(SK.Attendance.Totals(SK.Attendance.Sorted(SK.Attendance:Store(guild) or {},
-		now - Roster.ATT_DAYS * 86400))) do att[t.guid] = t end
-	local rows = SK.OfficerDir.Rows(guild, dir, self.filter, att)
-	local notes = 0
-	for _, r in ipairs(rows) do if r.note then notes = notes + 1 end end
-	self.count:SetText(Theme.Count(#rows, "character") .. "  ·  " .. Theme.Count(notes, "note"))
-	local found
-	for _, r in ipairs(rows) do if r.guid == Roster.offSelected then found = r end end
-	if not found then
-		found = rows[1]
-		Roster.offSelected = found and found.guid or nil
-		self.offSaved:SetText("")
+	local ps = SK.DB.settings.planner
+	local rows, guild, now = self:PlanRows()
+	if self.signupsFor then
+		local board = SK.RaidBoard:Get(guild)
+		if not (board and board.events[self.signupsFor]) then self.signupsFor = nil end
 	end
+	local c = RP.Counts(rows)
+	local label = { A = "All", T = "Tanks", H = "Healers", D = "DPS", N = "Not sorted" }
+	for _, chip in ipairs(self.roleChips) do
+		local k = chip.value
+		local n = k == "A" and c.all or k == "N" and c.notSorted or (c[k].m .. "+" .. c[k].b)
+		chip:SetText(label[k] .. "  " .. Theme.Paint(ps.role == k and "text" or "faint", tostring(n)))
+		chip:SetActive(ps.role == k)
+	end
+	for _, chip in ipairs(self.statusChips) do chip:SetActive(ps.status == chip.value) end
+	local needs = 0
+	for _, r in ipairs(rows) do if r.needsLook then needs = needs + 1 end end
+	self.needsChip:SetText("Needs a look  " .. Theme.Paint(ps.needs and "text" or "faint", tostring(needs)))
+	self.needsChip:SetActive(ps.needs == true)
+	local week = RP.PlanWeek(now)
+	local items = RP.View(rows, { role = ps.role or "A", status = ps.status, needs = ps.needs, search = self.filter, week = week })
+	if (ps.role or "A") == "A" then
+		self.planSummary:SetText(RP.SummaryText(RP.Summary(rows)))
+	else
+		self.planSummary:SetText("Click a status, role or note to change it. Click a name for their character. " ..
+			"Planning: " .. RP.WeekLabel(week) .. ".")
+	end
+	self.count:SetText(Theme.Count(#rows, "player") .. "  ·  officers only")
+	self.signupMenu:Refresh()
+	self.offList.headerButtons[11].text:SetText(self.signupsFor and "Signed" or "Seen")
 	self.offList:SetEmptyText(Roster.EmptyText(guild ~= nil, self.filter))
-	self.offList:SetItems(rows)
-	self.offList:SetSelected(function(r) return r.guid == Roster.offSelected end)
-	self.offEdit:SetShown(found ~= nil)
-	if not found then return end
-	self.offName:SetText(Theme.ClassText(found.name, found.class))
-	self.offSub:SetText(string.format("%s  ·  level %d%s", found.rank ~= "" and found.rank or "No rank", found.level,
-		found.main and ("  ·  alt of " .. (found.mainName or "?") .. (found.altHow == "auto" and " (by the addon)" or "")) or ""))
-	local roles = SK.OfficerDir.RolesOf(dir, found.guid) or {}
-	for _, c in ipairs(self.offRoles) do c:SetActive(roles[c.role] == true) end
-	self.offAlt:Refresh()
-	if not self.offNote:HasFocus() or self.offNoteFor ~= found.guid then
-		self.offNote:SetText(found.note or "")
-		self.offNoteFor = found.guid
+	local list = self.offList
+	if not list.wrapped then
+		list.wrapped = true
+		for _, col in ipairs(Roster.PLAN_COLUMNS) do
+			if col.sort then col.sort = RP.GroupSort(col.sort, function() return list.sortDesc end) end
+		end
 	end
-	self.offAtt:SetText(Roster.AttendanceText(found, Roster.ATT_DAYS))
+	if not list.sortCol then list:SortWith(RP.GroupSort(RP.DefaultOrder)) end
+	list:SetItems(items)
+end
+
+-- The selected member's attendance line (Character page, officers). Pure; tested.
+function Roster.AttendanceText(r, days)
+	if not r or r.raids == 0 then return "Attendance (" .. days .. " days): no recorded raids yet" end
+	return string.format("Attendance (%d days): %d%% of %d raids  ·  bench %d", days, r.pct or 0, r.raids, r.bench or 0)
 end
 
 -- What an empty roster says. Pure; tested.

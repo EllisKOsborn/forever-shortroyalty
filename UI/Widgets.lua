@@ -185,6 +185,11 @@ function W.Chip(parent, text, onClick)
 	c:SetScript("OnMouseUp", function(self) self:Paint() end)
 	c:SetScript("OnClick", onClick)
 	function c:SetActive(flag) self.active = flag; self:Paint() end
+	-- v0.13.0: new text (counts on the roster planner's chips); the chip resizes.
+	function c:SetText(t)
+		self.label:SetText(t)
+		self:SetWidth((self.label:GetStringWidth() or 0) + SP.m * 2)
+	end
 	c:Paint()
 	return c
 end
@@ -1188,6 +1193,86 @@ function W.OptionsButton(parent, items, tooltip)
 	b:SetScript("OnClick", function(self) if pop:IsShown() then self:Close() else self:Open() end end)
 	b:SetScript("OnHide", function(self) self:Close() end)
 	return b
+end
+
+---------------------------------------------------------------------------
+-- PopMenu (v0.13.0): a small menu opened under any frame, e.g. a table cell
+-- ("Main / Backup / none"). pm:Open(anchor, items) with items
+-- { { text, checked = bool, onClick } }; clicking the same anchor again
+-- closes it. pm:Run(text) clicks an item (tests).
+---------------------------------------------------------------------------
+function W.PopMenu(parent, width)
+	local pm = CreateFrame("Frame", nil, parent)
+	pm:SetWidth(width or 140)
+	pm:SetFrameStrata("FULLSCREEN_DIALOG")
+	pm:EnableMouse(true)
+	Theme.Panel(pm, { bg = "surface", border = "lineStrong" })
+	pm:Hide()
+	pm.entries, pm.items = {}, {}
+	function pm:Close()
+		self:Hide()
+		self.anchor = nil
+		if openMenu == self then openMenu = nil end
+	end
+	local function draw(items)
+		for i, it in ipairs(items) do
+			local e = pm.entries[i]
+			if not e then
+				e = CreateFrame("Button", nil, pm)
+				e:SetHeight(S.row + SP.xs)
+				e:SetPoint("TOPLEFT", 1, -1 - (i - 1) * (S.row + SP.xs))
+				e:SetPoint("TOPRIGHT", -1, -1 - (i - 1) * (S.row + SP.xs))
+				e.hl = e:CreateTexture(nil, "BACKGROUND")
+				e.hl:SetAllPoints()
+				Theme.Solid(e.hl, "raised")
+				e.hl:Hide()
+				e.tick = e:CreateTexture(nil, "ARTWORK")
+				e.tick:SetSize(8, 8)
+				e.tick:SetPoint("LEFT", SP.s, 0)
+				e.tick:SetTexture(Theme.TEX.dot)
+				Theme.Tint(e.tick, "accent")
+				e.text = Theme.Text(e, "body", "text")
+				e.text:SetPoint("LEFT", SP.l + SP.xs, 0)
+				e.text:SetPoint("RIGHT", -SP.s, 0)
+				e.text:SetWordWrap(false)
+				e:SetScript("OnEnter", function(self) self.hl:Show() end)
+				e:SetScript("OnLeave", function(self) self.hl:Hide() end)
+				e:SetScript("OnClick", function(self)
+					pm:Close()
+					if self.item and self.item.onClick then self.item.onClick() end
+				end)
+				pm.entries[i] = e
+			end
+			e.item = it
+			e.text:SetText(it.text)
+			e.tick:SetShown(it.checked == true)
+			e:Show()
+		end
+		for i = #items + 1, #pm.entries do pm.entries[i]:Hide() end
+		pm:SetHeight(#items * (S.row + SP.xs) + 2)
+	end
+	function pm:Open(anchor, items)
+		if self:IsShown() and self.anchor == anchor then return self:Close() end
+		if openMenu and openMenu ~= self then openMenu:Close() end
+		self.items, self.anchor = items, anchor
+		draw(items)
+		self:ClearAllPoints()
+		self:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -SP.xxs)
+		Motion.In(self, Theme.MOTION.menu, 0.96, "TOP")
+		openMenu = self
+	end
+	function pm:Run(text)
+		for _, it in ipairs(self.items) do
+			if it.text == text then
+				self:Close()
+				if it.onClick then it.onClick() end
+				return true
+			end
+		end
+		return false
+	end
+	parent:HookScript("OnHide", function() pm:Close() end)
+	return pm
 end
 
 ---------------------------------------------------------------------------

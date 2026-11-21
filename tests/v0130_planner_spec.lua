@@ -248,3 +248,148 @@ describe("v0.13.0 roster planner rows and views", function()
 		assert.same({ 6, 7, 8, 9 }, RP.WeeksOffered(W.now))
 	end)
 end)
+
+describe("v0.13.0 roster planner page", function()
+	local SK, W, R, OD
+	before_each(function()
+		SK, W = setup()
+		profile(SK, BOB, { talents = prot(), ilvl = 62, att = { ony = true } })
+		profile(SK, CAT, { level = 58, talents = holy(), ilvl = 54 })
+		H.loadUI(SK)
+		SK.DB.officer[W.player.guid] = true
+		SK.DB.settings.roster.officer = true
+		SK.MainFrame:Open("roster")
+		R, OD = SK.RosterTab, SK.OfficerDir
+		R:Refresh()
+	end)
+
+	local function itemNamed(name)
+		for _, it in ipairs(R.offList.items) do if it.name == name then return it end end
+	end
+
+	it("lists players with counts on the chips and the guild summary", function()
+		assert.is_true(R.offPanel:IsShown())
+		assert.truthy(itemNamed("Bob Stone"))
+		assert.is_nil(itemNamed("Dan Moss"))
+		assert.truthy(R.planSummary:GetText():find("attuned to Onyxia", 1, true))
+		assert.truthy(R.roleChips[1].label:GetText():find("All", 1, true))
+		assert.equal(0, #SK.errors)
+	end)
+
+	it("sets status and roles from a cell's menu, and filters by role", function()
+		local bob = itemNamed("Bob Stone")
+		local anchor = W.stub()
+		R.cellMenu:Open(anchor, R.CellItems(bob, "TANK"))
+		assert.is_true(R.cellMenu:Run("Main"))
+		R.cellMenu:Open(anchor, R.CellItems(itemNamed("Cat Fern"), "TANK"))
+		assert.is_true(R.cellMenu:Run("Backup"))
+		R.cellMenu:Open(anchor, R.CellItems(itemNamed("Cat Fern"), "status"))
+		assert.is_true(R.cellMenu:Run("Backup"))
+		assert.same({ TANK = "m" }, OD.TiersOf(OD:Get(), BOB))
+		assert.equal("b", OD.StatusOf(OD:Get(), CAT))
+		R.roleChips[2]:GetScript("OnClick")(R.roleChips[2]) -- Tanks
+		local items = R.offList.items
+		assert.is_true(items[1].section)
+		assert.equal("Bob Stone", items[2].name)
+		assert.equal("Cat Fern", items[4].name)
+		assert.truthy(R.roleChips[2].label:GetText():find("1+1", 1, true))
+		R.statusChips[2]:GetScript("OnClick")(R.statusChips[2]) -- Backup only
+		for _, it in ipairs(R.offList.items) do
+			if not it.section then assert.equal("b", it.status) end
+		end
+		assert.equal(0, #SK.errors)
+	end)
+
+	it("opens a character from a name and notes from the note cell", function()
+		R.offList.opts.onClick(itemNamed("Cat Fern"), "LeftButton")
+		assert.equal("character", SK.MainFrame.current)
+		SK.MainFrame:Open("roster")
+		R:OpenNotes(itemNamed("Cat Fern"), W.stub())
+		assert.is_true(R.noteBox:IsShown())
+		R.noteBox.edit:SetText("Keen healer, ask about week 1")
+		R:SaveMyNote()
+		assert.is_false(R.noteBox:IsShown())
+		assert.equal("Keen healer, ask about week 1", itemNamed("Cat Fern").note)
+		R:OpenNotes(itemNamed("Cat Fern"), W.stub())
+		assert.equal("Keen healer, ask about week 1", R.noteBox.edit:GetText())
+		R.noteBox.edit:SetText("")
+		R:SaveMyNote()
+		assert.is_nil(itemNamed("Cat Fern").note)
+		assert.equal(0, #SK.errors)
+	end)
+
+	it("shows sign-ups for a raid instead of Seen", function()
+		local e = SK.RaidBoard:Create("ony", W.now + 86400)
+		SK.RaidBoard:Get().signups[e.id] = { [CAT] = { s = "y", r = "HEALER", u = W.now } }
+		R.signupMenu:Choose(e.id)
+		assert.equal(e.id, R.signupsFor)
+		assert.equal("y", itemNamed("Cat Fern").signed)
+		R.signupMenu:Choose("")
+		assert.is_nil(R.signupsFor)
+		assert.equal(0, #SK.errors)
+	end)
+end)
+
+describe("v0.13.0 Officers on the Character page", function()
+	it("shows status, roles and notes, and sets away weeks and Alt of", function()
+		local SK, W = setup()
+		profile(SK, CAT, { level = 58, talents = holy(), ilvl = 54 })
+		H.loadUI(SK)
+		SK.DB.officer[W.player.guid] = true
+		local OD, C = SK.OfficerDir, SK.CharacterTab
+		assert.is_true(OD:SetStatus(CAT, "b"))
+		assert.is_true(OD:SetTier(CAT, "HEALER", "m"))
+		assert.is_true(OD:SetMyNote(CAT, "Keen healer"))
+		C:ShowCharacter(CAT)
+		assert.is_true(C.offStrip:IsShown())
+		local sec = C.colA.sections[1]
+		assert.equal("Officers", sec.title)
+		assert.equal("Backup", sec.rows[1].value)
+		assert.equal("Main", sec.rows[3].value)
+		assert.truthy(sec.rows[5].text:find("Keen healer", 1, true))
+		C.awayChips[2]:GetScript("OnClick")(C.awayChips[2])
+		assert.is_true(OD.AwayOf(OD:Get(), CAT)[SK.RosterPlan.PlanWeek(W.now) + 1])
+		C.altMenu:Choose(BOB)
+		assert.equal(BOB, OD.AltOf(OD:Get(), CAT))
+		-- A player without the addon still gets the Officers section.
+		C:ShowCharacter(FAY)
+		assert.equal("Officers", C.colB.sections[1].title)
+		-- Members don't see any of it.
+		SK.DB.officer[W.player.guid] = nil
+		C:ShowCharacter(CAT)
+		assert.is_false(C.offStrip:IsShown())
+		assert.equal(0, #SK.errors)
+	end)
+end)
+
+describe("v0.13.0 taller window", function()
+	it("toggles from the Roster page's ··· menu", function()
+		local SK = setup()
+		H.loadUI(SK)
+		SK.MainFrame:Open("roster")
+		assert.equal(0, SK.MainFrame.TallH())
+		assert.is_true(SK.RosterTab.options:Run("Taller window"))
+		assert.equal(SK.MainFrame.TALL, SK.MainFrame.TallH())
+		assert.is_true(SK.RosterTab.options:Run("Taller window"))
+		assert.equal(0, SK.MainFrame.TallH())
+		assert.equal(0, #SK.errors)
+	end)
+end)
+
+describe("v0.13.0 Auto-fill uses the roster planner", function()
+	it("puts Raiders and officer-set mains ahead", function()
+		local SK = setup()
+		local RG = SK.RaidGroups
+		local function r(guid, name, role) return { guid = guid, name = name, role = role, status = "y" } end
+		local L = { count = 2, groups = { {}, {} }, unplaced = {}, bench = {},
+			available = { r("g1", "Aa", "TANK"), r("g2", "Bb", "TANK"), r("g3", "Cc", "TANK") } }
+		-- Only two tank spots (10-man target): Cc is the main tank, Aa a Backup raider.
+		local plan = { g3 = { status = "r", tiers = { TANK = "m" } }, g1 = { status = "b", tiers = { TANK = "m" } } }
+		local moves = RG.AutoFill(L, "barrow", {}, plan)
+		local benched = {}
+		for _, m in ipairs(moves) do if m.kind == "bench" then benched[m.guid] = true end end
+		assert.is_nil(benched.g3)
+		assert.is_true(benched.g1) -- the Backup raider waits; the unsorted tank gets the second spot
+		assert.is_nil(benched.g2)
+	end)
+end)

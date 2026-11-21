@@ -153,6 +153,7 @@ function Char:Build(page)
 	self.meta:SetPoint("TOPLEFT", self.info, "BOTTOMLEFT", 0, -SP.xxs)
 	self.meta:SetPoint("RIGHT", 0, 0)
 	self.meta:SetWordWrap(false)
+	self:BuildOfficerStrip(page)
 
 	-- Paperdoll: slots around a centre that carries the one key figure.
 	local top = S.control + SP.m + 60
@@ -239,6 +240,95 @@ function Char:Build(page)
 	self.empty:SetPoint("TOPLEFT", doll, "TOPRIGHT", SP.xl, 0)
 	self.empty:SetPoint("RIGHT", 0, 0)
 	self.empty:SetJustifyV("TOP")
+end
+
+-- v0.13.0: officers (with /sr officer) get away weeks and "Alt of" for the
+-- player shown, top right; status, roles and notes show in the Officers
+-- section and are changed in Roster → Officers (the roster planner).
+Char.STRIP_W = 330
+function Char:BuildOfficerStrip(page)
+	local strip = CreateFrame("Frame", nil, page)
+	strip:SetPoint("TOPRIGHT", 0, -(S.control + SP.m))
+	strip:SetSize(Char.STRIP_W, 2 * S.control + SP.xs)
+	strip:Hide()
+	self.offStrip = strip
+	local label = Theme.Text(strip, "small", "dim")
+	label:SetText("Away (reset week)")
+	label:SetPoint("TOPLEFT", 0, -5)
+	self.awayChips = {}
+	local prev
+	for i = 1, 4 do
+		local c = W.Chip(strip, tostring(i), function(chip)
+			local guid = Char.shownGuid
+			if not guid or not chip.week then return end
+			local ok, why = SK.OfficerDir:ToggleAway(guid, chip.week)
+			if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
+			Char:Refresh()
+		end)
+		if prev then c:SetPoint("LEFT", prev, "RIGHT", SP.xs, 0) else c:SetPoint("LEFT", label, "RIGHT", SP.s, 0) end
+		self.awayChips[i] = c
+		prev = c
+	end
+	local altLabel = Theme.Text(strip, "small", "dim")
+	altLabel:SetText("Alt of")
+	altLabel:SetPoint("TOPLEFT", 0, -(S.control + SP.xs + 5))
+	self.altMenu = W.Menu(strip, {
+		width = 200,
+		items = function()
+			local out = { { value = "", text = "Not an alt (or linked by the addon)" } }
+			local guild = SK.DBM:Guild()
+			local list = {}
+			for guid, m in pairs(guild and guild.members or {}) do
+				if not m.leftAt and guid ~= Char.shownGuid then list[#list + 1] = { value = guid, text = m.name or "?" } end
+			end
+			table.sort(list, function(a, b) return a.text:lower() < b.text:lower() end)
+			for _, it in ipairs(list) do out[#out + 1] = it end
+			return out
+		end,
+		get = function() return Char.shownGuid and SK.OfficerDir.AltOf(SK.OfficerDir:Get(), Char.shownGuid) or "" end,
+		set = function(v)
+			if not Char.shownGuid then return end
+			local ok, why = SK.OfficerDir:Set("a", Char.shownGuid, v)
+			if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
+			Char:Refresh()
+		end,
+	})
+	self.altMenu.tooltip = "Link this character to its main (for alts that never logged in with the addon)."
+	self.altMenu:SetPoint("TOPLEFT", altLabel, "TOPRIGHT", SP.s, 5)
+end
+
+function Char:OfficerSection(guild, guid, now)
+	local attText
+	local t = SK.Attendance.Totals(SK.Attendance.Sorted(SK.Attendance:Store(guild) or {}, now - 30 * 86400))
+	for _, row in ipairs(t or {}) do
+		if row.guid == guid then
+			attText = SK.RosterTab.AttendanceText({ raids = row.full + row.late + row.missed, pct = row.pct, bench = row.bench }, 30)
+		end
+	end
+	return { title = "Officers", rows = Char.OfficerRows(SK.OfficerDir:Get(guild), guid, Compat.PlayerGUID(), attText,
+		function(g) local mm = guild.members[g]; return mm and mm.name end) }
+end
+
+-- The Officers section for the Character page (officers only). Pure apart
+-- from reading the stored officer roster. Returns rows for a Sheet block.
+function Char.OfficerRows(dir, guid, me, att, nameOf)
+	local OD, RP = SK.OfficerDir, SK.RosterPlan
+	local rows = {}
+	local status = OD.StatusOf(dir, guid)
+	rows[#rows + 1] = { label = "Status", value = status and RP.STATUS_NAME[status] or "not set",
+		tone = status == "b" and "accent" or (status and "text" or "spark") }
+	local tiers = OD.TiersOf(dir, guid)
+	for _, role in ipairs(OD.TIER_ORDER) do
+		local t = tiers[role]
+		rows[#rows + 1] = { label = SK.Data.ROLE_NAMES[role], value = t and RP.TIER_NAME[t] or "-",
+			tone = t == "m" and "accent" or (t == "b" and "text" or "faint") }
+	end
+	if att then rows[#rows + 1] = { text = att, tone = "dim" } end
+	for _, n in ipairs(OD.NotesOf(dir, guid, me)) do
+		rows[#rows + 1] = { text = Theme.Paint("dim", (nameOf(n.by) or "?") .. ": ") .. n.text, tone = "text" }
+	end
+	rows[#rows + 1] = { text = "Change these in Roster → Officers (click a cell).", tone = "faint" }
+	return rows
 end
 
 Char.asked = {}    -- guid -> when we pressed "Ask for latest" (cleared by the answer)
@@ -447,6 +537,20 @@ function Char:Refresh()
 	if not mine and guid then
 		self.askLatest:SetDisabled(SK.Sync:FreshSource(guid, now) == nil)
 	end
+	local officer = SK.RaidBoard.OfficerView() and guid ~= nil and m ~= nil
+	self.offStrip:SetShown(officer)
+	self.meta:SetPoint("RIGHT", officer and -(Char.STRIP_W + SP.m) or 0, 0)
+	if officer then
+		local away = SK.OfficerDir.AwayOf(SK.OfficerDir:Get(guild), guid)
+		for i, w in ipairs(SK.RosterPlan.WeeksOffered(now)) do
+			local c = self.awayChips[i]
+			c.week = w
+			c:SetText(tostring(w))
+			c.tooltip = "Away " .. SK.RosterPlan.WeekLabel(w) .. ". Click to change."
+			c:SetActive(away[w] == true)
+		end
+		self.altMenu:Refresh()
+	end
 	local ask = guid and Char.AskStatus(Char.asked[guid], Char.answered[guid], now, SK.Sync.FRESH_INTERVAL)
 	if ask and Char.asked[guid] and now - Char.asked[guid] >= SK.Sync.FRESH_INTERVAL then Char.asked[guid] = nil end
 	local askText = ask and ("  ·  " .. Theme.Paint("spark", ask)) or ""
@@ -464,8 +568,14 @@ function Char:Refresh()
 		self.colB:Hide()
 		self.empty:SetText(Char.EmptyText(m ~= nil))
 		self.empty:Show()
+		self.empty:SetPoint("RIGHT", officer and -(Char.DETAIL_COL_W + SP.xl) or 0, 0)
+		if officer then -- officers still see and keep notes on players without the addon
+			self.colB:Show()
+			self.colB:SetSections({ self:OfficerSection(guild, guid, now) })
+		end
 		return
 	end
+	self.empty:SetPoint("RIGHT", 0, 0)
 
 	local name = (m and m.name) or p.name
 	self.name:SetText(Theme.ClassText(name, p.class))
@@ -501,6 +611,7 @@ function Char:Refresh()
 		alts = alts, isMain = isMain, note = m and m.note, officerNote = m and m.officerNote,
 	})
 	local a, b = {}, {}
+	if officer then a[#a + 1] = self:OfficerSection(guild, guid, now) end
 	for _, sec in ipairs(sections) do
 		if sec.col == 2 then b[#b + 1] = sec else a[#a + 1] = sec end
 	end

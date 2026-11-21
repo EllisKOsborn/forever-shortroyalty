@@ -46,7 +46,21 @@ end
 function Main:ApplyScale()
 	if not self.frame then return end
 	local chosen = SK.DB.settings.window.scale or 1
-	self.frame:SetScale(Main.FitScale(chosen, UIParent:GetWidth(), UIParent:GetHeight(), self.bannerH))
+	self.frame:SetScale(Main.FitScale(chosen, UIParent:GetWidth(), UIParent:GetHeight(), (self.bannerH or 0) + Main.TallH()))
+end
+
+-- v0.13.0: a taller window (Roster ··· menu), for long lists such as the
+-- roster planner. Lists stretch; other pages keep their layout.
+Main.TALL = 200
+function Main.TallH()
+	local t = SK.DB and SK.DB.settings.window.tall
+	return (type(t) == "number" and t > 0) and Main.TALL or 0
+end
+function Main:SetTall(on)
+	SK.DB.settings.window.tall = on and Main.TALL or 0
+	if not self.frame then return end
+	self.frame:SetHeight(S.window[2] + (self.bannerH or 0) + Main.TallH())
+	self:ApplyScale()
 end
 
 -- Accent and body font from Settings (v0.6.0). The font must be set before
@@ -73,7 +87,7 @@ function Main:Build()
 	if self.frame then return self.frame end
 	local s = SK.DB.settings.window
 	local f = CreateFrame("Frame", self.FRAME_NAME, UIParent)
-	f:SetSize(S.window[1], S.window[2])
+	f:SetSize(S.window[1], S.window[2] + Main.TallH())
 	f:SetPoint(s.point or "CENTER", UIParent, s.relPoint or s.point or "CENTER", s.x or 0, s.y or 0)
 	f:SetFrameStrata("HIGH")
 	f:SetToplevel(true)
@@ -305,7 +319,7 @@ function Main:UpdateBanner()
 	end
 	if extra ~= self.bannerH then
 		self.bannerH = extra
-		f:SetHeight(S.window[2] + extra)
+		f:SetHeight(S.window[2] + extra + Main.TallH())
 		f.content:SetPoint("TOPLEFT", S.sidebar + SP.l, -(S.pageHead + SP.xs + extra))
 		self:ApplyScale()
 	end

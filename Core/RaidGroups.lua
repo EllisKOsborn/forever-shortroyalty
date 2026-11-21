@@ -322,7 +322,12 @@ end
 
 -- L = Layout(…); pct = { [guid] = attendance % }.
 -- Returns moves = { { guid, kind = "group", n } | { guid, kind = "bench" } }. Pure.
-function RG.AutoFill(L, raidKey, pct)
+-- plan (v0.13.0, optional): { [guid] = { status = "r" | "b" | nil, tiers = { TANK = "m" | "b" } } }
+-- from the roster planner: Raiders before Backups, and an officer-set main
+-- for the role they signed up as before a backup.
+local PLAN_STATUS = { r = 1, b = 3 }
+local PLAN_TIER = { m = 1, b = 2 }
+function RG.AutoFill(L, raidKey, pct, plan)
 	local raid = SK.RaidBoard.Raid(raidKey)
 	local size = raid and raid.size or L.count * RG.SIZE
 	local target = RG.TARGETS[size] or { TANK = math.max(1, math.floor(size / 10)), HEALER = math.ceil(size / 4) }
@@ -344,9 +349,19 @@ function RG.AutoFill(L, raidKey, pct)
 	end
 	for _, r in ipairs(L.unplaced) do consider(r, true) end
 	for _, r in ipairs(L.available) do consider(r, false) end
+	plan = plan or {}
+	local function planRank(r)
+		local p = plan[r.guid]
+		if not p then return 2, 3 end
+		return PLAN_STATUS[p.status or ""] or 2, PLAN_TIER[(p.tiers or {})[r.role or "DPS"] or ""] or 3
+	end
 	table.sort(pool, function(a, b)
 		if a.chosen ~= b.chosen then return a.chosen end
 		if a.status ~= b.status then return a.status == "y" end
+		local sa, ta = planRank(a)
+		local sb, tb = planRank(b)
+		if sa ~= sb then return sa < sb end
+		if ta ~= tb then return ta < tb end
 		local pa, pb = pct[a.guid] or -1, pct[b.guid] or -1
 		if pa ~= pb then return pa > pb end
 		if (a.ilvl or 0) ~= (b.ilvl or 0) then return (a.ilvl or 0) > (b.ilvl or 0) end
@@ -417,7 +432,11 @@ function RG:Fill(id)
 	local A = SK.Attendance
 	for _, t in ipairs(A.Totals(A.Sorted(A:Store() or {}, Compat.Now() - 60 * 86400))) do pct[t.guid] = t.pct end
 	local placed, benched = 0, 0
-	for _, m in ipairs(RG.AutoFill(L, ev.raid, pct)) do
+	local plan, dir = {}, SK.OfficerDir:Get()
+	for _, r in ipairs(rows) do
+		plan[r.guid] = { status = SK.OfficerDir.StatusOf(dir, r.guid), tiers = SK.OfficerDir.TiersOf(dir, r.guid) }
+	end
+	for _, m in ipairs(RG.AutoFill(L, ev.raid, pct, plan)) do
 		if self:Move(id, m.guid, { kind = m.kind, n = m.n }) then
 			if m.kind == "bench" then benched = benched + 1 else placed = placed + 1 end
 		end
