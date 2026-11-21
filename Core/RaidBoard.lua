@@ -13,7 +13,9 @@
 --              rs = v0.14.0 the night's instances "hyjal,ony", "" = to be
 --                   decided (then raid = "tbd"); absent = just `raid` }
 --   signup = { s = "y" (signed up) | "t" (tentative) | "n" (can't come),
---              r = "TANK" | "HEALER" | "DPS" | nil, u = last change }
+--              r = "TANK" | "HEALER" | "DPS" | nil, u = last change,
+--              w = v0.14.0 when they changed from Signed up to Tentative or
+--                  Can't come (kept while they stay that way) }
 --
 -- Every receiver checks, against its own copy of the guild roster, that an
 -- event's creator (and whoever changed it) is in an officer or raid leader
@@ -177,7 +179,16 @@ function Board.ValidSignup(s, now)
 	if s.r ~= nil and not ROLE_ORDER[s.r] then return false, "bad role" end
 	if not finite(s.u) or s.u > now + Board.MAX_FUTURE then return false, "bad time" end
 	if s.b ~= nil and not str(s.b, 64) then return false, "bad officer" end
+	if s.w ~= nil and (not finite(s.w) or s.w > s.u or s.s == "y") then return false, "bad change" end
 	return true
+end
+
+-- v0.14.0: when a sign-up moves away from "y", remember when (attendance
+-- counts changed sign-ups); back to "y" forgets it. Pure.
+function Board.ChangedAt(have, status, now)
+	if status == "y" then return nil end
+	if have and have.s == "y" then return now end
+	return have and have.w or nil
 end
 
 -- v0.10.0 raid roster: an officer puts a signed-up player In or on the
@@ -227,7 +238,7 @@ function Board.MergeSignup(board, s, now, isMember, isLead)
 	local have = list[s.g]
 	if have and have.u >= s.u then return false, "not newer" end
 	if not have and SK.Count(list) >= Board.MAX_SIGNUPS then return false, "raid full of sign-ups" end
-	list[s.g] = { s = s.s, r = s.r, u = s.u, b = s.b }
+	list[s.g] = { s = s.s, r = s.r, u = s.u, b = s.b, w = s.w }
 	return true
 end
 
@@ -740,7 +751,8 @@ function Board:SignUp(id, status, role)
 	local list = board.signups[id] or {}
 	board.signups[id] = list
 	local have = list[guid]
-	list[guid] = { s = status, r = ROLE_ORDER[role or ""] and role or nil, u = math.max(now, have and have.u + 1 or 0) }
+	local u = math.max(now, have and have.u + 1 or 0)
+	list[guid] = { s = status, r = ROLE_ORDER[role or ""] and role or nil, u = u, w = Board.ChangedAt(have, status, u) }
 	if role and ROLE_ORDER[role] then SK.DB.raidRole[guid] = role end
 	changed({ "S:" .. id .. "|" .. guid })
 	return true
@@ -778,7 +790,8 @@ function Board:Import(id, entries)
 		elseif not have and SK.Count(list) >= Board.MAX_SIGNUPS then
 			kept = kept + 1
 		elseif not have or have.s ~= x.s or (x.r and have.r ~= x.r) then
-			list[x.guid] = { s = x.s, r = x.r or (have and have.r), u = math.max(now, have and have.u + 1 or 0), b = officer }
+			local u = math.max(now, have and have.u + 1 or 0)
+			list[x.guid] = { s = x.s, r = x.r or (have and have.r), u = u, b = officer, w = Board.ChangedAt(have, x.s, u) }
 			if have then updated = updated + 1 else added = added + 1 end
 			keys[#keys + 1] = "S:" .. id .. "|" .. x.guid
 		end

@@ -61,7 +61,7 @@ local function wireItem(board, key)
 	end
 	local sid, guid = key:match("^S:(.+)|(.+)$")
 	local su = sid and board.signups[sid] and board.signups[sid][guid]
-	return su and "su", su and { e = sid, g = guid, s = su.s, r = su.r, u = su.u, b = su.b }
+	return su and "su", su and { e = sid, g = guid, s = su.s, r = su.r, u = su.u, b = su.b, w = su.w }
 end
 
 -- Every key of one raid (the raid first, then its sign-ups).

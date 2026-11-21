@@ -387,8 +387,8 @@ function Commands.Officer()
 	local on = not SK.DB.officer[guid]
 	SK.DB.officer[guid] = on or nil
 	if on then
-		SK:Print("Officer tools on: Raids now has New raid and Attendance. Attendance is recorded while you're " ..
-			"in a raid group at a raid's time. /sr officer again turns them off.")
+		SK:Print("Officer tools on: make raids on Raids > Calendar (click a day); Attendance and the Roster's " ..
+			"Officers view are shown. /sr officer again turns them off.")
 		SK.MainFrame:Open("raids", true)
 	else
 		SK:Print("Officer tools off.")
@@ -444,8 +444,8 @@ function Commands.RaidLines()
 	for _, mm in pairs(guild and guild.members or {}) do if mm.online and not mm.leftAt then guildOnline = guildOnline + 1 end end
 	local inInst, kind = Compat.InInstance()
 	add("Guild online now: %d (instance: %s %s)", guildOnline, yesno(inInst), tostring(kind or ""))
-	local rec = SK.Attendance.current
-	add("Attendance: recording %s%s, raids saved: %d, last check skipped because: %s",
+	local rec = SK.Attendance.checking
+	add("Attendance (v0.14.0, online at the start): checking %s%s, raids saved: %d, last check skipped because: %s",
 		rec and "yes" or "no", rec and string.format(" (%s, %d checks)", tostring(rec.raid), rec.snaps) or "",
 		SK.Count(SK.Attendance:Store() or {}), tostring(SK.Attendance.lastWhy))
 	local as = SK.AttendanceSync.stats

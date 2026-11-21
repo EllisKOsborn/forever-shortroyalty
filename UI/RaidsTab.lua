@@ -39,29 +39,35 @@ RT.RECORD_COLUMNS = {
 	{ key = "raid", title = "Raid", width = 110 },
 	{ key = "came", title = "Came", width = RT.ATT_LEFT_W - 96 - 110 - SP.m, align = "RIGHT" },
 }
+-- v0.14.0: "Changed" = when they moved from Signed up to Tentative or
+-- Can't come (v0.8.0 group records show minutes in the group there).
 RT.PEOPLE_COLUMNS = {
-	{ key = "name", title = "Name", width = 140, sort = function(a, b) return a.name:lower() < b.name:lower() end },
-	{ key = "signed", title = "Signed up", width = 84 },
-	{ key = "result", title = "Result", width = 110 },
-	{ key = "bench", title = "Bench", width = 56, align = "CENTER" },
-	{ key = "mins", title = "Mins", width = RT.ATT_RIGHT_W - 140 - 84 - 110 - 56 - SP.m, align = "RIGHT",
-		sort = function(a, b) return a.inS < b.inS end },
+	{ key = "name", title = "Name", width = 130, sort = function(a, b) return a.name:lower() < b.name:lower() end },
+	{ key = "signed", title = "Signed up", width = 78 },
+	{ key = "result", title = "Result", width = 90 },
+	{ key = "bench", title = "Bench", width = 50, align = "CENTER" },
+	{ key = "mins", title = "Changed", width = RT.ATT_RIGHT_W - 130 - 78 - 90 - 50 - SP.m, align = "RIGHT",
+		sort = function(a, b) return (a.changed or a.inS) < (b.changed or b.inS) end },
 }
 local function pctSort(a, b) return (a.pct or -1) < (b.pct or -1) end
+local function by(k) return function(a, b) return (a[k] or 0) < (b[k] or 0) end end
 RT.TOTAL_COLUMNS = {
-	{ key = "name", title = "Name", width = 180, sort = function(a, b) return a.name:lower() < b.name:lower() end },
-	{ key = "raids", title = "Raids", width = 70, align = "RIGHT", sort = function(a, b) return a.raids < b.raids end },
-	{ key = "full", title = "On time", width = 80, align = "RIGHT", sort = function(a, b) return a.full < b.full end },
-	{ key = "late", title = "Late", width = 70, align = "RIGHT", sort = function(a, b) return a.late < b.late end },
-	{ key = "missed", title = "Didn't attend", width = 100, align = "RIGHT", sort = function(a, b) return a.missed < b.missed end },
-	{ key = "bench", title = "Bench", width = 70, align = "RIGHT", sort = function(a, b) return a.bench < b.bench end },
-	{ key = "pct", title = "Attended", width = 90, align = "RIGHT", sort = pctSort },
+	{ key = "name", title = "Name", width = 150, sort = function(a, b) return a.name:lower() < b.name:lower() end },
+	{ key = "raids", title = "Raids", width = 56, align = "RIGHT", sort = by("raids") },
+	{ key = "full", title = "On time", width = 66, align = "RIGHT", sort = by("full") },
+	{ key = "late", title = "Late", width = 52, align = "RIGHT", sort = by("late") },
+	{ key = "missed", title = "No-show", width = 72, align = "RIGHT", sort = by("missed") },
+	{ key = "bench", title = "Bench", width = 56, align = "RIGHT", sort = by("bench") },
+	{ key = "changed", title = "Changed", width = 74, align = "RIGHT", sort = by("changed") },
+	{ key = "late24", title = "<24h", width = 56, align = "RIGHT", sort = by("changedLate") },
+	{ key = "pct", title = "Attended", width = S.contentW - 150 - 56 - 66 - 52 - 72 - 56 - 74 - 56 - SP.m,
+		align = "RIGHT", sort = pctSort },
 }
 
 local STATUS_TONE = { y = "good", t = "text", n = "faint" }
 -- Short names in the list; the full ones are in the tooltip and the spreadsheet.
 RT.RESULT_SHORT = { full = "On time", late = "Late / part", missed = "Didn't attend", declined = "Can't come" }
-local RESULT_TONE = { full = "good", late = "spark", missed = "bad", declined = "faint" }
+local RESULT_TONE = { full = "good", late = "spark", missed = "bad", maybe = "dim", declined = "faint" }
 
 ---------------------------------------------------------------------------
 -- Pure helpers (tested)
@@ -152,22 +158,31 @@ function RT.MineText(su, place, group, jobs)
 		.. (su.b and Theme.Paint("faint", " (added by an officer)") or "") .. tail
 end
 
--- The line at the top of Attendance: what's being recorded, else who
+-- The line at the top of Attendance: the raid being checked, else who
 -- recorded the raid picked below (v0.8.1: records come from every officer).
+-- v0.14.0: signed up and online at the start = attended; no raid group.
 function RT.RecordingText(rec, now, shown)
-	if not rec then
-		if shown then
-			local raid = Board.Raid(shown.raid)
-			local by = SK.Identity:Member(shown.by)
-			return string.format("%s, %s  ·  recorded by %s  ·  %s", raid and raid.name or "Raid", Board.When(shown.at),
-				by and Theme.ClassText(by.name, by.class) or "an officer", Theme.Count(shown.snaps, "check"))
-		end
-		return "Not recording. It starts by itself when you're in a raid group from 30 minutes before a raid's start."
+	if rec and not rec.ended and now <= rec.at + Att.LATE_FOR then
+		return string.format("%s %s (%s)  ·  online at the start = on time, by %s = late", Theme.Paint("good", "Checking"),
+			Board.EventName(rec), Board.ShortWhen(rec.at, now), date("%H:%M", rec.at + Att.LATE_FOR))
 	end
-	local raid = Board.Raid(rec.raid)
-	return string.format("%s %s (%s)  ·  %s  ·  %s", Theme.Paint("good", "Recording"), raid and raid.name or "raid",
-		Board.ShortWhen(rec.at, now), Theme.Count(rec.snaps, "check"),
-		rec.last and ("last " .. Theme.Ago(rec.last, now)) or "first check soon")
+	if shown then
+		local who = SK.Identity:Member(shown.by)
+		local how = shown.v == 2 and ("checked from " .. date("%H:%M", shown.began)) or Theme.Count(shown.snaps, "check")
+		return string.format("%s, %s  ·  recorded by %s  ·  %s", Board.EventName(shown), Board.When(shown.at),
+			who and Theme.ClassText(who.name, who.class) or "an officer", how)
+	end
+	return "Attendance is taken by itself at each raid's start time: signed up and online = there. Any officer's " ..
+		"or raid leader's game that's online then does it."
+end
+
+-- "2d before", "5h before", "40m before" (the start). Pure.
+function RT.BeforeText(at, w)
+	local d = at - w
+	if d >= 86400 then return math.floor(d / 86400) .. "d before" end
+	if d >= 3600 then return math.floor(d / 3600) .. "h before" end
+	if d >= 0 then return math.floor(d / 60) .. "m before" end
+	return "after the start"
 end
 
 ---------------------------------------------------------------------------
@@ -210,8 +225,7 @@ local function setRecordCell(fs, r, col)
 	if col.key == "date" then
 		fs:SetText(date("%a %d %b", r.at))
 	elseif col.key == "raid" then
-		local raid = Board.Raid(r.raid)
-		fs:SetText((raid and raid.name or r.raid) .. ((Att.current == r) and (" " .. Theme.Paint("good", "•")) or ""))
+		fs:SetText(Board.EventName(r, true) .. ((Att.checking == r and not r.ended) and (" " .. Theme.Paint("good", "•")) or ""))
 	elseif col.key == "came" then
 		local s = Att.Summary(Att.Rows(r))
 		fs:SetText(tostring(s.full + s.late))
@@ -225,11 +239,18 @@ local function setPersonCell(fs, r, col)
 	elseif k == "signed" then
 		fs:SetText(Theme.Paint(r.signed and STATUS_TONE[r.signed] or "faint", r.signedName))
 	elseif k == "result" then
-		fs:SetText(Theme.Paint(RESULT_TONE[r.result], RT.RESULT_SHORT[r.result]))
+		local short = r.v == 2 and Att.RESULT_SHORT2 or RT.RESULT_SHORT
+		fs:SetText(Theme.Paint(RESULT_TONE[r.result], short[r.result]))
 	elseif k == "bench" then
 		fs:SetText(r.bench and Theme.Paint("accent", "yes") or Theme.DASH)
 	elseif k == "mins" then
-		fs:SetText(string.format("%d", math.floor(r.inS / 60 + 0.5)))
+		if r.v ~= 2 then
+			fs:SetText(string.format("%d min", math.floor(r.inS / 60 + 0.5)))
+		elseif r.changed and r.recAt then
+			fs:SetText(Theme.Paint(r.changedLate and "spark" or "dim", RT.BeforeText(r.recAt, r.changed)))
+		else
+			fs:SetText(Theme.DASH)
+		end
 	end
 end
 
@@ -239,6 +260,12 @@ local function setTotalCell(fs, r, col)
 		fs:SetText(Theme.ClassText(r.name, r.class))
 	elseif k == "pct" then
 		fs:SetText(r.pct and (r.pct .. "%") or Theme.DASH)
+	elseif k == "missed" then
+		fs:SetText(r.missed > 0 and Theme.Paint("bad", tostring(r.missed)) or "0")
+	elseif k == "changed" then
+		fs:SetText(r.changed > 0 and (r.changed .. Theme.Paint("faint", " / " .. r.signedUp)) or "0")
+	elseif k == "late24" then
+		fs:SetText(r.changedLate > 0 and Theme.Paint("spark", tostring(r.changedLate)) or "0")
 	else
 		fs:SetText(tostring(r[k] or 0))
 	end
@@ -399,18 +426,9 @@ function RT:Build(page)
 	self.attPage = at
 	self.recording = Theme.Text(at, "small", "dim")
 	self.recording:SetPoint("TOPLEFT", 0, -SP.xs)
-	self.recording:SetPoint("RIGHT", -120, 0)
+	self.recording:SetPoint("RIGHT", 0, 0)
 	self.recording:SetJustifyH("LEFT")
 	self.recording:SetWordWrap(true)
-	self.endRaid = W.Button(at, "End raid", nil, S.control, function() Att:Stop(Compat.Now()); RT:Refresh() end)
-	self.endRaid:SetPoint("TOPRIGHT", 0, 0)
-	self.endRaid.tooltip = "Stop recording now. It also stops by itself 15 minutes after you leave the raid group."
-	self.resume = W.Button(at, "Resume", nil, S.control, function()
-		if RT.record then Att:Resume(RT.record) end
-		RT:Refresh()
-	end)
-	self.resume:SetPoint("TOPRIGHT", 0, 0)
-	self.resume.tooltip = "Start recording this raid again (you're in a raid group in its time)."
 
 	local chipsY = -(S.control + SP.m)
 	self.modeChips = {}
@@ -447,9 +465,19 @@ function RT:Build(page)
 			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
 			Theme.TipLine(GameTooltip, Theme.ClassText(r.name, r.class))
 			Theme.TipLine(GameTooltip, r.resultName, RESULT_TONE[r.result])
-			Theme.TipDouble(GameTooltip, "In the raid group", math.floor(r.inS / 60 + 0.5) .. " min", "dim", "text")
-			Theme.TipDouble(GameTooltip, "Online, not in the group", math.floor(r.bnS / 60 + 0.5) .. " min", "dim", "text")
-			Theme.TipLine(GameTooltip, r.benchAuto and "Bench was ticked automatically." or "Bench wasn't ticked automatically.", "faint")
+			if r.v == 2 then
+				if r.changed then
+					Theme.TipLine(GameTooltip, "Changed from Signed up to " .. r.signedName .. " on " ..
+						date("%a %d %b, %H:%M", r.changed) .. " (" .. RT.BeforeText(r.recAt, r.changed) .. ")",
+						r.changedLate and "spark" or "dim", true)
+				end
+				Theme.TipLine(GameTooltip, r.benchAuto and "Bench ticked: officers had them on the Bench." or
+					"Bench is ticked by itself for people on the Bench who were online.", "faint", true)
+			else
+				Theme.TipDouble(GameTooltip, "In the raid group", math.floor(r.inS / 60 + 0.5) .. " min", "dim", "text")
+				Theme.TipDouble(GameTooltip, "Online, not in the group", math.floor(r.bnS / 60 + 0.5) .. " min", "dim", "text")
+				Theme.TipLine(GameTooltip, r.benchAuto and "Bench was ticked automatically." or "Bench wasn't ticked automatically.", "faint")
+			end
 			Theme.TipLine(GameTooltip, "Click to tick or untick Bench", "accent")
 			GameTooltip:Show()
 		end,
@@ -666,15 +694,11 @@ function RT:RefreshAttendance(now)
 	local s = SK.DB.settings
 	local mode = s.attView == "totals" and "totals" or "raids"
 	local days = s.attDays or 30
-	self.endRaid:SetShown(Att.current ~= nil)
 	local store = Att:Store() or {}
 	local list = Att.Sorted(store)
-	if not RT.record or not store[RT.record] then RT.record = Att.current and Att.current.id or (list[1] and list[1].id) end
+	if not RT.record or not store[RT.record] then RT.record = Att.checking and Att.checking.id or (list[1] and list[1].id) end
 	local rec = RT.record and store[RT.record]
-	self.recording:SetText(RT.RecordingText(Att.current, now, mode == "raids" and rec or nil))
-	local canResume = Att.current == nil and rec ~= nil and rec.ended ~= nil and Compat.InRaidGroup()
-		and now <= rec.at + Att.LONGEST
-	self.resume:SetShown(canResume and mode == "raids")
+	self.recording:SetText(RT.RecordingText(Att.checking, now, mode == "raids" and rec or nil))
 	for _, c in ipairs(self.modeChips) do c:SetActive(c.value == mode) end
 	for _, c in ipairs(self.dayChips) do
 		c:SetShown(mode == "totals")
@@ -686,7 +710,9 @@ function RT:RefreshAttendance(now)
 	if mode == "raids" then
 		self.records:SetItems(list)
 		self.records:SetSelected(function(r) return r.id == RT.record end)
-		self.people:SetItems(rec and Att.Rows(rec) or {})
+		local rows = rec and Att.Rows(rec) or {}
+		for _, r in ipairs(rows) do r.recAt = rec.at end
+		self.people:SetItems(rows)
 	else
 		self.totals:SetItems(Att.Totals(Att.Sorted(store, days > 0 and (now - days * 86400) or nil)))
 	end

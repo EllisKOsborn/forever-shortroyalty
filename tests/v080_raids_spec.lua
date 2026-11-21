@@ -379,7 +379,7 @@ describe("v0.8.0 attendance rules", function()
 		assert.equal("No", result(rows, "A8").signedName)
 		assert.is_false(result(rows, "A1").bench)
 		local s = A.Summary(rows)
-		assert.same({ full = 3, late = 2, missed = 2, declined = 1, bench = 2 }, s)
+		assert.same({ full = 3, late = 2, missed = 2, maybe = 0, declined = 1, bench = 2, changed = 0 }, s)
 		assert.equal(3 * 3600, rec.total)
 	end)
 
@@ -414,82 +414,8 @@ describe("v0.8.0 attendance rules", function()
 	end)
 end)
 
-describe("v0.8.0 recording", function()
-	local SK, W, B, A
-	before_each(function()
-		SK, W = setup()
-		B, A = SK.RaidBoard, SK.Attendance
-		SK.DB.officer[ME] = true
-	end)
-
-	local function group()
-		W.raid = { { name = "Pip", guid = ME }, { name = "Bob", guid = BOB }, { name = "Cat", guid = CAT } }
-	end
-
-	it("starts in the raid group at raid time, checks every 2 minutes, and stops after leaving", function()
-		local e = B:Create("ony", W.now + 20 * 60)
-		B:Get().signups[e.id] = { [DAN] = { s = "y", u = W.now } } -- online, not in the group
-		A:Tick(W.now)
-		assert.is_nil(A.current) -- not in a raid group
-		group()
-		A:Tick(W.now)
-		assert.is_not_nil(A.current)
-		assert.equal(1, A.current.snaps)
-		A:Tick(W.now + 60)
-		assert.equal(1, A.current.snaps)
-		W.combat = true
-		A:Tick(W.now + 20 * 60 + 130)
-		assert.equal(1, A.current.snaps)
-		assert.is_true(A.pendingSnap)
-		W.combat = false
-		A:Tick(W.now + 20 * 60 + 140)
-		assert.equal(2, A.current.snaps)
-		W.raid = nil
-		A:Tick(W.now + 40 * 60)
-		assert.is_not_nil(A.current)
-		A:Tick(W.now + 40 * 60 + A.LEFT_AFTER)
-		assert.is_nil(A.current)
-		local rec = A:Store()[e.id]
-		assert.equal(W.now + 40 * 60, rec.ended)
-		local rows = A.Rows(rec)
-		local byGuid = {}
-		for _, r in ipairs(rows) do byGuid[r.guid] = r end
-		assert.equal("full", byGuid[BOB].result)
-		assert.equal("missed", byGuid[DAN].result)
-		assert.equal("No", byGuid[CAT].signedName)
-		-- an ended raid doesn't start again by itself, Resume does
-		group()
-		A:Tick(W.now + 41 * 60)
-		assert.is_nil(A.current)
-		assert.is_true(A:Resume(e.id))
-		assert.is_not_nil(A.current)
-	end)
-
-	it("matches raid members by name when the game hides their GUID", function()
-		B:Create("ony", W.now + 60)
-		group()
-		W.raidHideGuid = true
-		A:Tick(W.now + 120)
-		assert.is_not_nil(A.current.people[BOB].first)
-	end)
-
-	it("records nothing unless the officer tools are on", function()
-		B:Create("ony", W.now + 60)
-		SK.DB.officer[ME] = nil
-		group()
-		A:Tick(W.now + 120)
-		assert.is_nil(A.current)
-	end)
-
-	it("stops 6 hours after the start", function()
-		local e = B:Create("ony", W.now + 60)
-		group()
-		A:Tick(W.now + 120)
-		A:Tick(e.at + A.LONGEST + 1)
-		assert.is_nil(A.current)
-		assert.equal(e.at + A.LONGEST, A:Store()[e.id].ended)
-	end)
-end)
+-- v0.8.0 recording in the raid group was replaced in v0.14.0 (online at
+-- the start): tests/v0140_spec.lua.
 
 local function tabOf(RT, key)
 	for _, t in ipairs(RT.views.tabs) do if t.key == key then return t end end

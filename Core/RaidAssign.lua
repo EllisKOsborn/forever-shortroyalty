@@ -193,7 +193,8 @@ function RA:CopyLast(id)
 	if not ev then return 0, "unknown raid" end
 	local best
 	for oid, e in pairs(board.events) do
-		if oid ~= id and #B.Keys(ev) > 0 and table.concat(B.Keys(e), ",") == table.concat(B.Keys(ev), ",") and e.at < ev.at and #RA.Blocks(board, oid) > 0
+		local same = #B.Keys(ev) > 0 and table.concat(B.Keys(e), ",") == table.concat(B.Keys(ev), ",")
+		if oid ~= id and same and e.at < ev.at and #RA.Blocks(board, oid) > 0
 			and (not best or e.at > best.at) then best = e end
 	end
 	if not best then return 0, "no earlier " .. (#B.Keys(ev) > 0 and B.EventName(ev) or "raid") .. " with assignments" end

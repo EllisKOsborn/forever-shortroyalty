@@ -119,7 +119,7 @@ function AS:HandleAR(msg, from, dist)
 	local store = Att:Store()
 	if not store then return end
 	local have = store[msg.r.id]
-	local out, changed = Att.Merge(have, msg.r, Att.current ~= nil and Att.current == have)
+	local out, changed = Att.Merge(have, msg.r, false)
 	if changed then
 		if not have and SK.Count(store) >= Att.MAX_RECORDS then
 			local list = Att.Sorted(store)

@@ -672,7 +672,8 @@ local function updatePlanRow(row, r)
 				b.label:SetText(n == 0 and Theme.Paint("faint", "add") or (Theme.Paint("dim", r.note or "") ..
 					(n > 1 and Theme.Paint("faint", " (+" .. (n - 1) .. ")") or "")))
 			elseif b.key == "status" then
-				if r.status then pill(b, "plain", Theme.Paint(r.status == "b" and "accent" or (r.status == "s" and "faint" or "dim"), RP.STATUS_NAME[r.status]))
+				local tone = r.status == "b" and "accent" or (r.status == "s" and "faint" or "dim")
+				if r.status then pill(b, "plain", Theme.Paint(tone, RP.STATUS_NAME[r.status]))
 				else pill(b, "plain", Theme.Paint("spark", "Not set")) end
 			else
 				local t = r.tiers[b.key]

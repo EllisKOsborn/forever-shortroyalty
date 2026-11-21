@@ -326,3 +326,44 @@ describe("Security: v0.11.0 groups, assignments and absences", function()
 		assert.equal(0, #SK.errors)
 	end)
 end)
+
+describe("Security: v0.14.0 raid nights, sign-up changes, attendance records", function()
+	local SK, W
+	local BOB, CAT = "Player-1-B", "Player-1-C"
+	before_each(function()
+		SK, W = H.load()
+		W.member("Pip", W.player.guid)
+		W.member("Bob", BOB, { rank = "Officer", rankIndex = 1 })
+		W.member("Cat", CAT, { rank = "Member", rankIndex = 4 })
+		SK.Identity:ReadRoster()
+	end)
+	it("refuses bad instance lists, sign-up change times and per-instance groups of unknown raids", function()
+		local id = BOB .. ":" .. string.format("%d", W.now)
+		local function send(fields, sender, guid)
+			SK.Sync:OnCommReceived(SK.PREFIX, H.peerMessage(SK, "RB", fields, guid), "GUILD", sender)
+		end
+		send({ e = { { id = id, by = BOB, c = W.now, raid = "hyjal", rs = { "x" }, at = W.now + 3600, u = W.now } } }, "Bob", BOB)
+		assert.is_nil(SK.RaidBoard:Get().events[id])
+		send({ e = { { id = id, by = BOB, c = W.now, raid = "hyjal", rs = string.rep("ony,", 30), at = W.now + 3600, u = W.now } } },
+			"Bob", BOB)
+		assert.is_nil(SK.RaidBoard:Get().events[id])
+		send({ e = { { id = id, by = BOB, c = W.now, raid = "hyjal", rs = "hyjal,ony", at = W.now + 3600, u = W.now } } }, "Bob", BOB)
+		local board = SK.RaidBoard:Get()
+		assert.is_not_nil(board.events[id])
+		send({ su = { { e = id, g = CAT, s = "n", u = W.now, w = "yesterday" } },
+			gs = { { e = id .. "@nope", g = CAT, n = 1, m = "", u = W.now, by = BOB } } }, "Bob", BOB)
+		assert.is_nil(board.signups[id] and board.signups[id][CAT])
+		assert.is_nil(board.slots and board.slots[id .. "@nope"])
+		W.advance(20)
+		assert.equal(0, #SK.errors)
+	end)
+	it("refuses broken v0.14.0 attendance records", function()
+		local A = SK.Attendance
+		local rec = A.NewCheck({ id = "x:1", raid = "ony", at = 1000 }, BOB, 1000)
+		rec.o[CAT] = true
+		assert.is_false((A.ValidRecord(rec, W.now)))
+		rec.o = {}
+		for i = 1, A.MAX_PEOPLE + 1 do rec.signed["Player-9-" .. i] = "y" end
+		assert.is_false((A.ValidRecord(rec, W.now)))
+	end)
+end)
