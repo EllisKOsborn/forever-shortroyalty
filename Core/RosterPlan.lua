@@ -9,7 +9,7 @@
 --   View(rows, opts)   -> items for the table: rows, and for a role its group
 --                         headers (mains, backups, unsorted whose spec fits)
 --   Counts(rows)       -> chip counts; Summary(rows) -> the "All" line
---   Week / WeekStart / PlanWeek / WeekLabel: reset weeks from 9 Dec 2026
+--   AwayDays / AwayText: who's away in the next four weeks, in words
 --   Record / Gain      -> each officer's own daily level / item level history
 local _, SK = ...
 
@@ -18,8 +18,6 @@ local RP = SK:NewModule("RosterPlan")
 RP.MAX_LEVEL = 60          -- Forever's level cap
 RP.CLOSE_LEVEL = 55        -- "close": 55 to 59
 RP.STALE = 7 * 86400       -- data older than this needs a look
-RP.RESET0 = 1796774400     -- Wed 9 Dec 2026 00:00 UTC: raids open, week 1
-RP.WEEK = 7 * 86400
 RP.HISTORY_DAYS = 35
 RP.GAIN_DAYS = 7
 RP.ROLE_KEYS = { T = "TANK", H = "HEALER", D = "DPS" }
@@ -35,39 +33,61 @@ RP.SHORT_SPEC = {
 }
 
 ---------------------------------------------------------------------------
--- Reset weeks
+-- Away days (officer-set, and the player's own from Raids → Calendar)
 ---------------------------------------------------------------------------
-function RP.Week(t) return math.floor((t - RP.RESET0) / RP.WEEK) + 1 end
-function RP.WeekStart(n) return RP.RESET0 + (n - 1) * RP.WEEK end
--- The week planned for: this week, or week 1 before raids open.
-function RP.PlanWeek(now) return math.max(1, RP.Week(now)) end
-function RP.WeekLabel(n, short)
-	local t = RP.WeekStart(n)
-	local day = tonumber(date("!%d", t)) or 0
-	return (short and "" or "Week ") .. n .. " (" .. day .. date("! %b", t) .. ")"
+RP.AWAY_AHEAD = 28 -- days looked at from today
+local WEEKDAY = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" }
+
+local function dayAt(now, i)
+	local t = date("*t", now)
+	return time({ year = t.year, month = t.month, day = t.day + i, hour = 12 })
 end
--- Availability for the weeks offered: { { n, officer = bool, self = days } }.
--- officer = an officer marked the whole week away; self = how many days of
--- that week the player marked away themselves (Raids → Calendar). Pure.
-function RP.Weeks(officerAway, selfAway, weeks)
+
+-- The away days from today: { { key, at, officer = bool, self = bool } }.
+function RP.AwayDays(officerDays, selfAway, now, ahead)
 	local out = {}
-	for _, n in ipairs(weeks) do
-		local days, start = 0, RP.WeekStart(n)
-		if selfAway and SK.Absences then
-			for d = 0, 6 do
-				if SK.Absences.IsAway(selfAway, start + d * 86400 + 43200) then days = days + 1 end
-			end
-		end
-		out[#out + 1] = { n = n, officer = officerAway[n] == true, self = days }
+	for i = 0, (ahead or RP.AWAY_AHEAD) - 1 do
+		local at = dayAt(now, i)
+		local key = date("%Y-%m-%d", at)
+		local off = officerDays and officerDays[key] == true
+		local own = selfAway ~= nil and SK.Absences ~= nil and SK.Absences.IsAway(selfAway, at)
+		if off or own then out[#out + 1] = { key = key, at = at, officer = off, self = own } end
 	end
 	return out
 end
 
--- The weeks offered for "away": the plan week and the next three.
-function RP.WeeksOffered(now)
-	local first, out = RP.PlanWeek(now), {}
-	for i = 0, 3 do out[#out + 1] = first + i end
-	return out
+local function dayText(at) return tostring(tonumber(date("%d", at))) end
+
+-- "9-15 Dec", "9 Dec, 20 Dec", "Every Tue", "Every Tue, 9-15 Dec" ... or nil. Pure.
+function RP.AwayText(days, selfAway)
+	local weekly, parts = {}, {}
+	for _, w in ipairs(selfAway and selfAway.w or {}) do weekly[w] = true end
+	local every = {}
+	for i = 1, 7 do if weekly[i] then every[#every + 1] = WEEKDAY[i] end end
+	if #every > 0 then parts[#parts + 1] = "Every " .. table.concat(every, ", ") end
+	local runs, run = {}, nil
+	for _, d in ipairs(days) do
+		local wd = SK.Absences and SK.Absences.Weekday(d.at)
+		if d.officer or not weekly[wd or 0] then
+			if run and d.at - run.last < 1.5 * 86400 then run.last = d.at
+			else
+				run = { first = d.at, last = d.at }
+				runs[#runs + 1] = run
+			end
+		end
+	end
+	for i, r in ipairs(runs) do
+		if i > 2 then
+			parts[#parts + 1] = "+" .. (#runs - 2)
+			break
+		end
+		local m1, m2 = date("%b", r.first), date("%b", r.last)
+		if r.first == r.last then parts[#parts + 1] = dayText(r.first) .. " " .. m1
+		elseif m1 == m2 then parts[#parts + 1] = dayText(r.first) .. "-" .. dayText(r.last) .. " " .. m2
+		else parts[#parts + 1] = dayText(r.first) .. " " .. m1 .. "-" .. dayText(r.last) .. " " .. m2 end
+	end
+	if #parts == 0 then return nil end
+	return table.concat(parts, ", ")
 end
 
 ---------------------------------------------------------------------------
@@ -117,7 +137,8 @@ local function onyRaid()
 	end
 end
 
--- ctx = { guild, dir, now, me, progress, isOwn(guid), signups = { [guid] = "y" | "t" | "n" } }
+-- ctx = { guild, dir, now, me, progress, isOwn(guid), signups = { [guid] = "y" | "t" | "n" },
+--         raidDays = { ["2026-12-09"] = true } days with a raid on the board }
 function RP.Build(ctx)
 	local guild, dir, now = ctx.guild, ctx.dir or {}, ctx.now
 	local rows = {}
@@ -148,8 +169,7 @@ function RP.Build(ctx)
 		alts[main] = alts[main] or {}
 		table.insert(alts[main], live[guid].name or "?")
 	end
-	local week = RP.PlanWeek(now)
-	local offered = RP.WeeksOffered(now)
+	local weekEnd = dayAt(now, 7)
 	for guid, m in pairs(live) do
 		local altRank = SK.Identity.IsAltRank and SK.Identity.IsAltRank(m)
 		if not mainOf[guid] and not altRank then
@@ -168,15 +188,21 @@ function RP.Build(ctx)
 			local age = p and (own and 0 or (type(p.updated) == "number" and math.max(0, now - p.updated) or nil)) or nil
 			local hist = ctx.progress and ctx.progress[guid]
 			local tiers = OD.TiersOf(dir, guid)
-			local away = OD.AwayOf(dir, guid)
+			local selfAway = SK.Absences and SK.Absences.Of(guild, guid) or nil
+			local awayDays = RP.AwayDays(OD.AwayOf(dir, guid), selfAway, now)
+			local clash, soon = false, false
+			for _, d in ipairs(awayDays) do
+				if ctx.raidDays and ctx.raidDays[d.key] then clash = true end
+				if d.at < weekEnd then soon = true end
+			end
 			local notes = OD.NotesOf(dir, guid, ctx.me)
 			local r = {
 				guid = guid, name = m.name or (p and p.name) or "?", class = m.class or (p and p.class),
 				level = level, rank = m.rank or "", online = m.online and true or false,
 				hasData = p ~= nil, spec = spec, ilvl = ilvl, att = att, ench = ench, age = age,
 				guess = p and SK.Data.GuessRole(m.class or p.class, p.talents) or nil,
-				status = OD.StatusOf(dir, guid), tiers = tiers, away = away, awayNow = away[week] or false,
-				weeks = RP.Weeks(away, SK.Absences and SK.Absences.Of(guild, guid), offered),
+				status = OD.StatusOf(dir, guid), tiers = tiers,
+				awayDays = awayDays, awayText = RP.AwayText(awayDays, selfAway), awayClash = clash, awayNow = soon,
 				notes = notes, note = notes[1] and notes[1].text or nil,
 				levelGain = RP.Gain(hist, now, "l", level), ilvlGain = RP.Gain(hist, now, "i", ilvl),
 				alts = alts[guid] or {}, signed = ctx.signups and ctx.signups[guid] or nil,
@@ -238,12 +264,12 @@ function RP.SummaryText(s)
 	return table.concat(parts, "  ·  ")
 end
 
-local function groupLine(title, list, week)
+local function groupLine(title, list)
 	local at60, attuned, away = 0, 0, {}
 	for _, r in ipairs(list) do
 		if r.level >= RP.MAX_LEVEL then at60 = at60 + 1 end
 		if r.att == "yes" then attuned = attuned + 1 end
-		if r.away[week] then away[#away + 1] = r.name end
+		if r.awayNow then away[#away + 1] = r.name end
 	end
 	local n = #list
 	local parts = { title .. " " .. n }
@@ -254,8 +280,8 @@ local function groupLine(title, list, week)
 	local text = table.concat(parts, "  ·  "):upper()
 	local awayText
 	if #away > 0 then
-		awayText = (table.concat(away, ", ", 1, math.min(#away, 3)) .. (#away > 3 and " +" .. (#away - 3) or "")
-			.. " away week " .. week):upper()
+		awayText = ("Away this week: " .. table.concat(away, ", ", 1, math.min(#away, 3))
+			.. (#away > 3 and " +" .. (#away - 3) or "")):upper()
 	end
 	return text, awayText
 end
@@ -268,14 +294,13 @@ local function match(r, opts)
 end
 
 -- opts = { role = "A" | "T" | "H" | "D" | "N", status = nil | "r" | "b",
---          needs = bool, search = text, week = n }
+--          needs = bool, search = text }
 -- Items get g (group) for sorting; group headers are { section = true, g,
--- text, away = "NAME AWAY WEEK 1" or nil }.
+-- text, away = "AWAY THIS WEEK: NAME" or nil }.
 function RP.View(rows, opts)
 	opts = opts or {}
 	local items = {}
 	local role = opts.role or "A"
-	local week = opts.week or 1
 	if role == "A" or role == "N" then
 		for _, r in ipairs(rows) do
 			if (role == "A" or not r.sorted) and match(r, opts) then r.g = 1; items[#items + 1] = r end
@@ -297,8 +322,8 @@ function RP.View(rows, opts)
 		items[#items + 1] = { section = true, g = g, text = text, away = away }
 		for _, r in ipairs(list) do r.g = g; items[#items + 1] = r end
 	end
-	local t1, a1 = groupLine("Main", mains, week)
-	local t2, a2 = groupLine("Backup", backs, week)
+	local t1, a1 = groupLine("Main", mains)
+	local t2, a2 = groupLine("Backup", backs)
 	add(1, t1, mains, true, a1)
 	add(2, t2, backs, true, a2)
 	add(3, "NOT SORTED YET, SPEC FITS", fits, false)

@@ -38,7 +38,7 @@ bridged to the addon only by copy and paste.
   table only, statuses Raider/Backup not tied to ranks, click a name → the
   Character page, click a note cell → notes).
   - `Core/OfficerDir.lua` new kinds: `t` tiers ("mb-" for T/H/D; v0.10.1
-    `r` roles read as mains), `s` status r/b, `w` away weeks "1,3",
+    `r` roles read as mains), `s` status r/b, `d` away days "2026-12-09,2026-12-10" (officer-set),
     `m:<member>:<author>` per-officer notes (by must equal author; legacy
     `n` shows as its writer's note; `SetMyNote` moves it). `TiersOf/
     StatusOf/AwayOf/NotesOf`, `SetTier/SetStatus/ToggleAway/SetMyNote`.

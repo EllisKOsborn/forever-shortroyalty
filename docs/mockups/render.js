@@ -44,6 +44,7 @@ const SHOTS = {
   "raids-calendar": ["shot=1&screen=raids&data=full&raidsView=calendar", W, H],
   "roster-planner": ["shot=1&screen=roster&data=full&officer=1&rosterView=planner&planRole=T&planMenu=1", W, H],
   "roster-planner-all": ["shot=1&screen=roster&data=full&officer=1&rosterView=planner&planRole=A", W, H],
+  "roster-planner-away": ["shot=1&screen=roster&data=full&officer=1&rosterView=planner&planRole=T&planAway=1", W, H],
   "roster-planner-note": ["shot=1&screen=roster&data=full&officer=1&rosterView=planner&planRole=H&noteOpen=1", W, H],
   "roster-planner-character": ["shot=1&screen=character&data=full&officer=1&offCard=1", W, H],
   "raids-new": ["shot=1&screen=raids&data=full&officer=1&raidsView=new", W, H],

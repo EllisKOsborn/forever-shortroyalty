@@ -273,13 +273,15 @@ addon read.
     Backup. Click **Status**: Raider or Backup. Another officer on v0.13.0
     sees the same within a minute.
 69. [ ] **Tanks** chip: mains, then backups, then unsorted players with a
-    tanking spec. Click someone's first **Away** square: it turns solid red
-    and the Main header shows "NAME AWAY WEEK n". A player who marked a day
-    away themselves (Raids → Calendar) shows a red outline; hover explains.
+    tanking spec. Click someone's **Away** cell: a month calendar opens
+    with raid days underlined. Click two days this week: they turn red, the
+    cell says e.g. "9-10 Dec" (red if a raid is on one), and the Main header
+    says "AWAY THIS WEEK: NAME". A player's own away days (Raids → Calendar)
+    show outlined; hover a day for who set it.
 70. [ ] Click a **note** cell: write a note, Save my note. Another officer
     adds theirs: both show, with names and how long ago. Remove mine works.
 71. [ ] Click a **name**: their Character page has an **Officers** section
-    (with Away weeks); **Alt of** links an alt (it disappears from the
+    (with Away days); **Alt of** links an alt (it disappears from the
     planner, "+1" on the main).
 72. [ ] **Needs a look**, **Raider**, **Backup** filters; column titles sort;
     **Sign-ups** menu shows who signed up for a raid.

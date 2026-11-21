@@ -1,5 +1,5 @@
 -- v0.13.0: the raid roster planner (officers' feedback, 21 Nov): role tiers
--- (Main / Backup), Raider / Backup status, away weeks, notes from several
+-- (Main / Backup), Raider / Backup status, away days, notes from several
 -- officers, and one table of players with level, gear and attunement.
 local H = require("tests.helpers.load")
 
@@ -30,14 +30,14 @@ end
 local function prot() return { trees = { { n = "Arms", p = 5 }, { n = "Fury", p = 5 }, { n = "Protection", p = 31 } } } end
 local function holy() return { trees = { { n = "Discipline", p = 21 }, { n = "Holy", p = 30 }, { n = "Shadow", p = 0 } } } end
 
-describe("v0.13.0 officer roster: tiers, status, away weeks, notes", function()
+describe("v0.13.0 officer roster: tiers, status, away days, notes", function()
 	local SK, W, OD
 	before_each(function()
 		SK, W = setup()
 		OD = SK.OfficerDir
 	end)
 
-	it("sets Main / Backup per role, Raider / Backup and away weeks", function()
+	it("sets Main / Backup per role, Raider / Backup and away days", function()
 		assert.is_true(OD:SetTier(CAT, "HEALER", "m"))
 		assert.is_true(OD:SetTier(CAT, "DPS", "b"))
 		assert.same({ HEALER = "m", DPS = "b" }, OD.TiersOf(OD:Get(), CAT))
@@ -48,11 +48,15 @@ describe("v0.13.0 officer roster: tiers, status, away weeks, notes", function()
 		assert.equal("b", OD.StatusOf(OD:Get(), CAT))
 		assert.is_true(OD:SetStatus(CAT, nil))
 		assert.is_nil(OD.StatusOf(OD:Get(), CAT))
-		assert.is_true(OD:ToggleAway(CAT, 3))
-		assert.is_true(OD:ToggleAway(CAT, 1))
-		assert.equal("1,3", OD:Get()["w:" .. CAT].v)
-		assert.is_true(OD:ToggleAway(CAT, 3))
-		assert.same({ [1] = true }, OD.AwayOf(OD:Get(), CAT))
+		local d1, d2 = date("%Y-%m-%d", W.now + 86400), date("%Y-%m-%d", W.now + 3 * 86400)
+		assert.is_true(OD:ToggleAway(CAT, d2))
+		assert.is_true(OD:ToggleAway(CAT, d1))
+		assert.equal(d1 .. "," .. d2, OD:Get()["d:" .. CAT].v)
+		assert.is_true(OD:ToggleAway(CAT, d2))
+		assert.same({ [d1] = true }, OD.AwayOf(OD:Get(), CAT))
+		-- Past days drop out when the list changes.
+		assert.is_true(OD:ToggleAway(CAT, "2020-01-01"))
+		assert.same({ [d1] = true }, OD.AwayOf(OD:Get(), CAT))
 		local SK2 = setup({ rank = "Member", rankIndex = 4 })
 		assert.is_false(SK2.OfficerDir:SetTier(CAT, "TANK", "m"))
 	end)
@@ -101,10 +105,12 @@ describe("v0.13.0 officer roster: tiers, status, away weeks, notes", function()
 		assert.is_false(OD.Merge(dir, "t:" .. EVE, { v = "mbmb", u = now, by = BOB }, now, lead, member))
 		assert.is_true(OD.Merge(dir, "s:" .. CAT, { v = "r", u = now, by = BOB }, now, lead, member))
 		assert.is_false(OD.Merge(dir, "s:" .. EVE, { v = "core", u = now, by = BOB }, now, lead, member))
-		assert.is_true(OD.Merge(dir, "w:" .. CAT, { v = "1,2", u = now, by = BOB }, now, lead, member))
-		assert.is_false(OD.Merge(dir, "w:" .. EVE, { v = "0", u = now, by = BOB }, now, lead, member))
-		assert.is_false(OD.Merge(dir, "w:" .. EVE, { v = "1,x", u = now, by = BOB }, now, lead, member))
-		assert.is_false(OD.Merge(dir, "w:" .. EVE, { v = string.rep("1,", 13) .. "1", u = now, by = BOB }, now, lead, member))
+		assert.is_true(OD.Merge(dir, "d:" .. CAT, { v = "2026-12-09,2026-12-10", u = now, by = BOB }, now, lead, member))
+		assert.is_false(OD.Merge(dir, "d:" .. EVE, { v = "9 Dec", u = now, by = BOB }, now, lead, member))
+		assert.is_false(OD.Merge(dir, "d:" .. EVE, { v = "2026-12-09,", u = now, by = BOB }, now, lead, member))
+		assert.is_false(OD.Merge(dir, "d:" .. EVE, { v = string.rep("2026-12-09,", 41) .. "2026-12-09", u = now, by = BOB },
+			now, lead, member))
+		assert.is_false(OD.Merge(dir, "w:" .. EVE, { v = "1", u = now, by = BOB }, now, lead, member))
 		assert.is_false(OD.Merge(dir, "m:" .. CAT .. ":" .. W.player.guid, { v = "forged", u = now, by = BOB }, now, lead, member))
 		assert.same({ false, "not the author" }, { OD.Valid("m:" .. CAT .. ":" .. W.player.guid, { v = "x", u = now, by = BOB }, now) })
 		assert.is_false(OD.Merge(dir, "m:" .. CAT .. ":" .. BOB, { v = "a|Hlink", u = now, by = BOB }, now, lead, member))
@@ -175,13 +181,13 @@ describe("v0.13.0 roster planner rows and views", function()
 	it("shows a role's mains, backups and unsorted players whose spec fits", function()
 		assert.is_true(OD:SetTier(BOB, "TANK", "m"))
 		assert.is_true(OD:SetTier(CAT, "TANK", "b"))
-		assert.is_true(OD:ToggleAway(BOB, RP.PlanWeek(W.now)))
+		assert.is_true(OD:ToggleAway(BOB, date("%Y-%m-%d", W.now + 2 * 86400)))
 		local rows = build()
-		local items = RP.View(rows, { role = "T", week = RP.PlanWeek(W.now) })
+		local items = RP.View(rows, { role = "T" })
 		assert.is_true(items[1].section)
 		assert.truthy(items[1].text:find("MAIN 1", 1, true))
 		assert.truthy(items[1].text:find("ALL AT 60", 1, true))
-		assert.truthy(items[1].away:find("BOB STONE AWAY WEEK", 1, true))
+		assert.equal("AWAY THIS WEEK: BOB STONE", items[1].away)
 		assert.equal("Bob Stone", items[2].name)
 		assert.truthy(items[3].text:find("BACKUP 1", 1, true))
 		assert.equal("Cat Fern", items[4].name)
@@ -236,16 +242,24 @@ describe("v0.13.0 roster planner rows and views", function()
 		assert.equal(1, #store[CAT])
 	end)
 
-	it("sums up the guild and labels reset weeks", function()
+	it("sums up the guild and says away days in words", function()
 		local s = RP.Summary(build())
 		assert.equal(1, s.at60 - (byName(build())["Pip Hocus"].level >= 60 and 1 or 0))
 		assert.equal(1, s.attuned)
 		assert.truthy(RP.SummaryText(s):find("attuned to Onyxia", 1, true))
-		assert.equal(1, RP.Week(RP.RESET0))
-		assert.equal(2, RP.Week(RP.RESET0 + 7 * 86400))
-		assert.equal(1, RP.PlanWeek(RP.RESET0 - 86400))
-		assert.equal("Week 1 (9 Dec)", RP.WeekLabel(1))
-		assert.same({ 6, 7, 8, 9 }, RP.WeeksOffered(W.now))
+		local function key(i) return date("%Y-%m-%d", W.now + i * 86400) end
+		local function day(i) return tostring(tonumber(date("%d", W.now + i * 86400))) end
+		-- A run of days, a single day, a weekly day, and nothing.
+		local days = RP.AwayDays({ [key(2)] = true, [key(3)] = true, [key(4)] = true, [key(10)] = true }, nil, W.now)
+		assert.equal(4, #days)
+		local text = RP.AwayText(days, nil)
+		assert.truthy(text:find(day(2) .. "-" .. day(4), 1, true) or text:find(day(2) .. " ", 1, true))
+		assert.truthy(text:find(day(10), 1, true))
+		local weekly = { w = { 2 } }
+		local wd = RP.AwayDays({}, weekly, W.now)
+		assert.equal(4, #wd)
+		assert.equal("Every Tue", RP.AwayText(wd, weekly))
+		assert.is_nil(RP.AwayText({}, nil))
 	end)
 end)
 
@@ -271,7 +285,7 @@ describe("v0.13.0 roster planner page", function()
 		local total = 0
 		for _, c in ipairs(R.PLAN_COLUMNS) do total = total + c.width end
 		assert.equal(SK.Theme.SIZES.contentW - SK.Theme.SPACE.m, total)
-		assert.is_true(R.PLAN_COLUMNS[#R.PLAN_COLUMNS].width >= 90) -- the note keeps some room
+		assert.is_true(R.PLAN_COLUMNS[#R.PLAN_COLUMNS].width >= 80) -- the note keeps some room
 	end)
 
 	it("lists players with counts on the chips and the guild summary", function()
@@ -338,7 +352,7 @@ describe("v0.13.0 roster planner page", function()
 end)
 
 describe("v0.13.0 Officers on the Character page", function()
-	it("shows status, roles and notes, and sets away weeks and Alt of", function()
+	it("shows status, roles, notes and away days, and sets Alt of", function()
 		local SK, W = setup()
 		profile(SK, CAT, { level = 58, talents = holy(), ilvl = 54 })
 		H.loadUI(SK)
@@ -355,9 +369,9 @@ describe("v0.13.0 Officers on the Character page", function()
 		assert.equal("Main", sec.rows[3].value)
 		assert.equal("-", sec.rows[5].value) -- Away
 		assert.truthy(sec.rows[6].text:find("Keen healer", 1, true))
-		assert.is_true(OD:ToggleAway(CAT, SK.RosterPlan.PlanWeek(W.now) + 1))
+		assert.is_true(OD:ToggleAway(CAT, date("%Y-%m-%d", W.now + 86400)))
 		C:Refresh()
-		assert.equal(SK.RosterPlan.WeekLabel(SK.RosterPlan.PlanWeek(W.now) + 1), C.colA.sections[1].rows[5].value)
+		assert.truthy(C.colA.sections[1].rows[5].value:find(tostring(tonumber(date("%d", W.now + 86400))), 1, true))
 		C.altMenu:Choose(BOB)
 		assert.equal(BOB, OD.AltOf(OD:Get(), CAT))
 		-- A player without the addon still gets the Officers section.
@@ -403,33 +417,38 @@ describe("v0.13.0 Auto-fill uses the roster planner", function()
 	end)
 end)
 
-describe("v0.13.0 availability squares", function()
-	it("shows officer-set weeks, the player's own away days, and toggles from the table", function()
+describe("v0.13.0 away calendar", function()
+	it("shows their own and officer-set days, marks a day from the calendar, and flags a raid clash", function()
 		local SK, W = setup()
-		local RP = SK.RosterPlan
-		local weeks = RP.WeeksOffered(W.now)
-		-- Cat marked every Wednesday away herself; an officer marks Bob away for the second week.
-		local wed = { w = { 3 } }
-		local cat = RP.Weeks({}, wed, weeks)
-		assert.equal(1, cat[1].self)
-		assert.is_false(cat[1].officer)
-		local bob = RP.Weeks({ [weeks[2]] = true }, nil, weeks)
-		assert.is_true(bob[2].officer)
-		assert.equal(0, bob[1].self)
 		H.loadUI(SK)
-		local R = SK.RosterTab
-		assert.truthy(R.WeekTip(cat[1]):find("1 day away themselves", 1, true))
-		assert.truthy(R.WeekTip(bob[2]):find("set by an officer", 1, true))
-		assert.truthy(R.WeekTip(bob[1]):find("available", 1, true))
+		local R, OD = SK.RosterTab, SK.OfficerDir
 		SK.DB.officer[W.player.guid] = true
 		SK.DB.settings.roster.officer = true
+		local e = SK.RaidBoard:Create("ony", W.now + 2 * 86400)
+		assert.truthy(e)
 		SK.MainFrame:Open("roster")
-		local row
-		for _, it in ipairs(R.offList.items) do if it.guid == CAT then row = it end end
-		R:ToggleWeek(row, weeks[3])
-		assert.is_true(SK.OfficerDir.AwayOf(SK.OfficerDir:Get(), CAT)[weeks[3]])
-		for _, it in ipairs(R.offList.items) do if it.guid == CAT then row = it end end
-		assert.is_true(row.weeks[3].officer)
+		local function rowOf(guid)
+			for _, it in ipairs(R.offList.items) do if it.guid == guid then return it end end
+		end
+		assert.is_nil(rowOf(CAT).awayText)
+		R:OpenAway(rowOf(CAT), W.stub())
+		assert.is_true(R.awayBox:IsShown())
+		-- Click the raid day's cell in the calendar.
+		local raidKey = date("%Y-%m-%d", e.at)
+		local hit
+		for _, c in ipairs(R.awayBox.cells) do
+			if c.cell and date("%Y-%m-%d", c.cell.at) == raidKey then hit = c end
+		end
+		assert.truthy(hit)
+		assert.equal(1, #hit.cell.raids)
+		hit:GetScript("OnClick")(hit)
+		assert.is_true(OD.AwayOf(OD:Get(), CAT)[raidKey])
+		local r = rowOf(CAT)
+		assert.truthy(r.awayText)
+		assert.is_true(r.awayClash)
+		assert.is_true(r.awayNow)
+		R:CloseAway()
+		assert.is_false(R.awayBox:IsShown())
 		assert.equal(0, #SK.errors)
 	end)
 end)

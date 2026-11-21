@@ -11,7 +11,7 @@
 --   t  role tiers: 3 letters for Tank, Healer, DPS, each "m" main, "b" backup
 --      or "-" (e.g. "mb-"); replaces r, which still reads as mains
 --   s  status: "r" Raider, "b" Backup, "" not set (not the guild rank)
---   w  away: reset weeks, "1,3" (week 1 = from 9 Dec 2026), "" = none
+--   d  away days an officer marked: "2026-12-09,2026-12-10" (local dates), "" = none
 --   m  one officer's note: key "m:" .. guid .. ":" .. author GUID; only the
 --      author can write it (by must be the author). n stays as a legacy note.
 --   entry = { v = value, u = changed, by = officer GUID }; newest wins.
@@ -25,7 +25,7 @@ local Compat = SK.Compat
 
 OD.NOTE_MAX = 300
 OD.MAX_ENTRIES = 4000
-OD.MAX_AWAY = 12
+OD.MAX_AWAY = 40
 OD.MAX_FUTURE = 300
 OD.ROLE_LETTERS = { T = "TANK", H = "HEALER", D = "DPS" }
 OD.ROLE_ORDER = { "T", "H", "D" }
@@ -39,7 +39,7 @@ function OD.Split(key)
 	if type(key) ~= "string" then return nil end
 	local guid, author = key:match("^m:([^:]+):([^:]+)$")
 	if guid then return "m", guid, author end
-	return key:match("^([rnatsw]):([^:]+)$")
+	return key:match("^([rnatsd]):([^:]+)$")
 end
 
 -- Plain text only: no colour codes, links or line breaks; trimmed; cut.
@@ -74,14 +74,12 @@ function OD.Valid(key, e, now)
 		if not str(v, 3) or not (v == "" or v:match("^[-mb][-mb][-mb]$")) then return false, "bad tiers" end
 	elseif kind == "s" then
 		if v ~= "" and v ~= "r" and v ~= "b" then return false, "bad status" end
-	elseif kind == "w" then
-		if not str(v, 64) or not (v == "" or v:match("^%d+[%d,]*$")) then return false, "bad weeks" end
-		local n = 0
-		for w in v:gmatch("[^,]+") do
-			n = n + 1
-			local x = tonumber(w)
-			if not x or x < 1 or x > 999 or n > OD.MAX_AWAY then return false, "bad weeks" end
+	elseif kind == "d" then
+		if not str(v, 11 * OD.MAX_AWAY) then return false, "bad days" end
+		for day in v:gmatch("[^,]*") do
+			if day ~= "" and not day:match("^%d%d%d%d%-%d%d%-%d%d$") then return false, "bad days" end
 		end
+		if v ~= "" and (v:sub(1, 1) == "," or v:sub(-1) == "," or v:find(",,", 1, true)) then return false, "bad days" end
 	elseif not str(v, 64) then
 		return false, "bad alt"
 	end
@@ -159,11 +157,11 @@ function OD.StatusOf(dir, guid)
 	return e and e.v ~= "" and e.v or nil
 end
 
--- { [week] = true }.
+-- Days an officer marked them away: { ["2026-12-09"] = true }.
 function OD.AwayOf(dir, guid)
 	local out = {}
-	local e = dir and dir[OD.Key("w", guid)]
-	for w in ((e and e.v) or ""):gmatch("%d+") do out[tonumber(w)] = true end
+	local e = dir and dir[OD.Key("d", guid)]
+	for day in ((e and e.v) or ""):gmatch("[^,]+") do out[day] = true end
 	return out
 end
 
@@ -285,15 +283,16 @@ function OD:SetStatus(guid, status)
 	return self:Set("s", guid, (status == "r" or status == "b") and status or "")
 end
 
-function OD:ToggleAway(guid, week)
+-- Mark or clear one day ("2026-12-09"). Days before today are dropped.
+function OD:ToggleAway(guid, day)
 	local away = OD.AwayOf(self:Get(), guid)
-	away[week] = not away[week] or nil
-	local weeks = {}
-	for w in pairs(away) do weeks[#weeks + 1] = w end
-	table.sort(weeks)
-	while #weeks > OD.MAX_AWAY do table.remove(weeks, 1) end
-	for i, w in ipairs(weeks) do weeks[i] = tostring(w) end
-	return self:Set("w", guid, table.concat(weeks, ","))
+	away[day] = not away[day] or nil
+	local today = date("%Y-%m-%d", Compat.Now())
+	local days = {}
+	for d in pairs(away) do if d >= today then days[#days + 1] = d end end
+	table.sort(days)
+	while #days > OD.MAX_AWAY do table.remove(days) end
+	return self:Set("d", guid, table.concat(days, ","))
 end
 
 -- Write (or, with "", remove) my own note. A legacy note I wrote moves into it.

@@ -487,22 +487,22 @@ local function tierRank(role) return function(a, b)
 end end
 
 Roster.PLAN_COLUMNS = {
-	{ key = "name", title = "Name", width = 104, sort = function(a, b) return a.name:lower() < b.name:lower() end },
+	{ key = "name", title = "Name", width = 100, sort = function(a, b) return a.name:lower() < b.name:lower() end },
 	{ key = "spec", title = "Spec", width = 64, sort = function(a, b) return (a.spec or "~") < (b.spec or "~") end },
 	{ key = "status", title = "Status", width = 58, click = true, sort = RP.DefaultOrder },
 	{ key = "TANK", title = "Tank", width = 48, click = true, sort = tierRank("TANK") },
 	{ key = "HEALER", title = "Healer", width = 48, click = true, sort = tierRank("HEALER") },
 	{ key = "DPS", title = "DPS", width = 48, click = true, sort = tierRank("DPS") },
-	-- v0.13.0: availability, one square per reset week (the next four).
-	{ key = "weeks", title = "Away", width = 56, click = true,
-		sort = function(a, b) return (a.awayNow and 1 or 0) < (b.awayNow and 1 or 0) end },
+	-- v0.13.0: away days in words ("9-15 Dec", "Every Tue"); click for a mini calendar.
+	{ key = "away", title = "Away", width = 72, click = true,
+		sort = function(a, b) return (a.awayDays[1] and a.awayDays[1].at or 1e12) < (b.awayDays[1] and b.awayDays[1].at or 1e12) end },
 	{ key = "level", title = "Level", width = 52, align = "RIGHT", sort = function(a, b) return a.level < b.level end },
 	{ key = "ilvl", title = "iLvl", width = 52, align = "RIGHT", sort = function(a, b) return (a.ilvl or 0) < (b.ilvl or 0) end },
 	{ key = "att", title = "Ony", width = 40, align = "RIGHT",
 		sort = function(a, b) return (a.att == "yes" and 1 or 0) < (b.att == "yes" and 1 or 0) end },
 	{ key = "ench", title = "Ench", width = 30, align = "RIGHT", sort = function(a, b) return (a.ench or 99) < (b.ench or 99) end },
 	{ key = "seen", title = "Seen", width = 40, align = "RIGHT", sort = ageSort },
-	{ key = "note", title = "Note", width = S.contentW - SP.m - 640, click = true },
+	{ key = "note", title = "Note", width = S.contentW - SP.m - 652, click = true },
 }
 
 local SIGNED_TEXT = { y = { "good", "Yes" }, t = { "accent", "Maybe" }, n = { "bad", "No" } }
@@ -565,10 +565,7 @@ local function rowTooltip(row, r)
 	GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
 	Theme.TipLine(GameTooltip, Theme.ClassText(r.name, r.class) .. Theme.Paint("dim", "  " .. (r.rank ~= "" and r.rank or "")))
 	if #r.alts > 0 then Theme.TipLine(GameTooltip, "Alts: " .. table.concat(r.alts, ", "), "dim", true) end
-	local away = {}
-	for w in pairs(r.away) do away[#away + 1] = w end
-	table.sort(away)
-	if #away > 0 then Theme.TipLine(GameTooltip, "Away: week " .. table.concat(away, ", "), "bad", true) end
+	if r.awayText then Theme.TipLine(GameTooltip, "Away: " .. r.awayText, "bad", true) end
 	for _, n in ipairs(r.notes) do
 		local who = nameOf(n.by) or "?"
 		Theme.TipLine(GameTooltip, Theme.Paint("dim", who .. ": ") .. n.text, "text", true)
@@ -592,52 +589,29 @@ local function decoratePlanRow(row)
 	row.hits = {}
 	local x = 0
 	for _, col in ipairs(Roster.PLAN_COLUMNS) do
-		if col.key == "weeks" then
-			for i = 1, 4 do
-				local q = CreateFrame("Button", nil, row)
-				q:SetSize(Roster.SQUARE, Roster.SQUARE)
-				q:SetPoint("LEFT", x + SP.s + (i - 1) * (Roster.SQUARE + 3), 0)
-				q.fill = q:CreateTexture(nil, "ARTWORK")
-				q.fill:SetAllPoints()
-				Theme.Border(q, "bad")
-				q.key, q.idx = "week", i
-				q:SetScript("OnClick", function(self)
-					local r = row.item
-					if r and not r.section and r.weeks[self.idx] then Roster:ToggleWeek(r, r.weeks[self.idx].n) end
-				end)
-				q:SetScript("OnEnter", function(self)
-					local r = row.item
-					local w = r and not r.section and r.weeks[self.idx]
-					if not w then return end
-					GameTooltip:SetOwner(self, "ANCHOR_TOP")
-					Theme.TipLine(GameTooltip, Roster.WeekTip(w), "text", true)
-					Theme.TipLine(GameTooltip, w.officer and "Click: available again." or "Click: mark the whole week away.", "accent")
-					GameTooltip:Show()
-				end)
-				q:SetScript("OnLeave", function() GameTooltip:Hide() end)
-				row.hits[#row.hits + 1] = q
-			end
-		elseif col.click then
+		if col.click then
 			local b = CreateFrame("Button", nil, row)
 			b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-			local w = col.key == "note" and (col.width - SP.s) or Roster.PILL_W
+			local text = col.key == "note" or col.key == "away"
+			local w = text and (col.width - SP.s) or Roster.PILL_W
 			b:SetSize(w, S.row - 6)
-			b:SetPoint("LEFT", x + (col.key == "note" and SP.xs or math.floor((col.width - w) / 2)), 0)
+			b:SetPoint("LEFT", x + (text and SP.xs or math.floor((col.width - w) / 2)), 0)
 			b.fill = b:CreateTexture(nil, "BACKGROUND")
 			b.fill:SetAllPoints()
 			Theme.Solid(b.fill, "accent")
 			b.fill:Hide()
-			if col.key ~= "note" then Theme.Border(b, "accent") end
+			if not text then Theme.Border(b, "accent") end
 			b.label = Theme.Text(b, col.key == "note" and "body" or "small", "text")
-			b.label:SetPoint("LEFT", col.key == "note" and SP.xs or 0, 0)
-			b.label:SetPoint("RIGHT", col.key == "note" and -SP.xs or 0, 0)
-			b.label:SetJustifyH(col.key == "note" and "LEFT" or "CENTER")
+			b.label:SetPoint("LEFT", text and SP.xs or 0, 0)
+			b.label:SetPoint("RIGHT", text and -SP.xs or 0, 0)
+			b.label:SetJustifyH(text and "LEFT" or "CENTER")
 			b.label:SetWordWrap(false)
 			b.key = col.key
 			b:SetScript("OnClick", function(self)
 				local r = row.item
 				if not r or r.section then return end
 				if self.key == "note" then return Roster:OpenNotes(r, self) end
+				if self.key == "away" then return Roster:OpenAway(r, self) end
 				Roster.cellMenu:Open(self, Roster.CellItems(r, self.key))
 			end)
 			b:SetScript("OnEnter", function(self)
@@ -650,6 +624,18 @@ local function decoratePlanRow(row)
 						Theme.TipLine(GameTooltip, Theme.Paint("dim", (nameOf(n.by) or "?") .. ": ") .. n.text, "text", true)
 					end
 					Theme.TipLine(GameTooltip, "Click to read or add notes.", "accent")
+				elseif self.key == "away" then
+					if #r.awayDays == 0 then Theme.TipLine(GameTooltip, "Not away in the next four weeks.", "dim") end
+					for i, d in ipairs(r.awayDays) do
+						if i > 8 then
+							Theme.TipLine(GameTooltip, "+" .. (#r.awayDays - 8) .. " more", "faint")
+							break
+						end
+						Theme.TipDouble(GameTooltip, date("%a %d %b", d.at), d.officer and "set by an officer" or "they marked it",
+							"text", "dim")
+					end
+					if r.awayClash then Theme.TipLine(GameTooltip, "Clashes with a raid on the calendar.", "bad") end
+					Theme.TipLine(GameTooltip, "Click for the calendar.", "accent")
 				elseif self.key == "status" then
 					Theme.TipLine(GameTooltip, "Raider or Backup (not their guild rank). Click to change.", "accent", true)
 				else
@@ -662,25 +648,6 @@ local function decoratePlanRow(row)
 		end
 		x = x + col.width
 	end
-end
-
-Roster.SQUARE = 9
-
--- What one week's square means (tooltip). Pure.
-function Roster.WeekTip(w)
-	local label = RP.WeekLabel(w.n)
-	if w.officer then return label .. ": away (set by an officer)" end
-	if w.self > 0 then
-		return label .. ": they marked " .. (w.self == 7 and "the whole week" or (w.self .. (w.self == 1 and " day" or " days")))
-			.. " away themselves (Raids → Calendar)"
-	end
-	return label .. ": available"
-end
-
-function Roster:ToggleWeek(r, n)
-	local ok, why = SK.OfficerDir:ToggleAway(r.guid, n)
-	if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
-	self:Refresh()
 end
 
 local function pill(b, tone, text)
@@ -697,14 +664,8 @@ local function updatePlanRow(row, r)
 	for _, b in ipairs(row.hits) do
 		b:SetShown(not sec)
 		if not sec then
-			if b.key == "week" then
-				local w = r.weeks[b.idx]
-				b:SetShown(w ~= nil)
-				if w then
-					-- solid red: an officer marked the week; red outline: they marked days themselves
-					Theme.Solid(b.fill, w.officer and "bad" or "lineStrong", w.officer and 1 or (w.self > 0 and 0 or 1))
-					Theme.SetBorderColor(b, "bad", (w.officer or w.self > 0) and 1 or 0)
-				end
+			if b.key == "away" then
+				b.label:SetText(r.awayText and Theme.Paint(r.awayClash and "bad" or "dim", r.awayText) or Theme.Paint("faint", "-"))
 			elseif b.key == "note" then
 				local n = #r.notes
 				b.label:SetText(n == 0 and Theme.Paint("faint", "add") or (Theme.Paint("dim", r.note or "") ..
@@ -797,6 +758,139 @@ function Roster:BuildOfficers(page)
 	self.offList:SetPoint("TOPLEFT", 0, -(2 * S.control + SP.s + SP.m))
 	self.offList:SetPoint("BOTTOMRIGHT")
 	self:BuildNotes(p)
+	self:BuildAway(p)
+end
+
+---------------------------------------------------------------------------
+-- The away calendar (click an Away cell): a month like Raids → Calendar.
+-- Raid days are marked; the player's own away days (from their Calendar)
+-- show outlined; officers click days to mark them away (filled red).
+---------------------------------------------------------------------------
+Roster.CAL_CELL_W, Roster.CAL_CELL_H = 30, 20
+
+function Roster:BuildAway(p)
+	local W7, H6 = 7 * (Roster.CAL_CELL_W + 2), 6 * (Roster.CAL_CELL_H + 2)
+	local box = CreateFrame("Frame", nil, p)
+	box:SetSize(W7 + 2 * SP.m, W.CARD_LABEL_H + S.control + 16 + H6 + 2 * SP.m + 18)
+	box:SetFrameStrata("FULLSCREEN_DIALOG")
+	box:EnableMouse(true)
+	Theme.Panel(box, { bg = "raised", border = "accent" })
+	box:Hide()
+	self.awayBox = box
+	box.title = Theme.Text(box, "body", "text")
+	box.title:SetPoint("TOPLEFT", SP.m, -SP.s)
+	box.close = W.CloseButton(box, function() Roster:CloseAway() end)
+	box.close:SetPoint("TOPRIGHT", -SP.xs, -SP.xs)
+	local top = -(SP.s + W.CARD_LABEL_H)
+	box.prev = W.Button(box, "<", S.control, S.control, function() Roster:ShiftAway(-1) end)
+	box.prev:SetPoint("TOPLEFT", SP.m, top)
+	box.next = W.Button(box, ">", S.control, S.control, function() Roster:ShiftAway(1) end)
+	box.next:SetPoint("TOPRIGHT", -SP.m, top)
+	box.month = Theme.Text(box, "body", "text")
+	box.month:SetPoint("TOP", 0, top - 6)
+	local y = top - S.control - SP.xs
+	for i, d in ipairs({ "M", "T", "W", "T", "F", "S", "S" }) do
+		local l = Theme.Text(box, "small", "faint")
+		l:SetText(d)
+		l:SetPoint("TOP", box, "TOPLEFT", SP.m + (i - 1) * (Roster.CAL_CELL_W + 2) + Roster.CAL_CELL_W / 2, y)
+	end
+	y = y - 16
+	box.cells = {}
+	for i = 1, 42 do
+		local c = CreateFrame("Button", nil, box)
+		c:SetSize(Roster.CAL_CELL_W, Roster.CAL_CELL_H)
+		c:SetPoint("TOPLEFT", SP.m + ((i - 1) % 7) * (Roster.CAL_CELL_W + 2), y - math.floor((i - 1) / 7) * (Roster.CAL_CELL_H + 2))
+		c.fill = c:CreateTexture(nil, "BACKGROUND")
+		c.fill:SetAllPoints()
+		Theme.Border(c, "bad")
+		c.raid = c:CreateTexture(nil, "ARTWORK")
+		c.raid:SetHeight(2)
+		c.raid:SetPoint("BOTTOMLEFT", 3, 2)
+		c.raid:SetPoint("BOTTOMRIGHT", -3, 2)
+		Theme.Solid(c.raid, "accent")
+		c.label = Theme.Text(c, "small", "text")
+		c.label:SetPoint("CENTER")
+		c:SetScript("OnClick", function(self)
+			if self.cell and not self.cell.past and Roster.awayFor then
+				local ok, why = SK.OfficerDir:ToggleAway(Roster.awayFor.guid, date("%Y-%m-%d", self.cell.at))
+				if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
+				Roster:Refresh()
+				Roster:DrawAway()
+			end
+		end)
+		c:SetScript("OnEnter", function(self)
+			local cell = self.cell
+			if not cell then return end
+			GameTooltip:SetOwner(self, "ANCHOR_TOP")
+			Theme.TipLine(GameTooltip, date("%A %d %B", cell.at), "text")
+			for _, rd in ipairs(cell.raids) do Theme.TipLine(GameTooltip, "Raid: " .. rd.text, "accent") end
+			if cell.officer then Theme.TipLine(GameTooltip, "Away (set by an officer)", "bad") end
+			if cell.away then Theme.TipLine(GameTooltip, "Away (they marked it on their Calendar)", "bad") end
+			if not cell.past then
+				Theme.TipLine(GameTooltip, cell.officer and "Click: not away" or "Click: mark away", "accent")
+			end
+			GameTooltip:Show()
+		end)
+		c:SetScript("OnLeave", function() GameTooltip:Hide() end)
+		box.cells[i] = c
+	end
+	box.key = Theme.Text(box, "small", "dim")
+	box.key:SetPoint("BOTTOMLEFT", SP.m, SP.s)
+	box.key:SetPoint("BOTTOMRIGHT", -SP.m, SP.s)
+	box.key:SetJustifyH("LEFT")
+	box.key:SetWordWrap(false)
+	box.key:SetText(Theme.Paint("bad", "Red") .. " away  ·  " .. Theme.Paint("bad", "Outline") .. " theirs  ·  " ..
+		Theme.Paint("accent", "Line") .. " raid")
+end
+
+function Roster:OpenAway(r, anchor)
+	local box = self.awayBox
+	if box:IsShown() and self.awayFor and self.awayFor.guid == r.guid then return self:CloseAway() end
+	self:CloseNotes()
+	self.awayFor = r
+	local t = date("*t", SK.Compat.Now())
+	self.awayMonth = { t.year, t.month }
+	box:ClearAllPoints()
+	box:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -SP.xxs)
+	box.title:SetText(Theme.ClassText(r.name, r.class) .. Theme.Paint("dim", "  away"))
+	box:Show()
+	self:DrawAway()
+end
+
+function Roster:CloseAway()
+	if self.awayBox then self.awayBox:Hide() end
+	self.awayFor = nil
+end
+
+function Roster:ShiftAway(delta)
+	if not self.awayMonth then return end
+	self.awayMonth = { SK.RaidsTab.ShiftMonth(self.awayMonth[1], self.awayMonth[2], delta) }
+	self:DrawAway()
+end
+
+function Roster:DrawAway()
+	local r, box = self.awayFor, self.awayBox
+	if not r or not box:IsShown() then return end
+	local guild = SK.DBM:Guild()
+	local now = SK.Compat.Now()
+	local officer = SK.OfficerDir.AwayOf(SK.OfficerDir:Get(guild), r.guid)
+	local grid = SK.RaidsTab.MonthGrid(self.awayMonth[1], self.awayMonth[2], SK.RaidBoard:Get(guild), now,
+		SK.Compat.PlayerGUID(), SK.Absences.Of(guild, r.guid))
+	box.month:SetText(grid.title)
+	for i, c in ipairs(box.cells) do
+		local cell = grid.cells[i]
+		cell.officer = officer[date("%Y-%m-%d", cell.at)] == true
+		c.cell = cell
+		local tone = (cell.officer and "onAccent") or (not cell.inMonth or cell.past) and "faint" or "text"
+		c.label:SetText(Theme.Paint(tone, tostring(cell.day)))
+		Theme.Solid(c.fill, cell.officer and "bad" or (cell.today and "accent" or "surface"),
+			(cell.officer and 1) or (cell.today and Theme.ALPHA.selected) or 1)
+		Theme.SetBorderColor(c, "bad", (cell.away and not cell.officer) and 1 or 0)
+		c.raid:SetShown(#cell.raids > 0)
+	end
+	local row
+	for _, x in ipairs(self.offList.items or {}) do if x.guid == r.guid then row = x end end
+	if row then self.awayFor = row end
 end
 
 -- The notes box: everyone's notes on one player, and mine to write.
@@ -860,6 +954,7 @@ function Roster.NotesText(notes)
 end
 
 function Roster:OpenNotes(r, anchor)
+	self:CloseAway()
 	local box = self.noteBox
 	if box:IsShown() and self.notesFor == r.guid then return self:CloseNotes() end
 	self.notesFor = r.guid
@@ -899,8 +994,13 @@ function Roster:PlanRows()
 		signups = {}
 		for guid, su in pairs(board and board.signups[self.signupsFor] or {}) do signups[guid] = su.s end
 	end
+	local raidDays = {}
+	local board = SK.RaidBoard:Get(guild)
+	for _, e in pairs(board and board.events or {}) do
+		if not e.x and e.at >= now - 86400 then raidDays[date("%Y-%m-%d", e.at)] = true end
+	end
 	local rows = RP.Build({ guild = guild, dir = SK.OfficerDir:Get(guild) or {}, now = now, me = SK.Compat.PlayerGUID(),
-		progress = SK.DB.rosterProgress, signups = signups,
+		progress = SK.DB.rosterProgress, signups = signups, raidDays = raidDays,
 		profile = function(g) return SK.Profile:Get(g, guild) end,
 		isOwn = function(g) return SK.DB.account[g] == true end })
 	RP.Record(SK.DB.rosterProgress, rows, now)
@@ -909,7 +1009,7 @@ end
 
 function Roster:RefreshOfficers()
 	local ps = SK.DB.settings.planner
-	local rows, guild, now = self:PlanRows()
+	local rows, guild = self:PlanRows()
 	if self.signupsFor then
 		local board = SK.RaidBoard:Get(guild)
 		if not (board and board.events[self.signupsFor]) then self.signupsFor = nil end
@@ -927,23 +1027,17 @@ function Roster:RefreshOfficers()
 	for _, r in ipairs(rows) do if r.needsLook then needs = needs + 1 end end
 	self.needsChip:SetText("Needs a look  " .. Theme.Paint(ps.needs and "text" or "faint", tostring(needs)))
 	self.needsChip:SetActive(ps.needs == true)
-	local week = RP.PlanWeek(now)
-	local items = RP.View(rows, { role = ps.role or "A", status = ps.status, needs = ps.needs, search = self.filter, week = week })
+	local items = RP.View(rows, { role = ps.role or "A", status = ps.status, needs = ps.needs, search = self.filter })
 	if (ps.role or "A") == "A" then
 		self.planSummary:SetText(RP.SummaryText(RP.Summary(rows)))
 	else
-		self.planSummary:SetText("Click a cell to change it.  Away: 4 reset weeks from " .. RP.WeekLabel(week, true) ..
-			" (solid: an officer, outline: their own days).")
+		self.planSummary:SetText("Click a status, role, away or note cell to change it. Click a name for their character.")
 	end
 	self.count:SetText(Theme.Count(#rows, "player") .. "  ·  officers only")
 	self.signupMenu:Refresh()
 	for i, col in ipairs(Roster.PLAN_COLUMNS) do
 		local hb = self.offList.headerButtons[i]
 		if col.key == "seen" then hb.text:SetText(self.signupsFor and "Signed" or "Seen") end
-		if col.key == "weeks" then
-			hb.tooltip = "Away, one square per reset week from " .. RP.WeekLabel(RP.PlanWeek(now)) ..
-				". Solid red: set by an officer. Outline: they marked days away themselves."
-		end
 	end
 	self.offList:SetEmptyText(Roster.EmptyText(guild ~= nil, self.filter))
 	local list = self.offList

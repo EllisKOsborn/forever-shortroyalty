@@ -18,11 +18,12 @@ From the officers' feedback: one overview of the static raid roster.
   officer's note and write your own (each with its author and date); click a
   **name** for the Character page. Columns sort. Optional **Sign-ups** column
   for a raid.
-- **Away** column: one square per reset week, the next four (week 1 = 9
-  Dec). Solid red = an officer marked them away, red outline = they marked
-  away days themselves on the Calendar. Click a square to mark the week.
+- **Away** column in words ("9-15 Dec", "Every Tue"), red when it clashes
+  with a raid. Click it for a **mini calendar** (like Raids → Calendar):
+  raid days are marked, the player's own away days are outlined, and you
+  click days to mark them away. Group headers say "Away this week: …".
 - Character page (officers): an **Officers** section (status, roles, away
-  weeks, attendance, notes) and **Alt of** at the top right.
+  days, attendance, notes) and **Alt of** at the top right.
 - **Taller window** in the Roster's ··· menu.
 - Raids → Groups **Auto-fill** puts Raiders and officer-set mains first.
 - Officer roles from v0.10.1 count as mains; the old single officer note

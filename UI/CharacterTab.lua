@@ -243,7 +243,7 @@ function Char:Build(page)
 end
 
 -- v0.13.0: officers (with /sr officer) get "Alt of" for the player shown,
--- top right; status, roles, away weeks and notes show in the Officers
+-- top right; status, roles, away days and notes show in the Officers
 -- section and are changed in Roster → Officers (the roster planner).
 Char.STRIP_W = 330
 function Char:BuildOfficerStrip(page)
@@ -306,12 +306,10 @@ function Char.OfficerRows(dir, guid, me, att, nameOf)
 		rows[#rows + 1] = { label = SK.Data.ROLE_NAMES[role], value = t and RP.TIER_NAME[t] or "-",
 			tone = t == "m" and "accent" or (t == "b" and "text" or "faint") }
 	end
-	local weeks = {}
-	for w in pairs(OD.AwayOf(dir, guid)) do weeks[#weeks + 1] = w end
-	table.sort(weeks)
-	for i, w in ipairs(weeks) do weeks[i] = RP.WeekLabel(w) end
-	rows[#rows + 1] = { label = "Away", value = #weeks > 0 and table.concat(weeks, ", ", 1, math.min(#weeks, 3)) or "-",
-		tone = #weeks > 0 and "bad" or "faint" }
+	local guild = SK.DBM:Guild()
+	local selfAway = SK.Absences.Of(guild, guid)
+	local awayText = RP.AwayText(RP.AwayDays(OD.AwayOf(dir, guid), selfAway, Compat.Now()), selfAway)
+	rows[#rows + 1] = { label = "Away", value = awayText or "-", tone = awayText and "bad" or "faint" }
 	if att then rows[#rows + 1] = { text = att, tone = "dim" } end
 	for _, n in ipairs(OD.NotesOf(dir, guid, me)) do
 		rows[#rows + 1] = { text = Theme.Paint("dim", (nameOf(n.by) or "?") .. ": ") .. n.text, tone = "text" }

@@ -551,12 +551,10 @@ function rosterPlanner() {
     return `<span class="faint" style="display:inline-block;width:42px;text-align:center">·</span>`;
   };
   // Column widths as built (UI/RosterTab.lua PLAN_COLUMNS).
-  const W = { n: 104, sp: 64, st: 58, T: 48, H: 48, D: 48, wk: 56, l: 52, i: 52, a: 40, e: 30, seen: 40 };
-  // Availability, next four reset weeks: [officer-set, own days] per week (made up).
-  const WK = { Brannoc: [[1, 0], [0, 0], [0, 0], [0, 0]], Mirrel: [[0, 0], [0, 2], [0, 2], [0, 2]], Plopper: [[0, 0], [0, 0], [1, 0], [0, 0]],
-    Procella: [[0, 0], [0, 7], [0, 0], [0, 0]], Merrin: [[0, 0], [0, 0], [0, 0], [1, 0]] };
-  const squares = (name) => `<span style="display:inline-flex;gap:3px;vertical-align:middle">${(WK[name] || [[0, 0], [0, 0], [0, 0], [0, 0]]).map(([o, d]) =>
-    `<i style="display:inline-block;width:9px;height:9px;box-sizing:border-box;${o ? "background:var(--bad);border:1px solid var(--bad)" : d ? "border:1px solid var(--bad)" : "background:var(--lineStrong)"}"></i>`).join("")}</span>`;
+  const W = { n: 100, sp: 64, st: 58, T: 48, H: 48, D: 48, wk: 72, l: 52, i: 52, a: 40, e: 30, seen: 40 };
+  // Away, in words (made up). Red = clashes with a raid on the calendar.
+  const AW = { Brannoc: ["9-15 Dec", 1], Mirrel: ["Every Tue", 0], Plopper: ["23 Dec", 0], Procella: ["16-20 Dec", 1], Merrin: ["30 Dec", 0] };
+  const awayCell = (name) => AW[name] ? `<span class="small ${AW[name][1] ? "bad" : "dim"}">${AW[name][0]}</span>` : `<span class="faint">-</span>`;
   const NW = 744 - Object.values(W).reduce((a, b) => a + b, 0) - 12;
   const cell = (w, html, r, pad) => `<span class="cell ${r ? "r" : ""}" style="width:${w}px;${pad === 0 ? "padding:0;text-align:center" : pad === 1 ? "overflow:visible" : ""}">${html}</span>`;
   const ILG = { Jumpwick: 3, Plopper: 4, Procella: 2, Thalgrim: 2 };
@@ -566,7 +564,7 @@ function rosterPlanner() {
       cell(W.sp, `<span class="dim">${r[1]}</span>`),
       cell(W.st, r[2] ? `<span class="${r[2] === "Raider" ? "dim" : "acc"}">${r[2]}</span>` : `<span class="spark">Not set</span>`, 0, 0),
       cell(W.T, roleCell(r, "T"), 0, 0), cell(W.H, roleCell(r, "H"), 0, 0), cell(W.D, roleCell(r, "D"), 0, 0),
-      cell(W.wk, squares(r[0].name), 0, 1),
+      cell(W.wk, awayCell(r[0].name)),
       cell(W.l, r[4] === 60 ? `<span class="good">60</span>` : `${r[4]}${r[5] ? ` <span class="good small">+${r[5]}</span>` : ""}`, 1),
       cell(W.i, `${r[6]}${ILG[r[0].name] ? ` <span class="good small">+${ILG[r[0].name]}</span>` : ""}`, 1),
       cell(W.a, r[7] ? `<span class="good">yes</span>` : `<span class="faint">no</span>`, 1),
@@ -584,7 +582,7 @@ function rosterPlanner() {
     const n60 = (l) => l.filter((r) => r[4] === 60).length, att = (l) => l.filter((r) => r[7]).length;
     const line = (t, l) => `${t} ${l.length}  ·  ${n60(l) === l.length ? "ALL" : n60(l)} AT 60  ·  ${att(l) === l.length ? "ALL" : att(l)} ATTUNED`;
     const awayM = mains.filter((r) => r[12]).map((r) => r[0].name.toUpperCase());
-    body = sep(line("MAIN", mains), awayM.length ? awayM.join(", ") + " AWAY WEEK 1" : "") + mains.map(row).join("")
+    body = sep(line("MAIN", mains), awayM.length ? "AWAY THIS WEEK: " + awayM.join(", ") : "") + mains.map(row).join("")
       + sep(line("BACKUP", backs)) + backs.map(row).join("")
       + sep("NOT SORTED YET, SPEC FITS") + P.filter((r) => !r[2] && r[15] === filter).map(row).join("");
   }
@@ -594,7 +592,7 @@ function rosterPlanner() {
     .map(([k, t, n]) => `<span class="chip ${filter === k ? "on" : ""}" style="white-space:nowrap">${t}&nbsp;&nbsp;<span class="${filter === k ? "" : "faint"}">${n}</span></span>`).join("");
   const summary = filter === "A"
     ? "46 players  ·  31 at 60 (6 this week)  ·  8 at 55-59  ·  22 attuned to Onyxia  ·  11 missing enchants  ·  5 without the addon"
-    : "Click a cell to change it.  Away: 4 reset weeks from 1 (9 Dec) (solid: an officer, outline: their own days).";
+    : "Click a status, role, away or note cell to change it. Click a name for their character.";
   const top = `<div class="search abs" style="left:0;top:0;width:240px"><input placeholder="Search name, profession, note" value=""></div>
     <div class="menu abs" style="left:248px;top:0;width:28px">${btn("···", "", 'style="padding:0;width:28px;justify-content:center"')}</div>
     <span class="chip on" style="position:absolute;left:284px;top:1px">Officers</span>
@@ -614,7 +612,25 @@ function rosterPlanner() {
       <div class="small" style="margin-top:5px;line-height:1.35"><span class="dim">Nura, 3h ago:</span> Said yes to week 1 as healer.</div>
       <div class="small" style="margin-top:8px;height:24px;line-height:22px;padding:0 6px;border:1px solid var(--lineStrong);background:var(--void)">Happy to tank Onyxia if needed|</div>
       <div style="display:flex;gap:6px;margin-top:6px;align-items:center">${btn("Save my note", "primary")}${btn("Remove mine")}<span class="faint small" style="margin-left:auto">Officers only</span></div></div>`;
-  return top + lst + menu + notePop;
+  // Clicking an Away cell: a mini calendar like Raids → Calendar.
+  let awayPop = "";
+  if (S.planAway) {
+    const RAIDS = [4, 9, 11, 16, 18, 23, 30], OFF = [9, 10, 11, 12, 13, 14, 15], OWN = [];
+    let cells = "";
+    for (let i = 0; i < 42; i++) {
+      const day = i === 0 ? 30 : i <= 31 ? i : i - 31, inM = i >= 1 && i <= 31, past = i < 2;
+      const off = inM && OFF.includes(day), own = inM && OWN.includes(day), raid = inM && RAIDS.includes(day);
+      cells += `<div style="position:relative;width:30px;height:20px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:12px;
+        background:${off ? "var(--bad)" : i === 2 ? "var(--accent-selected)" : "var(--surface)"};${own ? "border:1px solid var(--bad);" : ""}color:${off ? "#000" : (!inM || past) ? "var(--faint)" : "var(--text)"}">${day}
+        ${raid ? '<i style="position:absolute;left:3px;right:3px;bottom:2px;height:2px;background:var(--accent)"></i>' : ""}</div>`;
+    }
+    awayPop = `<div class="abs" style="left:${100 + 64 + 58 + 48 * 3}px;top:${100 + 22 + 22 + 22}px;width:234px;background:var(--raised);border:1px solid var(--accent);padding:8px 12px 10px;box-shadow:0 6px 18px rgba(0,0,0,.6);z-index:6">
+      <div style="display:flex;align-items:baseline"><span>${cls(C("WARRIOR", "Brannoc"))}</span><span class="dim small" style="margin-left:8px">away</span><span class="faint" style="margin-left:auto">×</span></div>
+      <div style="display:flex;align-items:center;margin-top:6px">${btn("<", "", 'style="width:24px;padding:0;justify-content:center"')}<span style="flex:1;text-align:center">December 2026</span>${btn(">", "", 'style="width:24px;padding:0;justify-content:center"')}</div>
+      <div style="display:grid;grid-template-columns:repeat(7,30px);gap:2px;margin-top:6px">${["M", "T", "W", "T", "F", "S", "S"].map((d) => `<span class="faint small" style="text-align:center">${d}</span>`).join("")}${cells}</div>
+      <div class="small dim" style="margin-top:6px;white-space:nowrap"><span class="bad">Red</span> away  ·  <span class="bad">Outline</span> theirs  ·  <span class="acc">Line</span> raid</div></div>`;
+  }
+  return top + lst + menu + notePop + awayPop;
 }
 
 function roster() {
@@ -647,7 +663,7 @@ function offBlock(w) {
   // As built (UI/CharacterTab.lua): read-only rows; changes happen in Roster → Officers.
   const r = (l, v, tone) => `<div style="display:flex;height:22px;align-items:center"><span class="dim" style="flex:1">${l}</span><span class="${tone || ""}">${v}</span></div>`;
   return `<div class="block"><div class="bhead"><span class="h display">Officers</span></div>
-    ${r("Status", "Backup", "acc")}${r("Tank", "Backup")}${r("Healer", "Main", "acc")}${r("DPS", "Backup")}${r("Away", "Week 2 (16 Dec)", "bad")}
+    ${r("Status", "Backup", "acc")}${r("Tank", "Backup")}${r("Healer", "Main", "acc")}${r("DPS", "Backup")}${r("Away", "Every Tue, 16-20 Dec", "bad")}
     <div class="small dim" style="margin-top:4px">Attendance (30 days): no recorded raids yet</div>
     <div class="small" style="margin-top:6px;line-height:1.35"><span class="dim">Pocus:</span> Great raider, plays any role. Can't commit to a schedule: ask on the day.</div>
     <div class="small" style="margin-top:4px;line-height:1.35"><span class="dim">Nura:</span> Said yes to week 1 as healer.</div>
@@ -1400,7 +1416,7 @@ function seg(id) {
 try { Object.assign(S, JSON.parse(localStorage.getItem("skPreview") || "{}")); } catch (e) { /* ignore */ }
 // ?screen=roster&data=worst&view=before&raid=ony  (and &shot=1 for the README pictures: window only, no chrome)
 const Q = new URLSearchParams(location.search);
-for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode", "rosterView", "planSel", "planRole", "offCard", "charIdx", "noteOpen", "planMenu"]) if (Q.get(k)) S[k] = Q.get(k);
+for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode", "rosterView", "planSel", "planRole", "offCard", "charIdx", "noteOpen", "planMenu", "planAway"]) if (Q.get(k)) S[k] = Q.get(k);
 const SHOT = Q.get("shot");
 if (SHOT) {
   document.body.classList.add("shot"); S.view = SHOT === "compare" ? "before" : "after"; S.reduce = true;
