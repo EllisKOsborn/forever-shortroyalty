@@ -36,15 +36,20 @@ attunement and spec filled in from the addon.
    filled, Backup outlined) that you **click to change**, level with "+4"
    in 7 days, item level, attuned, missing enchants, **Seen** (age of their
    data; orange after a week), note (hover for every note).
-4. **Click a name** → their **full Character page** (gear, talents,
+4. **Click a note cell** → a small **Notes** box opens under that row:
+   every officer's note with who wrote it and when, a line to add one
+   (Enter or Add), and your own notes can be edited or removed. Esc closes
+   it. (Officer, 21 Nov: "add notes by clicking on the note cell".)
+5. **Click a name** → their **full Character page** (gear, talents,
    professions, attunements) with an **Officers** box at the top of the
    middle column: status, roles, **away by reset week**, **notes with who
    wrote them and when** (several officers each add theirs), Add note.
    *Back to roster* returns to the planner.
-5. **Sign-ups for** (optional menu): pick a raid to add a *Signed* column
+6. **Sign-ups for** (optional menu): pick a raid to add a *Signed* column
    (signed up, tentative, can't come, no answer).
 
 Pictures: `docs/images/roster-planner.png` (Tanks chosen),
+`docs/images/roster-planner-note.png` (a note cell clicked),
 `docs/images/roster-planner-character.png` (the Officers box).
 
 ### Earlier versions

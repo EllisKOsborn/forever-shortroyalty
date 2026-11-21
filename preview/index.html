@@ -584,7 +584,7 @@ function rosterPlanner() {
   const top = `<div class="abs" style="left:0;top:1px;display:flex;gap:4px">${chips}</div>
     <div class="search" style="position:absolute;left:584px;top:0;width:160px"><input placeholder="Search name or note" value=""></div>
     <div class="abs" style="left:0;top:33px;display:flex;gap:4px;align-items:center;width:744px">${["Raider", "Backup", "Needs a look 9"].map((t) => `<span class="chip" style="white-space:nowrap">${t}</span>`).join("")}
-      <span class="faint small" style="margin-left:10px;white-space:nowrap">Click a status or role to change it.</span>
+      <span class="faint small" style="margin-left:10px;white-space:nowrap">Click a status, role or note to change it.</span>
       <span style="margin-left:auto">${btn("Sign-ups for: none").replace("</span>", '<i class="arrow"></i></span>')}</span></div>`;
   const cov = "", legend = "";
   const listW = S.planSel ? 744 - 290 : 744;
@@ -605,7 +605,15 @@ function rosterPlanner() {
       <div class="abs" style="left:14px;top:300px">${btn("Add note", "primary")} ${btn("Character")}</div>
       <div class="abs faint small" style="left:14px;top:334px;width:256px">Last 7 days: no change  ·  seen 2 days ago.</div></div>`;
   }
-  return top + cov + legend + lst + drawer;
+  // v3: clicking a note cell opens a small box over the table: every note with its author, and a line to add one.
+  let notePop = "";
+  if (S.noteOpen) notePop = `<div class="abs" style="left:420px;top:${68 + 22 + 3 * 22 + 2 * 22 + 22 + 20}px;width:324px;background:var(--raised);border:1px solid var(--accent);padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.6);z-index:5">
+      <div style="display:flex;align-items:baseline"><span>${cls(C("SHAMAN", "Mirrel"))}</span><span class="display dim" style="font-size:10.5px;letter-spacing:.08em;margin-left:8px">NOTES</span><span class="faint small" style="margin-left:auto">Esc to close</span></div>
+      <div class="small" style="margin-top:6px;line-height:1.35"><span class="dim">Pocus, 2 days ago:</span> Great raider, plays any role. Can't commit to a schedule: ask on the day.</div>
+      <div class="small" style="margin-top:5px;line-height:1.35"><span class="dim">Nura, today:</span> Said yes to week 1 as healer.</div>
+      <div style="display:flex;gap:6px;margin-top:8px"><span class="small" style="flex:1;height:24px;line-height:22px;padding:0 6px;border:1px solid var(--accent);background:var(--void)">Happy to tank Onyxia if needed|</span>${btn("Add", "primary")}</div>
+      <div class="faint small" style="margin-top:6px">Your own notes can be edited or removed. Only officers see notes.</div></div>`;
+  return top + cov + legend + lst + drawer + notePop;
 }
 
 function roster() {
@@ -1387,7 +1395,7 @@ function seg(id) {
 try { Object.assign(S, JSON.parse(localStorage.getItem("skPreview") || "{}")); } catch (e) { /* ignore */ }
 // ?screen=roster&data=worst&view=before&raid=ony  (and &shot=1 for the README pictures: window only, no chrome)
 const Q = new URLSearchParams(location.search);
-for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode", "rosterView", "planSel", "planRole", "offCard", "charIdx"]) if (Q.get(k)) S[k] = Q.get(k);
+for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode", "rosterView", "planSel", "planRole", "offCard", "charIdx", "noteOpen"]) if (Q.get(k)) S[k] = Q.get(k);
 const SHOT = Q.get("shot");
 if (SHOT) {
   document.body.classList.add("shot"); S.view = SHOT === "compare" ? "before" : "after"; S.reduce = true;
