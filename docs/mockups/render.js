@@ -43,6 +43,8 @@ const SHOTS = {
   "raids-assign": ["shot=1&screen=raids&data=full&officer=1&raidsView=assign", W, H],
   "raids-calendar": ["shot=1&screen=raids&data=full&raidsView=calendar", W, H],
   "roster-officers": ["shot=1&screen=roster&data=full&officer=1&rosterView=officers", W, H],
+  "roster-planner": ["shot=1&screen=roster&data=full&officer=1&rosterView=planner", W, H],
+  "roster-planner-edit": ["shot=1&screen=roster&data=full&officer=1&rosterView=planner&planSel=1", W, H],
   "raids-new": ["shot=1&screen=raids&data=full&officer=1&raidsView=new", W, H],
   "raids-attendance": ["shot=1&screen=raids&data=full&officer=1&raidsView=attendance", W, H],
   "raids-totals": ["shot=1&screen=raids&data=full&officer=1&raidsView=attendance&attView=totals", W, H],
