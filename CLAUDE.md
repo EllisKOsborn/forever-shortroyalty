@@ -32,6 +32,44 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.13.0 (built 21 Nov on the branch, NOT released; owner: "build
+  that"): the raid roster planner** (officers' feedback 21 Nov; three mock-up
+  rounds in `docs/proposals/raid-roster-planner.md`; officer: static roster,
+  table only, statuses Raider/Backup not tied to ranks, click a name → the
+  Character page, click a note cell → notes).
+  - `Core/OfficerDir.lua` new kinds: `t` tiers ("mb-" for T/H/D; v0.10.1
+    `r` roles read as mains), `s` status r/b, `w` away weeks "1,3",
+    `m:<member>:<author>` per-officer notes (by must equal author; legacy
+    `n` shows as its writer's note; `SetMyNote` moves it). `TiersOf/
+    StatusOf/AwayOf/NotesOf`, `SetTier/SetStatus/ToggleAway/SetMyNote`.
+    `Split` returns kind, member, author. MAX_ENTRIES 4000. OfficerSync sends
+    60 per OR (`MAX_ITEMS`), reads 120 (`MAX_RECEIVE`).
+  - `Core/RosterPlan.lua` (pure): `Build(ctx)` one row per player (alts by
+    officer link or `Alts.Groups` folded into the main; Alt-rank characters
+    left out), short spec names `SHORT_SPEC`, `View(rows, {role A|T|H|D|N,
+    status, needs, search, week})` (role → section rows: mains, backups,
+    unsorted whose `Data.GuessRole` fits; headers with at-60/attuned/away),
+    `Counts`, `Summary/SummaryText`, `GroupSort(cmp, isDesc)` (keeps headers
+    on top in either sort direction), `DefaultOrder`, `AgeText`, reset weeks
+    `RESET0` 1796774400 (Wed 9 Dec 2026 00:00 UTC = week 1), `Week/
+    WeekStart/PlanWeek/WeekLabel/WeeksOffered`, progress `Record/Gain`
+    (`SK.DB.rosterProgress`, local, 35 days, gain vs ≥7 days ago).
+  - `UI/RosterTab.lua`: the Officers chip shows the planner
+    (`BuildOfficers/RefreshOfficers`; `PLAN_COLUMNS` with `click` cells drawn
+    as pill buttons via List `decorate/update`; `W.PopMenu` cell menus,
+    `Roster.CellItems`; note box `BuildNotes/OpenNotes/SaveMyNote`;
+    `settings.planner` {role, status, needs}; `Roster.signupsFor` turns the
+    Seen column into Signed). `W.Chip:SetText`, `W.PopMenu` are new widgets.
+  - `UI/CharacterTab.lua`: officers get an Officers section (`OfficerRows`,
+    also for players without data, in column B) and a strip top right
+    (Away chips for `WeeksOffered`, Alt of menu). `UI/MainFrame.lua`
+    `TALL` 200, `TallH/SetTall` (`settings.window.tall`), ··· "Taller window".
+  - `RaidGroups.AutoFill(L, raidKey, pct, plan)`: Raiders before Backups,
+    officer-set mains for the signed-up role before backups.
+  - Tests `tests/v0130_planner_spec.lua`; v0101 UI test rewritten. Pictures
+    `roster-planner*.png` (preview `rosterView=planner`, `planRole`,
+    `planMenu`, `noteOpen`; `screen=character&offCard=1`). TESTING 67–74.
+    Officer guide not yet updated for v0.13.0.
 - **v0.12.0 (released 20 Nov on `main`, owner: "push to main"): our own Discord
   bot** (owner: "I want it to be our own rather than something we use
   externally"; earlier: Discord "shouldn't require any PC programs"). Setup
@@ -133,7 +171,8 @@ bridged to the addon only by copy and paste.
   (list 470 + editor: role chips, Alt-of menu, note EditBox + Save,
   `Roster.AttendanceText`, 30-day `Attendance.Totals`). `/sr debug`
   "Officer roster" line. Tests `tests/v0101_officer_roster_spec.lua`,
-  security case. Picture `roster-officers.png` (`rosterView=officers`).
+  security case. (Picture `roster-officers.png` removed in v0.13.0: the
+  Officers view is now the roster planner.)
   TESTING 52–54. Officer-set roles aren't used in raid line-ups yet.
 - **v0.10.0 (released 20 Nov on `main`, owner: "I need this live asap for testing"): In or Bench, Discord by copy and paste.** The
   officers' asks (review `docs/proposals/officer-roster-and-calendar.md`);

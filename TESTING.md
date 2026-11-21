@@ -263,3 +263,24 @@ addon read.
     `/link`. After `/link Their Name`, the button puts them on the post.
 66. [ ] **Copy for the addon** → in game *Import sign-ups from Discord* →
     paste → Import: those players appear in the line-up.
+
+## v0.13.0 Raid roster planner (officers, with /sr officer)
+
+67. [ ] **Roster → Officers**: one row per player (no Alt-rank characters,
+    alts shown as "+1"). The "All" line under the chips adds up (at 60,
+    attuned, missing enchants, without the addon).
+68. [ ] Click a **Tank / Healer / DPS** cell: a small menu, pick Main or
+    Backup. Click **Status**: Raider or Backup. Another officer on v0.13.0
+    sees the same within a minute.
+69. [ ] **Tanks** chip: mains, then backups, then unsorted players with a
+    tanking spec. Mark someone away for this week (Character page, Away):
+    the Main header shows "NAME AWAY WEEK n" in red.
+70. [ ] Click a **note** cell: write a note, Save my note. Another officer
+    adds theirs: both show, with names and how long ago. Remove mine works.
+71. [ ] Click a **name**: their Character page has an **Officers** section;
+    **Alt of** links an alt (it disappears from the planner, "+1" on the main).
+72. [ ] **Needs a look**, **Raider**, **Backup** filters; column titles sort;
+    **Sign-ups** menu shows who signed up for a raid.
+73. [ ] ··· → **Taller window**: the window grows; the list shows more rows.
+74. [ ] Tomorrow, level and item level show "+N" for people who levelled or
+    upgraded (each officer's game remembers what it saw each day).

@@ -1,4 +1,10 @@
-# Raid roster planner (proposal, 21 Nov 2026)
+# Raid roster planner (built in v0.13.0, 21 Nov 2026)
+
+Built from version 3 below with the four review fixes: an "All" summary
+line, cell menus instead of cycling, clearer columns (Ony, away in the row,
+item level gain, alts on hover), sortable columns and players without the
+addon. Status/roles/notes are changed in the table; away weeks and Alt of on
+the Character page; "Taller window" in the Roster ··· menu.
 
 From the officers' feedback (21 Nov): raids open on 9 Dec, the guild grew
 fast, and the officers don't all know everyone. They want **one overview**

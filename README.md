@@ -42,7 +42,7 @@
 | | What you get |
 |---|---|
 | 🏰 **Overview** | The guild at a glance: four numbers, what needs a look, raid readiness and recent milestones |
-| 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view; for officers an **Officers** view with roles, notes, alt links and attendance |
+| 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view; for officers the **raid roster planner**: Raider or Backup, Main or Backup per role, level, gear, attunement and notes from every officer in one table |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
 | 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness and who's **In** or on the **Bench**; **Groups** of five (drag and drop, **Auto-fill**, **Invite & arrange**), **boss assignments**, **away days** on a calendar; **Copy for Discord** and **Import sign-ups from Discord**, and our own **Discord bot** with sign-up buttons; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals, shared between all officers |
 | 🎲 **Loot** (Reserve+) | Soft reserves with **bonus points**: reserve items for a raid night, and every night you don't get one it gains points (no cap) that are added to your roll next time; your points, everyone's, and a history of every change; for officers a **Loot night** screen (rolls ranked, award, raid check, end-of-night bonus) and **Rules** (reserves per raid, bonus, loot lists) |
@@ -94,15 +94,21 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 - Filters **All / Attuned / Not attuned / Unknown**, a count such as "23 attuned · 9 not · 6 unknown", and **Max level only** (on by default).
 - Every character gets its own row, alts included, with "alt of X" in the tooltip. Your choices are remembered.
 
-**Officers view** (v0.10.1). Officers and raid leaders with `/sr officer` get an
-**Officers** chip next to the ··· menu:
+**Officers view: the raid roster planner** (v0.13.0; from the officers' feedback). Officers and raid leaders with `/sr officer` get an **Officers** chip next to the ··· menu: the static raid roster as one table, one row per player (alts folded into their main), with level, gear and attunement filled in by the addon.
 
-<p align="center"><img src="docs/images/roster-officers.png" alt="Roster, Officers view: roles, attendance and notes, with the editor on the right" width="100%"></p>
+<p align="center"><img src="docs/images/roster-planner-all.png" alt="Roster planner: one row per player with status, Tank/Healer/DPS, level, item level, attunement, enchants, data age and notes" width="100%"></p>
 
-- Every member of every rank, with alts under their main (linked by an officer, or by the addon once both characters have logged in with it).
-- Columns: **Roles** (any of Tank, Healer, DPS), **Attend.** (attendance over the last 30 days, from the Attendance tab) and **Note**.
-- Click a name to edit on the right: tick their **roles**, link them as an **alt of** another character, and write an **officer note** (up to 300 characters, plain text). Right-click opens their character.
+- **Chips with counts**: All, **Tanks 2+3** (mains + backups), Healers, DPS, **Not sorted** (no status or roles yet: the people to get to know), plus Raider, Backup and **Needs a look** (not 60, not attuned, missing enchants, no addon, or data a week old). "All" shows the whole guild in one line: players at 60 (and how many reached it this week), at 55-59, attuned to Onyxia, missing enchants, without the addon.
+- **Columns**: name (+2 = alts; "away" when they're away this reset week), spec, **Status** (Raider or Backup; not the guild rank), **Tank / Healer / DPS** (Main filled, Backup outlined), level and item level with what they gained in the last 7 days, Onyxia attunement, missing enchants, **Seen** (how old their data is; orange after a week), and **Note**. Click a column title to sort.
+- **Click a status or role cell** for a small menu (Main / Backup / No): no accidental changes. **Click a note cell** to read every officer's note (who wrote it and when) and write or remove your own. **Click a name** for their full Character page.
+- A role chip shows its **mains**, then its **backups**, then **unsorted players whose spec fits** (an unsorted Prot warrior under Tanks); each group's header says how many are 60 and attuned, and who's **away this reset week**.
+- **Sign-ups** (menu, optional): pick a raid and the Seen column shows who signed up for it.
+- The Character page gets an **Officers** section (status, roles, attendance, notes) and, top right, **Away** by reset week (week 1 = 9 Dec) and **Alt of**. Auto-fill on the Raids → Groups page puts Raiders and officer-set mains first.
+- **Taller window** in the ··· menu for long lists.
 - Shared only between officers and raid leaders, by whisper: changes reach the others online within a minute, and the rest when they log in. Members never receive any of it.
+
+<p align="center"><img src="docs/images/roster-planner.png" alt="Roster planner, Tanks: mains, backups and unsorted tanks, with a role menu open" width="100%"></p>
+<p align="center"><img src="docs/images/roster-planner-note.png" alt="Roster planner: the notes box on a note cell" width="100%"></p>
 
 ### 🛡️ Character
 <p align="center"><img src="docs/images/character.png" alt="Character tab" width="100%"></p>

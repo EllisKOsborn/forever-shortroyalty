@@ -487,19 +487,19 @@ local function tierRank(role) return function(a, b)
 end end
 
 Roster.PLAN_COLUMNS = {
-	{ key = "name", title = "Name", width = 104, sort = function(a, b) return a.name:lower() < b.name:lower() end },
-	{ key = "spec", title = "Spec", width = 62, sort = function(a, b) return (a.spec or "~") < (b.spec or "~") end },
+	{ key = "name", title = "Name", width = 118, sort = function(a, b) return a.name:lower() < b.name:lower() end },
+	{ key = "spec", title = "Spec", width = 56, sort = function(a, b) return (a.spec or "~") < (b.spec or "~") end },
 	{ key = "status", title = "Status", width = 58, click = true, sort = RP.DefaultOrder },
 	{ key = "TANK", title = "Tank", width = 54, click = true, sort = tierRank("TANK") },
 	{ key = "HEALER", title = "Healer", width = 54, click = true, sort = tierRank("HEALER") },
 	{ key = "DPS", title = "DPS", width = 54, click = true, sort = tierRank("DPS") },
 	{ key = "level", title = "Level", width = 52, align = "RIGHT", sort = function(a, b) return a.level < b.level end },
-	{ key = "ilvl", title = "iLvl", width = 44, align = "RIGHT", sort = function(a, b) return (a.ilvl or 0) < (b.ilvl or 0) end },
-	{ key = "att", title = "Ony", width = 38, align = "RIGHT",
+	{ key = "ilvl", title = "iLvl", width = 52, align = "RIGHT", sort = function(a, b) return (a.ilvl or 0) < (b.ilvl or 0) end },
+	{ key = "att", title = "Ony", width = 36, align = "RIGHT",
 		sort = function(a, b) return (a.att == "yes" and 1 or 0) < (b.att == "yes" and 1 or 0) end },
-	{ key = "ench", title = "Ench.", width = 38, align = "RIGHT", sort = function(a, b) return (a.ench or 99) < (b.ench or 99) end },
-	{ key = "seen", title = "Seen", width = 48, align = "RIGHT", sort = ageSort },
-	{ key = "note", title = "Note", width = S.contentW - SP.m - 606, click = true },
+	{ key = "ench", title = "Ench.", width = 36, align = "RIGHT", sort = function(a, b) return (a.ench or 99) < (b.ench or 99) end },
+	{ key = "seen", title = "Seen", width = 44, align = "RIGHT", sort = ageSort },
+	{ key = "note", title = "Note", width = S.contentW - SP.m - 614, click = true },
 }
 
 local SIGNED_TEXT = { y = { "good", "Yes" }, t = { "accent", "Maybe" }, n = { "bad", "No" } }

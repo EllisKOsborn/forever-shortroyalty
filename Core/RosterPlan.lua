@@ -26,6 +26,13 @@ RP.ROLE_KEYS = { T = "TANK", H = "HEALER", D = "DPS" }
 RP.ROLE_TITLE = { T = "Tanks", H = "Healers", D = "DPS" }
 RP.STATUS_NAME = { r = "Raider", b = "Backup" }
 RP.TIER_NAME = { m = "Main", b = "Backup" }
+-- Short talent tree names for the Spec column (the full name is in the tooltip).
+RP.SHORT_SPEC = {
+	Protection = "Prot", Restoration = "Resto", Discipline = "Disc", Retribution = "Ret", Enhancement = "Enh",
+	Elemental = "Ele", ["Beast Mastery"] = "BM", Marksmanship = "MM", Survival = "Surv", Affliction = "Affli",
+	Demonology = "Demo", Destruction = "Destro", Assassination = "Assa", Subtlety = "Sub", ["Feral Combat"] = "Feral",
+	Balance = "Balance",
+}
 
 ---------------------------------------------------------------------------
 -- Reset weeks
@@ -133,7 +140,7 @@ function RP.Build(ctx)
 			local spec, att, ench, ilvl
 			if p and not hidden then
 				local _, tree = SK.Talents.Summary(p.talents)
-				spec = tree
+				spec = tree and (RP.SHORT_SPEC[tree] or tree) or nil
 				ilvl = type(p.ilvl) == "number" and p.ilvl or nil
 				ench = #SK.Data.Enchants.Missing(p.gear, p.class, p.level)
 			end

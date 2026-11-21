@@ -208,3 +208,15 @@ the Officers view and its tooltip.
   and wrangler to an exact version.
 - Data kept: Discord user IDs, linked character names, sign-ups; raids and
   sign-ups are deleted 14 days after the start.
+
+## Addendum (21 Nov 2026, v0.13.0 roster planner)
+
+- New officer-roster kinds over the existing OR/OQ whispers (officers only,
+  sender and `by` checked against the receiver's roster): `t` tiers (exactly
+  three of `-mb`), `s` status (`r`, `b` or empty), `w` away weeks (up to 12
+  numbers 1-999), `m:<member>:<author>` notes (plain text, 300 characters,
+  no `|` or control characters, and **`by` must be the author in the key**,
+  so one officer can't write another's note). Older versions reject the new
+  kinds without striking the sender. OR now sends at most 60 entries per
+  message (notes are long) and still reads 120.
+- The level/item level history is local to each officer's game (never sent).

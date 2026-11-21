@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.13.0 (not released yet): the raid roster planner
+
+From the officers' feedback: one overview of the static raid roster.
+
+- **Roster → Officers** is now the **raid roster planner** (officers and
+  raid leaders with `/sr officer`): one row per player (alts folded into
+  their main) with **Status** (Raider or Backup, separate from guild ranks),
+  **Tank / Healer / DPS** as **Main** or **Backup**, spec, level and item
+  level (with the last 7 days' gain), Onyxia attunement, missing enchants,
+  how old their data is, and notes.
+- Chips with counts: **All**, **Tanks 2+3** (mains + backups), Healers, DPS,
+  **Not sorted**, plus Raider, Backup and **Needs a look**. A role shows its
+  mains, backups, then unsorted players whose spec fits, with who's away this
+  reset week. "All" sums up the guild: at 60, 55-59, attuned, enchants.
+- Click a status or role cell for a menu; click a **note** to read every
+  officer's note and write your own (each with its author and date); click a
+  **name** for the Character page. Columns sort. Optional **Sign-ups** column
+  for a raid.
+- Character page (officers): an **Officers** section, and **Away** by reset
+  week (week 1 = 9 Dec) and **Alt of** at the top right.
+- **Taller window** in the Roster's ··· menu.
+- Raids → Groups **Auto-fill** puts Raiders and officer-set mains first.
+- Officer roles from v0.10.1 count as mains; the old single officer note
+  shows as its writer's note. Everyone sharing it needs v0.13.0.
+
 ## v0.12.0 (20 Nov 2026): our own Discord bot
 
 - **Short Royalty's own Discord bot** (code in `discord-bot/`, runs free on
