@@ -1,6 +1,7 @@
 -- Raids page (v0.8.0). Everyone: upcoming guild raids, who's coming, and
 -- Sign up / Tentative / Can't come with a role. Officers and raid leaders
--- who typed /sr officer also get New raid, Cancel and Attendance (shared
+-- who typed /sr officer also make raids on the Calendar (v0.14.0: the New
+-- raid tab is gone), Cancel and Attendance (shared
 -- between officers; v0.8.1: no spreadsheet, it all stays in the addon). The rules live in Core/RaidBoard.lua and
 -- Core/Attendance.lua.
 local _, SK = ...
@@ -11,8 +12,8 @@ local Board, Att = SK.RaidBoard, SK.Attendance
 local S, SP = Theme.SIZES, Theme.SPACE
 
 RT.VIEWS = { { "upcoming", "Raids" }, { "groups", "Groups" }, { "assign", "Assignments" }, { "calendar", "Calendar" },
-	{ "new", "New raid" }, { "attendance", "Attendance" } }
-RT.OFFICER_VIEWS = { new = true, attendance = true }
+	{ "attendance", "Attendance" } }
+RT.OFFICER_VIEWS = { attendance = true }
 RT.LEFT_W = 270
 RT.RIGHT_W = S.contentW - RT.LEFT_W - SP.xl
 RT.ATT_LEFT_W = 270
@@ -68,8 +69,9 @@ local RESULT_TONE = { full = "good", late = "spark", missed = "bad", declined = 
 -- Which page tab to show: officer tabs fall back to Raids for everyone else.
 function RT.View(officer)
 	local v = SK.DB.settings.raidsView
+	if v == "new" then return "calendar" end -- v0.14.0: raids are made on the Calendar
 	if RT.OFFICER_VIEWS[v] and not officer then return "upcoming" end
-	if v ~= "new" and v ~= "attendance" and v ~= "calendar" and v ~= "groups" and v ~= "assign" then return "upcoming" end
+	if v ~= "attendance" and v ~= "calendar" and v ~= "groups" and v ~= "assign" then return "upcoming" end
 	return v
 end
 
@@ -106,9 +108,8 @@ function RT.MonthGrid(year, month, board, now, me, mine, guild)
 		local list = byDay[key] or {}
 		table.sort(list, function(a, b) return a.at < b.at end)
 		for _, e in ipairs(list) do
-			local raid = Board.Raid(e.raid)
 			local su = board.signups[e.id] and board.signups[e.id][me or ""]
-			raids[#raids + 1] = { id = e.id, at = e.at, text = date("%H:%M", e.at) .. " " .. (raid and (raid.short or raid.name) or e.raid),
+			raids[#raids + 1] = { id = e.id, at = e.at, text = date("%H:%M", e.at) .. " " .. Board.EventName(e, true),
 				mine = su and su.s or nil, place = Board.PlaceOf(board, e.id, me or "") }
 		end
 		cells[i] = { at = at, day = d.day, inMonth = d.month == month, today = key == todayKey,
@@ -128,10 +129,9 @@ end
 function RT.EventRows(board, now, me)
 	local rows = {}
 	for _, e in ipairs(Board.Upcoming(board, now)) do
-		local raid = Board.Raid(e.raid)
 		local mine = board.signups[e.id] and board.signups[e.id][me or ""]
-		rows[#rows + 1] = { id = e.id, at = e.at, when = Board.ShortWhen(e.at, now), raidName = raid and (raid.short or raid.name) or e.raid,
-			size = raid and raid.size, counts = Board.Counts(board, e.id), mine = mine and mine.s, ev = e }
+		rows[#rows + 1] = { id = e.id, at = e.at, when = Board.ShortWhen(e.at, now), raidName = Board.EventName(e, true),
+			size = Board.EventSize(e), counts = Board.Counts(board, e.id), mine = mine and mine.s, ev = e }
 	end
 	return rows
 end
@@ -247,12 +247,6 @@ end
 ---------------------------------------------------------------------------
 -- Building
 ---------------------------------------------------------------------------
-local function label(parent, text)
-	local fs = Theme.Text(parent, "label", "dim")
-	fs:SetText(text:upper())
-	return fs
-end
-
 function RT:Build(page)
 	self.page = page
 	local s = SK.DB.settings
@@ -290,6 +284,29 @@ function RT:Build(page)
 	self.sub:SetPoint("TOPLEFT", self.title, "BOTTOMLEFT", 0, -SP.xs)
 	self.options = W.OptionsButton(d, function() return RT:DetailOptions() end, "Copy the line-up, cancel the raid")
 	self.options:SetPoint("TOPRIGHT", 0, 0)
+	self.title:SetPoint("RIGHT", self.options, "LEFT", -SP.s, 0)
+	self.title:SetJustifyH("LEFT")
+	self.title:SetWordWrap(false)
+	-- v0.14.0 officers: which instances this night is (none = to be decided).
+	self.keyChips = {}
+	local kprev
+	local avail = SK.Data.ShownAttunements()
+	for i = #avail, 1, -1 do
+		local r = avail[i]
+		local c = W.Chip(d, r.short or r.name, function()
+			local board = Board:Get()
+			local ev = board and RT.selected and board.events[RT.selected]
+			if not ev then return end
+			local ok, why = Board:SetRaids(ev.id, RT.ToggleKey(Board.Keys(ev), r.key))
+			if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
+			RT:Refresh()
+		end)
+		c.value = r.key
+		c.tooltip = "Officers: is this night " .. r.name .. "? Pick one or more; none = to be decided."
+		if kprev then c:SetPoint("RIGHT", kprev, "LEFT", -SP.xxs, 0) else c:SetPoint("TOPRIGHT", 0, -(S.control + SP.xxs)) end
+		self.keyChips[#self.keyChips + 1] = c
+		kprev = c
+	end
 
 	self.signButtons = {}
 	local prev
@@ -368,73 +385,6 @@ function RT:Build(page)
 	self.empty:SetPoint("RIGHT", 0, 0)
 	self.empty:SetJustifyH("LEFT")
 	self.empty:SetWordWrap(true)
-
-	-------------------------------------------------------------------------
-	-- New raid (officers)
-	-------------------------------------------------------------------------
-	local nw = CreateFrame("Frame", nil, page)
-	nw:SetPoint("TOPLEFT", 0, top)
-	nw:SetPoint("BOTTOMRIGHT")
-	self.newPage = nw
-	s.newRaid = s.newRaid or {}
-	local form = s.newRaid
-	local y = 0
-	local function field(text, menu)
-		local l = label(nw, text)
-		l:SetPoint("TOPLEFT", 0, -y)
-		menu:SetPoint("TOPLEFT", 0, -(y + W.CARD_LABEL_H))
-		y = y + W.CARD_LABEL_H + S.control + SP.l
-		return menu
-	end
-	self.raidMenu = field("Raid", W.Menu(nw, {
-		width = 240,
-		items = function()
-			local out = {}
-			for _, r in ipairs(SK.Data.ShownAttunements()) do
-				out[#out + 1] = { value = r.key, text = string.format("%s (%d)", r.name, r.size or 0) }
-			end
-			return out
-		end,
-		get = function() return form.raid or "ony" end,
-		set = function(v) form.raid = v end,
-	}))
-	self.dayMenu = field("Day", W.Menu(nw, {
-		width = 240,
-		items = function()
-			local out, now = {}, Compat.Now()
-			for i = 0, Board.DAYS_SHOWN - 1 do
-				local at = Board.DayStart(now, i)
-				out[#out + 1] = { value = i, text = (i == 0 and "Today, " or i == 1 and "Tomorrow, " or "") .. date("%A %d %B", at) }
-			end
-			return out
-		end,
-		get = function() return form.day or 0 end,
-		set = function(v) form.day = v end,
-	}))
-	self.timeMenu = field("Start time (your time)", W.Menu(nw, {
-		width = 240,
-		items = function()
-			local out = {}
-			for m = 0, 23 * 60 + 30, 30 do out[#out + 1] = { value = m, text = string.format("%02d:%02d", math.floor(m / 60), m % 60) } end
-			return out
-		end,
-		get = function() return form.minutes or 20 * 60 end,
-		set = function(v) form.minutes = v end,
-	}))
-	self.create = W.Button(nw, "Create raid", nil, S.control, function() RT:CreateRaid() end, "primary")
-	self.create:SetPoint("TOPLEFT", 0, -y)
-	self.createNote = Theme.Text(nw, "small", "dim")
-	self.createNote:SetPoint("TOPLEFT", 0, -(y + S.control + SP.m))
-	self.createNote:SetWidth(460)
-	self.createNote:SetJustifyH("LEFT")
-	self.createNote:SetWordWrap(true)
-	self.createNote:SetText("Everyone with Short Royalty sees the raid within a minute (people who are offline " ..
-		"get it when they log in) and can sign up from this page. Times show in each player's own time zone. " ..
-		"To change a raid, cancel it from its ··· menu and make a new one.")
-	self.createResult = Theme.Text(nw, "body", "text")
-	self.createResult:SetPoint("TOPLEFT", self.createNote, "BOTTOMLEFT", 0, -SP.m)
-	self.createResult:SetWidth(460)
-	self.createResult:SetJustifyH("LEFT")
 
 	self:BuildCalendar(page, top)
 	self:BuildGroups(page, top)
@@ -529,20 +479,35 @@ function RT:SignUp(status)
 	RT:Refresh()
 end
 
-function RT:CreateRaid()
-	local form = SK.DB.settings.newRaid
-	local now = Compat.Now()
-	local at = Board.StartAt(Board.DayStart(now, form.day or 0), form.minutes or 20 * 60)
-	local e, why = Board:Create(form.raid or "ony", at)
-	if e then
-		local raid = Board.Raid(e.raid)
-		self.createResult:SetText(Theme.Paint("good", "Made: ") .. (raid and raid.name or "") .. ", " .. Board.When(e.at))
-		RT.selected = e.id
-		SK.DB.settings.raidsView = "upcoming"
-	else
-		self.createResult:SetText(Theme.Paint("bad", "Not made: " .. tostring(why)))
-	end
+-- v0.14.0: officers make a raid from a Calendar day (the day box). The
+-- form remembers the time and instances: settings.newRaid = { minutes,
+-- keys = { "ony", ... } } (no instance = to be decided). Returns the event
+-- or nil and why.
+function RT:CreateRaid(dayAt)
+	local form = RT.NewRaidForm()
+	local at = Board.StartAt(Board.DayStart(dayAt or Compat.Now(), 0), form.minutes or 20 * 60)
+	local e, why = Board:Create(form.keys, at)
+	if e then RT.selected = e.id end
 	RT:Refresh()
+	return e, why
+end
+
+function RT.NewRaidForm()
+	local s = SK.DB.settings
+	s.newRaid = type(s.newRaid) == "table" and s.newRaid or {}
+	local form = s.newRaid
+	if type(form.keys) ~= "table" then form.keys = { form.raid or "ony" } end
+	return form
+end
+
+-- Officers: the night's instances, toggled one at a time.
+function RT.ToggleKey(keys, key)
+	local out, had = {}, false
+	for _, k in ipairs(keys) do
+		if k == key then had = true else out[#out + 1] = k end
+	end
+	if not had then out[#out + 1] = key end
+	return Board.ParseKeys(table.concat(out, ",")) or {}
 end
 
 -- Officers: undecided -> In -> Bench -> undecided.
@@ -638,6 +603,10 @@ RT.Ctx = Board.Ctx
 -- Refresh
 ---------------------------------------------------------------------------
 function RT:Description()
+	if RT.View(Board.OfficerView()) == "calendar" then
+		return Board.OfficerView() and "Click a day to make a raid on it, or to mark yourself away."
+			or "Click a day to mark yourself away. Officers see it when they plan raids."
+	end
 	if Board.OfficerView() then return "Guild raids, sign-ups and attendance (officer tools on: /sr officer turns them off)" end
 	return "Guild raids made by officers and raid leaders. Sign up here so they know who's coming."
 end
@@ -649,7 +618,7 @@ function RT:RefreshUpcoming(board, now, me)
 	if not found then RT.selected = rows[1] and rows[1].id or nil end
 	self.events:SetItems(rows)
 	self.events:SetSelected(function(r) return r.id == RT.selected end)
-	self.events:SetEmptyText(Board.OfficerView() and "No raids yet. Make one under New raid."
+	self.events:SetEmptyText(Board.OfficerView() and "No raids yet. Make one on the Calendar: click a day."
 		or "No raids yet. Officers and raid leaders make them.")
 
 	local ev = board and RT.selected and board.events[RT.selected]
@@ -657,15 +626,21 @@ function RT:RefreshUpcoming(board, now, me)
 	for _, f in ipairs({ self.title, self.sub, self.options, self.role, self.mine, self.counts, self.ready, self.lineup }) do
 		f:SetShown(shown)
 	end
+	local officer = Board.OfficerView()
+	for _, c in ipairs(self.keyChips) do c:SetShown(shown and officer) end
 	for _, b in ipairs(self.signButtons) do b:SetShown(shown) end
 	self.empty:SetShown(not shown)
 	if not shown then
 		self.empty:SetText(#rows == 0 and "When a raid is made it shows here, and you can sign up with one click." or "")
 		return
 	end
-	local raid = Board.Raid(ev.raid)
 	local creator = SK.Identity:Member(ev.by)
-	self.title:SetText(string.format("%s (%d)", raid and raid.name or ev.raid, raid and raid.size or 0))
+	local keys = Board.Keys(ev)
+	local size = Board.EventSize(ev)
+	self.title:SetText(Board.EventName(ev, #keys > 1) .. (size and (" (" .. size .. ")") or ""))
+	local on = {}
+	for _, k in ipairs(keys) do on[k] = true end
+	for _, c in ipairs(self.keyChips) do c:SetActive(on[c.value] == true) end
 	self.sub:SetText(Board.When(ev.at) .. (creator and ("  ·  made by " .. Theme.ClassText(creator.name, creator.class)) or ""))
 	local mine = board.signups[ev.id] and board.signups[ev.id][me or ""]
 	for _, b in ipairs(self.signButtons) do
@@ -673,7 +648,8 @@ function RT:RefreshUpcoming(board, now, me)
 		b:Paint("rest")
 	end
 	self.role:Refresh()
-	self.mine:SetText(RT.MineText(mine, Board.PlaceOf(board, ev.id, me or ""), (SK.RaidGroups.SlotOf(board, ev.id, me or "")),
+	local myGroup = SK.RaidGroups.SlotOf(board, SK.RaidGroups.SlotId(ev), me or "")
+	self.mine:SetText(RT.MineText(mine, Board.PlaceOf(board, ev.id, me or ""), myGroup,
 		SK.RaidAssign.JobsOf(board, ev.id, me or "")))
 	local rows2, sum = Board.LineUp(board, ev, RT.Ctx())
 	self.counts:SetText(Board.CountsText(sum) .. "  ·  " .. sum.maybe .. " tentative  ·  " .. sum.out .. " can't come")
@@ -723,12 +699,13 @@ function RT:Refresh()
 	local view = RT.View(officer)
 	self.views:SetActive(view)
 	self.upcoming:SetShown(view == "upcoming")
-	self.newPage:SetShown(view == "new")
 	self.attPage:SetShown(view == "attendance")
 	self.calPage:SetShown(view == "calendar")
 	self.grpPage:SetShown(view == "groups")
 	self.asgPage:SetShown(view == "assign")
 	if view ~= "groups" then RT:CancelCarry() end
+	if view ~= "calendar" then RT:CloseDay() end
+	if SK.MainFrame.current == "raids" then SK.MainFrame:UpdateHeader() end
 	local now = Compat.Now()
 	if view == "upcoming" then
 		self:RefreshUpcoming(Board:Get(), now, Compat.PlayerGUID())
@@ -738,8 +715,6 @@ function RT:Refresh()
 		self:RefreshAssign(now)
 	elseif view == "calendar" then
 		self:RefreshCalendar(now)
-	elseif view == "new" then
-		self.raidMenu:Refresh(); self.dayMenu:Refresh(); self.timeMenu:Refresh()
 	else
 		self:RefreshAttendance(now)
 	end
@@ -780,8 +755,7 @@ end
 function RT.RaidItems()
 	local out, now = {}, Compat.Now()
 	for _, e in ipairs(Board.Upcoming(Board:Get() or Board.New(), now)) do
-		local raid = Board.Raid(e.raid)
-		out[#out + 1] = { value = e.id, text = Board.ShortWhen(e.at, now) .. "  " .. (raid and raid.name or e.raid) }
+		out[#out + 1] = { value = e.id, text = Board.ShortWhen(e.at, now) .. "  " .. Board.EventName(e, true) }
 	end
 	return out
 end
@@ -807,12 +781,12 @@ function RT:BuildGroups(page, top)
 	self.grpMenu:SetPoint("TOPLEFT", 0, 0)
 	-- Officers: set the game's group up from the plan, one step per press.
 	self.grpSetup = W.Button(gp, "Invite & arrange", nil, S.control, function()
-		RT.setupMsg = SK.RaidGroups:Setup(RT.selected)
+		RT.setupMsg = SK.RaidGroups:Setup(RT.selected, RT.grpKey)
 		RT:Refresh()
 	end, "primary")
 	self.grpSetup:SetPoint("TOPRIGHT", 0, 0)
 	self.grpFill = W.Button(gp, "Auto-fill", nil, S.control, function()
-		local placed, benched = SK.RaidGroups:Fill(RT.selected)
+		local placed, benched = SK.RaidGroups:Fill(RT.selected, RT.grpKey)
 		RT.setupMsg = placed and string.format("Auto-fill: %s placed, %d on the bench. Move anyone you like.",
 			Theme.Count(placed, "player"), benched) or tostring(benched)
 		RT:Refresh()
@@ -827,6 +801,24 @@ function RT:BuildGroups(page, top)
 	self.grpCounts:SetPoint("RIGHT", self.grpFill, "LEFT", -SP.m, 0)
 	self.grpCounts:SetJustifyH("RIGHT")
 	self.grpCounts:SetWordWrap(false)
+	-- v0.14.0: a night with several instances has groups per instance.
+	self.grpKeys = {}
+	local kprev
+	local avail = SK.Data.ShownAttunements()
+	for i = #avail, 1, -1 do
+		local r = avail[i]
+		local c = W.Chip(gp, r.short or r.name, function()
+			RT.grpKey = r.key
+			RT:CancelCarry()
+			RT:Refresh()
+		end)
+		c.value = r.key
+		c.tooltip = "Groups for " .. r.name .. " (this night has more than one raid)."
+		if kprev then c:SetPoint("RIGHT", kprev, "LEFT", -SP.xxs, 0) else c:SetPoint("TOPRIGHT", 0, -(S.control + SP.xs)) end
+		self.grpKeys[#self.grpKeys + 1] = c
+		kprev = c
+	end
+	self.grpKeysLeft = kprev
 	self.grpHint = Theme.Text(gp, "small", "faint")
 	self.grpHint:SetPoint("TOPLEFT", 0, -(S.control + SP.s))
 	self.grpHint:SetPoint("RIGHT", 0, 0)
@@ -980,7 +972,7 @@ function RT:DropOn(target, onto)
 	RT:CancelCarry()
 	if not carry or not target or not RT.selected then return RT:Refresh() end
 	local t = { kind = target.kind, n = target.n }
-	local ok, why = SK.RaidGroups:Move(RT.selected, carry.guid, t, onto ~= carry.guid and onto or nil)
+	local ok, why = SK.RaidGroups:Move(RT.selected, carry.guid, t, onto ~= carry.guid and onto or nil, RT.grpKey)
 	if not ok then SK:Print("Couldn't move %s: %s.", tostring(carry.name), tostring(why)) end
 	RT:Refresh()
 end
@@ -989,7 +981,7 @@ end
 function RT:SlotClick(r, target, button)
 	if button == "RightButton" then
 		if r and Board.OfficerView() and RT.selected then
-			local ok, why = SK.RaidGroups:CycleMark(RT.selected, r.guid)
+			local ok, why = SK.RaidGroups:CycleMark(RT.selected, r.guid, RT.grpKey)
 			if not ok then SK:Print("Couldn't mark them: %s.", tostring(why)) end
 			RT:Refresh()
 		elseif r then
@@ -1022,23 +1014,46 @@ function RT:RefreshGroups(now)
 	self.grpAvail:SetShown(ev ~= nil)
 	self.grpBench:SetShown(ev ~= nil)
 	self.grpEmpty:SetShown(ev == nil)
+	local keys = ev and Board.Keys(ev) or {}
+	local want = {}
+	for _, k in ipairs(keys) do want[k] = true end
+	if not want[RT.grpKey or ""] then RT.grpKey = keys[1] end
+	for _, c in ipairs(self.grpKeys) do
+		c:SetShown(#keys > 1 and want[c.value] == true)
+		c:SetActive(c.value == RT.grpKey)
+	end
+	self.grpHint:ClearAllPoints()
+	self.grpHint:SetPoint("TOPLEFT", 0, -(S.control + SP.s))
+	if #keys > 1 then self.grpHint:SetPoint("RIGHT", self.grpKeysLeft, "LEFT", -SP.s, 0) else self.grpHint:SetPoint("RIGHT", 0, 0) end
+	if ev and #keys == 0 then
+		-- To be decided: groups come once the night's instances are picked.
+		self.grpAvail:Hide()
+		self.grpBench:Hide()
+		self.grpEmpty:Show()
+		ev = nil
+		self.grpEmptyText = officer and "This raid is still to be decided. Pick its instance(s) on the Raids page " ..
+			"(the chips next to its title), then arrange the groups here."
+			or "This raid is still to be decided. Groups come once the officers pick the instance(s)."
+	else
+		self.grpEmptyText = nil
+	end
 	if not ev then
 		self.grpSetup:Hide()
 		self.grpFill:Hide()
 		self.grpCounts:SetText("")
 		self.grpHint:SetText("")
-		self.grpEmpty:SetText("No raids yet. When one is made, its groups show here.")
+		self.grpEmpty:SetText(self.grpEmptyText or "No raids yet. When one is made, its groups show here.")
 		return
 	end
 	local rows, sum = Board.LineUp(board, ev, RT.Ctx())
-	local L = SK.RaidGroups.Layout(board, ev, rows)
+	local L = SK.RaidGroups.Layout(board, ev, rows, RT.grpKey)
 	local marks = {}
 	for _, k in ipairs({ "l", "e", "a" }) do
 		if L.marks[k] > 0 then marks[#marks + 1] = SK.RaidGroups.MARK_NAME[k] .. " " .. L.marks[k] end
 	end
 	if (sum.away or 0) > 0 then marks[#marks + 1] = Theme.Paint("bad", "Away " .. sum.away) end
 	self.grpCounts:SetText(Board.CountsText(sum) .. (#marks > 0 and ("  ·  " .. table.concat(marks, "  ·  ")) or ""))
-	local mine = (SK.RaidGroups.SlotOf(board, ev.id, me or ""))
+	local mine = (SK.RaidGroups.SlotOf(board, L.sid, me or ""))
 	if Board.PlaceOf(board, ev.id, me or "") ~= "i" then mine = 0 end
 	self.grpSetup:SetShown(officer)
 	self.grpFill:SetShown(officer)
@@ -1328,8 +1343,8 @@ function RT:BuildCalendar(page, top)
 			if cell.away then Theme.TipLine(GameTooltip, "You're away", "bad") end
 			if cell.awayCount > 0 then Theme.TipLine(GameTooltip, Theme.Count(cell.awayCount, "member") .. " away", "dim") end
 			if not cell.past then
-				Theme.TipLine(GameTooltip, "Right-click: mark yourself away (or not).", "accent")
-				if Board.OfficerView() then Theme.TipLine(GameTooltip, "Click: make a raid on this day.", "accent") end
+				Theme.TipLine(GameTooltip, Board.OfficerView() and "Click: mark yourself away, or make a raid on this day."
+					or "Click: mark yourself away (or not).", "accent")
 			end
 			GameTooltip:Show()
 		end)
@@ -1356,16 +1371,213 @@ function RT:BuildCalendar(page, top)
 			b:SetScript("OnLeave", function() GameTooltip:Hide() end)
 			c.lines[j] = b
 		end
-		-- Officers: clicking an empty future day starts a New raid on it.
+		-- v0.14.0: click = the day box (away for everyone; officers make a
+		-- raid there). Right-click still toggles away straight away.
 		c:SetScript("OnClick", function(selfC, button)
 			if button == "RightButton" then
 				if selfC.cell and not selfC.cell.past then SK.Absences:ToggleDay(selfC.cell.at) end
 				return RT:Refresh()
 			end
-			RT:CalendarDay(selfC.cell)
+			RT:CalendarDay(selfC.cell, selfC, i)
 		end)
 		self.calCells[i] = c
 	end
+	self:BuildDay(cal)
+end
+
+---------------------------------------------------------------------------
+-- The day box (v0.14.0): click a Calendar day. Everyone: that day's raids
+-- and "I'm away this day". Officers: New raid there, with the start time
+-- and the night's instances (none picked = to be decided), any day up to
+-- 60 days ahead (Board.AHEAD).
+---------------------------------------------------------------------------
+RT.DAY_W = 300
+RT.DAY_LINES = 4
+
+function RT:BuildDay(cal)
+	local box = CreateFrame("Frame", nil, cal)
+	box:SetSize(RT.DAY_W, 100)
+	box:SetFrameStrata("FULLSCREEN_DIALOG")
+	box:EnableMouse(true)
+	Theme.Panel(box, { bg = "raised", border = "accent" })
+	box:Hide()
+	self.dayBox = box
+	box.title = Theme.Text(box, "body", "text")
+	box.title:SetPoint("TOPLEFT", SP.m, -SP.s)
+	box.close = W.CloseButton(box, function() RT:CloseDay() end)
+	box.close:SetPoint("TOPRIGHT", -SP.xs, -SP.xs)
+	box.lines = {}
+	for j = 1, RT.DAY_LINES do
+		local b = CreateFrame("Button", nil, box)
+		b:SetHeight(16)
+		b:SetPoint("LEFT", SP.m, 0)
+		b:SetPoint("RIGHT", -SP.m, 0)
+		b.text = Theme.Text(b, "small", "text")
+		b.text:SetAllPoints()
+		b.text:SetJustifyH("LEFT")
+		b.text:SetWordWrap(false)
+		b:SetScript("OnClick", function(selfB) if selfB.id then RT:CloseDay(); RT:ShowRaid(selfB.id) end end)
+		b:SetScript("OnEnter", function(selfB)
+			GameTooltip:SetOwner(selfB, "ANCHOR_RIGHT")
+			Theme.TipLine(GameTooltip, "Click to open the raid", "accent")
+			GameTooltip:Show()
+		end)
+		b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+		box.lines[j] = b
+	end
+	box.away = W.Button(box, "I'm away this day", nil, S.control, function()
+		if RT.dayCell then SK.Absences:ToggleDay(RT.dayCell.at) end
+		RT:Refresh()
+		RT:DrawDay()
+	end)
+	box.away.tooltip = "Officers and guildmates see it, and raids you'd signed up for that day are answered Can't come."
+	-- Officers: New raid.
+	box.newLabel = Theme.Text(box, "label", "dim")
+	box.newLabel:SetText("NEW RAID")
+	box.time = W.Menu(box, {
+		width = 90,
+		items = function()
+			local out = {}
+			for m = 0, 23 * 60 + 30, 30 do out[#out + 1] = { value = m, text = string.format("%02d:%02d", math.floor(m / 60), m % 60) } end
+			return out
+		end,
+		get = function() return RT.NewRaidForm().minutes or 20 * 60 end,
+		set = function(v) RT.NewRaidForm().minutes = v end,
+	})
+	box.time.tooltip = "Start time, in your own time zone (everyone sees it in theirs)."
+	box.keys = {}
+	local prev = box.time
+	for _, r in ipairs(SK.Data.ShownAttunements()) do
+		local c = W.Chip(box, r.short or r.name, function()
+			local form = RT.NewRaidForm()
+			form.keys = RT.ToggleKey(form.keys, r.key)
+			RT:DrawDay()
+		end)
+		c.value = r.key
+		c.tooltip = r.name .. " (" .. (r.size or "?") .. "). Pick one or more, or none: to be decided."
+		c:SetPoint("LEFT", prev, "RIGHT", prev == box.time and SP.s or SP.xxs, 0)
+		box.keys[#box.keys + 1] = c
+		prev = c
+	end
+	box.create = W.Button(box, "Create raid", nil, S.control, function()
+		local e, why = RT:CreateRaid(RT.dayCell and RT.dayCell.at)
+		if e then
+			RT.dayResult = Theme.Paint("good", "Made: ") .. Board.EventName(e, true) .. ", " .. date("%H:%M", e.at)
+		else
+			RT.dayResult = Theme.Paint("bad", "Not made: " .. tostring(why))
+		end
+		RT:DrawDay()
+	end, "primary")
+	box.what = Theme.Text(box, "small", "dim")
+	box.what:SetJustifyH("LEFT")
+	box.what:SetWordWrap(true)
+	box.result = Theme.Text(box, "small", "text")
+	box.result:SetJustifyH("LEFT")
+	box.result:SetWordWrap(false)
+end
+
+-- Click on a day: the day box next to it (nothing for days before today).
+function RT:CalendarDay(cell, frame, index)
+	if not cell or cell.past then return self:CloseDay() end
+	if self.dayCell and self.dayCell.at == cell.at and self.dayBox:IsShown() then return self:CloseDay() end
+	self.dayCell, self.dayResult = cell, nil
+	local box = self.dayBox
+	box:ClearAllPoints()
+	if frame then
+		local col, row = ((index or 1) - 1) % 7, math.floor(((index or 1) - 1) / 7)
+		local h = col >= 4 and "RIGHT" or "LEFT"
+		local v = row >= 3 and "BOTTOM" or "TOP"
+		box:SetPoint(v .. h, frame, v .. (h == "RIGHT" and "LEFT" or "RIGHT"), h == "RIGHT" and -SP.xxs or SP.xxs, 0)
+	else
+		box:SetPoint("CENTER")
+	end
+	box:Show()
+	self:DrawDay()
+end
+
+function RT:CloseDay()
+	if self.dayBox then self.dayBox:Hide() end
+	self.dayCell = nil
+end
+
+function RT:DrawDay()
+	local box, cell = self.dayBox, self.dayCell
+	if not box or not cell then return end
+	local now = Compat.Now()
+	local board = Board:Get() or Board.New()
+	-- The cell may be from before a change: find the day's raids again.
+	local key = date("%Y-%m-%d", cell.at)
+	local raids = {}
+	for _, e in pairs(board.events) do
+		if not e.x and date("%Y-%m-%d", e.at) == key then raids[#raids + 1] = e end
+	end
+	table.sort(raids, function(a, b) return a.at < b.at end)
+	box.title:SetText(date("%A %d %B", cell.at))
+	local y = SP.s + 20
+	for j, b in ipairs(box.lines) do
+		local e = raids[j]
+		if e then
+			local me = Compat.PlayerGUID() or ""
+			local su = board.signups[e.id] and board.signups[e.id][me]
+			b.id = e.id
+			b.text:SetText(date("%H:%M", e.at) .. "  " .. Board.EventName(e, true) .. Theme.Paint("dim", "  ·  " ..
+				(su and Board.STATUS_NAME[su.s] or "not signed up")))
+			b:ClearAllPoints()
+			b:SetPoint("TOPLEFT", SP.m, -y)
+			b:SetPoint("RIGHT", -SP.m, 0)
+			b:Show()
+			y = y + 16
+		else
+			b.id = nil
+			b:Hide()
+		end
+	end
+	if #raids == 0 then y = y + SP.xxs end
+	local away = SK.Absences.IsAway(SK.Absences:Mine(now), cell.at)
+	box.away:SetText(away and "I'm not away after all" or "I'm away this day")
+	box.away:ClearAllPoints()
+	box.away:SetPoint("TOPLEFT", SP.m, -(y + SP.xs))
+	y = y + SP.xs + S.control
+	local officer = Board.OfficerView()
+	local canMake = officer and cell.at <= now + Board.AHEAD
+	for _, f in ipairs({ box.newLabel, box.time, box.create, box.what, box.result }) do f:SetShown(canMake) end
+	for _, c in ipairs(box.keys) do c:SetShown(canMake) end
+	if canMake then
+		box.newLabel:ClearAllPoints()
+		box.newLabel:SetPoint("TOPLEFT", SP.m, -(y + SP.m))
+		y = y + SP.m + W.CARD_LABEL_H
+		box.time:ClearAllPoints()
+		box.time:SetPoint("TOPLEFT", SP.m, -y)
+		box.time:Refresh()
+		local form = RT.NewRaidForm()
+		local on = {}
+		for _, k in ipairs(form.keys) do on[k] = true end
+		for _, c in ipairs(box.keys) do c:SetActive(on[c.value] == true) end
+		y = y + S.control + SP.xs
+		local probe = { raid = (form.keys[1] or Board.TBD), rs = #form.keys == 1 and nil or table.concat(form.keys, ",") }
+		box.what:ClearAllPoints()
+		box.what:SetPoint("TOPLEFT", SP.m, -y)
+		box.what:SetPoint("RIGHT", -SP.m, 0)
+		box.what:SetText(#form.keys == 0 and "No instance picked: the raid is \"to be decided\". Pick them later on the Raids page."
+			or (Board.EventName(probe) .. " (" .. Board.EventSize(probe) .. ")"))
+		y = y + 28
+		box.create:ClearAllPoints()
+		box.create:SetPoint("TOPLEFT", SP.m, -y)
+		box.result:ClearAllPoints()
+		box.result:SetPoint("LEFT", box.create, "RIGHT", SP.s, 0)
+		box.result:SetPoint("RIGHT", -SP.m, 0)
+		box.result:SetText(RT.dayResult or "")
+		y = y + S.control
+	elseif officer then
+		y = y + SP.s
+		box.what:Show()
+		box.what:ClearAllPoints()
+		box.what:SetPoint("TOPLEFT", SP.m, -y)
+		box.what:SetPoint("RIGHT", -SP.m, 0)
+		box.what:SetText("Raids can be made up to 60 days ahead.")
+		y = y + 16
+	end
+	box:SetHeight(y + SP.m)
 end
 
 function RT:MoveMonth(delta)
@@ -1373,18 +1585,6 @@ function RT:MoveMonth(delta)
 	local cur = RT.calMonth or { year = tonumber(date("%Y", now)), month = tonumber(date("%m", now)) }
 	local y, m = RT.ShiftMonth(cur.year, cur.month, delta)
 	RT.calMonth = { year = y, month = m }
-	RT:Refresh()
-end
-
--- Officers: a day from today up to New raid's last day opens New raid on it.
-function RT:CalendarDay(cell)
-	if not cell or not Board.OfficerView() then return end
-	local now = Compat.Now()
-	local offset = math.floor((Board.DayStart(cell.at, 0) - Board.DayStart(now, 0)) / 86400 + 0.5)
-	if offset < 0 or offset >= Board.DAYS_SHOWN then return end
-	SK.DB.settings.newRaid = SK.DB.settings.newRaid or {}
-	SK.DB.settings.newRaid.day = offset
-	SK.DB.settings.raidsView = "new"
 	RT:Refresh()
 end
 

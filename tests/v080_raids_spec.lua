@@ -531,10 +531,10 @@ describe("v0.8.0 /sr officer and the page", function()
 		assert.is_true(RT.attPage:IsShown())
 		SK.DB.settings.attView = "totals"
 		RT:Refresh()
-		SK.DB.settings.raidsView = "new"
-		SK.DB.settings.newRaid = { raid = "barrow", day = 1, minutes = 19 * 60 + 30 }
+		SK.DB.settings.raidsView = "calendar"
+		SK.DB.settings.newRaid = { keys = { "barrow" }, minutes = 19 * 60 + 30 }
 		RT:Refresh()
-		RT:CreateRaid()
+		assert.truthy(RT:CreateRaid(W.now + 86400))
 		assert.equal(2, #SK.RaidBoard.Upcoming(SK.RaidBoard:Get(), W.now))
 		RT:CopyLineUp()
 		assert.equal(0, #SK.errors)

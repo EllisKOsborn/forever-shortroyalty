@@ -32,7 +32,6 @@ Board.MAX_FUTURE = 300          -- a change dated more than 5 minutes ahead is r
 Board.AHEAD = 60 * 86400        -- a raid can start at most 60 days ahead
 Board.KEEP_AFTER = 7 * 86400    -- raids are deleted this long after they started
 Board.LISTED_AFTER = 6 * 3600   -- still listed under Upcoming this long after the start
-Board.DAYS_SHOWN = 14           -- days offered by New raid
 
 Board.STATUS_NAME = { y = "Signed up", t = "Tentative", n = "Can't come" }
 Board.STATUS_GROUP = { y = "coming", t = "maybe", n = "out" }

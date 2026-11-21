@@ -54,15 +54,19 @@ describe("v0.10.2 raid calendar", function()
 		assert.equal("upcoming", SK.DB.settings.raidsView)
 		SK.DB.settings.raidsView = "calendar"
 		RT:Refresh()
-		RT:CalendarDay(RT.calCells[7].cell)   -- Sunday 6 Dec, not an officer view yet
-		assert.equal("calendar", SK.DB.settings.raidsView)
+		-- v0.14.0: a day opens the day box; members get "I'm away", officers New raid.
+		RT:CalendarDay(RT.calCells[7].cell, RT.calCells[7], 7)   -- Sunday 6 Dec
+		assert.is_true(RT.dayBox:IsShown())
+		assert.is_false(RT.dayBox.create:IsShown())
+		RT.dayBox.away:GetScript("OnClick")(RT.dayBox.away)
+		assert.is_true(SK.Absences.IsAway(SK.Absences:Mine(W.now), RT.calCells[7].cell.at))
+		RT:CloseDay()
 		SK.DB.officer[W.player.guid] = true
-		RT:CalendarDay(RT.calCells[7].cell)
-		assert.equal("new", SK.DB.settings.raidsView)
-		assert.equal(4, SK.DB.settings.newRaid.day)
-		SK.DB.settings.raidsView = "calendar"
+		RT:CalendarDay(RT.calCells[7].cell, RT.calCells[7], 7)
+		assert.is_true(RT.dayBox.create:IsShown())
+		RT:CloseDay()
 		RT:CalendarDay(RT.calCells[1].cell)   -- in the past: nothing
-		assert.equal("calendar", SK.DB.settings.raidsView)
+		assert.is_false(RT.dayBox:IsShown())
 		RT:MoveMonth(1)
 		assert.equal("January 2027", RT.calTitle:GetText())
 		RT.calToday:GetScript("OnClick")(RT.calToday)
