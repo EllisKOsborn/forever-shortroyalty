@@ -242,36 +242,19 @@ function Char:Build(page)
 	self.empty:SetJustifyV("TOP")
 end
 
--- v0.13.0: officers (with /sr officer) get away weeks and "Alt of" for the
--- player shown, top right; status, roles and notes show in the Officers
+-- v0.13.0: officers (with /sr officer) get "Alt of" for the player shown,
+-- top right; status, roles, away weeks and notes show in the Officers
 -- section and are changed in Roster → Officers (the roster planner).
 Char.STRIP_W = 330
 function Char:BuildOfficerStrip(page)
 	local strip = CreateFrame("Frame", nil, page)
 	strip:SetPoint("TOPRIGHT", 0, -(S.control + SP.m))
-	strip:SetSize(Char.STRIP_W, 2 * S.control + SP.xs)
+	strip:SetSize(Char.STRIP_W, S.control)
 	strip:Hide()
 	self.offStrip = strip
-	local label = Theme.Text(strip, "small", "dim")
-	label:SetText("Away (reset week)")
-	label:SetPoint("TOPLEFT", 0, -5)
-	self.awayChips = {}
-	local prev
-	for i = 1, 4 do
-		local c = W.Chip(strip, tostring(i), function(chip)
-			local guid = Char.shownGuid
-			if not guid or not chip.week then return end
-			local ok, why = SK.OfficerDir:ToggleAway(guid, chip.week)
-			if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
-			Char:Refresh()
-		end)
-		if prev then c:SetPoint("LEFT", prev, "RIGHT", SP.xs, 0) else c:SetPoint("LEFT", label, "RIGHT", SP.s, 0) end
-		self.awayChips[i] = c
-		prev = c
-	end
 	local altLabel = Theme.Text(strip, "small", "dim")
 	altLabel:SetText("Alt of")
-	altLabel:SetPoint("TOPLEFT", 0, -(S.control + SP.xs + 5))
+	altLabel:SetPoint("TOPLEFT", 0, -5)
 	self.altMenu = W.Menu(strip, {
 		width = 200,
 		items = function()
@@ -323,6 +306,12 @@ function Char.OfficerRows(dir, guid, me, att, nameOf)
 		rows[#rows + 1] = { label = SK.Data.ROLE_NAMES[role], value = t and RP.TIER_NAME[t] or "-",
 			tone = t == "m" and "accent" or (t == "b" and "text" or "faint") }
 	end
+	local weeks = {}
+	for w in pairs(OD.AwayOf(dir, guid)) do weeks[#weeks + 1] = w end
+	table.sort(weeks)
+	for i, w in ipairs(weeks) do weeks[i] = RP.WeekLabel(w) end
+	rows[#rows + 1] = { label = "Away", value = #weeks > 0 and table.concat(weeks, ", ", 1, math.min(#weeks, 3)) or "-",
+		tone = #weeks > 0 and "bad" or "faint" }
 	if att then rows[#rows + 1] = { text = att, tone = "dim" } end
 	for _, n in ipairs(OD.NotesOf(dir, guid, me)) do
 		rows[#rows + 1] = { text = Theme.Paint("dim", (nameOf(n.by) or "?") .. ": ") .. n.text, tone = "text" }
@@ -540,17 +529,7 @@ function Char:Refresh()
 	local officer = SK.RaidBoard.OfficerView() and guid ~= nil and m ~= nil
 	self.offStrip:SetShown(officer)
 	self.meta:SetPoint("RIGHT", officer and -(Char.STRIP_W + SP.m) or 0, 0)
-	if officer then
-		local away = SK.OfficerDir.AwayOf(SK.OfficerDir:Get(guild), guid)
-		for i, w in ipairs(SK.RosterPlan.WeeksOffered(now)) do
-			local c = self.awayChips[i]
-			c.week = w
-			c:SetText(tostring(w))
-			c.tooltip = "Away " .. SK.RosterPlan.WeekLabel(w) .. ". Click to change."
-			c:SetActive(away[w] == true)
-		end
-		self.altMenu:Refresh()
-	end
+	if officer then self.altMenu:Refresh() end
 	local ask = guid and Char.AskStatus(Char.asked[guid], Char.answered[guid], now, SK.Sync.FRESH_INTERVAL)
 	if ask and Char.asked[guid] and now - Char.asked[guid] >= SK.Sync.FRESH_INTERVAL then Char.asked[guid] = nil end
 	local askText = ask and ("  ·  " .. Theme.Paint("spark", ask)) or ""

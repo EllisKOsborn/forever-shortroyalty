@@ -546,21 +546,27 @@ function rosterPlanner() {
   const filter = S.planRole || "T";
   const roleCell = (r, k) => {
     const t = r[3][k];
-    if (t === "m") return `<span style="display:inline-block;width:44px;text-align:center;background:var(--accent);color:var(--onAccent);font-size:11px;line-height:17px">Main</span>`;
-    if (t === "b") return `<span style="display:inline-block;width:44px;text-align:center;border:1px solid var(--accent);color:var(--accentLit);font-size:11px;line-height:15px;box-sizing:border-box">Backup</span>`;
-    return `<span class="faint" style="display:inline-block;width:44px;text-align:center">·</span>`;
+    if (t === "m") return `<span style="display:inline-block;width:42px;text-align:center;background:var(--accent);color:var(--onAccent);font-size:11px;line-height:17px">Main</span>`;
+    if (t === "b") return `<span style="display:inline-block;width:42px;text-align:center;border:1px solid var(--accent);color:var(--accentLit);font-size:11px;line-height:15px;box-sizing:border-box">Backup</span>`;
+    return `<span class="faint" style="display:inline-block;width:42px;text-align:center">·</span>`;
   };
   // Column widths as built (UI/RosterTab.lua PLAN_COLUMNS).
-  const W = { n: 118, sp: 56, st: 58, T: 54, H: 54, D: 54, l: 52, i: 52, a: 36, e: 36, seen: 44 };
+  const W = { n: 104, sp: 64, st: 58, T: 48, H: 48, D: 48, wk: 56, l: 52, i: 52, a: 40, e: 30, seen: 40 };
+  // Availability, next four reset weeks: [officer-set, own days] per week (made up).
+  const WK = { Brannoc: [[1, 0], [0, 0], [0, 0], [0, 0]], Mirrel: [[0, 0], [0, 2], [0, 2], [0, 2]], Plopper: [[0, 0], [0, 0], [1, 0], [0, 0]],
+    Procella: [[0, 0], [0, 7], [0, 0], [0, 0]], Merrin: [[0, 0], [0, 0], [0, 0], [1, 0]] };
+  const squares = (name) => `<span style="display:inline-flex;gap:3px;vertical-align:middle">${(WK[name] || [[0, 0], [0, 0], [0, 0], [0, 0]]).map(([o, d]) =>
+    `<i style="display:inline-block;width:9px;height:9px;box-sizing:border-box;${o ? "background:var(--bad);border:1px solid var(--bad)" : d ? "border:1px solid var(--bad)" : "background:var(--lineStrong)"}"></i>`).join("")}</span>`;
   const NW = 744 - Object.values(W).reduce((a, b) => a + b, 0) - 12;
-  const cell = (w, html, r, pad) => `<span class="cell ${r ? "r" : ""}" style="width:${w}px;${pad === 0 ? "padding:0;text-align:center" : ""}">${html}</span>`;
+  const cell = (w, html, r, pad) => `<span class="cell ${r ? "r" : ""}" style="width:${w}px;${pad === 0 ? "padding:0;text-align:center" : pad === 1 ? "overflow:visible" : ""}">${html}</span>`;
   const ILG = { Jumpwick: 3, Plopper: 4, Procella: 2, Thalgrim: 2 };
   const row = (r) => {
-    const extra = (r[13] ? ` <span class="faint small">+${r[13]}</span>` : "") + (r[12] ? ' <span class="bad small">away</span>' : "");
+    const extra = r[13] ? ` <span class="faint small">+${r[13]}</span>` : "";
     const cells = [cell(W.n, cls(r[0]) + extra),
       cell(W.sp, `<span class="dim">${r[1]}</span>`),
       cell(W.st, r[2] ? `<span class="${r[2] === "Raider" ? "dim" : "acc"}">${r[2]}</span>` : `<span class="spark">Not set</span>`, 0, 0),
       cell(W.T, roleCell(r, "T"), 0, 0), cell(W.H, roleCell(r, "H"), 0, 0), cell(W.D, roleCell(r, "D"), 0, 0),
+      cell(W.wk, squares(r[0].name), 0, 1),
       cell(W.l, r[4] === 60 ? `<span class="good">60</span>` : `${r[4]}${r[5] ? ` <span class="good small">+${r[5]}</span>` : ""}`, 1),
       cell(W.i, `${r[6]}${ILG[r[0].name] ? ` <span class="good small">+${ILG[r[0].name]}</span>` : ""}`, 1),
       cell(W.a, r[7] ? `<span class="good">yes</span>` : `<span class="faint">no</span>`, 1),
@@ -582,13 +588,13 @@ function rosterPlanner() {
       + sep(line("BACKUP", backs)) + backs.map(row).join("")
       + sep("NOT SORTED YET, SPEC FITS") + P.filter((r) => !r[2] && r[15] === filter).map(row).join("");
   }
-  const headCols = [["n", "Name"], ["sp", "Spec"], ["st", "Status"], ["T", "Tank"], ["H", "Healer"], ["D", "DPS"], ["l", "Level", 1], ["i", "iLvl", 1], ["a", "Ony", 1], ["e", "Ench.", 1], ["seen", "Seen", 1]];
+  const headCols = [["n", "Name"], ["sp", "Spec"], ["st", "Status"], ["T", "Tank"], ["H", "Healer"], ["D", "DPS"], ["wk", "Away"], ["l", "Level", 1], ["i", "iLvl", 1], ["a", "Ony", 1], ["e", "Ench", 1], ["seen", "Seen", 1]];
   const head = `<div class="lhead">${headCols.map(([k, t, r]) => `<span class="${r ? "r" : ""}" style="width:${W[k]}px;${"THD".includes(k) && k.length === 1 ? "justify-content:center" : ""}">${t}</span>`).join("")}<span style="width:${NW}px">Note</span></div>`;
   const chips = [["A", "All", 46], ["T", "Tanks", "2+3"], ["H", "Healers", "4+3"], ["D", "DPS", "25+3"], ["N", "Not sorted", 12]]
     .map(([k, t, n]) => `<span class="chip ${filter === k ? "on" : ""}" style="white-space:nowrap">${t}&nbsp;&nbsp;<span class="${filter === k ? "" : "faint"}">${n}</span></span>`).join("");
   const summary = filter === "A"
     ? "46 players  ·  31 at 60 (6 this week)  ·  8 at 55-59  ·  22 attuned to Onyxia  ·  11 missing enchants  ·  5 without the addon"
-    : "Click a status, role or note to change it. Click a name for their character. Planning: Week 1 (9 Dec).";
+    : "Click a cell to change it.  Away: 4 reset weeks from 1 (9 Dec) (solid: an officer, outline: their own days).";
   const top = `<div class="search abs" style="left:0;top:0;width:240px"><input placeholder="Search name, profession, note" value=""></div>
     <div class="menu abs" style="left:248px;top:0;width:28px">${btn("···", "", 'style="padding:0;width:28px;justify-content:center"')}</div>
     <span class="chip on" style="position:absolute;left:284px;top:1px">Officers</span>
@@ -641,17 +647,16 @@ function offBlock(w) {
   // As built (UI/CharacterTab.lua): read-only rows; changes happen in Roster → Officers.
   const r = (l, v, tone) => `<div style="display:flex;height:22px;align-items:center"><span class="dim" style="flex:1">${l}</span><span class="${tone || ""}">${v}</span></div>`;
   return `<div class="block"><div class="bhead"><span class="h display">Officers</span></div>
-    ${r("Status", "Backup", "acc")}${r("Tank", "Backup")}${r("Healer", "Main", "acc")}${r("DPS", "Backup")}
+    ${r("Status", "Backup", "acc")}${r("Tank", "Backup")}${r("Healer", "Main", "acc")}${r("DPS", "Backup")}${r("Away", "Week 2 (16 Dec)", "bad")}
     <div class="small dim" style="margin-top:4px">Attendance (30 days): no recorded raids yet</div>
     <div class="small" style="margin-top:6px;line-height:1.35"><span class="dim">Pocus:</span> Great raider, plays any role. Can't commit to a schedule: ask on the day.</div>
     <div class="small" style="margin-top:4px;line-height:1.35"><span class="dim">Nura:</span> Said yes to week 1 as healer.</div>
     <div class="small faint" style="margin-top:6px">Change these in Roster → Officers (click a cell).</div></div>`;
 }
-// The officers' strip, top right of the Character page: away weeks and Alt of.
+// The officers' strip, top right of the Character page: Alt of.
 function offStrip() {
   return `<div class="abs" style="right:0;top:34px;width:330px">
-    <div style="display:flex;gap:4px;align-items:center"><span class="dim small" style="margin-right:6px">Away (reset week)</span>${[1, 2, 3, 4].map((w) => `<span class="chip ${w === 2 ? "on" : ""}">${w}</span>`).join("")}</div>
-    <div style="display:flex;gap:8px;align-items:center;margin-top:4px"><span class="dim small">Alt of</span><span class="menu" style="position:relative;width:200px">${btn("Not an alt (or linked by the addon)").replace("</span>", '<i class="arrow"></i></span>')}</span></div></div>`;
+    <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end"><span class="dim small">Alt of</span><span class="menu" style="position:relative;width:200px">${btn("Not an alt (or linked by the addon)").replace("</span>", '<i class="arrow"></i></span>')}</span></div></div>`;
 }
 
 function character() {

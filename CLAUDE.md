@@ -60,9 +60,14 @@ bridged to the addon only by copy and paste.
     `Roster.CellItems`; note box `BuildNotes/OpenNotes/SaveMyNote`;
     `settings.planner` {role, status, needs}; `Roster.signupsFor` turns the
     Seen column into Signed). `W.Chip:SetText`, `W.PopMenu` are new widgets.
-  - `UI/CharacterTab.lua`: officers get an Officers section (`OfficerRows`,
-    also for players without data, in column B) and a strip top right
-    (Away chips for `WeeksOffered`, Alt of menu). `UI/MainFrame.lua`
+  - Away (owner: the first layout, numbered chips on the Character page,
+    was "quite bad"): planner column `weeks`, four squares per row
+    (`Roster.SQUARE`, `RP.Weeks(officerAway, selfAway, weeks)` → officer =
+    solid red, self = days the player marked away via `Absences` = red
+    outline; click → `Roster:ToggleWeek`, `Roster.WeekTip`).
+  - `UI/CharacterTab.lua`: officers get an Officers section (`OfficerRows`
+    with an Away row; also for players without data, in column B) and an
+    "Alt of" menu top right. `UI/MainFrame.lua`
     `TALL` 200, `TallH/SetTall` (`settings.window.tall`), ··· "Taller window".
   - `RaidGroups.AutoFill(L, raidKey, pct, plan)`: Raiders before Backups,
     officer-set mains for the signed-up role before backups.

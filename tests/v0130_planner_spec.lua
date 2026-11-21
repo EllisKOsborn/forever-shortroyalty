@@ -267,6 +267,13 @@ describe("v0.13.0 roster planner page", function()
 		for _, it in ipairs(R.offList.items) do if it.name == name then return it end end
 	end
 
+	it("fits the planner's columns in the page", function()
+		local total = 0
+		for _, c in ipairs(R.PLAN_COLUMNS) do total = total + c.width end
+		assert.equal(SK.Theme.SIZES.contentW - SK.Theme.SPACE.m, total)
+		assert.is_true(R.PLAN_COLUMNS[#R.PLAN_COLUMNS].width >= 90) -- the note keeps some room
+	end)
+
 	it("lists players with counts on the chips and the guild summary", function()
 		assert.is_true(R.offPanel:IsShown())
 		assert.truthy(itemNamed("Bob Stone"))
@@ -346,9 +353,11 @@ describe("v0.13.0 Officers on the Character page", function()
 		assert.equal("Officers", sec.title)
 		assert.equal("Backup", sec.rows[1].value)
 		assert.equal("Main", sec.rows[3].value)
-		assert.truthy(sec.rows[5].text:find("Keen healer", 1, true))
-		C.awayChips[2]:GetScript("OnClick")(C.awayChips[2])
-		assert.is_true(OD.AwayOf(OD:Get(), CAT)[SK.RosterPlan.PlanWeek(W.now) + 1])
+		assert.equal("-", sec.rows[5].value) -- Away
+		assert.truthy(sec.rows[6].text:find("Keen healer", 1, true))
+		assert.is_true(OD:ToggleAway(CAT, SK.RosterPlan.PlanWeek(W.now) + 1))
+		C:Refresh()
+		assert.equal(SK.RosterPlan.WeekLabel(SK.RosterPlan.PlanWeek(W.now) + 1), C.colA.sections[1].rows[5].value)
 		C.altMenu:Choose(BOB)
 		assert.equal(BOB, OD.AltOf(OD:Get(), CAT))
 		-- A player without the addon still gets the Officers section.
@@ -391,5 +400,36 @@ describe("v0.13.0 Auto-fill uses the roster planner", function()
 		assert.is_nil(benched.g3)
 		assert.is_true(benched.g1) -- the Backup raider waits; the unsorted tank gets the second spot
 		assert.is_nil(benched.g2)
+	end)
+end)
+
+describe("v0.13.0 availability squares", function()
+	it("shows officer-set weeks, the player's own away days, and toggles from the table", function()
+		local SK, W = setup()
+		local RP = SK.RosterPlan
+		local weeks = RP.WeeksOffered(W.now)
+		-- Cat marked every Wednesday away herself; an officer marks Bob away for the second week.
+		local wed = { w = { 3 } }
+		local cat = RP.Weeks({}, wed, weeks)
+		assert.equal(1, cat[1].self)
+		assert.is_false(cat[1].officer)
+		local bob = RP.Weeks({ [weeks[2]] = true }, nil, weeks)
+		assert.is_true(bob[2].officer)
+		assert.equal(0, bob[1].self)
+		H.loadUI(SK)
+		local R = SK.RosterTab
+		assert.truthy(R.WeekTip(cat[1]):find("1 day away themselves", 1, true))
+		assert.truthy(R.WeekTip(bob[2]):find("set by an officer", 1, true))
+		assert.truthy(R.WeekTip(bob[1]):find("available", 1, true))
+		SK.DB.officer[W.player.guid] = true
+		SK.DB.settings.roster.officer = true
+		SK.MainFrame:Open("roster")
+		local row
+		for _, it in ipairs(R.offList.items) do if it.guid == CAT then row = it end end
+		R:ToggleWeek(row, weeks[3])
+		assert.is_true(SK.OfficerDir.AwayOf(SK.OfficerDir:Get(), CAT)[weeks[3]])
+		for _, it in ipairs(R.offList.items) do if it.guid == CAT then row = it end end
+		assert.is_true(row.weeks[3].officer)
+		assert.equal(0, #SK.errors)
 	end)
 end)

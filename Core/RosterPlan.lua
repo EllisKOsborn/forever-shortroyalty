@@ -46,6 +46,23 @@ function RP.WeekLabel(n, short)
 	local day = tonumber(date("!%d", t)) or 0
 	return (short and "" or "Week ") .. n .. " (" .. day .. date("! %b", t) .. ")"
 end
+-- Availability for the weeks offered: { { n, officer = bool, self = days } }.
+-- officer = an officer marked the whole week away; self = how many days of
+-- that week the player marked away themselves (Raids → Calendar). Pure.
+function RP.Weeks(officerAway, selfAway, weeks)
+	local out = {}
+	for _, n in ipairs(weeks) do
+		local days, start = 0, RP.WeekStart(n)
+		if selfAway and SK.Absences then
+			for d = 0, 6 do
+				if SK.Absences.IsAway(selfAway, start + d * 86400 + 43200) then days = days + 1 end
+			end
+		end
+		out[#out + 1] = { n = n, officer = officerAway[n] == true, self = days }
+	end
+	return out
+end
+
 -- The weeks offered for "away": the plan week and the next three.
 function RP.WeeksOffered(now)
 	local first, out = RP.PlanWeek(now), {}
@@ -132,6 +149,7 @@ function RP.Build(ctx)
 		table.insert(alts[main], live[guid].name or "?")
 	end
 	local week = RP.PlanWeek(now)
+	local offered = RP.WeeksOffered(now)
 	for guid, m in pairs(live) do
 		local altRank = SK.Identity.IsAltRank and SK.Identity.IsAltRank(m)
 		if not mainOf[guid] and not altRank then
@@ -158,6 +176,7 @@ function RP.Build(ctx)
 				hasData = p ~= nil, spec = spec, ilvl = ilvl, att = att, ench = ench, age = age,
 				guess = p and SK.Data.GuessRole(m.class or p.class, p.talents) or nil,
 				status = OD.StatusOf(dir, guid), tiers = tiers, away = away, awayNow = away[week] or false,
+				weeks = RP.Weeks(away, SK.Absences and SK.Absences.Of(guild, guid), offered),
 				notes = notes, note = notes[1] and notes[1].text or nil,
 				levelGain = RP.Gain(hist, now, "l", level), ilvlGain = RP.Gain(hist, now, "i", ilvl),
 				alts = alts[guid] or {}, signed = ctx.signups and ctx.signups[guid] or nil,
