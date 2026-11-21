@@ -7,25 +7,39 @@
 --   r  roles: any of "T", "H", "D" (Tank, Healer, DPS), "" = none
 --   n  note: plain text, at most NOTE_MAX characters, "" = none
 --   a  alt of: the main's GUID, "" = not an alt
+--   (v0.13.0, the roster planner; older versions reject these kinds safely)
+--   t  role tiers: 3 letters for Tank, Healer, DPS, each "m" main, "b" backup
+--      or "-" (e.g. "mb-"); replaces r, which still reads as mains
+--   s  status: "r" Raider, "b" Backup, "" not set (not the guild rank)
+--   w  away: reset weeks, "1,3" (week 1 = from 9 Dec 2026), "" = none
+--   m  one officer's note: key "m:" .. guid .. ":" .. author GUID; only the
+--      author can write it (by must be the author). n stays as a legacy note.
 --   entry = { v = value, u = changed, by = officer GUID }; newest wins.
 --
 -- Pure parts (tested): Key, Split, CleanNote, Valid, Merge, RolesOf,
--- RolesText, NoteOf, AltOf, Rows.
+-- RolesText, NoteOf, AltOf, Rows, TiersOf, StatusOf, AwayOf, NotesOf.
 local _, SK = ...
 
 local OD = SK:NewModule("OfficerDir")
 local Compat = SK.Compat
 
 OD.NOTE_MAX = 300
-OD.MAX_ENTRIES = 1500
+OD.MAX_ENTRIES = 4000
+OD.MAX_AWAY = 12
 OD.MAX_FUTURE = 300
 OD.ROLE_LETTERS = { T = "TANK", H = "HEALER", D = "DPS" }
 OD.ROLE_ORDER = { "T", "H", "D" }
 
-function OD.Key(kind, guid) return kind .. ":" .. guid end
+function OD.Key(kind, guid, author)
+	if author then return kind .. ":" .. guid .. ":" .. author end
+	return kind .. ":" .. guid
+end
+-- kind, member GUID (and the author for "m").
 function OD.Split(key)
 	if type(key) ~= "string" then return nil end
-	return key:match("^([rna]):(.+)$")
+	local guid, author = key:match("^m:([^:]+):([^:]+)$")
+	if guid then return "m", guid, author end
+	return key:match("^([rnatsw]):([^:]+)$")
 end
 
 -- Plain text only: no colour codes, links or line breaks; trimmed; cut.
@@ -41,8 +55,8 @@ local function str(v, max) return type(v) == "string" and #v <= max end
 
 -- Is one received entry well formed? Everything received is untrusted.
 function OD.Valid(key, e, now)
-	local kind, guid = OD.Split(key)
-	if not kind or #guid > 64 then return false, "bad key" end
+	local kind, guid, author = OD.Split(key)
+	if not kind or #guid > 64 or (author and #author > 64) then return false, "bad key" end
 	if type(e) ~= "table" or not finite(e.u) or e.u > now + OD.MAX_FUTURE then return false, "bad time" end
 	if not str(e.by, 64) or e.by == "" then return false, "bad officer" end
 	local v = e.v
@@ -53,8 +67,21 @@ function OD.Valid(key, e, now)
 			if seen[c] then return false, "bad roles" end
 			seen[c] = true
 		end
-	elseif kind == "n" then
+	elseif kind == "n" or kind == "m" then
 		if not str(v, OD.NOTE_MAX) or v:find("[|%c]") then return false, "bad note" end
+		if kind == "m" and e.by ~= author then return false, "not the author" end
+	elseif kind == "t" then
+		if not str(v, 3) or not (v == "" or v:match("^[-mb][-mb][-mb]$")) then return false, "bad tiers" end
+	elseif kind == "s" then
+		if v ~= "" and v ~= "r" and v ~= "b" then return false, "bad status" end
+	elseif kind == "w" then
+		if not str(v, 64) or not (v == "" or v:match("^%d+[%d,]*$")) then return false, "bad weeks" end
+		local n = 0
+		for w in v:gmatch("[^,]+") do
+			n = n + 1
+			local x = tonumber(w)
+			if not x or x < 1 or x > 999 or n > OD.MAX_AWAY then return false, "bad weeks" end
+		end
 	elseif not str(v, 64) then
 		return false, "bad alt"
 	end
@@ -99,6 +126,66 @@ end
 function OD.NoteOf(dir, guid)
 	local e = dir and dir[OD.Key("n", guid)]
 	return e and e.v ~= "" and e.v or nil
+end
+
+-- v0.13.0 roster planner -----------------------------------------------------
+OD.TIER_ORDER = { "TANK", "HEALER", "DPS" }
+
+-- { TANK = "m" | "b", ... } (empty when none). The tiers entry wins; the
+-- older plain roles (v0.10.1) count as mains.
+function OD.TiersOf(dir, guid)
+	local out = {}
+	local t = dir and dir[OD.Key("t", guid)]
+	if t then
+		for i, role in ipairs(OD.TIER_ORDER) do
+			local c = t.v:sub(i, i)
+			if c == "m" or c == "b" then out[role] = c end
+		end
+		return out
+	end
+	for role in pairs(OD.RolesOf(dir, guid) or {}) do out[role] = "m" end
+	return out
+end
+
+function OD.TiersString(tiers)
+	local s = ""
+	for _, role in ipairs(OD.TIER_ORDER) do s = s .. (tiers[role] or "-") end
+	return s
+end
+
+-- "r" Raider, "b" Backup, or nil.
+function OD.StatusOf(dir, guid)
+	local e = dir and dir[OD.Key("s", guid)]
+	return e and e.v ~= "" and e.v or nil
+end
+
+-- { [week] = true }.
+function OD.AwayOf(dir, guid)
+	local out = {}
+	local e = dir and dir[OD.Key("w", guid)]
+	for w in ((e and e.v) or ""):gmatch("%d+") do out[tonumber(w)] = true end
+	return out
+end
+
+-- Every officer's note on a member, newest first: { { by, text, u, mine } }.
+-- A legacy single note (v0.10.1) counts as its writer's unless they've
+-- written a newer one of their own.
+function OD.NotesOf(dir, guid, me)
+	local out, authors = {}, {}
+	local prefix = "m:" .. guid .. ":"
+	for key, e in pairs(dir or {}) do
+		if key:sub(1, #prefix) == prefix and e.v ~= "" then
+			local author = key:sub(#prefix + 1)
+			authors[author] = true
+			out[#out + 1] = { by = author, text = e.v, u = e.u, mine = author == me }
+		end
+	end
+	local n = dir and dir[OD.Key("n", guid)]
+	if n and n.v ~= "" and not authors[n.by] then
+		out[#out + 1] = { by = n.by, text = n.v, u = n.u, mine = n.by == me, legacy = true }
+	end
+	table.sort(out, function(a, b) if a.u ~= b.u then return a.u > b.u end return a.by < b.by end)
+	return out
 end
 
 function OD.AltOf(dir, guid)
@@ -156,14 +243,16 @@ function OD:Get(guild)
 	return guild.officerDir
 end
 
--- kind "r" (roles string), "n" (note), "a" (main GUID or ""). Officers only.
+-- kind "r" (roles string), "n" (note), "a" (main GUID or ""), and since
+-- v0.13.0 "t" (tiers), "s" (status), "w" (away weeks), "m" (my own note).
+-- Officers only.
 function OD:Set(kind, guid, v)
 	local dir, me, now = self:Get(), Compat.PlayerGUID(), Compat.Now()
 	if not dir or not me then return false, "no guild" end
 	if not SK.RaidBoard.CanLead(me) then return false, "only officers and raid leaders can change this" end
-	if kind == "n" then v = OD.CleanNote(v) end
+	if kind == "n" or kind == "m" then v = OD.CleanNote(v) end
 	if kind == "a" and v == guid then v = "" end
-	local key = OD.Key(kind, guid)
+	local key = OD.Key(kind, guid, kind == "m" and me or nil)
 	local have = dir[key]
 	local e = { v = v or "", u = math.max(now, have and have.u + 1 or 0), by = me }
 	local ok, why = OD.Valid(key, e, now + 1)
@@ -183,4 +272,36 @@ function OD:ToggleRole(guid, role)
 		if have[OD.ROLE_LETTERS[c]] then s = s .. c end
 	end
 	return self:Set("r", guid, s)
+end
+
+-- v0.13.0: Main / Backup / nil for one role.
+function OD:SetTier(guid, role, tier)
+	local tiers = OD.TiersOf(self:Get(), guid)
+	tiers[role] = (tier == "m" or tier == "b") and tier or nil
+	return self:Set("t", guid, OD.TiersString(tiers))
+end
+
+function OD:SetStatus(guid, status)
+	return self:Set("s", guid, (status == "r" or status == "b") and status or "")
+end
+
+function OD:ToggleAway(guid, week)
+	local away = OD.AwayOf(self:Get(), guid)
+	away[week] = not away[week] or nil
+	local weeks = {}
+	for w in pairs(away) do weeks[#weeks + 1] = w end
+	table.sort(weeks)
+	while #weeks > OD.MAX_AWAY do table.remove(weeks, 1) end
+	for i, w in ipairs(weeks) do weeks[i] = tostring(w) end
+	return self:Set("w", guid, table.concat(weeks, ","))
+end
+
+-- Write (or, with "", remove) my own note. A legacy note I wrote moves into it.
+function OD:SetMyNote(guid, text)
+	local dir, me = self:Get(), Compat.PlayerGUID()
+	local ok, why = self:Set("m", guid, text)
+	if not ok then return ok, why end
+	local legacy = dir and dir[OD.Key("n", guid)]
+	if legacy and legacy.v ~= "" and legacy.by == me then self:Set("n", guid, "") end
+	return true
 end

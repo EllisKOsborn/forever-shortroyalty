@@ -18,7 +18,8 @@ local Board, OD = SK.RaidBoard, SK.OfficerDir
 
 OS.SHARE_DELAY = 5
 OS.QUERY_DELAY = 110
-OS.MAX_ITEMS = 120          -- entries per OR
+OS.MAX_ITEMS = 60           -- entries per OR sent (notes can be 300 characters)
+OS.MAX_RECEIVE = 120        -- entries read from one OR (older versions send 120)
 OS.MAX_ASK = 2000           -- keys read from one OQ
 OS.pending = {}
 OS.stats = { sentOR = 0, sentOQ = 0, gotOR = 0, gotOQ = 0, accepted = 0, rejected = 0 }
@@ -103,7 +104,7 @@ function OS:HandleOR(msg, from, dist)
 	local isMember = function(g) return SK.Identity:IsMember(g) end
 	for key, e in pairs(msg.d) do
 		n = n + 1
-		if n > OS.MAX_ITEMS then break end
+		if n > OS.MAX_RECEIVE then break end
 		local ok, why = OD.Merge(dir, key, e, now, isLead, isMember)
 		if ok then
 			changed = true

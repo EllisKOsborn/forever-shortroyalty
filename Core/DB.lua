@@ -11,7 +11,7 @@ local DEFAULTS = {
 		sync = true,
 		debug = false,
 		minimap = { hide = false, minimapPos = 210 },
-		window = { point = "CENTER", x = 0, y = 0, scale = 1 },
+		window = { point = "CENTER", x = 0, y = 0, scale = 1, tall = 0 }, -- tall: extra height (v0.13.0)
 		share = { gear = true, recipes = true, words = true }, -- privacy toggles (A7; words v0.7.0)
 		groupAlts = true,                         -- Roster: alts under their main
 		main = nil,                               -- guid of the player's main
@@ -39,9 +39,11 @@ local DEFAULTS = {
 		lootView = "reserves",                    -- v0.9.0 Loot page tab: reserves, points, history, night, rules
 		lootPoints = "mine",                      -- v0.9.0 Points tab: mine or all
 		lootHistory = "all",                      -- v0.9.0 History tab: all, mine or hand
+		planner = { role = "A" },                 -- v0.13.0 roster planner: role chip, status, needs, signups
 	},
 	officer = {},   -- [guid] = true: /sr officer turned the officer tools on for this character (v0.8.0)
 	raidRole = {},  -- [guid] = "TANK" | "HEALER" | "DPS", the role picked for raid sign-ups (v0.8.0)
+	rosterProgress = {}, -- [guid] = { { d = day, l = level, i = item level } } seen by this officer (v0.13.0, local)
 	lootNight = {}, -- [raid id] = the loot officer's night: kills, drops, rolls, wins (v0.9.0, local)
 	own = {},             -- [guid] = full profile of our own characters (never sent)
 	cooldownSpells = {},  -- [guid] = { [recipeID] = true } recipes with cooldowns
