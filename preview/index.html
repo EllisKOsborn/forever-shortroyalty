@@ -517,7 +517,7 @@ function rosterOfficers() {
     <div class="abs faint small" style="left:${RX}px;top:400px;width:254px;line-height:1.35">Only officers and raid leaders see this page. Changes reach the others online within a minute, and the rest when they log in.</div>`;
 }
 
-// v0.13.0 (proposal v2): the raid roster planner (officers). One row per
+// v0.13.0 (proposal v3): the raid roster planner (officers). One row per
 // person, like the officers' spreadsheet: role cells (Main / Backup) edited
 // in the list, live level, gear and attunement from the addon. Made-up names;
 // the scenario mirrors the officers' examples.
@@ -525,18 +525,18 @@ function rosterPlanner() {
   const C = (cls, name) => ({ cls, name });
   // [who, spec, status, roles {T,H,D: m|b}, level, gain7d, ilvl, attuned, enchMissing, seenDays, note, noteBy, away wk1, alts, rank]
   const P = [
-    [C("WARRIOR", "Brannoc"), "Prot", "Core", { T: "m" }, 60, 0, 66, 1, 0, 0, "Main tank. Misses the first reset (holiday).", "Pocus", 1, 1, "Officer"],
-    [C("WARRIOR", "Mazgrul"), "Prot", "Core", { T: "m", D: "b" }, 60, 0, 63, 1, 1, 0, "", "", 0, 0, "Raider"],
-    [C("DRUID", "Jumpwick"), "Feral", "Core", { T: "b", D: "m" }, 58, 4, 54, 0, 2, 1, "Building a bear set.", "Kerath", 0, 0, "Raider"],
-    [C("WARRIOR", "Plopper"), "Arms", "Trial", { T: "b" }, 52, 6, 49, 0, 3, 0, "Friend of Kettle. Keen to tank.", "Kerath", 0, 0, "Member"],
+    [C("WARRIOR", "Brannoc"), "Prot", "Raider", { T: "m" }, 60, 0, 66, 1, 0, 0, "Main tank. Misses the first reset (holiday).", "Pocus", 1, 1, "Officer"],
+    [C("WARRIOR", "Mazgrul"), "Prot", "Raider", { T: "m", D: "b" }, 60, 0, 63, 1, 1, 0, "", "", 0, 0, "Raider"],
+    [C("DRUID", "Jumpwick"), "Feral", "Raider", { T: "b", D: "m" }, 58, 4, 54, 0, 2, 1, "Building a bear set.", "Kerath", 0, 0, "Raider"],
+    [C("WARRIOR", "Plopper"), "Arms", "Raider", { T: "b" }, 52, 6, 49, 0, 3, 0, "Friend of Kettle. Keen to tank.", "Kerath", 0, 0, "Member"],
     [C("SHAMAN", "Mirrel"), "Resto", "Backup", { T: "b", H: "b", D: "b" }, 60, 0, 65, 1, 0, 2, "Great raider, any role. Can't commit: ask on the day.", "Pocus", 0, 2, "Social"],
-    [C("PRIEST", "Elowen"), "Holy", "Core", { H: "m" }, 60, 0, 64, 1, 0, 0, "", "", 0, 0, "Raider"],
-    [C("PALADIN", "Fizzwick"), "Holy", "Core", { H: "m" }, 60, 0, 61, 1, 0, 0, "", "", 0, 0, "Raider"],
-    [C("DRUID", "Merrin"), "Resto", "Core", { H: "m" }, 60, 0, 59, 0, 1, 0, "Amulet quest on Thursday.", "Nura", 0, 0, "Raider"],
-    [C("SHAMAN", "Wobblegear"), "Resto", "Core", { H: "m" }, 59, 2, 57, 0, 2, 4, "", "", 0, 0, "Raider"],
+    [C("PRIEST", "Elowen"), "Holy", "Raider", { H: "m" }, 60, 0, 64, 1, 0, 0, "", "", 0, 0, "Raider"],
+    [C("PALADIN", "Fizzwick"), "Holy", "Raider", { H: "m" }, 60, 0, 61, 1, 0, 0, "", "", 0, 0, "Raider"],
+    [C("DRUID", "Merrin"), "Resto", "Raider", { H: "m" }, 60, 0, 59, 0, 1, 0, "Amulet quest on Thursday.", "Nura", 0, 0, "Raider"],
+    [C("SHAMAN", "Wobblegear"), "Resto", "Raider", { H: "m" }, 59, 2, 57, 0, 2, 4, "", "", 0, 0, "Raider"],
     [C("PRIEST", "Lunabelle"), "Disc", "", {}, 58, 6, 52, 0, 2, 0, "", "", 0, 0, "Member", "H"],
-    [C("PALADIN", "Torvin"), "Ret", "Core", { D: "m", H: "b" }, 60, 0, 62, 1, 0, 0, "Has a healing set.", "Pocus", 0, 0, "Raider"],
-    [C("PRIEST", "Procella"), "Shadow", "Core", { D: "m", H: "b" }, 57, 3, 55, 0, 2, 9, "Needs healing gear.", "Nura", 0, 0, "Raider"],
+    [C("PALADIN", "Torvin"), "Ret", "Raider", { D: "m", H: "b" }, 60, 0, 62, 1, 0, 0, "Has a healing set.", "Pocus", 0, 0, "Raider"],
+    [C("PRIEST", "Procella"), "Shadow", "Raider", { D: "m", H: "b" }, 57, 3, 55, 0, 2, 9, "Needs healing gear.", "Nura", 0, 0, "Raider"],
     [C("HUNTER", "Gimbleflax"), "MM", "", {}, 56, 5, 52, 0, 3, 0, "", "", 0, 0, "Member"],
     [C("WARLOCK", "Tinkerbolt"), "Affli", "", {}, 49, 7, 45, 0, 3, 3, "", "", 0, 0, "Member"],
     [C("ROGUE", "Quillon"), "Combat", "", {}, 60, 0, 61, 1, 0, 0, "", "", 0, 1, "Member"],
@@ -555,10 +555,10 @@ function rosterPlanner() {
   const NW = S.planSel ? 0 : 744 - Object.values(W).reduce((a, b) => a + b, 0) - 14;
   const cell = (w, html, r) => `<span class="cell ${r ? "r" : ""}" style="width:${w}px">${html}</span>`;
   const row = (r, idx) => {
-    const away = r[12] ? ' <span class="bad small">away wk 1</span>' : "";
+    const away = r[12] ? ' <span class="bad small">away week 1</span>' : "";
     const cells = [cell(W.n, cls(r[0]) + (r[13] ? ` <span class="faint small">+${r[13]}</span>` : "")),
       W.sp ? cell(W.sp, `<span class="dim">${r[1]}</span>`) : "",
-      cell(W.st, r[2] ? `<span class="${r[2] === "Core" ? "dim" : "acc"}">${r[2] === "Backup" ? "Backup" : r[2]}</span>` : `<span class="spark">New</span>`),
+      cell(W.st, r[2] ? `<span class="${r[2] === "Raider" ? "dim" : "acc"}">${r[2]}</span>` : `<span class="spark">Not set</span>`),
       cell(W.T, roleCell(r, "T")), cell(W.H, roleCell(r, "H")), cell(W.D, roleCell(r, "D")),
       cell(W.l, r[4] === 60 ? `<span class="good">60</span>` : `${r[4]}${r[5] ? ` <span class="good small">+${r[5]}</span>` : ""}`, 1),
       W.i ? cell(W.i, r[6], 1) : "", cell(W.a, r[7] ? `<span class="good">yes</span>` : `<span class="faint">no</span>`, 1)];
@@ -573,30 +573,22 @@ function rosterPlanner() {
   if (filter === "N") body = shown.map(row).join("");
   else {
     const mains = shown.filter((r) => r[3][filter] === "m"), backs = shown.filter((r) => r[3][filter] === "b");
-    body = mains.map(row).join("") + sep("BACKUP") + backs.map(row).join("") + sep("NOT SORTED YET, SPEC FITS")
+    body = sep(`MAIN ${mains.length}  ·  ALL 60  ·  ALL ATTUNED  ·  <span class="bad">BRANNOC AWAY WEEK 1</span>`) + mains.map(row).join("") + sep(`BACKUP ${backs.length}  ·  1 AT 60  ·  1 ATTUNED`) + backs.map(row).join("") + sep("NOT SORTED YET, SPEC FITS")
       + P.filter((r) => !r[2] && r[15] === filter).map(row).join("");
   }
   const headCols = [["n", "Name"], ["sp", "Spec"], ["st", "Status"], ["T", "Tank"], ["H", "Healer"], ["D", "DPS"], ["l", "Level", 1], ["i", "iLvl", 1], ["a", "Att.", 1], ["e", "Ench.", 1], ["seen", "Seen", 1]];
   const head = `<div class="lhead">${headCols.filter(([k]) => W[k]).map(([k, t, r]) => `<span class="${r ? "r" : ""} ${k === filter ? "sorted" : ""}" style="width:${W[k]}px;${"THD".includes(k) && k.length === 1 ? "justify-content:center" : ""}">${t}</span>`).join("")}${S.planSel ? "" : `<span style="width:${NW}px">Note</span>`}</div>`;
-  // Coverage pills: click one to show that role (mains, then backups). Bar: ready (60 + attuned) / close (55+) / levelling / away.
-  const pill = (k, title, big, sub, segs, line, tone) => `<div style="width:180px;height:58px;box-sizing:border-box;border:1px solid var(--${filter === k ? "accent" : "line"});background:${filter === k ? "var(--accent-selected)" : "var(--surface)"};padding:5px 9px;cursor:pointer">
-      <div style="display:flex;align-items:baseline;gap:6px;white-space:nowrap"><span class="display dim" style="font-size:11px;letter-spacing:.08em">${title}</span><span style="font-size:15px;margin-left:auto">${big}</span><span class="dim small">${sub}</span></div>
-      <div style="display:flex;height:5px;margin:5px 0 4px;gap:2px">${segs.map(([n, c]) => `<i style="flex:${n};background:var(--${c})"></i>`).join("")}</div>
-      <div class="small ${tone}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${line}</div></div>`;
-  const cov = `<div class="abs" style="left:0;right:0;top:34px;display:flex;gap:8px">
-      ${pill("T", "TANKS", "1/4", "mains", [[1, "good"], [1, "bad"], [1, "good"], [1, "accent"], [1, "faint"]], "Brannoc away week 1", "spark")}
-      ${pill("H", "HEALERS", "8/10", "mains", [[6, "good"], [2, "accent"], [2, "good"], [1, "accent"]], "2 short, 1 backup ready", "spark")}
-      ${pill("D", "DPS", "25/26", "mains", [[17, "good"], [6, "accent"], [2, "faint"], [3, "good"]], "On track", "good")}
-      ${pill("N", "NOT SORTED", "12", "people", [[5, "good"], [4, "accent"], [3, "faint"]], "Start here", "spark")}</div>`;
-  const legend = `<div class="abs small dim" style="left:0;top:100px;display:flex;gap:12px;align-items:center;white-space:nowrap">
-      <span><i style="display:inline-block;width:8px;height:8px;background:var(--good)"></i> ready (60, attuned)</span><span><i style="display:inline-block;width:8px;height:8px;background:var(--accent)"></i> 55+</span>
-      <span><i style="display:inline-block;width:8px;height:8px;background:var(--faint)"></i> levelling</span><span><i style="display:inline-block;width:8px;height:8px;background:var(--bad)"></i> away</span>
-      <span class="faint" style="margin-left:auto">Click a role cell: none, Backup, Main. Click a name for status, weeks away and notes.</span></div>`;
-  const top = `<div class="menu abs" style="left:0;top:0;width:268px">${btn("Planning for: Onyxia (40), week 1 (9 Dec)").replace("</span>", '<i class="arrow"></i></span>')}</div>
-    <div class="abs" style="left:280px;top:1px;display:flex;gap:4px">${["All", "Needs a look 9", "Core", "Backup", "Trial"].map((t, i) => `<span class="chip">${t}</span>`).join("")}</div>
-    <div class="search" style="position:absolute;left:604px;top:0;width:140px"><input placeholder="Search" value=""></div>`;
+  // Role chips filter the list (mains, then backups, then unsorted people whose spec fits); counts = main + backup.
+  const chips = [["A", "All", 46], ["T", "Tanks", "2+3"], ["H", "Healers", "4+3"], ["D", "DPS", "25+3"], ["N", "Not sorted", 12]]
+    .map(([k, t, n]) => `<span class="chip ${filter === k ? "on" : ""}">${t} <span class="${filter === k ? "" : "faint"}" style="margin-left:5px">${n}</span></span>`).join("");
+  const top = `<div class="abs" style="left:0;top:1px;display:flex;gap:4px">${chips}</div>
+    <div class="search" style="position:absolute;left:584px;top:0;width:160px"><input placeholder="Search name or note" value=""></div>
+    <div class="abs" style="left:0;top:33px;display:flex;gap:4px;align-items:center;width:744px">${["Raider", "Backup", "Needs a look 9"].map((t) => `<span class="chip" style="white-space:nowrap">${t}</span>`).join("")}
+      <span class="faint small" style="margin-left:10px;white-space:nowrap">Click a status or role to change it.</span>
+      <span style="margin-left:auto">${btn("Sign-ups for: none").replace("</span>", '<i class="arrow"></i></span>')}</span></div>`;
+  const cov = "", legend = "";
   const listW = S.planSel ? 744 - 290 : 744;
-  const lst = `<div class="list" style="left:0;top:122px;bottom:0;width:${listW}px">${head}<div class="lbody" style="top:var(--sz-header)">${body}</div></div>`;
+  const lst = `<div class="list" style="left:0;top:68px;bottom:0;width:${listW}px">${head}<div class="lbody" style="top:var(--sz-header)">${body}</div></div>`;
   let drawer = "";
   if (S.planSel) {
     const seg = (opts, on) => `<span style="display:inline-flex;border:1px solid var(--lineStrong)">${opts.map((o) => `<span style="padding:2px 7px;font-size:12px;${o === on ? "background:var(--accent);color:var(--onAccent)" : "color:var(--dim)"}">${o}</span>`).join("")}</span>`;
@@ -640,6 +632,20 @@ function roster() {
 }
 
 // ---------------------------------------------------------------- character
+// v0.13.0 (proposal v3): the officers' box on the Character page, for players
+// opened from the roster planner (officers only).
+function offBlock(w) {
+  const seg = (opts, on) => `<span style="display:inline-flex;border:1px solid var(--lineStrong)">${opts.map((o) => `<span style="padding:0 7px;font-size:12px;line-height:18px;${o === on ? "background:var(--accent);color:var(--onAccent)" : "color:var(--dim)"}">${o}</span>`).join("")}</span>`;
+  const r = (l, v) => `<div style="display:flex;align-items:center;height:24px"><span class="dim" style="width:58px">${l}</span>${v}</div>`;
+  return `<div class="block" style="border:1px solid var(--accentDeep);padding:6px 8px 8px;margin-bottom:10px"><div class="bhead"><span class="h display">Officers</span><span class="faint small">only officers see this</span></div>
+    ${r("Status", seg(["Raider", "Backup"], "Backup"))}
+    ${r("Tank", seg(["-", "Backup", "Main"], "Backup"))}${r("Healer", seg(["-", "Backup", "Main"], "Main"))}${r("DPS", seg(["-", "Backup", "Main"], "Backup"))}
+    ${r("Away", `<span style="display:flex;gap:3px;align-items:center"><span class="faint small" style="margin-right:3px">week</span>${["1", "2", "3", "4"].map((d, i) => `<span class="chip ${i === 1 ? "on" : ""}" style="height:18px;padding:0 7px">${d}</span>`).join("")}</span>`)}
+    <div class="small" style="margin-top:6px;line-height:1.35"><span class="dim">Pocus, 2 days ago:</span> Great raider, plays any role. Can't commit to a schedule: ask on the day.</div>
+    <div class="small" style="margin-top:4px;line-height:1.35"><span class="dim">Nura, today:</span> Said yes to week 1 as healer.</div>
+    <div style="display:flex;gap:6px;margin-top:6px"><span class="small faint" style="flex:1;height:22px;line-height:20px;padding:0 6px;border:1px solid var(--lineStrong);background:var(--void)">Add a note…</span>${btn("Add", "primary")}</div></div>`;
+}
+
 function character() {
   const m = G.members[S.charIdx] || null;
   const head = `${btn("Back to roster", "quiet", 'data-go="roster" style="position:absolute;left:-8px;top:0"')}${btn("My character", "quiet", 'data-me="1" style="position:absolute;left:92px;top:0"')}
@@ -672,6 +678,7 @@ function character() {
   const x1 = 236 + T.space.xl, x2 = x1 + colW + T.space.xl + T.space.m;
   const details = !m.hasData ? `<div class="abs dim" style="left:${x1}px;top:96px;right:0;line-height:1.4">No data synced yet. They may not have Short Royalty, or they're on a trial account (trials can't sync). Their profile appears here the next time they log in with it.</div>`
     : `<div class="sheet" style="left:${x1}px;top:96px;bottom:0;width:${colW + 12}px">
+        ${S.offCard ? offBlock(colW) : ""}
         ${m.alts ? block("Alts", [{ label: `<span style="color:${CLASS.PRIEST}">${esc(G.members[(m.i + 5) % G.members.length].name)}</span>`, lhtml: 1, value: "main", tone: "acc" }]) : ""}
         ${block("Talents", SPEC[m.cls].map((t, i) => ({ label: t, value: [31, 20, 0][i] })))}
         ${block("Professions", m.profs.map((p, i) => ({ label: p[0], lt: 1, value: (i === 0 ? '<span class="dim">42 recipes&nbsp;&nbsp;&nbsp;</span>' : "") + `${p[2]}/300` })))}
@@ -1380,7 +1387,7 @@ function seg(id) {
 try { Object.assign(S, JSON.parse(localStorage.getItem("skPreview") || "{}")); } catch (e) { /* ignore */ }
 // ?screen=roster&data=worst&view=before&raid=ony  (and &shot=1 for the README pictures: window only, no chrome)
 const Q = new URLSearchParams(location.search);
-for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode", "rosterView", "planSel", "planRole"]) if (Q.get(k)) S[k] = Q.get(k);
+for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode", "rosterView", "planSel", "planRole", "offCard", "charIdx"]) if (Q.get(k)) S[k] = Q.get(k);
 const SHOT = Q.get("shot");
 if (SHOT) {
   document.body.classList.add("shot"); S.view = SHOT === "compare" ? "before" : "after"; S.reduce = true;
