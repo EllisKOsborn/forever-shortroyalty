@@ -41,18 +41,21 @@ bridged to the addon only by copy and paste.
     `r` roles read as mains), `s` status r/b, `d` away days "2026-12-09,2026-12-10" (officer-set),
     `m:<member>:<author>` per-officer notes (by must equal author; legacy
     `n` shows as its writer's note; `SetMyNote` moves it). `TiersOf/
-    StatusOf/AwayOf/NotesOf`, `SetTier/SetStatus/ToggleAway/SetMyNote`.
+    StatusOf/AwayOf/NotesOf`, `SetTier/SetStatus/ToggleAway(guid, day)/
+    SetMyNote`.
     `Split` returns kind, member, author. MAX_ENTRIES 4000. OfficerSync sends
     60 per OR (`MAX_ITEMS`), reads 120 (`MAX_RECEIVE`).
   - `Core/RosterPlan.lua` (pure): `Build(ctx)` one row per player (alts by
     officer link or `Alts.Groups` folded into the main; Alt-rank characters
     left out), short spec names `SHORT_SPEC`, `View(rows, {role A|T|H|D|N,
-    status, needs, search, week})` (role → section rows: mains, backups,
+    status, needs, search})` (role → section rows: mains, backups,
     unsorted whose `Data.GuessRole` fits; headers with at-60/attuned/away),
     `Counts`, `Summary/SummaryText`, `GroupSort(cmp, isDesc)` (keeps headers
-    on top in either sort direction), `DefaultOrder`, `AgeText`, reset weeks
-    `RESET0` 1796774400 (Wed 9 Dec 2026 00:00 UTC = week 1), `Week/
-    WeekStart/PlanWeek/WeekLabel/WeeksOffered`, progress `Record/Gain`
+    on top in either sort direction), `DefaultOrder`, `AgeText`, away
+    `AwayDays(officerDays, selfAway, now)` (next `AWAY_AHEAD` 28 days, officer
+    days and the player's own `Absences`), `AwayText` ("9-15 Dec", "Every
+    Tue"), rows `awayText/awayClash` (a raid that day, `ctx.raidDays`)/
+    `awayNow` (next 7 days → header "AWAY THIS WEEK: …"), progress `Record/Gain`
     (`SK.DB.rosterProgress`, local, 35 days, gain vs ≥7 days ago).
   - `UI/RosterTab.lua`: the Officers chip shows the planner
     (`BuildOfficers/RefreshOfficers`; `PLAN_COLUMNS` with `click` cells drawn
@@ -60,11 +63,13 @@ bridged to the addon only by copy and paste.
     `Roster.CellItems`; note box `BuildNotes/OpenNotes/SaveMyNote`;
     `settings.planner` {role, status, needs}; `Roster.signupsFor` turns the
     Seen column into Signed). `W.Chip:SetText`, `W.PopMenu` are new widgets.
-  - Away (owner: the first layout, numbered chips on the Character page,
-    was "quite bad"): planner column `weeks`, four squares per row
-    (`Roster.SQUARE`, `RP.Weeks(officerAway, selfAway, weeks)` → officer =
-    solid red, self = days the player marked away via `Absences` = red
-    outline; click → `Roster:ToggleWeek`, `Roster.WeekTip`).
+  - Away (owner: numbered week chips were "quite bad", then week squares
+    "kinda meaningless … want to use brain as little as possible", "should
+    just be a mini-calendar that's linked to the raids calendar"): planner
+    column `away` shows `awayText` (red on a raid clash); click →
+    `Roster:OpenAway`, a month popup (`BuildAway/DrawAway/ShiftAway`, reuses
+    `RaidsTab.MonthGrid`: raid days underlined, the player's own away days
+    outlined, officer days filled red; click a day → `OD:ToggleAway`).
   - `UI/CharacterTab.lua`: officers get an Officers section (`OfficerRows`
     with an Away row; also for players without data, in column B) and an
     "Alt of" menu top right. `UI/MainFrame.lua`
@@ -73,7 +78,7 @@ bridged to the addon only by copy and paste.
     officer-set mains for the signed-up role before backups.
   - Tests `tests/v0130_planner_spec.lua`; v0101 UI test rewritten. Pictures
     `roster-planner*.png` (preview `rosterView=planner`, `planRole`,
-    `planMenu`, `noteOpen`; `screen=character&offCard=1`). TESTING 67–74.
+    `planMenu`, `noteOpen`, `planAway`; `screen=character&offCard=1`). TESTING 67–74.
     Officer guide not yet updated for v0.13.0.
 - **v0.12.0 (released 20 Nov on `main`, owner: "push to main"): our own Discord
   bot** (owner: "I want it to be our own rather than something we use
