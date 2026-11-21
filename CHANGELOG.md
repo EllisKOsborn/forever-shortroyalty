@@ -1,5 +1,39 @@
 # Changelog
 
+## v0.14.0 (not released yet): raids from the calendar, attendance at the start time
+
+From the officers' second round of feedback.
+
+- **Roster planner:** the second role tier is now called **Off** (Main /
+  Off / No), and there's a third status, **Social**, for people who are
+  neither Raider nor Backup (they count as sorted, unlike *Not set*).
+- **Raids are made on the Calendar:** click a day for the day box. Officers
+  pick the start time and the night's instances, then **Create raid**, up
+  to **60 days ahead**. The **New raid** tab is gone.
+- **Several instances a night, or "to be decided":** pick one or more of
+  Barrow, Hyjal and Onyxia, or none (*to be decided*), and change it later
+  with the chips next to the raid's title. Such a night shows e.g.
+  "Hyjal + Onyxia (40)" everywhere, has **groups per instance** on the
+  Groups page, and **one reserve list** with all its instances' loot (the
+  larger reserve limit). Discord texts and the bot code name every
+  instance. Older versions see a several-instance night as its first
+  instance, and don't see a night still to be decided.
+- **Away days for everyone:** the day box has **I'm away this day** for every
+  member (right-click still works), and the Calendar's page line says so.
+- **Attendance = signed up and online at the start time** (no raid group
+  needed): online at the start = **On time**, within 15 minutes = **Late**,
+  signed up but not online = **No-show**. Every officer's or raid leader's
+  game that's online at the start checks (no `/sr officer` needed); their
+  records merge. Bench = people the officers had on the Bench who were
+  online. *End raid* and *Resume* are gone. Raids recorded the old way still
+  show.
+- **Changed sign-ups:** sign-ups now remember when someone changed from
+  Signed up to Tentative or Can't come. Attendance shows it per raid ("5h
+  before") and in the totals (**Changed**, and **<24h** for changes in the
+  last day), next to **No-show**.
+- Everyone needs v0.14.0 for the new sign-up change times, instances and
+  attendance records; older versions ignore what they don't understand.
+
 ## v0.13.0 (21 Nov 2026): the raid roster planner
 
 From the officers' feedback: one overview of the static raid roster.

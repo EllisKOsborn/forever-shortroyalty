@@ -288,3 +288,27 @@ addon read.
 73. [ ] ··· → **Taller window**: the window grows; the list shows more rows.
 74. [ ] Tomorrow, level and item level show "+N" for people who levelled or
     upgraded (each officer's game remembers what it saw each day).
+
+## v0.14.0 Raids from the calendar, attendance at the start time
+
+75. [ ] Roster → Officers: a role menu says **Main / Off / No**; the Status
+    menu has **Social**; the **Social** chip filters them.
+76. [ ] Raids → **Calendar**, click a day (as a member): the day box has
+    **I'm away this day**; the day then says "away" and officers see it.
+77. [ ] As an officer: click a day **six weeks ahead**, pick 20:00 and
+    **Hyjal + Onyxia**, Create raid. Everyone sees "Hyjal + Onyxia (40)".
+78. [ ] Make a raid with **no instance**: it reads "Raid (to be decided)".
+    On the Raids page, click the **Onyxia** chip by its title: it becomes
+    Onyxia's Lair for everyone within a minute.
+79. [ ] **Groups** on the Hyjal + Onyxia night: chips **Hyjal** / **Onyxia**
+    show different groups (4 and 8). Bench takes someone out of both.
+80. [ ] **Loot** on that night: the list has both raids' items.
+81. [ ] Attendance: sign up three players; at the raid's start, have one
+    online, one log in 5 minutes later, one stay offline. 15 minutes after
+    the start (an officer online the whole time) Attendance shows **On time**,
+    **Late**, **No-show**. Another officer sees the same.
+82. [ ] A player signs up, then changes to Can't come: the raid's
+    Attendance shows "Changed … before" (orange within a day), and Totals
+    count it under **Changed** and **<24h**.
+83. [ ] `/sr debug` "Attendance (v0.14.0, online at the start)" line: checking
+    yes during the first 15 minutes of a raid.

@@ -42,9 +42,9 @@
 | | What you get |
 |---|---|
 | 🏰 **Overview** | The guild at a glance: four numbers, what needs a look, raid readiness and recent milestones |
-| 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view; for officers the **raid roster planner**: Raider or Backup, Main or Backup per role, level, gear, attunement and notes from every officer in one table |
+| 👥 **Roster** | The whole guild in one sortable, searchable list, with alts folded under mains and a raid-attunement view; for officers the **raid roster planner**: Raider, Backup or Social, Main or Off per role, level, gear, attunement and notes from every officer in one table |
 | 🛡️ **Character** | Anyone's gear, talents, professions, cooldowns, attunements and reputations |
-| 📅 **Raids** | Guild raids made in the addon by officers and raid leaders; sign up with your role and see who's coming, with readiness and who's **In** or on the **Bench**; **Groups** of five (drag and drop, **Auto-fill**, **Invite & arrange**), **boss assignments**, **away days** on a calendar; **Copy for Discord** and **Import sign-ups from Discord**, and our own **Discord bot** with sign-up buttons; for officers (`/sr officer`) **New raid** and automatic **attendance** (on time, late, didn't attend, bench) with totals, shared between all officers |
+| 📅 **Raids** | Guild raids made in the addon by officers and raid leaders, from the **Calendar** (one or several instances a night, or "to be decided" until later); sign up with your role and see who's coming, with readiness and who's **In** or on the **Bench**; **Groups** of five (drag and drop, **Auto-fill**, **Invite & arrange**), **boss assignments**, **away days** on a calendar; **Copy for Discord** and **Import sign-ups from Discord**, and our own **Discord bot** with sign-up buttons; for officers (`/sr officer`) automatic **attendance**: signed up and online at the start (on time, late, no-show, bench) and **changed sign-ups**, with totals, shared between all officers |
 | 🎲 **Loot** (Reserve+) | Soft reserves with **bonus points**: reserve items for a raid night, and every night you don't get one it gains points (no cap) that are added to your roll next time; your points, everyone's, and a history of every change; for officers a **Loot night** screen (rolls ranked, award, raid check, end-of-night bonus) and **Rules** (reserves per raid, bonus, loot lists) |
 | ⚒️ **Find a crafter** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
 | 🧪 **Professions** | Three page tabs: **Guild** (every profession in the guild, then each profession's crafters and recipes), **Recipes** (**every recipe in the game**, by name, group or material) and **Cooldowns**; specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
@@ -98,9 +98,9 @@ Onyxia's Lair, Forever's first wave) to see who's attuned:
 
 <p align="center"><img src="docs/images/roster-planner-all.png" alt="Roster planner: one row per player with status, Tank/Healer/DPS, level, item level, attunement, enchants, data age and notes" width="100%"></p>
 
-- **Chips with counts**: All, **Tanks 2+3** (mains + backups), Healers, DPS, **Not sorted** (no status or roles yet: the people to get to know), plus Raider, Backup and **Needs a look** (not 60, not attuned, missing enchants, no addon, or data a week old). "All" shows the whole guild in one line: players at 60 (and how many reached it this week), at 55-59, attuned to Onyxia, missing enchants, without the addon.
-- **Columns**: name (+2 = alts), spec, **Status** (Raider or Backup; not the guild rank), **Tank / Healer / DPS** (Main filled, Backup outlined), **Away** in words ("9-15 Dec", "Every Tue"; red when it clashes with a raid on the calendar; click it for a **mini calendar** like Raids → Calendar, with raid days marked and the player's own away days outlined, and click days to mark them away), level and item level with what they gained in the last 7 days, Onyxia attunement, missing enchants, **Seen** (how old their data is; orange after a week), and **Note**. Click a column title to sort.
-- **Click a status or role cell** for a small menu (Main / Backup / No): no accidental changes. **Click a note cell** to read every officer's note (who wrote it and when) and write or remove your own. **Click a name** for their full Character page.
+- **Chips with counts**: All, **Tanks 2+3** (mains + backups), Healers, DPS, **Not sorted** (no status or roles yet: the people to get to know), plus Raider, Backup, **Social** (v0.14.0: neither, but sorted) and **Needs a look** (not 60, not attuned, missing enchants, no addon, or data a week old). "All" shows the whole guild in one line: players at 60 (and how many reached it this week), at 55-59, attuned to Onyxia, missing enchants, without the addon.
+- **Columns**: name (+2 = alts), spec, **Status** (Raider, Backup or Social; not the guild rank), **Tank / Healer / DPS** (Main filled, Off outlined), **Away** in words ("9-15 Dec", "Every Tue"; red when it clashes with a raid on the calendar; click it for a **mini calendar** like Raids → Calendar, with raid days marked and the player's own away days outlined, and click days to mark them away), level and item level with what they gained in the last 7 days, Onyxia attunement, missing enchants, **Seen** (how old their data is; orange after a week), and **Note**. Click a column title to sort.
+- **Click a status or role cell** for a small menu (Main / Off / No): no accidental changes. **Click a note cell** to read every officer's note (who wrote it and when) and write or remove your own. **Click a name** for their full Character page.
 - A role chip shows its **mains**, then its **backups**, then **unsorted players whose spec fits** (an unsorted Prot warrior under Tanks); each group's header says how many are 60 and attuned, and who's **away this reset week**.
 - **Sign-ups** (menu, optional): pick a raid and the Seen column shows who signed up for it.
 - The Character page gets an **Officers** section (status, roles, away days, attendance, notes) and **Alt of** at the top right. Auto-fill on the Raids → Groups page puts Raiders and officer-set mains first.
@@ -142,40 +142,46 @@ people who were offline get them when they log in. `/sr raids` opens the page.
 
 <p align="center"><img src="docs/images/discord-bot.png" alt="Short Royalty and Discord: post the raid from the addon, sign up with buttons in Discord, import the sign-ups back into the game" width="100%"></p>
 <p align="center"><img src="docs/images/discord-bot-post.png" alt="The bot's raid post in Discord with sign-up buttons" width="62%"></p>
-- **Calendar** (v0.10.2): a month view with each raid on its day, coloured by your answer (green signed up or in, pink bench). Click a raid to open it; officers click a day in the next two weeks to make a raid on it. **<** / **>** change month, **Today** comes back.
+- **Calendar** (v0.10.2): a month view with each raid on its day, coloured by your answer (green signed up or in, pink bench). Click a raid to open it. **<** / **>** change month, **Today** comes back.
+- **Click a day** (v0.14.0) for the day box: that day's raids and **I'm away this day** for everyone. Officers also make a raid there: start time, and the night's instances (Barrow, Hyjal, Onyxia, one or several; none = **to be decided**), up to 60 days ahead. The **New raid** tab is gone.
 
-<p align="center"><img src="docs/images/raids-calendar.png" alt="Raids calendar: December with raids on their days" width="100%"></p>
+<p align="center"><img src="docs/images/raids-calendar-day.png" alt="Raids calendar: the day box with I'm away this day and New raid (time and instances)" width="100%"></p>
 
-- **Away days** (v0.11.0): right-click a day on the Calendar to mark yourself away, or tick **Away every** for a weekday. It counts for all your characters, answers *Can't come* to raids you'd signed up for that day, and officers see "away" on the calendar, in the line-up and in the groups.
+- **Several instances a night, or to be decided** (v0.14.0): officers change a night's instances any time with the chips next to its title on the Raids page. A night with Hyjal and Onyxia shows "Hyjal + Onyxia (40)", has **groups per instance** on the Groups page (chips pick which), and one reserve list on the Loot page with both raids' loot.
+
+<p align="center"><img src="docs/images/raids-multi.png" alt="A raid night with Hyjal and Onyxia; officers' instance chips by the title" width="100%"></p>
+
+- **Away days** (v0.11.0): click a day on the Calendar (or right-click it) to mark yourself away, or tick **Away every** for a weekday. It counts for all your characters, answers *Can't come* to raids you'd signed up for that day, and officers see "away" on the calendar, in the line-up and in the groups.
 - **Groups** (v0.11.0): the raid as groups of five, with **Available** and **Bench** beside them. Everyone sees the groups ("You're in group 3"). Officers drag a name into a group, onto the Bench or back to Available (or click, then click where it goes); a full group swaps the two players; right-click marks **late**, **leaving early** or **absent**.
   - **Auto-fill** fills the empty spots from the sign-ups (signed up before tentative, then attendance and item level), with enough tanks and healers, healers spread over the groups and nobody marked away. What's already placed stays.
   - **Invite & arrange** (while leading the group) invites everyone In who's online, makes it a raid, invites the rest and moves everyone into their group. Press it again after each step: the game only makes a raid on a button press.
 
 <p align="center"><img src="docs/images/raids-groups.png" alt="Groups: eight groups of five, Available and Bench" width="100%"></p>
+<p align="center"><img src="docs/images/raids-groups-multi.png" alt="Groups on a Hyjal + Onyxia night: chips choose the instance" width="100%"></p>
 
 - **Assignments** (v0.11.0): officers add a boss (a name they type, or "Trash") and jobs from a list (Main tank, Off tank, Tank healer, Raid healer, Interrupt, Dispel, Decurse, Kite, Cooldowns, Soak, Marks, Pull), each with up to five players; **Copy last raid** brings the last raid's jobs over. Everyone sees them, and your own jobs show on the Raids page.
 
 <p align="center"><img src="docs/images/raids-assign.png" alt="Assignments: bosses, jobs and who does them" width="100%"></p>
 
 **Officer tools.** Officers, raid leaders and the Guild Master type
-`/sr officer` to switch on two more tabs (per character; type it again to
-switch them off). For anyone else the command just prints the help. Every
+`/sr officer` to switch on the officer tools (per character; type it again to
+switch them off): making raids on the Calendar, Attendance, and the Roster's
+Officers view. For anyone else the command just prints the help. Every
 player's game checks the rank of whoever made a raid, so nobody else can
 make or cancel one.
 
-<p align="center"><img src="docs/images/raids-new.png" alt="New raid: raid, day and start time" width="100%"></p>
+- **Making a raid:** click a day on the Calendar (above). Cancel a raid from its ··· menu.
 
-- **New raid:** pick the raid, the day (next two weeks) and the start time in your own time zone (everyone sees it in theirs), then **Create raid**. Cancel a raid from its ··· menu.
+<p align="center"><img src="docs/images/raids-attendance.png" alt="Attendance for one raid: on time, late, no-show, tentative, can't come, bench and changed sign-ups" width="100%"></p>
 
-<p align="center"><img src="docs/images/raids-attendance.png" alt="Attendance for one raid: on time, late, didn't attend and bench" width="100%"></p>
-
-- **Attendance** is recorded **automatically** while you're in the raid group, from 30 minutes before the start: every 2 minutes (and after each boss, never in combat) it notes who's in the group and who in the guild is online. It stops 15 minutes after you leave the group, 6 hours after the start, or when you press **End raid** (**Resume** starts it again).
-- Each person gets **On time, whole raid** (in the group within 10 minutes of the start and missed at most 10 minutes), **Late / not the whole raid** (joined late or left early) or **Didn't attend** (signed up or tentative, never came), and a separate **Bench** tick: signed up and online for at least 30 minutes without being in the group. Bench is ticked automatically; click a name to tick or untick it. People who said *Can't come* and people who came without signing up are listed too.
+- **Attendance** (v0.14.0) is taken **automatically at each raid's start time**, no raid group needed: everyone who signed up (or is tentative) and is **online at the start** is **On time**; online within 15 minutes is **Late**; signed up and not online by then is a **No-show**. Tentative players who didn't come and people who said *Can't come* are listed without counting against them. Any officer's or raid leader's game that's online at the start does it (the more of them, the surer). **Bench** is ticked for people the officers had on the Bench who were online; click a name to tick or untick it.
+- **Changed sign-ups:** when someone changes from *Signed up* to *Tentative* or *Can't come*, the addon remembers when. The raid's list shows how long before the start ("5h before", orange within 24 hours).
+- Raids recorded before v0.14.0 (in the raid group) still show as they were.
 
 <p align="center"><img src="docs/images/raids-totals.png" alt="Attendance totals per person" width="100%"></p>
 
-- **Totals** per person over 30, 60 or 90 days, or all: raids, on time, late, didn't attend, bench and attended %.
-- **Every officer sees it** (v0.8.1): when a recording ends, or Bench is ticked or unticked, the record goes by whisper to the officers and raid leaders online with the addon; officers who were offline get it when they log in. The tab says who recorded each raid. Members never receive attendance. Everything stays in the addon: there's no spreadsheet export.
+- **Totals** per person over 30, 60 or 90 days, or all: raids, on time, late, **no-shows**, bench, **changed** (sign-ups changed away from Signed up, out of the raids they signed up for), **<24h** (of those, changed in the last 24 hours) and attended %.
+- **Every officer sees it** (v0.8.1): when a raid's check ends, or Bench is ticked or unticked, the record goes by whisper to the officers and raid leaders online with the addon; officers who were offline get it when they log in. The tab says who recorded each raid. Members never receive attendance. Everything stays in the addon: there's no spreadsheet export.
 
 ### 🎲 Loot (Reserve+)
 <p align="center"><img src="docs/images/loot.png" alt="Loot page: tonight's raid, its loot with your points, and who reserved what" width="100%"></p>
@@ -415,7 +421,7 @@ recipes are recorded (the addon reminds you), and log in on each **alt** once.
 | `/sr words` | play Short Words |
 | `/sr raids` | guild raids: sign up and see who's coming |
 | `/sr loot` | Reserve+: reserve items, see your points, loot nights |
-| `/sr officer` | officers and raid leaders: switch the officer tools on or off (New raid, Attendance, Loot night, Rules) |
+| `/sr officer` | officers and raid leaders: switch the officer tools on or off (making raids on the Calendar, Attendance, the Roster's Officers view, Loot night, Rules) |
 | `/sr reset` | put the window back in the middle of the screen |
 
 `/shortroyalty` and `/sk` work too, if another addon already uses `/sr`.
@@ -494,11 +500,12 @@ from Discord**. No extra program needed.
 <details>
 <summary><b>How does attendance work?</b></summary>
 
-Only officers and raid leaders who typed `/sr officer` record it. Their game
-notes who's in the raid group and who in the guild is online every 2 minutes
-while they're in the raid group at a raid's time, and sorts everyone who
-signed up into on time, late, didn't attend and bench. Every officer and raid
-leader sees it on the Attendance tab; members don't.
+Since v0.14.0: at each raid's start time, the game of every officer and raid
+leader who's online looks at the guild roster. Signed up and online at the
+start = on time, online within 15 minutes = late, signed up and not online =
+no-show. It also notes sign-ups changed from Signed up to Tentative or Can't
+come, and when. No raid group needed. Every officer and raid leader sees it
+on the Attendance tab; members don't.
 </details>
 
 <details>

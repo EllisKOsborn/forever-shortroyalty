@@ -220,3 +220,19 @@ the Officers view and its tooltip.
   kinds without striking the sender. OR now sends at most 60 entries per
   message (notes are long) and still reads 120.
 - The level/item level history is local to each officer's game (never sent).
+
+## Addendum (21 Nov 2026, v0.14.0 raids from the calendar, attendance at the start)
+
+- Raid events may carry `rs` (instance keys, at most 60 characters, known
+  keys only, no repeats); `raid` must then be its first key, or `tbd` when
+  it's empty. Older versions reject `tbd` nights as an unknown raid.
+- Sign-ups may carry `w` (when they changed from Signed up): a number not
+  after the sign-up's own change time, and never on a "Signed up" answer.
+  A player could fake their own `w` (only makes them look worse).
+- Groups per instance use slot ids `id@key`: the raid must exist and the key
+  must be a known instance.
+- Attendance records v2 (officers only, unchanged AR/AQ checks): every list
+  is capped at `MAX_PEOPLE` and each value is checked (`o` only "s"/"l", `w`
+  numbers, `pb` only true, sign-ups y/t/n). They have no `total`, so older
+  versions refuse them instead of misreading them. Online status comes from
+  each officer's own guild roster; merging keeps the best result per player.

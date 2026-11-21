@@ -529,7 +529,7 @@ function rosterPlanner() {
     [C("WARRIOR", "Mazgrul"), "Prot", "Raider", { T: "m", D: "b" }, 60, 0, 63, 1, 1, 0, "", "", 0, 0, "Raider"],
     [C("DRUID", "Jumpwick"), "Feral", "Raider", { T: "b", D: "m" }, 58, 4, 54, 0, 2, 1, "Building a bear set.", "Kerath", 0, 0, "Raider"],
     [C("WARRIOR", "Plopper"), "Arms", "Raider", { T: "b" }, 52, 6, 49, 0, 3, 0, "Friend of Kettle. Keen to tank.", "Kerath", 0, 0, "Member"],
-    [C("SHAMAN", "Mirrel"), "Resto", "Backup", { T: "b", H: "b", D: "b" }, 60, 0, 65, 1, 0, 2, "Great raider, any role. Can't commit: ask on the day.", "Pocus", 0, 2, "Social"],
+    [C("SHAMAN", "Mirrel"), "Resto", "Social", { T: "b", H: "b", D: "b" }, 60, 0, 65, 1, 0, 2, "Great raider, any role. Can't commit: ask on the day.", "Pocus", 0, 2, "Social"],
     [C("PRIEST", "Elowen"), "Holy", "Raider", { H: "m" }, 60, 0, 64, 1, 0, 0, "", "", 0, 0, "Raider"],
     [C("PALADIN", "Fizzwick"), "Holy", "Raider", { H: "m" }, 60, 0, 61, 1, 0, 0, "", "", 0, 0, "Raider"],
     [C("DRUID", "Merrin"), "Resto", "Raider", { H: "m" }, 60, 0, 59, 0, 1, 0, "Amulet quest on Thursday.", "Nura", 0, 0, "Raider"],
@@ -547,7 +547,7 @@ function rosterPlanner() {
   const roleCell = (r, k) => {
     const t = r[3][k];
     if (t === "m") return `<span style="display:inline-block;width:42px;text-align:center;background:var(--accent);color:var(--onAccent);font-size:11px;line-height:17px">Main</span>`;
-    if (t === "b") return `<span style="display:inline-block;width:42px;text-align:center;border:1px solid var(--accent);color:var(--accentLit);font-size:11px;line-height:15px;box-sizing:border-box">Backup</span>`;
+    if (t === "b") return `<span style="display:inline-block;width:42px;text-align:center;border:1px solid var(--accent);color:var(--accentLit);font-size:11px;line-height:15px;box-sizing:border-box">Off</span>`;
     return `<span class="faint" style="display:inline-block;width:42px;text-align:center">·</span>`;
   };
   // Column widths as built (UI/RosterTab.lua PLAN_COLUMNS).
@@ -562,7 +562,7 @@ function rosterPlanner() {
     const extra = r[13] ? ` <span class="faint small">+${r[13]}</span>` : "";
     const cells = [cell(W.n, cls(r[0]) + extra),
       cell(W.sp, `<span class="dim">${r[1]}</span>`),
-      cell(W.st, r[2] ? `<span class="${r[2] === "Raider" ? "dim" : "acc"}">${r[2]}</span>` : `<span class="spark">Not set</span>`, 0, 0),
+      cell(W.st, r[2] ? `<span class="${r[2] === "Raider" ? "dim" : r[2] === "Social" ? "faint" : "acc"}">${r[2]}</span>` : `<span class="spark">Not set</span>`, 0, 0),
       cell(W.T, roleCell(r, "T"), 0, 0), cell(W.H, roleCell(r, "H"), 0, 0), cell(W.D, roleCell(r, "D"), 0, 0),
       cell(W.wk, awayCell(r[0].name)),
       cell(W.l, r[4] === 60 ? `<span class="good">60</span>` : `${r[4]}${r[5] ? ` <span class="good small">+${r[5]}</span>` : ""}`, 1),
@@ -597,13 +597,13 @@ function rosterPlanner() {
     <div class="menu abs" style="left:248px;top:0;width:28px">${btn("···", "", 'style="padding:0;width:28px;justify-content:center"')}</div>
     <span class="chip on" style="position:absolute;left:284px;top:1px">Officers</span>
     <div class="abs dim small" style="right:0;top:6px">46 players  ·  officers only</div>
-    <div class="abs" style="left:0;top:34px;display:flex;gap:4px;align-items:center">${chips}<span style="width:12px"></span>${["Raider", "Backup", "Needs a look  9"].map((t) => `<span class="chip" style="white-space:nowrap">${t}</span>`).join("")}</div>
+    <div class="abs" style="left:0;top:34px;display:flex;gap:4px;align-items:center">${chips}<span style="width:12px"></span>${["Raider", "Backup", "Social", "Needs a look  9"].map((t) => `<span class="chip" style="white-space:nowrap">${t}</span>`).join("")}</div>
     <div class="abs small dim ell" style="left:0;right:212px;top:${66 + 5}px">${summary}</div>
     <div class="menu abs" style="right:0;top:66px;width:200px">${btn("Sign-ups: none").replace("</span>", '<i class="arrow"></i></span>')}</div>`;
   const lst = `<div class="list" style="left:0;top:100px;bottom:0;width:744px">${head}<div class="lbody" style="top:var(--sz-header)">${body}</div></div>`;
   // Clicking a role or status cell opens a small menu (no accidental changes).
   const menu = S.planMenu ? `<div class="abs" style="left:${104 + 62 + 58 + 4}px;top:${100 + 22 + 22 + 22 * 2 + 22 + 2}px;width:120px;background:var(--surface);border:1px solid var(--lineStrong);z-index:6">
-      ${[["Main", 0], ["Backup", 1], ["No", 0]].map(([t, on]) => `<div class="small" style="height:24px;line-height:24px;padding-left:22px;position:relative;${t === "Main" ? "background:var(--raised)" : ""}">${on ? '<i style="position:absolute;left:8px;top:8px;width:8px;height:8px;border-radius:50%;background:var(--accent)"></i>' : ""}${t}</div>`).join("")}</div>` : "";
+      ${[["Main", 0], ["Off", 1], ["No", 0]].map(([t, on]) => `<div class="small" style="height:24px;line-height:24px;padding-left:22px;position:relative;${t === "Main" ? "background:var(--raised)" : ""}">${on ? '<i style="position:absolute;left:8px;top:8px;width:8px;height:8px;border-radius:50%;background:var(--accent)"></i>' : ""}${t}</div>`).join("")}</div>` : "";
   // v3: clicking a note cell opens a small box over the table: every note with its author, and a line to add one.
   let notePop = "";
   if (S.noteOpen) notePop = `<div class="abs" style="right:0;top:${100 + 22 + 22 + 22 * 2 + 22 * 2 + 22}px;width:330px;background:var(--raised);border:1px solid var(--accent);padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.6);z-index:5">
@@ -663,7 +663,7 @@ function offBlock(w) {
   // As built (UI/CharacterTab.lua): read-only rows; changes happen in Roster → Officers.
   const r = (l, v, tone) => `<div style="display:flex;height:22px;align-items:center"><span class="dim" style="flex:1">${l}</span><span class="${tone || ""}">${v}</span></div>`;
   return `<div class="block"><div class="bhead"><span class="h display">Officers</span></div>
-    ${r("Status", "Backup", "acc")}${r("Tank", "Backup")}${r("Healer", "Main", "acc")}${r("DPS", "Backup")}${r("Away", "Every Tue, 16-20 Dec", "bad")}
+    ${r("Status", "Backup", "acc")}${r("Tank", "Off")}${r("Healer", "Main", "acc")}${r("DPS", "Off")}${r("Away", "Every Tue, 16-20 Dec", "bad")}
     <div class="small dim" style="margin-top:4px">Attendance (30 days): no recorded raids yet</div>
     <div class="small" style="margin-top:6px;line-height:1.35"><span class="dim">Pocus:</span> Great raider, plays any role. Can't commit to a schedule: ask on the day.</div>
     <div class="small" style="margin-top:4px;line-height:1.35"><span class="dim">Nura:</span> Said yes to week 1 as healer.</div>
@@ -942,7 +942,7 @@ function raids() {
   const officer = S.officer === "1";
   let view = S.raidsView || "upcoming";
   if (!officer && !["upcoming", "calendar", "groups", "assign"].includes(view)) view = "upcoming";
-  const tabs = [["upcoming", "Raids"], ["groups", "Groups"], ["assign", "Assignments"], ["calendar", "Calendar"]].concat(officer ? [["new", "New raid"], ["attendance", "Attendance"]] : []);
+  const tabs = [["upcoming", "Raids"], ["groups", "Groups"], ["assign", "Assignments"], ["calendar", "Calendar"]].concat(officer ? [["attendance", "Attendance"]] : []);
   const t0 = T.sizes.subTabs + T.space.m;
   const head = subtabs(tabs, view, "data-rv");
   const menu = (text, style) => `<div class="menu abs" style="${style}">${btn(text).replace("</span>", '<i class="arrow"></i></span>')}</div>`;
@@ -961,10 +961,12 @@ function raids() {
         ${[0, 1, 2, 3, 4].map((i) => `<div class="small" style="height:${RH}px;line-height:${RH}px;padding:0 6px;white-space:nowrap;overflow:hidden">${slot(ms[i], g === 3 && i === 1 ? ' <span class="spark">late</span>' : g === 5 && i === 0 ? ' <span class="bad">away</span>' : "")}</div>`).join("")}</div>`;
     }
     const avail = M.slice(33, 40), bench = M.slice(40, 43);
-    return head + `<div class="menu abs" style="left:0;top:${t0}px;width:260px">${btn("Today 20:00  Onyxia's Lair").replace("</span>", '<i class="arrow"></i></span>')}</div>
+    // v0.14.0: a night with Hyjal and Onyxia has groups per instance (chips on the right).
+    const keyChips = S.multi ? `<div class="abs" style="right:0;top:${t0 + 28}px;display:flex;gap:2px"><span class="chip">Hyjal</span><span class="chip on">Onyxia</span></div>` : "";
+    return head + keyChips + `<div class="menu abs" style="left:0;top:${t0}px;width:260px">${btn(S.multi ? "Today 20:00  Hyjal + Onyxia" : "Today 20:00  Onyxia's Lair").replace("</span>", '<i class="arrow"></i></span>')}</div>
       <div class="abs dim small ell" style="left:272px;right:${officer ? 250 : 0}px;top:${t0 + 5}px;text-align:right">In 33 / 40: Tanks 4  ·  Healers 9  ·  DPS 20  ·  Bench 3  ·  Late 1</div>
       ${officer ? btn("Auto-fill", "", `style="position:absolute;right:140px;top:${t0}px"`) + btn("Invite & arrange", "primary", `style="position:absolute;right:0;top:${t0}px"`) : ""}
-      <div class="abs faint small ell" style="left:0;right:0;top:${t0 + 32}px">${officer ? "Drag a name into a group, onto the Bench or back to Available (or click it, then click where it goes). Right-click: late, leaving early, absent." : "You're in group 2."}</div>
+      <div class="abs faint small ell" style="left:0;right:${S.multi ? 130 : 0}px;top:${t0 + 32}px">${officer ? "Drag a name into a group, onto the Bench or back to Available (or click it, then click where it goes). Right-click: late, leaving early, absent." : "You're in group 2."}</div>
       ${boxes}
       ${list([{ key: "n", t: "Available", w: 188 }], avail, (m) => slot(m), { click: true, style: `left:${GW + 16}px;right:0;top:${y0}px;height:230px` })}
       ${list([{ key: "n", t: "Bench", w: 188 }], bench, (m) => slot(m), { click: true, style: `left:${GW + 16}px;right:0;top:${y0 + 238}px;bottom:0` })}`;
@@ -987,8 +989,8 @@ function raids() {
     // v0.10.2: December 2026 starts on a Tuesday; today = Wed 2 Dec.
     const CW = Math.floor(T.sizes.contentW / 7), gy = t0 + 24 + 8 + 20;
     const CH = Math.floor((600 - 60 - 4 - 16 - 30 - 12 - (24 + 8 + 20)) / 6);
-    const RAIDS = { 4: [["20:00 Onyxia", "good"]], 9: [["19:30 Barrow", ""]], 11: [["18:30 Hyjal", "acc"], ["20:00 Onyxia", "good"]], 16: [["19:30 Hyjal", ""]],
-      18: [["20:00 Onyxia", "faint"]], 23: [["19:30 Barrow", ""]], 30: [["20:00 Onyxia", ""]] };
+    const RAIDS = { 4: [["20:00 Onyxia", "good"]], 9: [["19:30 Barrow", ""]], 11: [["18:30 Hyjal", "acc"], ["20:00 Onyxia", "good"]], 16: [["19:30 Hyjal + Onyxia", ""]],
+      18: [["20:00 Onyxia", "faint"]], 23: [["19:30 Barrow", ""]], 30: [["20:00 TBD", ""]] };
     let cells = "";
     for (let i = 0; i < 42; i++) {
       const day = i === 0 ? 30 : i <= 31 ? i : i - 31, inMonth = i >= 1 && i <= 31, today = i === 2, past = i < 2;
@@ -998,48 +1000,58 @@ function raids() {
         ${inMonth && (day === 11 || day === 18) ? `<div class="faint" style="position:absolute;right:4px;bottom:1px;font-size:11px">${day === 11 ? 3 : 1} away</div>` : ""}
         ${rs.map((r) => `<div class="${r[1]}" style="font-size:11px;padding:0 4px;white-space:nowrap;overflow:hidden">${r[0]}</div>`).join("")}</div>`;
     }
-    return head + `${btn("<", "", `style="position:absolute;left:0;top:${t0}px;width:32px;padding:0;justify-content:center"`)}${btn(">", "", `style="position:absolute;left:36px;top:${t0}px;width:32px;padding:0;justify-content:center"`)}
+    // v0.14.0: clicking a day opens the day box (everyone: "I'm away"; officers: New raid).
+    let dayBox = "";
+    if (S.dayBox) {
+      const bx = 3 * CW + CW - 4 + 2, by = gy + 2 * CH;
+      dayBox = `<div class="abs" style="left:${bx}px;top:${by}px;width:300px;background:var(--raised);border:1px solid var(--accent);padding:8px 12px 12px;box-shadow:0 6px 18px rgba(0,0,0,.6);z-index:5">
+        <div style="display:flex"><span>Thursday 17 December</span><span class="faint" style="margin-left:auto">×</span></div>
+        <div style="margin-top:8px">${btn("I'm away this day")}</div>
+        ${officer ? `<div class="display dim" style="font-size:11px;letter-spacing:.08em;margin-top:12px">NEW RAID</div>
+        <div style="display:flex;gap:2px;align-items:center;margin-top:4px"><span class="menu" style="width:90px;margin-right:6px">${btn("20:00").replace("</span>", '<i class="arrow"></i></span>')}</span><span class="chip">Barrow</span><span class="chip on">Hyjal</span><span class="chip on">Onyxia</span></div>
+        <div class="small dim" style="margin-top:6px">Hyjal Summit + Onyxia's Lair (40)</div>
+        <div style="margin-top:8px">${btn("Create raid", "primary")}</div>` : ""}</div>`;
+    }
+    return head + dayBox + `${btn("<", "", `style="position:absolute;left:0;top:${t0}px;width:32px;padding:0;justify-content:center"`)}${btn(">", "", `style="position:absolute;left:36px;top:${t0}px;width:32px;padding:0;justify-content:center"`)}
       <div class="abs" style="left:80px;top:${t0 + 3}px;font-size:15px">December 2026</div>
       ${btn("Today", "", `style="position:absolute;right:0;top:${t0}px"`)}
       <div class="abs" style="right:72px;top:${t0 + 1}px;display:flex;gap:2px;align-items:center"><span class="dim small" style="margin-right:6px">Away every</span>${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => `<span class="chip ${d === "Tue" ? "on" : ""}">${d}</span>`).join("")}</div>
       ${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => `<div class="abs display dim" style="left:${i * CW + 4}px;top:${t0 + 32}px;font-size:11px;letter-spacing:.08em">${d.toUpperCase()}</div>`).join("")}
       ${cells}`;
   }
-  if (view === "new") {
-    const field = (label, text, y) => `<div class="abs display dim" style="left:0;top:${t0 + y}px;font-size:11px;letter-spacing:.08em">${label.toUpperCase()}</div>${menu(text, `left:0;top:${t0 + y + 20}px;width:240px`)}`;
-    return head + field("Raid", "Onyxia's Lair (40)", 0) + field("Day", "Friday 11 December", 60) + field("Start time (your time)", "20:00", 120) +
-      btn("Create raid", "primary", `style="position:absolute;left:0;top:${t0 + 180}px"`) +
-      `<div class="abs dim small" style="left:0;top:${t0 + 216}px;width:460px;line-height:1.4">Everyone with Short Royalty sees the raid within a minute (people who are offline get it when they log in) and can sign up from this page. Times show in each player's own time zone. To change a raid, cancel it from its ··· menu and make a new one.</div>
-      <div class="abs" style="left:0;top:${t0 + 280}px"><span class="good">Made: </span>Onyxia's Lair, Fri 11 Dec, 20:00</div>`;
-  }
   if (view === "attendance") {
     const totals = S.attView === "totals";
-    const RES = [["full", "On time", "good"], ["late", "Late / part", "spark"], ["missed", "Didn't attend", "bad"], ["declined", "Can't come", "faint"]];
+    // v0.14.0: signed up and online at the start = on time; within 15 min = late; else no-show.
+    const RES = [["full", "On time", "good"], ["late", "Late", "spark"], ["missed", "No-show", "bad"], ["maybe", "Tentative", "dim"], ["declined", "Can't come", "faint"]];
     const people = M.slice(0, 19).map((m, i) => {
-      const r = i < 9 ? 0 : i < 12 ? 1 : i < 16 ? 2 : 3;
-      return { m, signed: i === 8 ? "No" : r === 3 ? "Can't come" : i === 15 ? "Tentative" : "Yes", res: RES[r], bench: i === 9 || i === 14 || i === 15, mins: r === 0 ? 180 - (i % 3) : r === 1 ? 95 + i * 3 : 0 };
+      const r = i < 11 ? 0 : i < 13 ? 1 : i < 15 ? 2 : i < 16 ? 3 : 4;
+      const ch = i === 15 ? ["5h before", "spark"] : i === 16 ? ["3d before", "dim"] : i === 18 ? ["40m before", "spark"] : null;
+      return { m, signed: r === 4 ? "Can't come" : r === 3 ? "Tentative" : "Yes", res: RES[r], bench: i === 9 || i === 10, ch };
     });
-    const top = `<div class="abs small" style="left:0;top:${t0 + 4}px;right:120px"><span class="good">Recording</span> <span class="dim">Onyxia's Lair (Today 20:00)  ·  64 checks  ·  last now</span></div>
-      ${btn("End raid", "", `style="position:absolute;right:0;top:${t0}px"`)}
+    const top = `<div class="abs small" style="left:0;top:${t0 + 4}px;right:0">${totals ? `<span class="dim">Attendance is taken by itself at each raid's start time: signed up and online = there.</span>` : `<span class="dim">Onyxia's Lair, Fri 11 Dec, 20:00  ·  recorded by ${nm(M[0])}  ·  checked from 20:00</span>`}</div>
       <div class="abs" style="left:0;top:${t0 + 36}px;display:flex;gap:4px"><span class="chip ${totals ? "" : "on"}" data-av="raids">By raid</span><span class="chip ${totals ? "on" : ""}" data-av="totals">Totals</span>
       ${totals ? `<span style="width:12px"></span><span class="chip on">30 days</span><span class="chip">60 days</span><span class="chip">90 days</span><span class="chip">All</span>` : ""}</div>`;
     const lt = t0 + 36 + 22 + 12;
     if (totals) {
-      const rows = M.slice(0, 22).map((m, i) => ({ m, raids: 6 - (i % 3), full: 5 - (i % 4), late: i % 3 === 1 ? 1 : 0, missed: i % 5 === 4 ? 1 : 0, bench: i % 6 === 2 ? 2 : 0 }))
-        .map((r) => Object.assign(r, { pct: Math.round((r.full + r.late) / Math.max(1, r.full + r.late + r.missed) * 100) }));
-      return head + top + list([{ key: "n", t: "Name", w: 180 }, { key: "raids", t: "Raids", w: 70, r: 1 }, { key: "full", t: "On time", w: 80, r: 1 }, { key: "late", t: "Late", w: 70, r: 1 },
-        { key: "missed", t: "Didn't attend", w: 100, r: 1 }, { key: "bench", t: "Bench", w: 70, r: 1 }, { key: "pct", t: "Attended", w: 90, r: 1 }], rows,
-        (r, c) => c.key === "n" ? nm(r.m) : c.key === "pct" ? r.pct + "%" : r[c.key], { sort: { key: "n" }, style: `left:0;right:0;top:${lt}px;bottom:0` });
+      const rows = M.slice(0, 22).map((m, i) => ({ m, raids: 6 - (i % 3), full: 5 - (i % 4), late: i % 3 === 1 ? 1 : 0, missed: i % 5 === 4 ? 1 : 0, bench: i % 6 === 2 ? 2 : 0,
+        changed: i % 7 === 3 ? 2 : i % 7 === 5 ? 1 : 0, cl: i % 7 === 3 ? 1 : 0 }))
+        .map((r) => Object.assign(r, { pct: Math.round((r.full + r.late) / Math.max(1, r.full + r.late + r.missed) * 100), su: r.full + r.late + r.missed + (r.changed ? 1 : 0) }));
+      const NWT = 744 - 56 - 66 - 52 - 72 - 56 - 74 - 56 - 80 - 12;
+      return head + top + list([{ key: "n", t: "Name", w: NWT }, { key: "raids", t: "Raids", w: 56, r: 1 }, { key: "full", t: "On time", w: 66, r: 1 }, { key: "late", t: "Late", w: 52, r: 1 },
+        { key: "missed", t: "No-show", w: 72, r: 1 }, { key: "bench", t: "Bench", w: 56, r: 1 }, { key: "changed", t: "Changed", w: 74, r: 1 }, { key: "cl", t: "<24h", w: 56, r: 1 }, { key: "pct", t: "Attended", w: 80, r: 1 }], rows,
+        (r, c) => c.key === "n" ? nm(r.m) : c.key === "pct" ? r.pct + "%" : c.key === "missed" ? (r.missed ? `<span class="bad">${r.missed}</span>` : "0")
+          : c.key === "changed" ? (r.changed ? `${r.changed}<span class="faint"> / ${r.su}</span>` : "0") : c.key === "cl" ? (r.cl ? `<span class="spark">${r.cl}</span>` : "0") : r[c.key],
+        { sort: { key: "n" }, style: `left:0;right:0;top:${lt}px;bottom:0` });
     }
-    const recs = [["Fri 11 Dec", "Onyxia's Lair", 20, 1], ["Wed 09 Dec", "Hyjal Summit", 18], ["Wed 09 Dec", "Barrow Deeps", 10]];
+    const recs = [["Fri 11 Dec", "Onyxia", 13], ["Wed 09 Dec", "Hyjal + Onyxia", 18], ["Mon 07 Dec", "Barrow", 10]];
     return head + top + list([{ key: "d", t: "Date", w: 96 }, { key: "r", t: "Raid", w: 110 }, { key: "c", t: "Came", w: 52, r: 1 }], recs,
       (r, c) => c.key === "d" ? r[0] : c.key === "r" ? r[1] + (r[3] ? ' <span class="good">•</span>' : "") : r[2], { click: true, sel: (r) => r === recs[0], style: `left:0;top:${lt}px;bottom:0;width:270px` }) +
-      list([{ key: "n", t: "Name", w: 140 }, { key: "s", t: "Signed up", w: 84 }, { key: "res", t: "Result", w: 110 }, { key: "b", t: "Bench", w: 56 }, { key: "m", t: "Mins", w: 52, r: 1 }], people,
+      list([{ key: "n", t: "Name", w: 130 }, { key: "s", t: "Signed up", w: 78 }, { key: "res", t: "Result", w: 90 }, { key: "b", t: "Bench", w: 50 }, { key: "m", t: "Changed", w: 80, r: 1 }], people,
         (p, c) => c.key === "n" ? nm(p.m) : c.key === "s" ? `<span class="${p.signed === "Yes" ? "good" : p.signed === "No" || p.signed === "Can't come" ? "faint" : ""}">${p.signed}</span>`
-          : c.key === "res" ? `<span class="${p.res[2]}">${p.res[1]}</span>` : c.key === "b" ? (p.bench ? '<span class="acc">yes</span>' : DASH) : p.mins,
+          : c.key === "res" ? `<span class="${p.res[2]}">${p.res[1]}</span>` : c.key === "b" ? (p.bench ? '<span class="acc">yes</span>' : DASH) : p.ch ? `<span class="${p.ch[1]}">${p.ch[0]}</span>` : DASH,
         { click: true, style: `left:290px;right:0;top:${lt}px;bottom:0` });
   }
-  const events = [["Today 20:00", "Onyxia", 22, 40, "y"], ["Wed 16 Dec 19:30", "Hyjal", 14, 20, "t"], ["Fri 18 Dec 20:00", "Barrow", 6, 10, ""], ["Wed 23 Dec 19:30", "Onyxia", 3, 40, ""]];
+  const events = [["Today 20:00", S.multi ? "Hyjal + Ony" : "Onyxia", 22, 40, "y"], ["Wed 16 Dec 19:30", "Hyjal", 14, 20, "t"], ["Fri 18 Dec 20:00", "Barrow", 6, 10, ""], ["Wed 23 Dec 19:30", "Onyxia", 3, 40, ""]];
   const ROLE = { WARRIOR: "Tank", PRIEST: "Healer", PALADIN: "Healer", DRUID: "Healer", SHAMAN: "Healer" };
   const lineup = M.slice(0, 27).map((m, i) => ({ m, st: i < 22 ? ["Signed up", "good"] : i < 25 ? ["Tentative", ""] : ["Can't come", "faint"],
     role: ROLE[m.cls] || "DPS", guess: i % 4 === 3, att: i % 9 === 4 ? '<span class="bad">no</span>' : '<span class="good">yes</span>',
@@ -1050,7 +1062,8 @@ function raids() {
   return head + list([{ key: "w", t: "When", w: 130 }, { key: "r", t: "Raid", w: 82 }, { key: "s", t: "Signed", w: 58, r: 1 }], events,
       (e, c) => c.key === "w" ? e[0] : c.key === "r" ? e[1] + dotFor(e[4]) : `${e[2]}<span class="faint"> / ${e[3]}</span>`,
       { click: true, sel: (e) => e === events[0], sort: { key: "w" }, style: `left:0;top:${t0}px;bottom:0;width:${LW}px` }) +
-    `<div class="abs" style="left:${RX}px;top:${t0 + 2}px;font-size:15px">Onyxia's Lair (40)</div>
+    `<div class="abs" style="left:${RX}px;top:${t0 + 2}px;font-size:15px">${S.multi ? "Hyjal + Onyxia (40)" : "Onyxia's Lair (40)"}</div>
+    ${officer ? `<div class="abs" style="right:0;top:${t0 + 26}px;display:flex;gap:2px"><span class="chip">Barrow</span><span class="chip ${S.multi ? "on" : ""}">Hyjal</span><span class="chip on">Onyxia</span></div>` : ""}
     <div class="abs dim small" style="left:${RX}px;top:${t0 + 24}px">Fri 11 Dec, 20:00  ·  made by ${nm(M[3])}</div>
     ${btn("···", "", `style="position:absolute;right:0;top:${t0}px;width:28px;padding:0;justify-content:center"`)}
     <div class="abs" style="left:${RX}px;top:${t0 + 48}px;display:flex;gap:8px">${btn("Sign up", "on")}${btn("Tentative")}${btn("Can't come")}<span style="width:4px"></span>
@@ -1248,6 +1261,7 @@ function windowHTML() {
   const members = G.members.length, players = members - G.members.reduce((a, m) => a + (m.alts ? 1 : 0), 0);
   if (S.screen === "loot" && S.officer === "1") DESC.loot = "Reserves, bonus points and loot nights (officer tools on: /sr officer turns them off)";
   if (S.screen === "raids" && S.officer === "1") DESC.raids = "Guild raids, sign-ups and attendance (officer tools on: /sr officer turns them off)";
+  if (S.screen === "raids" && S.raidsView === "calendar") DESC.raids = S.officer === "1" ? "Click a day to make a raid on it, or to mark yourself away." : "Click a day to mark yourself away. Officers see it when they plan raids.";
   const desc = S.screen === "overview" ? (G.name ? `${esc(G.name)}  ·  ${plural(members, "member")}  ·  ${plural(players, "player")}  ·  ${online} online` : "No guild  ·  join a guild to see guildmates here") : DESC[S.screen];
   const title = TABS.find((t) => t[0] === S.screen)[1];
   return `<div class="side"><div class="crest" role="img" aria-label="Short Royalty crest"></div><div class="brand display">Short<br>Royalty</div>${nav}
@@ -1416,7 +1430,7 @@ function seg(id) {
 try { Object.assign(S, JSON.parse(localStorage.getItem("skPreview") || "{}")); } catch (e) { /* ignore */ }
 // ?screen=roster&data=worst&view=before&raid=ony  (and &shot=1 for the README pictures: window only, no chrome)
 const Q = new URLSearchParams(location.search);
-for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode", "rosterView", "planSel", "planRole", "offCard", "charIdx", "noteOpen", "planMenu", "planAway"]) if (Q.get(k)) S[k] = Q.get(k);
+for (const k of ["screen", "data", "view", "raid", "prof", "profView", "start", "crafter", "remind", "model", "accent", "font", "setView", "wordsView", "wordsBoard", "wordsDone", "wordsCB", "raidsView", "attView", "officer", "lootView", "lootMode", "rosterView", "planSel", "planRole", "offCard", "charIdx", "noteOpen", "planMenu", "planAway", "dayBox", "multi"]) if (Q.get(k)) S[k] = Q.get(k);
 const SHOT = Q.get("shot");
 if (SHOT) {
   document.body.classList.add("shot"); S.view = SHOT === "compare" ? "before" : "after"; S.reduce = true;

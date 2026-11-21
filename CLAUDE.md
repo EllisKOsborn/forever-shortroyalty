@@ -32,6 +32,52 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.14.0 (built 21 Nov on the branch, NOT released; officers' second
+  round, owner relayed the list): raids from the calendar, attendance at
+  the start time.** Owner's answers (21 Nov): third status **Social**; late
+  login = **Late if within 15 min**; several instances = **one reserve
+  list** for the night.
+  - Planner: tier "b" reads **Off** (`RP.TIER_NAME`); status `s` Social
+    (`OD.Valid` accepts r/b/s; v0.13.0 clients reject "s" entries, counted
+    as rejects, no strikes); `PLAN_STATUS` s = 4 in Auto-fill.
+  - Events: `rs` = instance keys "hyjal,ony" ("" = to be decided, then
+    `raid = "tbd"`); `raid` = first key so v0.13.0 shows the first
+    instance (and drops TBD nights). Pure `Board.ParseKeys/Keys/Raids/
+    EventName(ev, short)/EventSize/AttRaid/RaidFields`, `Board:Create(keys
+    | key, at)` (≤ `AHEAD` 60 days), `Board:SetRaids(id, keys)` (+
+    `RaidGroups.Rehome`). `DAYS_SHOWN` removed.
+  - Groups per instance: `RG.SlotId(ev, key)` = id (one instance, no rs)
+    or `id .. "@" .. key`; `SplitId/SlotIds`; `Layout/Move/CycleMark/Fill/
+    Setup/Plan(…, key)`; Bench/Available clear every instance's group;
+    `Digest` tags "G<key>:"; `RS.raidKeys` and `Prune` include them.
+  - Reserves: `R.EventPicks(st, ev)` (max limit) and `R.EventLoot` (union);
+    LootNight learns new drops under `ev.raid` (not TBD).
+  - UI `RaidsTab`: no `new` view (saved "new" → calendar); Calendar click =
+    the **day box** (`BuildDay/CalendarDay(cell, frame, i)/DrawDay/
+    CloseDay`, `RT.NewRaidForm()` = `settings.newRaid {minutes, keys}`,
+    `RT.ToggleKey`): "I'm away this day" for everyone, officers New raid.
+    Raids detail: `keyChips` (officers) beside the title. Groups:
+    `grpKeys` chips, `RT.grpKey`; TBD shows a hint. `RT:Description()`
+    per view (Calendar sentence); `Refresh` calls `MainFrame:UpdateHeader`.
+  - Sign-ups: `w` = when changed from y to t/n (`Board.ChangedAt`; cleared
+    on y; `ValidSignup` w ≤ u, not with y; RB carries it; old relays strip).
+  - Attendance v2 (`rec.v = 2`, no `total` so v0.13.0 rejects it):
+    `NewCheck/AddCheck(rec, t, online, names, signups, places)`; `o[guid]`
+    "s" (online at a check ≤ start + `ON_TIME` 2 min, or the record's first
+    check) / "l" (later, within `LATE_FOR` 15 min); `w`, `pb` (place b);
+    `Rows` → full/late/missed/maybe/declined + `changed/changedLate`
+    (`CHANGED_LATE` 24 h); `Totals` adds `changed/changedLate/signedUp`.
+    `Att:Tick` for any lead rank (`IsLeadSelf`, no /sr officer):
+    `RequestRoster` before the start, checks start..+15 min, `Close` after
+    (prints, `AttendanceSync:Share`). `Merge` v2: s beats l, newest u
+    brings signed/w/pb; v1/v2 never mix. Group recording (Snapshot/Begin/
+    Stop/Resume/End raid) removed; v1 records still display.
+    UI: columns Changed / No-show / <24h, `RT.BeforeText`.
+  - Tests `tests/v0140_spec.lua` + security cases; v0.8.0 recording tests
+    removed. Pictures `raids-calendar-day.png`, `raids-multi.png`,
+    `raids-groups-multi.png` (preview `dayBox=1`, `multi=1`), planner and
+    attendance re-rendered; `raids-new.png` removed. TESTING 75–83.
+    Officer guide not yet updated for v0.14.0.
 - **v0.13.0 (released 21 Nov on `main`, owner: "push to main"; built from
   "build that"): the raid roster planner** (officers' feedback 21 Nov; three mock-up
   rounds in `docs/proposals/raid-roster-planner.md`; officer: static roster,
@@ -1047,9 +1093,9 @@ players. **Don't go back to AceComm multi-part messages.**
 | `PR` | WHISPER | One profile per message |
 | `SQ` | GUILD | Once per session: what I hold, and (`a`, v0.3.6) who I know runs the addon |
 | `SO` | GUILD | Backfill offer, random 2–8 s delay, suppressed if someone else offers first |
-| `RB` | GUILD | v0.8.0 raids and sign-ups (`Sync/RaidSync.lua`): after a change, and answering RD; v0.10.0 adds `pk` (In/Bench) and sign-up `b`; v0.11.0 adds `gs` (groups) and `as` (assignments) |
+| `RB` | GUILD | v0.8.0 raids and sign-ups (`Sync/RaidSync.lua`): after a change, and answering RD; v0.10.0 adds `pk` (In/Bench) and sign-up `b`; v0.11.0 adds `gs` (groups) and `as` (assignments); v0.14.0 adds event `rs`, sign-up `w`, and `gs` ids "id@key" |
 | `RD` | GUILD | v0.8.0 once per session: fingerprint per raid held; answered after 2–8 s, duplicates suppressed |
-| `AR` | WHISPER | v0.8.1 one attendance record, officer/raid leader ranks only (`Sync/AttendanceSync.lua`) |
+| `AR` | WHISPER | v0.8.1 one attendance record, officer/raid leader ranks only (`Sync/AttendanceSync.lua`); v0.14.0 records have `v = 2` (online at the start) |
 | `AQ` | WHISPER | v0.8.1 officer to officer after login: attendance records held, answered with what's missing |
 | `OR` | WHISPER | v0.10.1 officer roster entries (roles, notes, alt links), officers only (`Sync/OfficerSync.lua`) |
 | `OQ` | WHISPER | v0.10.1 officer to officer after login: officer roster entries held |
