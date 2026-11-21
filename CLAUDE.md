@@ -32,8 +32,8 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
-- **v0.14.0 (built 21 Nov on the branch, NOT released; officers' second
-  round, owner relayed the list): raids from the calendar, attendance at
+- **v0.14.0 (released 21 Nov on `main`, owner: "Push to main"; officers'
+  second round, owner relayed the list): raids from the calendar, attendance at
   the start time.** Owner's answers (21 Nov): third status **Social**; late
   login = **Late if within 15 min**; several instances = **one reserve
   list** for the night.
@@ -1009,7 +1009,7 @@ bridged to the addon only by copy and paste.
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
   (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed); **v0.5.7** (12 Nov, cooldown
-  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet); **v0.8.2** (16 Nov, "No player named" fix); **v0.9.0** (16 Nov, Reserve+: soft reserves with bonus points; the weekly loot-list workflow becomes active on `main`); **v0.9.1** (18 Nov, reserve reminders, Short Words Alt-F4 fix, creator as officer); **v0.9.2** (18 Nov, Milestones without Grats, times not cut off); **v0.9.3** (19 Nov, failed sends by kind in /sr debug, no nag for GeneralError); **v0.9.4** (19 Nov, cooldowns 49 days too long: client timer wrap); **v0.10.0–v0.10.2** (20 Nov, In/Bench + Discord copy/paste, officer roster, calendar); **v0.11.0** (20 Nov, groups, Auto-fill, Invite & arrange, away days, boss assignments); **v0.12.0** (20 Nov, our own Discord bot; the "Discord bot" workflow deploys it once the owner adds the secrets); **v0.13.0** (21 Nov, raid roster planner). Tag only when
+  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet); **v0.8.2** (16 Nov, "No player named" fix); **v0.9.0** (16 Nov, Reserve+: soft reserves with bonus points; the weekly loot-list workflow becomes active on `main`); **v0.9.1** (18 Nov, reserve reminders, Short Words Alt-F4 fix, creator as officer); **v0.9.2** (18 Nov, Milestones without Grats, times not cut off); **v0.9.3** (19 Nov, failed sends by kind in /sr debug, no nag for GeneralError); **v0.9.4** (19 Nov, cooldowns 49 days too long: client timer wrap); **v0.10.0–v0.10.2** (20 Nov, In/Bench + Discord copy/paste, officer roster, calendar); **v0.11.0** (20 Nov, groups, Auto-fill, Invite & arrange, away days, boss assignments); **v0.12.0** (20 Nov, our own Discord bot; the "Discord bot" workflow deploys it once the owner adds the secrets); **v0.13.0** (21 Nov, raid roster planner); **v0.14.0** (21 Nov, raids from the calendar, several instances a night, attendance at the start time). Tag only when
   the user asks.
 
 ## Layout

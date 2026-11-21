@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.14.0 (not released yet): raids from the calendar, attendance at the start time
+## v0.14.0 (21 Nov 2026): raids from the calendar, attendance at the start time
 
 From the officers' second round of feedback.
 
