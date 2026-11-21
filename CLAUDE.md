@@ -79,7 +79,7 @@ bridged to the addon only by copy and paste.
   - Tests `tests/v0130_planner_spec.lua`; v0101 UI test rewritten. Pictures
     `roster-planner*.png` (preview `rosterView=planner`, `planRole`,
     `planMenu`, `noteOpen`, `planAway`; `screen=character&offCard=1`). TESTING 67–74.
-    Officer guide not yet updated for v0.13.0.
+    Officer guide updated 21 Nov for v0.13.0 (Roster planner section, 2 pictures).
 - **v0.12.0 (released 20 Nov on `main`, owner: "push to main"): our own Discord
   bot** (owner: "I want it to be our own rather than something we use
   externally"; earlier: Discord "shouldn't require any PC programs"). Setup
