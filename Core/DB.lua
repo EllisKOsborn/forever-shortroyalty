@@ -35,7 +35,7 @@ local DEFAULTS = {
 		raidsView = "upcoming",                   -- v0.8.0 Raids page tab: upcoming, new or attendance
 		attView = "raids",                        -- v0.8.0 Attendance: raids or totals
 		attDays = 30,                             -- v0.8.0 Attendance totals period (0 = all)
-		newRaid = {},                             -- v0.8.0 New raid form { raid, day, minutes }
+		newRaid = {},                             -- v0.14.0 the Calendar's New raid form { minutes, keys }
 		lootView = "reserves",                    -- v0.9.0 Loot page tab: reserves, points, history, night, rules
 		lootPoints = "mine",                      -- v0.9.0 Points tab: mine or all
 		lootHistory = "all",                      -- v0.9.0 History tab: all, mine or hand

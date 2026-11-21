@@ -729,8 +729,7 @@ function Roster:BuildOfficers(page)
 			local out = { { value = "", text = "Sign-ups: none" } }
 			local board = SK.RaidBoard:Get()
 			for _, e in ipairs(board and SK.RaidBoard.Upcoming(board, SK.Compat.Now()) or {}) do
-				local raid = SK.RaidBoard.Raid(e.raid)
-				out[#out + 1] = { value = e.id, text = "Sign-ups: " .. date("%a %d %b", e.at) .. " " .. ((raid and raid.short) or e.raid) }
+				out[#out + 1] = { value = e.id, text = "Sign-ups: " .. date("%a %d %b", e.at) .. " " .. SK.RaidBoard.EventName(e, true) }
 			end
 			return out
 		end,

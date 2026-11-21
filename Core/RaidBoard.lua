@@ -679,7 +679,8 @@ function Board.IsLeadSelf()
 end
 
 -- Officers and raid leaders who typed /sr officer (it's remembered per
--- character) see New raid, Cancel and Attendance.
+-- character) see the officer tools: making raids on the Calendar (v0.14.0),
+-- Cancel, Attendance and the Roster's Officers view.
 function Board.OfficerView()
 	local guid = me()
 	return guid ~= nil and SK.DB.officer[guid] == true and Board.CanLead(guid)

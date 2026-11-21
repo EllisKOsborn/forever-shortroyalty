@@ -377,7 +377,7 @@ function Commands.Who(arg)
 	return #items
 end
 
--- /sr officer (v0.8.0): officers and raid leaders switch New raid, Cancel
+-- /sr officer (v0.8.0): officers and raid leaders switch making raids, Cancel
 -- and Attendance on or off for this character. For anyone else it does
 -- nothing and the help is printed, as for any unknown command. Hidden, not
 -- secret: every receiver still checks the creator's rank (RaidBoard).
