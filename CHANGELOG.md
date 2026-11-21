@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.13.0 (not released yet): the raid roster planner
+## v0.13.0 (21 Nov 2026): the raid roster planner
 
 From the officers' feedback: one overview of the static raid roster.
 
