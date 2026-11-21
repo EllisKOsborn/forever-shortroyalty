@@ -10,7 +10,8 @@
 --   (v0.13.0, the roster planner; older versions reject these kinds safely)
 --   t  role tiers: 3 letters for Tank, Healer, DPS, each "m" main, "b" backup
 --      or "-" (e.g. "mb-"); replaces r, which still reads as mains
---   s  status: "r" Raider, "b" Backup, "" not set (not the guild rank)
+--   s  status: "r" Raider, "b" Backup, "s" Social (v0.14.0), "" not set
+--      (not the guild rank)
 --   d  away days an officer marked: "2026-12-09,2026-12-10" (local dates), "" = none
 --   m  one officer's note: key "m:" .. guid .. ":" .. author GUID; only the
 --      author can write it (by must be the author). n stays as a legacy note.
@@ -73,7 +74,7 @@ function OD.Valid(key, e, now)
 	elseif kind == "t" then
 		if not str(v, 3) or not (v == "" or v:match("^[-mb][-mb][-mb]$")) then return false, "bad tiers" end
 	elseif kind == "s" then
-		if v ~= "" and v ~= "r" and v ~= "b" then return false, "bad status" end
+		if v ~= "" and v ~= "r" and v ~= "b" and v ~= "s" then return false, "bad status" end
 	elseif kind == "d" then
 		if not str(v, 11 * OD.MAX_AWAY) then return false, "bad days" end
 		for day in v:gmatch("[^,]*") do
@@ -151,7 +152,7 @@ function OD.TiersString(tiers)
 	return s
 end
 
--- "r" Raider, "b" Backup, or nil.
+-- "r" Raider, "b" Backup, "s" Social, or nil.
 function OD.StatusOf(dir, guid)
 	local e = dir and dir[OD.Key("s", guid)]
 	return e and e.v ~= "" and e.v or nil
@@ -280,7 +281,7 @@ function OD:SetTier(guid, role, tier)
 end
 
 function OD:SetStatus(guid, status)
-	return self:Set("s", guid, (status == "r" or status == "b") and status or "")
+	return self:Set("s", guid, (status == "r" or status == "b" or status == "s") and status or "")
 end
 
 -- Mark or clear one day ("2026-12-09"). Days before today are dropped.

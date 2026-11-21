@@ -243,9 +243,12 @@ function LN:OnLootOpened()
 	if #new > 0 then
 		-- Learn items the raid's list doesn't have yet (shared with everyone).
 		local list = {}
-		for _, i in ipairs(R.LootList(R:State(), ev.raid)) do list[i] = true end
+		for _, i in ipairs(R.EventLoot(R:State(), ev)) do list[i] = true end
+		-- v0.14.0: on a night with several instances a new item is filed
+		-- under the first; a night still to be decided learns nothing.
 		for _, i in ipairs(new) do
-			if not list[i] then R:AddLoot(ev.raid, i); list[i] = true end
+			if not list[i] and ev.raid ~= SK.RaidBoard.TBD then R:AddLoot(ev.raid, i) end
+			list[i] = true
 		end
 		if not night.current then night.current = new[1] end
 		self:Changed()
@@ -308,7 +311,7 @@ function LN:SaveNight(raidID)
 	if LN.Active() then self:NoteRaid(night) end
 	local st, rs = R:State(), R:Get()
 	local ev = R.Event(raidID)
-	local picks = R.PicksOf(rs, raidID, ev and R.PicksFor(st, ev.raid))
+	local picks = R.PicksOf(rs, raidID, ev and R.EventPicks(st, ev))
 	local _, grants = LN.EndRows(night, picks, rs.locks[raidID])
 	if not next(grants) then return nil, "nobody gets a bonus" end
 	local e, why = R:Night(raidID, grants)

@@ -107,10 +107,9 @@ function Ov.RaidRows(o)
 	-- v0.8.0: the next guild raid first; the row opens the Raids page.
 	local nr = o.nextRaid
 	if nr then
-		local raid = SK.RaidBoard.Raid(nr.ev.raid)
 		local mine = nr.mine and SK.RaidBoard.STATUS_NAME[nr.mine] or "not signed up"
 		local function openRaid() SK.RaidsTab:ShowRaid(nr.ev.id) end
-		rows[#rows + 1] = { label = (raid and raid.name or "Raid") .. ", " .. SK.RaidBoard.ShortWhen(nr.ev.at, Compat.Now()),
+		rows[#rows + 1] = { label = SK.RaidBoard.EventName(nr.ev, true) .. ", " .. SK.RaidBoard.ShortWhen(nr.ev.at, Compat.Now()),
 			value = n(nr.counts.y) .. " signed up", tone = "accent", onClick = openRaid, tip = function(tt)
 				Theme.TipLine(tt, "Next guild raid")
 				Theme.TipLine(tt, SK.RaidBoard.When(nr.ev.at), "dim")

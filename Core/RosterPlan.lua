@@ -22,8 +22,9 @@ RP.HISTORY_DAYS = 35
 RP.GAIN_DAYS = 7
 RP.ROLE_KEYS = { T = "TANK", H = "HEALER", D = "DPS" }
 RP.ROLE_TITLE = { T = "Tanks", H = "Healers", D = "DPS" }
-RP.STATUS_NAME = { r = "Raider", b = "Backup" }
-RP.TIER_NAME = { m = "Main", b = "Backup" }
+RP.STATUS_NAME = { r = "Raider", b = "Backup", s = "Social" }
+-- v0.14.0: the second tier reads "Off" (officers, 21 Nov); stored as "b".
+RP.TIER_NAME = { m = "Main", b = "Off" }
 -- Short talent tree names for the Spec column (the full name is in the tooltip).
 RP.SHORT_SPEC = {
 	Protection = "Prot", Restoration = "Resto", Discipline = "Disc", Retribution = "Ret", Enhancement = "Enh",
@@ -293,7 +294,7 @@ local function match(r, opts)
 	return true
 end
 
--- opts = { role = "A" | "T" | "H" | "D" | "N", status = nil | "r" | "b",
+-- opts = { role = "A" | "T" | "H" | "D" | "N", status = nil | "r" | "b" | "s",
 --          needs = bool, search = text }
 -- Items get g (group) for sorting; group headers are { section = true, g,
 -- text, away = "AWAY THIS WEEK: NAME" or nil }.
@@ -323,7 +324,7 @@ function RP.View(rows, opts)
 		for _, r in ipairs(list) do r.g = g; items[#items + 1] = r end
 	end
 	local t1, a1 = groupLine("Main", mains)
-	local t2, a2 = groupLine("Backup", backs)
+	local t2, a2 = groupLine("Off", backs)
 	add(1, t1, mains, true, a1)
 	add(2, t2, backs, true, a2)
 	add(3, "NOT SORTED YET, SPEC FITS", fits, false)
@@ -348,10 +349,10 @@ function RP.GroupSort(cmp, isDesc)
 	end
 end
 
--- Default order: Raiders, then Backups, then not set; then by name.
-local STATUS_ORDER = { r = 1, b = 2 }
+-- Default order: Raiders, Backups, Social, then not set; then by name.
+local STATUS_ORDER = { r = 1, b = 2, s = 3 }
 function RP.DefaultOrder(a, b)
-	local sa, sb = STATUS_ORDER[a.status or ""] or 3, STATUS_ORDER[b.status or ""] or 3
+	local sa, sb = STATUS_ORDER[a.status or ""] or 4, STATUS_ORDER[b.status or ""] or 4
 	if sa ~= sb then return sa < sb end
 	return a.name:lower() < b.name:lower()
 end

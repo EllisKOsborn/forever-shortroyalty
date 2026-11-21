@@ -13,7 +13,7 @@ function Tip.ReserveText(itemID)
 	local ev = LN.Tonight(SK.RaidBoard:Get(), SK.Compat.Now())
 	local store, st = ev and R:Get(), R:State()
 	if not store or not st then return nil end
-	local picks = R.PicksOf(store, ev.id, R.PicksFor(st, ev.raid))
+	local picks = R.PicksOf(store, ev.id, R.EventPicks(st, ev))
 	return LN.TooltipText(st, picks, itemID, function(g)
 		local m = SK.Identity:Member(g)
 		return m and SK.Theme.ClassText((m.name or "?"):match("^(%S+)") or "?", m.class) or "?"

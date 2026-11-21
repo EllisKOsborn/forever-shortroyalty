@@ -401,7 +401,7 @@ function Roster:Build(page)
 		rs.officer = not rs.officer
 		Roster:Refresh()
 	end)
-	self.officerChip.tooltip = "The raid roster planner: Raider or Backup, Main or Backup per role, level, gear, " ..
+	self.officerChip.tooltip = "The raid roster planner: Raider, Backup or Social, Main or Off per role, level, gear, " ..
 		"attunement and officers' notes for every player. Only officers and raid leaders see it."
 	self.officerChip:SetPoint("LEFT", self.options, "RIGHT", SP.s, 0)
 	self.count = Theme.Text(page, "small", "dim")
@@ -464,7 +464,7 @@ end
 ---------------------------------------------------------------------------
 -- Officers view: the raid roster planner (v0.13.0; it replaced the v0.10.1
 -- roles/notes editor). One row per player with officer-set status and
--- Main / Backup per role, level, gear, attunement and officers' notes.
+-- Main / Off per role, level, gear, attunement and officers' notes.
 -- Data: Core/OfficerDir.lua (shared between officers by
 -- Sync/OfficerSync.lua) and Core/RosterPlan.lua (rows, groups, summary).
 ---------------------------------------------------------------------------
@@ -549,13 +549,14 @@ function Roster.CellItems(r, key)
 		return {
 			{ text = "Raider", checked = r.status == "r", onClick = function() done(OD:SetStatus(r.guid, "r")) end },
 			{ text = "Backup", checked = r.status == "b", onClick = function() done(OD:SetStatus(r.guid, "b")) end },
+			{ text = "Social", checked = r.status == "s", onClick = function() done(OD:SetStatus(r.guid, "s")) end },
 			{ text = "Not set", checked = r.status == nil, onClick = function() done(OD:SetStatus(r.guid, nil)) end },
 		}
 	end
 	local t = r.tiers[key]
 	return {
 		{ text = "Main", checked = t == "m", onClick = function() done(OD:SetTier(r.guid, key, "m")) end },
-		{ text = "Backup", checked = t == "b", onClick = function() done(OD:SetTier(r.guid, key, "b")) end },
+		{ text = "Off", checked = t == "b", onClick = function() done(OD:SetTier(r.guid, key, "b")) end },
 		{ text = "No", checked = t == nil, onClick = function() done(OD:SetTier(r.guid, key, nil)) end },
 	}
 end
@@ -637,9 +638,9 @@ local function decoratePlanRow(row)
 					if r.awayClash then Theme.TipLine(GameTooltip, "Clashes with a raid on the calendar.", "bad") end
 					Theme.TipLine(GameTooltip, "Click for the calendar.", "accent")
 				elseif self.key == "status" then
-					Theme.TipLine(GameTooltip, "Raider or Backup (not their guild rank). Click to change.", "accent", true)
+					Theme.TipLine(GameTooltip, "Raider, Backup or Social (not their guild rank). Click to change.", "accent", true)
 				else
-					Theme.TipLine(GameTooltip, SK.Data.ROLE_NAMES[self.key] .. ": Main, Backup or no. Click to change.", "accent", true)
+					Theme.TipLine(GameTooltip, SK.Data.ROLE_NAMES[self.key] .. ": Main, Off or no. Click to change.", "accent", true)
 				end
 				GameTooltip:Show()
 			end)
@@ -671,12 +672,12 @@ local function updatePlanRow(row, r)
 				b.label:SetText(n == 0 and Theme.Paint("faint", "add") or (Theme.Paint("dim", r.note or "") ..
 					(n > 1 and Theme.Paint("faint", " (+" .. (n - 1) .. ")") or "")))
 			elseif b.key == "status" then
-				if r.status then pill(b, "plain", Theme.Paint(r.status == "b" and "accent" or "dim", RP.STATUS_NAME[r.status]))
+				if r.status then pill(b, "plain", Theme.Paint(r.status == "b" and "accent" or (r.status == "s" and "faint" or "dim"), RP.STATUS_NAME[r.status]))
 				else pill(b, "plain", Theme.Paint("spark", "Not set")) end
 			else
 				local t = r.tiers[b.key]
 				if t == "m" then pill(b, "fill", "Main")
-				elseif t == "b" then pill(b, "line", Theme.Paint("accentLit", "Backup"))
+				elseif t == "b" then pill(b, "line", Theme.Paint("accentLit", "Off"))
 				else pill(b, "plain", Theme.Paint("faint", "·")) end
 			end
 		end
@@ -704,7 +705,7 @@ function Roster:BuildOfficers(page)
 		prev = c
 	end
 	self.statusChips = {}
-	for i, st in ipairs({ { "r", "Raider" }, { "b", "Backup" } }) do
+	for i, st in ipairs({ { "r", "Raider" }, { "b", "Backup" }, { "s", "Social" } }) do
 		local c = W.Chip(p, st[2], function()
 			ps.status = ps.status ~= st[1] and st[1] or nil
 			Roster:Refresh()

@@ -269,6 +269,26 @@ function R.PicksFor(st, raidKey)
 	return st and st.picks[raidKey] or 1
 end
 
+-- v0.14.0 (owner: "One list for the night"): a night with several
+-- instances has one list with all their loot, and the largest of their
+-- reserve limits. A night still to be decided: no loot yet, 1 reserve.
+function R.EventPicks(st, ev)
+	local n
+	for _, k in ipairs(SK.RaidBoard.Keys(ev)) do n = math.max(n or 0, R.PicksFor(st, k)) end
+	return n or 1
+end
+
+function R.EventLoot(st, ev, journal)
+	local seen, out = {}, {}
+	for _, k in ipairs(SK.RaidBoard.Keys(ev)) do
+		for _, i in ipairs((R.LootList(st, k, journal))) do
+			if not seen[i] then seen[i] = true; out[#out + 1] = i end
+		end
+	end
+	table.sort(out)
+	return out
+end
+
 function R.PointsOf(st, g, i)
 	return st.points[g] and st.points[g][i] or 0
 end
@@ -617,7 +637,7 @@ function R:SetMyPicks(raidID, items)
 	local store, g, now = self:Get(), me(), Compat.Now()
 	local ev = R.Event(raidID)
 	if not store or not g or not ev or ev.x then return nil, "unknown raid" end
-	local limit = R.PicksFor(self:State(), ev.raid)
+	local limit = R.EventPicks(self:State(), ev)
 	if #items > limit then return nil, "this raid allows " .. limit .. (limit == 1 and " reserve" or " reserves") end
 	local lock = store.locks[raidID]
 	local officer = canLead(g)

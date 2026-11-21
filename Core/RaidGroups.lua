@@ -10,7 +10,12 @@
 -- Available list are places "b" and undecided. Shared in RB as `gs`
 -- (Sync/RaidSync.lua); older versions ignore it.
 --
--- Pure parts (tested): Groups, ValidSlot, MergeSlot, SlotOf, Layout.
+-- v0.14.0: a night with several instances (or one still to be decided)
+-- keeps groups per instance in board.slots[id .. "@" .. key]; a night with
+-- one instance in the v0.8.0 shape (no ev.rs) keeps board.slots[id]. In /
+-- Bench stay per night.
+--
+-- Pure parts (tested): Groups, SlotId, ValidSlot, MergeSlot, SlotOf, Layout.
 local _, SK = ...
 
 local RG = SK:NewModule("RaidGroups")
@@ -32,6 +37,30 @@ function RG.Groups(raidKey)
 	return math.max(1, math.min(RG.MAX_GROUPS, n))
 end
 
+-- Where one instance's groups live. key = nil: the night's first instance.
+function RG.SlotId(ev, key)
+	key = key or SK.RaidBoard.Keys(ev)[1]
+	if ev.rs == nil or not key then return ev.id end
+	return ev.id .. "@" .. key
+end
+
+-- "id@key" -> id, key (key nil for a plain id).
+function RG.SplitId(sid)
+	local id, key = sid:match("^(.+)@([a-z]+)$")
+	if id then return id, key end
+	return sid, nil
+end
+
+-- Every slot list id of a night: plain and per instance.
+function RG.SlotIds(board, id)
+	local out = {}
+	for sid in pairs(board.slots or {}) do
+		if RG.SplitId(sid) == id then out[#out + 1] = sid end
+	end
+	table.sort(out)
+	return out
+end
+
 function RG.ValidSlot(s, now)
 	if type(s) ~= "table" then return false, "not a table" end
 	if not str(s.e, 80) or not str(s.g, 64) or not str(s.by, 64) then return false, "bad id" end
@@ -46,7 +75,8 @@ function RG.MergeSlot(board, s, now, isMember, isLead)
 	if not ok then return false, why end
 	if not isLead(s.by) then return false, "not an officer or raid leader" end
 	if not isMember(s.g) then return false, "not a member" end
-	if not board.events[s.e] then return false, "unknown raid" end
+	local id, key = RG.SplitId(s.e)
+	if not board.events[id] or (key and not SK.RaidBoard.Raid(key)) then return false, "unknown raid" end
 	board.slots = board.slots or {}
 	local list = board.slots[s.e]
 	if not list then
@@ -71,13 +101,16 @@ end
 -- rows (In with that group), unplaced = In without a group, bench, and
 -- available = signed up or tentative, not yet In or Bench. Rows get
 -- .group and .mark. A group over five (two officers at once) keeps all.
-function RG.Layout(board, ev, rows)
-	local count = RG.Groups(ev.raid)
-	local out = { count = count, groups = {}, unplaced = {}, bench = {}, available = {}, declined = {},
+-- key = which instance (nil: the first).
+function RG.Layout(board, ev, rows, key)
+	key = key or SK.RaidBoard.Keys(ev)[1]
+	local sid = RG.SlotId(ev, key)
+	local count = RG.Groups(key)
+	local out = { count = count, key = key, sid = sid, groups = {}, unplaced = {}, bench = {}, available = {}, declined = {},
 		marks = { l = 0, e = 0, a = 0 } }
 	for i = 1, count do out.groups[i] = {} end
 	for _, r in ipairs(rows) do
-		r.group, r.mark = RG.SlotOf(board, ev.id, r.guid)
+		r.group, r.mark = RG.SlotOf(board, sid, r.guid)
 		if r.mark ~= "" then out.marks[r.mark] = out.marks[r.mark] + 1 end
 		if r.place == "i" then
 			local g = out.groups[r.group]
@@ -105,22 +138,49 @@ local function setSlot(board, id, guid, n, m, officer, now)
 	return "G:" .. id .. "|" .. guid
 end
 
+-- v0.14.0: when a night's instances change between one (groups under id)
+-- and several (id@key), the kept instance's groups move with it. Returns
+-- the sync keys written.
+function RG.Rehome(board, before, after, officer, now)
+	local out = {}
+	for _, key in ipairs(SK.RaidBoard.Keys(after)) do
+		local from, to = RG.SlotId(before, key), RG.SlotId(after, key)
+		local had = false
+		for _, k in ipairs(SK.RaidBoard.Keys(before)) do if k == key then had = true end end
+		if had and from ~= to and board.slots and board.slots[from] then
+			for guid, s in pairs(board.slots[from]) do
+				if s.n > 0 or s.m ~= "" then
+					board.slots = board.slots or {}
+					local list = board.slots[to] or {}
+					board.slots[to] = list
+					local have = list[guid]
+					list[guid] = { n = s.n, m = s.m, u = math.max(now, have and have.u + 1 or 0), by = officer }
+					out[#out + 1] = "G:" .. to .. "|" .. guid
+				end
+			end
+		end
+	end
+	return out
+end
+
 -- target = { kind = "group", n = 1..8 } | { kind = "bench" } | { kind = "available" };
 -- with swap = guid, the player already in that spot trades places.
--- Returns ok, why.
-function RG:Move(id, guid, target, swap)
+-- key = the instance (v0.14.0; nil = the first). Returns ok, why.
+function RG:Move(id, guid, target, swap, key)
 	local B = SK.RaidBoard
 	local board, officer, now = B:Get(), Compat.PlayerGUID(), Compat.Now()
 	local ev = board and board.events[id]
 	if not ev or ev.x then return false, "unknown raid" end
 	if not B.CanLead(officer) then return false, "only officers and raid leaders can arrange the raid" end
-	local fromN = RG.SlotOf(board, id, guid)
+	key = key or B.Keys(ev)[1]
+	local sid = RG.SlotId(ev, key)
+	local fromN = RG.SlotOf(board, sid, guid)
 	local fromPlace = B.PlaceOf(board, id, guid)
 	if target.kind == "group" then
-		if target.n < 1 or target.n > RG.Groups(ev.raid) then return false, "no such group" end
+		if target.n < 1 or target.n > RG.Groups(key) then return false, "no such group" end
 		if not swap then
 			local inGroup = 0
-			for g, s in pairs(board.slots and board.slots[id] or {}) do
+			for g, s in pairs(board.slots and board.slots[sid] or {}) do
 				if g ~= guid and s.n == target.n and B.PlaceOf(board, id, g) == "i" then inGroup = inGroup + 1 end
 			end
 			if inGroup >= RG.SIZE then return false, "group " .. target.n .. " is full" end
@@ -130,22 +190,24 @@ function RG:Move(id, guid, target, swap)
 	local function place(g, v) if B.PlaceOf(board, id, g) ~= (v ~= "-" and v or nil) then B:SetPlace(id, g, v) end end
 	if target.kind == "group" then
 		place(guid, "i")
-		keys[#keys + 1] = setSlot(board, id, guid, target.n, nil, officer, now)
+		keys[#keys + 1] = setSlot(board, sid, guid, target.n, nil, officer, now)
 		if swap and swap ~= guid then
 			-- The other player goes where this one came from.
 			if fromPlace == "i" and fromN > 0 then
-				keys[#keys + 1] = setSlot(board, id, swap, fromN, nil, officer, now)
+				keys[#keys + 1] = setSlot(board, sid, swap, fromN, nil, officer, now)
 			else
 				place(swap, fromPlace or "-")
-				keys[#keys + 1] = setSlot(board, id, swap, 0, nil, officer, now)
+				keys[#keys + 1] = setSlot(board, sid, swap, 0, nil, officer, now)
 			end
 		end
-	elseif target.kind == "bench" then
-		place(guid, "b")
-		keys[#keys + 1] = setSlot(board, id, guid, 0, nil, officer, now)
 	else
-		place(guid, "-")
-		keys[#keys + 1] = setSlot(board, id, guid, 0, nil, officer, now)
+		-- Bench and Available are for the whole night: out of every
+		-- instance's groups.
+		place(guid, target.kind == "bench" and "b" or "-")
+		for _, s in ipairs(RG.SlotIds(board, id)) do
+			if s ~= sid and RG.SlotOf(board, s, guid) > 0 then keys[#keys + 1] = setSlot(board, s, guid, 0, nil, officer, now) end
+		end
+		keys[#keys + 1] = setSlot(board, sid, guid, 0, nil, officer, now)
 	end
 	SK:Fire("RAIDS_UPDATED")
 	if SK.RaidSync then SK.RaidSync:Queue(keys) end
@@ -153,13 +215,14 @@ function RG:Move(id, guid, target, swap)
 end
 
 -- Next mark in turn: none, late, leaving early, absent.
-function RG:CycleMark(id, guid)
+function RG:CycleMark(id, guid, raidKey)
 	local B = SK.RaidBoard
 	local board, officer, now = B:Get(), Compat.PlayerGUID(), Compat.Now()
 	if not board or not board.events[id] then return false, "unknown raid" end
 	if not B.CanLead(officer) then return false, "only officers and raid leaders can mark players" end
-	local n, m = RG.SlotOf(board, id, guid)
-	local key = setSlot(board, id, guid, n, RG.NEXT_MARK[m] or "", officer, now)
+	local sid = RG.SlotId(board.events[id], raidKey)
+	local n, m = RG.SlotOf(board, sid, guid)
+	local key = setSlot(board, sid, guid, n, RG.NEXT_MARK[m] or "", officer, now)
 	SK:Fire("RAIDS_UPDATED")
 	if SK.RaidSync then SK.RaidSync:Queue({ key }) end
 	return true
@@ -221,20 +284,20 @@ function RG.Members()
 	return out
 end
 
-function RG:Plan(id)
+function RG:Plan(id, key)
 	local B = SK.RaidBoard
 	local board = B:Get()
 	local ev = board and board.events[id]
 	if not ev then return nil end
-	return RG.Layout(board, ev, B.LineUp(board, ev, B.Ctx()))
+	return RG.Layout(board, ev, B.LineUp(board, ev, B.Ctx()), key)
 end
 
 -- The button. Returns the sentence to show.
-function RG:Setup(id)
+function RG:Setup(id, key)
 	local B = SK.RaidBoard
 	if not B.CanLead(Compat.PlayerGUID()) then return "Only officers and raid leaders can set the raid up." end
 	if Compat.InCombat() then return "Not in combat." end
-	local L = self:Plan(id)
+	local L = self:Plan(id, key)
 	if not L then return "Pick a raid first." end
 	local state = Compat.GroupState()
 	if state ~= "none" and not Compat.IsLeaderOrAssist() then return "You need to lead the group (or be an assistant)." end
@@ -265,12 +328,12 @@ function RG:Setup(id)
 		return invited > 0 and ("Invited " .. invited .. ". When one has joined, press again.") or "Nobody In is online to invite."
 	end
 	if state == "party" then return "Invited " .. invited .. "." end
-	self:StartArrange(id)
+	self:StartArrange(id, key)
 	return (invited > 0 and ("Invited " .. invited .. ". ") or "") .. "Arranging the groups…"
 end
 
-function RG:StartArrange(id)
-	self.arranging = { id = id, moves = 0, until_ = Compat.Now() + RG.ARRANGE_FOR }
+function RG:StartArrange(id, key)
+	self.arranging = { id = id, key = key, moves = 0, until_ = Compat.Now() + RG.ARRANGE_FOR }
 	self:ArrangeStep()
 end
 
@@ -282,7 +345,7 @@ function RG:ArrangeStep()
 		self.arranging = nil
 		return SK:Print("Stopped arranging the groups (combat or it took too long). Press Invite & arrange again.")
 	end
-	local L = self:Plan(a.id)
+	local L = self:Plan(a.id, a.key)
 	local op = L and RG.NextMove(RG.Members(), RG.Want(L))
 	if not op then
 		self.arranging = nil
@@ -325,7 +388,7 @@ end
 -- plan (v0.13.0, optional): { [guid] = { status = "r" | "b" | nil, tiers = { TANK = "m" | "b" } } }
 -- from the roster planner: Raiders before Backups, and an officer-set main
 -- for the role they signed up as before a backup.
-local PLAN_STATUS = { r = 1, b = 3 }
+local PLAN_STATUS = { r = 1, b = 3, s = 4 } -- v0.14.0 Social after Backups
 local PLAN_TIER = { m = 1, b = 2 }
 function RG.AutoFill(L, raidKey, pct, plan)
 	local raid = SK.RaidBoard.Raid(raidKey)
@@ -420,14 +483,14 @@ function RG.AutoFill(L, raidKey, pct, plan)
 end
 
 -- The button. Returns how many players it placed and benched.
-function RG:Fill(id)
+function RG:Fill(id, key)
 	local B = SK.RaidBoard
 	if not B.CanLead(Compat.PlayerGUID()) then return nil, "only officers and raid leaders can fill the raid" end
 	local board = B:Get()
 	local ev = board and board.events[id]
 	if not ev then return nil, "unknown raid" end
 	local rows = B.LineUp(board, ev, B.Ctx())
-	local L = RG.Layout(board, ev, rows)
+	local L = RG.Layout(board, ev, rows, key)
 	local pct = {}
 	local A = SK.Attendance
 	for _, t in ipairs(A.Totals(A.Sorted(A:Store() or {}, Compat.Now() - 60 * 86400))) do pct[t.guid] = t.pct end
@@ -436,8 +499,8 @@ function RG:Fill(id)
 	for _, r in ipairs(rows) do
 		plan[r.guid] = { status = SK.OfficerDir.StatusOf(dir, r.guid), tiers = SK.OfficerDir.TiersOf(dir, r.guid) }
 	end
-	for _, m in ipairs(RG.AutoFill(L, ev.raid, pct, plan)) do
-		if self:Move(id, m.guid, { kind = m.kind, n = m.n }) then
+	for _, m in ipairs(RG.AutoFill(L, L.key, pct, plan)) do
+		if self:Move(id, m.guid, { kind = m.kind, n = m.n }, nil, L.key) then
 			if m.kind == "bench" then benched = benched + 1 else placed = placed + 1 end
 		end
 	end

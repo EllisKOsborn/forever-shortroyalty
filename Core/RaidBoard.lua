@@ -9,7 +9,9 @@
 --
 --   event  = { id = by .. ":" .. c, by = creator GUID, c = created (time),
 --              raid = key in Data/Attunements, at = start (server time),
---              u = last change, x = true when cancelled, eb = who changed it }
+--              u = last change, x = true when cancelled, eb = who changed it,
+--              rs = v0.14.0 the night's instances "hyjal,ony", "" = to be
+--                   decided (then raid = "tbd"); absent = just `raid` }
 --   signup = { s = "y" (signed up) | "t" (tentative) | "n" (can't come),
 --              r = "TANK" | "HEALER" | "DPS" | nil, u = last change }
 --
@@ -77,6 +79,73 @@ function Board.Raid(key)
 end
 
 ---------------------------------------------------------------------------
+-- v0.14.0: a raid night can be "to be decided" or cover several instances
+-- (officer, 21 Nov). `raid` stays the first instance so older versions
+-- still show the night; a night to be decided has raid = "tbd", which
+-- older versions don't know and leave out. Pure.
+---------------------------------------------------------------------------
+Board.TBD = "tbd"
+
+-- rs text -> list of keys in the order Raids shows them, or nil (bad).
+function Board.ParseKeys(rs)
+	if type(rs) ~= "string" or #rs > 60 then return nil end
+	local want = {}
+	for k in rs:gmatch("[^,]+") do
+		if want[k] or not Board.Raid(k) then return nil end
+		want[k] = true
+	end
+	if rs ~= "" and (rs:sub(1, 1) == "," or rs:sub(-1) == "," or rs:find(",,", 1, true)) then return nil end
+	local out = {}
+	for _, r in ipairs(SK.Data.ShownAttunements()) do
+		if want[r.key] then out[#out + 1] = r.key end
+	end
+	return out
+end
+
+-- The night's instance keys (may be empty: to be decided).
+function Board.Keys(ev)
+	if ev.rs ~= nil then return Board.ParseKeys(ev.rs) or {} end
+	if ev.raid == Board.TBD or not Board.Raid(ev.raid) then return {} end
+	return { ev.raid }
+end
+
+function Board.Raids(ev)
+	local out = {}
+	for _, k in ipairs(Board.Keys(ev)) do out[#out + 1] = Board.Raid(k) end
+	return out
+end
+
+-- "Onyxia's Lair + Hyjal Summit", short "Onyxia + Hyjal", or "Raid (to be
+-- decided)" / "TBD".
+function Board.EventName(ev, short)
+	local names = {}
+	for _, r in ipairs(Board.Raids(ev)) do names[#names + 1] = short and (r.short or r.name) or r.name end
+	if #names == 0 then return short and "TBD" or "Raid (to be decided)" end
+	return table.concat(names, " + ")
+end
+
+-- The biggest instance's size, or nil when to be decided.
+function Board.EventSize(ev)
+	local size
+	for _, r in ipairs(Board.Raids(ev)) do size = math.max(size or 0, r.size or 0) end
+	return size
+end
+
+-- The instance whose attunement counts (Onyxia's amulet), else the first.
+function Board.AttRaid(ev)
+	local list = Board.Raids(ev)
+	for _, r in ipairs(list) do if r.status ~= "none" then return r end end
+	return list[1]
+end
+
+-- Fields for keys: one instance keeps the v0.8.0 shape (no rs).
+function Board.RaidFields(keys)
+	if #keys == 1 then return keys[1], nil end
+	if #keys == 0 then return Board.TBD, "" end
+	return keys[1], table.concat(keys, ",")
+end
+
+---------------------------------------------------------------------------
 -- Checks for anything received (untrusted)
 ---------------------------------------------------------------------------
 local function finite(v) return type(v) == "number" and v == v and v ~= math.huge and v ~= -math.huge end
@@ -87,7 +156,13 @@ function Board.ValidEvent(e, now)
 	if not str(e.by, 64) or not finite(e.c) or e.id ~= e.by .. ":" .. string.format("%d", e.c) then
 		return false, "bad id"
 	end
-	if not Board.Raid(e.raid) then return false, "unknown raid" end
+	if e.rs ~= nil then
+		local keys = Board.ParseKeys(e.rs)
+		if not keys then return false, "bad raids" end
+		if e.raid ~= (keys[1] or Board.TBD) then return false, "bad raids" end
+	elseif not Board.Raid(e.raid) then
+		return false, "unknown raid"
+	end
 	if not finite(e.at) or not finite(e.u) then return false, "bad time" end
 	if e.u > now + Board.MAX_FUTURE then return false, "from the future" end
 	if e.at > now + Board.AHEAD or e.at < now - Board.KEEP_AFTER - 86400 then return false, "too far away" end
@@ -132,7 +207,7 @@ function Board.MergeEvent(board, e, now, isLead)
 	local have = board.events[e.id]
 	if have and have.u >= e.u then return false, "not newer" end
 	if not have and SK.Count(board.events) >= Board.MAX_EVENTS then return false, "too many raids" end
-	board.events[e.id] = { id = e.id, by = e.by, c = e.c, raid = e.raid, at = e.at, u = e.u, x = e.x, eb = e.eb }
+	board.events[e.id] = { id = e.id, by = e.by, c = e.c, raid = e.raid, rs = e.rs, at = e.at, u = e.u, x = e.x, eb = e.eb }
 	return true
 end
 
@@ -199,8 +274,8 @@ function Board.Prune(board, now)
 	for id in pairs(board.places or {}) do
 		if not board.events[id] then board.places[id] = nil end
 	end
-	for id in pairs(board.slots or {}) do
-		if not board.events[id] then board.slots[id] = nil end
+	for sid in pairs(board.slots or {}) do
+		if not board.events[(SK.RaidGroups.SplitId(sid))] then board.slots[sid] = nil end
 	end
 	for id in pairs(board.assign or {}) do
 		if not board.events[id] then board.assign[id] = nil end
@@ -252,10 +327,14 @@ function Board.Digest(board)
 		table.sort(placed)
 		for _, guid in ipairs(placed) do parts[#parts + 1] = "P" .. guid .. "=" .. string.format("%d", board.places[id][guid].u) end
 		-- v0.11.0: groups and marks too.
-		local grouped = {}
-		for guid in pairs(board.slots and board.slots[id] or {}) do grouped[#grouped + 1] = guid end
-		table.sort(grouped)
-		for _, guid in ipairs(grouped) do parts[#parts + 1] = "G" .. guid .. "=" .. string.format("%d", board.slots[id][guid].u) end
+		-- v0.14.0: per instance too ("id@key").
+		for _, sid in ipairs(SK.RaidGroups.SlotIds(board, id)) do
+			local grouped = {}
+			for guid in pairs(board.slots[sid]) do grouped[#grouped + 1] = guid end
+			table.sort(grouped)
+			local tag = sid == id and "G" or ("G" .. sid:sub(#id + 2) .. ":")
+			for _, guid in ipairs(grouped) do parts[#parts + 1] = tag .. guid .. "=" .. string.format("%d", board.slots[sid][guid].u) end
+		end
 		local blocks = {}
 		for k in pairs(board.assign and board.assign[id] or {}) do blocks[#blocks + 1] = k end
 		table.sort(blocks)
@@ -285,7 +364,7 @@ end
 -- ctx = { guild, now, profile = fn(guid), isOwn = fn(guid) }
 -- Returns rows (coming first, then by role and name) and a summary.
 function Board.LineUp(board, ev, ctx)
-	local raid = Board.Raid(ev.raid)
+	local raid = Board.AttRaid(ev) or { status = "none" }
 	local rows, profiles = {}, {}
 	for guid, su in pairs(board.signups[ev.id] or {}) do
 		local p = ctx.profile(guid)
@@ -339,7 +418,7 @@ function Board.LineUp(board, ev, ctx)
 	local s = { coming = 0, maybe = 0, out = 0,
 		roles = { TANK = 0, HEALER = 0, DPS = 0, unknown = 0 }, guesses = 0,
 		notAttuned = 0, noItem = 0, enchants = 0, stale = 0, noData = 0,
-		ilvlMin = nil, ilvlMax = nil, duplicates = dupes, size = raid and raid.size or nil,
+		ilvlMin = nil, ilvlMax = nil, duplicates = dupes, size = Board.EventSize(ev),
 		placedIn = 0, placedBench = 0, inRoles = { TANK = 0, HEALER = 0, DPS = 0, unknown = 0 }, away = 0 }
 	for _, r in ipairs(rows) do
 		s[r.group] = s[r.group] + 1
@@ -420,8 +499,7 @@ end
 
 -- Plain text for Copy (Discord). No colour codes.
 function Board.Text(ev, rows, s)
-	local raid = Board.Raid(ev.raid)
-	local L = { string.format("%s, %s", raid and raid.name or "Raid", Board.When(ev.at)), Board.CountsText(s) }
+	local L = { string.format("%s, %s", Board.EventName(ev), Board.When(ev.at)), Board.CountsText(s) }
 	for _, r in ipairs(Board.Readiness(s)) do L[#L + 1] = "- " .. r.text end
 	L[#L + 1] = ""
 	for _, r in ipairs(rows) do
@@ -446,9 +524,9 @@ local function plainName(n) return (tostring(n or "?"):gsub("[%*_~`|>]", "")) en
 
 -- The announcement. <t:...> shows each reader the time in their own zone.
 function Board.DiscordText(ev, rows, s)
-	local raid = Board.Raid(ev.raid)
 	local at = string.format("%d", ev.at)
-	local L = { string.format("**%s (%d)**: <t:%s:F> (<t:%s:R>)", raid and raid.name or "Raid", raid and raid.size or 0, at, at),
+	local size = Board.EventSize(ev)
+	local L = { string.format("**%s%s**: <t:%s:F> (<t:%s:R>)", Board.EventName(ev), size and (" (" .. size .. ")") or "", at, at),
 		"Sign up in game: /sr raids (Short Royalty addon)", Board.CountsText(s), "" }
 	local function names(filter)
 		local out = {}
@@ -482,11 +560,12 @@ end
 --   SR1;id;raid key;raid name;size;start;made
 --   Character Name;y|t|n;TANK|HEALER|DPS|;i|b|;changed
 function Board.BotCode(ev, rows, signups, now)
-	local raid = Board.Raid(ev.raid)
 	local function clean(s) return (tostring(s or ""):gsub("[;|%c]", "")) end
+	-- v0.14.0: several instances = the first one's key and every name
+	-- ("Onyxia's Lair + Hyjal Summit"); to be decided = key "tbd", size 40.
 	local L = { "In Discord: type /raid-post, paste all of this into the box, then Submit.",
-		string.format("SR1;%s;%s;%s;%d;%d;%d", clean(ev.id), clean(ev.raid), clean(raid and raid.name or "Raid"),
-			raid and raid.size or 40, ev.at, now) }
+		string.format("SR1;%s;%s;%s;%d;%d;%d", clean(ev.id), clean(ev.raid), clean(Board.EventName(ev)),
+			Board.EventSize(ev) or 40, ev.at, now) }
 	for _, r in ipairs(rows) do
 		local su = signups and signups[r.guid] or {}
 		L[#L + 1] = string.format("%s;%s;%s;%s;%d", clean(r.name), su.s or r.status or "y", r.role or "",
@@ -601,15 +680,20 @@ local function changed(keys)
 	if SK.RaidSync then SK.RaidSync:Queue(keys) end
 end
 
+-- keys = a raid key, or a list of keys (v0.14.0; empty = to be decided).
 -- Returns the new event, or nil and why.
-function Board:Create(raidKey, at)
+function Board:Create(keys, at)
 	local board, guid, now = self:Get(), me(), Compat.Now()
 	if not board or not guid then return nil, "no guild" end
 	if not Board.CanLead(guid) then return nil, "only officers and raid leaders can make raids" end
-	if not Board.Raid(raidKey) then return nil, "pick a raid" end
+	if type(keys) == "string" then keys = { keys } end
+	keys = type(keys) == "table" and Board.ParseKeys(table.concat(keys, ",")) or nil
+	if not keys then return nil, "pick a raid" end
 	if at < now - 3600 then return nil, "that time has passed" end
+	if at > now + Board.AHEAD then return nil, "that's more than 60 days ahead" end
 	if SK.Count(board.events) >= Board.MAX_EVENTS then Board.Prune(board, now) end
-	local e = { by = guid, c = now, raid = raidKey, at = at, u = now }
+	local raid, rs = Board.RaidFields(keys)
+	local e = { by = guid, c = now, raid = raid, rs = rs, at = at, u = now }
 	e.id = guid .. ":" .. string.format("%d", now)
 	while board.events[e.id] do
 		e.c = e.c + 1
@@ -619,6 +703,23 @@ function Board:Create(raidKey, at)
 	if not ok then return nil, why end
 	changed({ "E:" .. e.id })
 	return board.events[e.id]
+end
+
+-- v0.14.0: officers choose (or change) the night's instances later.
+function Board:SetRaids(id, keys)
+	local board, guid, now = self:Get(), me(), Compat.Now()
+	local e = board and board.events[id]
+	if not e or e.x then return false, "unknown raid" end
+	if not Board.CanLead(guid) then return false, "only officers and raid leaders can change raids" end
+	keys = type(keys) == "table" and Board.ParseKeys(table.concat(keys, ",")) or nil
+	if not keys then return false, "bad raids" end
+	local before = { id = e.id, raid = e.raid, rs = e.rs }
+	e.raid, e.rs = Board.RaidFields(keys)
+	e.eb, e.u = guid, math.max(now, e.u + 1)
+	local out = { "E:" .. id }
+	for _, k in ipairs(SK.RaidGroups.Rehome(board, before, e, guid, now)) do out[#out + 1] = k end
+	changed(out)
+	return true
 end
 
 function Board:Cancel(id)

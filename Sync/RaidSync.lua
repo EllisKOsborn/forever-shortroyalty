@@ -41,7 +41,7 @@ local function wireItem(board, key)
 	local id = key:match("^E:(.+)$")
 	if id then
 		local e = board.events[id]
-		return e and "e", e and { id = e.id, by = e.by, c = e.c, raid = e.raid, at = e.at, u = e.u, x = e.x, eb = e.eb }
+		return e and "e", e and { id = e.id, by = e.by, c = e.c, raid = e.raid, rs = e.rs, at = e.at, u = e.u, x = e.x, eb = e.eb }
 	end
 	local aid, akey = key:match("^A:(.+)|(.+)$")
 	if aid then
@@ -69,7 +69,9 @@ local function raidKeys(board, id)
 	local keys = { eventKey(id) }
 	for guid in pairs(board.signups[id] or {}) do keys[#keys + 1] = signupKey(id, guid) end
 	for guid in pairs(board.places and board.places[id] or {}) do keys[#keys + 1] = "P:" .. id .. "|" .. guid end
-	for guid in pairs(board.slots and board.slots[id] or {}) do keys[#keys + 1] = "G:" .. id .. "|" .. guid end
+	for _, sid in ipairs(SK.RaidGroups.SlotIds(board, id)) do
+		for guid in pairs(board.slots[sid]) do keys[#keys + 1] = "G:" .. sid .. "|" .. guid end
+	end
 	for k in pairs(board.assign and board.assign[id] or {}) do keys[#keys + 1] = "A:" .. id .. "|" .. k end
 	return keys
 end

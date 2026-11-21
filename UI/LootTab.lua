@@ -237,8 +237,7 @@ function LT:Build(page)
 		items = function()
 			local out = {}
 			for _, e in ipairs(Board.Upcoming(Board:Get() or Board.New(), Compat.Now())) do
-				local raid = Board.Raid(e.raid)
-				out[#out + 1] = { value = e.id, text = (raid and raid.name or e.raid) .. ", " .. Board.ShortWhen(e.at, Compat.Now()) }
+				out[#out + 1] = { value = e.id, text = Board.EventName(e) .. ", " .. Board.ShortWhen(e.at, Compat.Now()) }
 			end
 			return out
 		end,
@@ -641,7 +640,7 @@ end
 function LT:Reservers(night, itemID)
 	local rs, st = R:Get(), R:State()
 	local ev = R.Event(night.e)
-	local picks = R.PicksOf(rs, night.e, ev and R.PicksFor(st, ev.raid))
+	local picks = R.PicksOf(rs, night.e, ev and R.EventPicks(st, ev))
 	local out = {}
 	for _, r in ipairs(R.ReservedBy(picks, itemID)) do
 		out[#out + 1] = { guid = r.guid, name = (nameOf(r.guid)), points = R.PointsOf(st, r.guid, itemID) }
@@ -750,7 +749,7 @@ function LT:RefreshReserves(st, me, now)
 		self.resNote:SetText("")
 		return
 	end
-	local limit = R.PicksFor(st, ev.raid)
+	local limit = R.EventPicks(st, ev)
 	local mine = R:MyPicks(ev.id)
 	local lock = store.locks[ev.id]
 	local locked = lock and not lock.x
@@ -759,7 +758,7 @@ function LT:RefreshReserves(st, me, now)
 		#mine > 0 and LT.PicksText(mine) or Theme.Paint("spark", "none yet"),
 		Theme.Paint("dim", locked and "  ·  locked by an officer" or "  ·  you can change it until an officer locks reserves")))
 	local rows = {}
-	for _, i in ipairs((R.LootList(st, ev.raid))) do
+	for _, i in ipairs((R.EventLoot(st, ev))) do
 		local count = 0
 		for _, r in ipairs(R.ReservedBy(picks, i)) do count = count + r.count end
 		rows[#rows + 1] = { item = i, mine = me and R.PointsOf(st, me, i) or 0, count = count }
@@ -859,12 +858,11 @@ function LT:RefreshNight(st, now)
 		self.nightLine:SetText("No raid tonight. A loot night starts with a raid on the Raids page, from 3 hours before its start.")
 		return
 	end
-	local raid = Board.Raid(ev.raid)
 	local lock = store.locks[ev.id]
 	local locked = lock and not lock.x
 	local benchOn, benchOff = 0, 0
 	for _, v in pairs(locked and lock.b or {}) do if v == "bench" then benchOn = benchOn + 1 else benchOff = benchOff + 1 end end
-	self.nightLine:SetText(string.format("%s %s (%s)  ·  %s%s", Theme.Paint("good", "Tonight"), raid and raid.name or ev.raid,
+	self.nightLine:SetText(string.format("%s %s (%s)  ·  %s%s", Theme.Paint("good", "Tonight"), Board.EventName(ev),
 		Board.ShortWhen(ev.at, now), locked and ("reserves locked " .. date("%H:%M", lock.u) .. "  ·  bench: " .. benchOn .. " online, " ..
 		(benchOff > 0 and Theme.Paint("spark", benchOff .. " offline") or "0 offline")) or Theme.Paint("spark", "reserves open"),
 		#night.kills > 0 and ("  ·  " .. Theme.Count(#night.kills, "kill")) or ""))
@@ -872,7 +870,7 @@ function LT:RefreshNight(st, now)
 	self.lockBtn.tooltip = "Locking also notes who on the bench is online: they get the bonus at the end of the night."
 	self.endBtn.active = endMode
 	self.endBtn:Paint("rest")
-	local limit = R.PicksFor(st, ev.raid)
+	local limit = R.EventPicks(st, ev)
 	local picks = R.PicksOf(store, ev.id, limit)
 	if endMode then
 		local rows, grants = LN.EndRows(night, picks, lock)

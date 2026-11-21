@@ -37,8 +37,7 @@ function Rem.Pick(raids, now, inRaid, tonightID, inCombat)
 	for _, r in ipairs(raids) do
 		local ev, have = r.ev, #(r.mine or {})
 		if not r.locked and have < r.limit and not ev.x then
-			local raid = Board.Raid(ev.raid)
-			local name = raid and raid.name or "the raid"
+			local name = #Board.Keys(ev) > 0 and Board.EventName(ev) or "the raid"
 			local short = have == 0 and "Nothing reserved yet." or string.format("Only %d of %d reserved.", have, r.limit)
 			local raidDay = now >= Board.DayStart(ev.at) + 60 and now <= ev.at + LN.AFTER
 			if (raidDay and r.signed) or (inRaid and ev.id == tonightID) then
@@ -64,7 +63,7 @@ function Rem.Raids(now, me)
 		local su = board.signups[ev.id] and board.signups[ev.id][me or ""]
 		local lock = store.locks[ev.id]
 		out[#out + 1] = { ev = ev, signed = su ~= nil and (su.s == "y" or su.s == "t"), mine = R:MyPicks(ev.id),
-			limit = R.PicksFor(st, ev.raid), locked = lock ~= nil and not lock.x }
+			limit = R.EventPicks(st, ev), locked = lock ~= nil and not lock.x }
 	end
 	return out
 end
