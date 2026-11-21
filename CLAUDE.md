@@ -77,7 +77,7 @@ bridged to the addon only by copy and paste.
     removed. Pictures `raids-calendar-day.png`, `raids-multi.png`,
     `raids-groups-multi.png` (preview `dayBox=1`, `multi=1`), planner and
     attendance re-rendered; `raids-new.png` removed. TESTING 75–83.
-    Officer guide not yet updated for v0.14.0.
+    Officer guide updated 21 Nov for v0.14.0 (making raids, instances, groups, attendance, planner words; 2 pictures).
 - **v0.13.0 (released 21 Nov on `main`, owner: "push to main"; built from
   "build that"): the raid roster planner** (officers' feedback 21 Nov; three mock-up
   rounds in `docs/proposals/raid-roster-planner.md`; officer: static roster,
