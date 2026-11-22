@@ -95,4 +95,42 @@ describe("v0.16.0 weekly series", function()
 		assert.is_false(RT.reserveBtn:IsShown())
 		assert.equal(0, #SK.errors)
 	end)
+
+	it("away for a range of days from the day box; one button clears it", function()
+		H.loadUI(SK)
+		local A = SK.Absences
+		local function on(day) return os.time({ year = 2026, month = 12, day = day, hour = 20 }) end
+		-- pure parts
+		assert.equal("10-14 Dec", A.RangeText(on(10), on(14)))
+		assert.equal("30 Nov-2 Dec", A.RangeText(os.time({ year = 2026, month = 11, day = 30, hour = 12 }), on(2)))
+		assert.equal("10 Dec", A.RangeText(on(10), on(10)))
+		local items = RT.AwayItems(on(10))
+		assert.equal("Just this day", items[1].text)
+		assert.equal("Until Mon 14 Dec", items[5].text)
+		assert.equal(A.RANGE_DAYS, #items)
+		assert.same({ false, "too many days" }, { A:SetRange(on(10), A.RANGE_DAYS + 1) })
+		-- the day box: 10 Dec, until 14 Dec
+		SK.DB.settings.raidsView = "calendar"
+		SK.MainFrame:Open("raids")
+		local idx
+		for i, c in ipairs(RT.calCells) do if os.date("%Y-%m-%d", c.cell.at) == "2026-12-10" then idx = i end end
+		RT:CalendarDay(RT.calCells[idx].cell, RT.calCells[idx], idx)
+		RT.dayBox.awayUntil:Choose(5)
+		RT.dayBox.away:GetScript("OnClick")(RT.dayBox.away)
+		for d = 10, 14 do assert.is_true(A:IsMyDay(on(d)), "day " .. d) end
+		assert.is_false(A:IsMyDay(on(15)))
+		assert.same({ "2026-12-10", "2026-12-11", "2026-12-12", "2026-12-13", "2026-12-14" }, SK.Profile:Own().away.d)
+		assert.equal("Not away 10-14 Dec after all", RT.dayBox.away.label:GetText())
+		assert.is_false(RT.dayBox.awayUntil:IsShown())
+		-- clicking it again clears all five days
+		RT.dayBox.away:GetScript("OnClick")(RT.dayBox.away)
+		for d = 10, 14 do assert.is_false(A:IsMyDay(on(d))) end
+		assert.equal(0, #SK.errors)
+	end)
+
+	it("an old 'away every' weekday of ours is cleared once", function()
+		local db = SK.DBM:Load({ away = { d = {}, w = { [2] = true }, u = 1 } })
+		assert.same({}, db.away.w)
+		assert.is_true(db.away.u > 1)
+	end)
 end)

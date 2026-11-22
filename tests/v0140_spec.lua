@@ -254,7 +254,7 @@ describe("v0.14.0 Raids page", function()
 		assert.is_false(RT.dayBox.create:IsShown())
 		RT.dayBox.away:GetScript("OnClick")(RT.dayBox.away)
 		assert.is_true(SK.Absences.IsAway(SK.Absences:Mine(W.now), c.cell.at))
-		assert.equal("I'm not away after all", RT.dayBox.away.label:GetText())
+		assert.equal("Not away 9 Dec after all", RT.dayBox.away.label:GetText())
 	end)
 end)
 

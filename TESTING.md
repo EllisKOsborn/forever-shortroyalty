@@ -243,8 +243,8 @@ addon read.
     4. Press again once one joined: it becomes a raid. Press again: the
     rest are invited and, as they join, moved into their groups ("Raid
     groups arranged." in chat). Tell me any red error text from the game.
-61. [ ] **Away days**: Calendar → right-click a day: "away" shows on it. Tick
-    **Away every** Tue: every Tuesday shows away. If you'd signed up for a
+61. [ ] **Away days**: Calendar → right-click a day: "away" shows on it
+    (v0.16.0: the weekday chips are gone, see 91). If you'd signed up for a
     raid that day, your answer becomes *Can't come*. An officer sees "N
     away" on that day and "away" next to your name in Groups.
 62. [ ] **Assignments** (officer): type "Onyxia", Add boss; pick "Main tank"
@@ -347,3 +347,8 @@ addon read.
 90. [ ] Member: sign up for an Onyxia raid → **Reserve loot 0/1** appears
     under the buttons; it opens Loot → Reserves on that raid. Not shown for
     a raid still to be decided, or after Can't come.
+91. [ ] **Away for a range**: Calendar → click 10 Dec → **Until Mon 14 Dec**
+    → **I'm away**. 10–14 Dec show "away", the planner's Away column reads
+    "10-14 Dec". Click any of those days: the button reads **Not away 10-14
+    Dec after all** and clears all five. The "Away every" chips are gone,
+    and anyone who had ticked one isn't away every week any more.

@@ -997,7 +997,7 @@ function raids() {
       const day = i === 0 ? 30 : i <= 31 ? i : i - 31, inMonth = i >= 1 && i <= 31, today = i === 2, past = i < 2;
       const rs = inMonth ? (RAIDS[day] || []) : [];
       cells += `<div class="abs" style="left:${(i % 7) * CW}px;top:${gy + Math.floor(i / 7) * CH}px;width:${CW - 4}px;height:${CH - 4}px;border:1px solid var(--${today ? "accent" : "line"});background:${today ? "var(--accent-selected)" : inMonth ? "var(--surface)" : "var(--void)"}">
-        <div class="small ${today ? "" : inMonth && !past ? "dim" : "faint"}" style="padding:1px 4px">${day}${inMonth && (day === 8 || day === 15 || day === 22 || day === 29 || day === 19) ? ' <span class="bad">away</span>' : ""}</div>
+        <div class="small ${today ? "" : inMonth && !past ? "dim" : "faint"}" style="padding:1px 4px">${day}${inMonth && (day >= 8 && day <= 10) ? ' <span class="bad">away</span>' : ""}</div>
         ${inMonth && (day === 11 || day === 18) ? `<div class="faint" style="position:absolute;right:4px;bottom:1px;font-size:11px">${day === 11 ? 3 : 1} away</div>` : ""}
         ${rs.map((r) => `<div class="${r[1]}" style="font-size:11px;padding:0 4px;white-space:nowrap;overflow:hidden">${r[0]}</div>`).join("")}</div>`;
     }
@@ -1007,7 +1007,7 @@ function raids() {
       const bx = 3 * CW + CW - 4 + 2, by = gy + 2 * CH;
       dayBox = `<div class="abs" style="left:${bx}px;top:${by}px;width:300px;background:var(--raised);border:1px solid var(--accent);padding:8px 12px 12px;box-shadow:0 6px 18px rgba(0,0,0,.6);z-index:5">
         <div style="display:flex"><span>Thursday 17 December</span><span class="faint" style="margin-left:auto">×</span></div>
-        <div style="margin-top:8px">${btn("I'm away this day")}</div>
+        <div style="margin-top:8px;display:flex;gap:4px"><span class="menu" style="width:170px">${btn("Until Mon 21 Dec").replace("</span>", '<i class="arrow"></i></span>')}</span>${btn("I'm away")}</div>
         ${officer ? `<div class="display dim" style="font-size:11px;letter-spacing:.08em;margin-top:12px">NEW RAID</div>
         <div style="display:flex;gap:2px;align-items:center;margin-top:4px"><span class="menu" style="width:90px;margin-right:6px">${btn("20:00").replace("</span>", '<i class="arrow"></i></span>')}</span><span class="chip">Barrow</span><span class="chip on">Hyjal</span><span class="chip on">Onyxia</span></div>
         <div style="margin-top:6px"><span class="menu" style="width:170px">${btn("Weekly, 8 raids").replace("</span>", '<i class="arrow"></i></span>')}</span></div>
@@ -1017,7 +1017,6 @@ function raids() {
     return head + dayBox + `${btn("<", "", `style="position:absolute;left:0;top:${t0}px;width:32px;padding:0;justify-content:center"`)}${btn(">", "", `style="position:absolute;left:36px;top:${t0}px;width:32px;padding:0;justify-content:center"`)}
       <div class="abs" style="left:80px;top:${t0 + 3}px;font-size:15px">December 2026</div>
       ${btn("Today", "", `style="position:absolute;right:0;top:${t0}px"`)}
-      <div class="abs" style="right:72px;top:${t0 + 1}px;display:flex;gap:2px;align-items:center"><span class="dim small" style="margin-right:6px">Away every</span>${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => `<span class="chip ${d === "Tue" ? "on" : ""}">${d}</span>`).join("")}</div>
       ${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => `<div class="abs display dim" style="left:${i * CW + 4}px;top:${t0 + 32}px;font-size:11px;letter-spacing:.08em">${d.toUpperCase()}</div>`).join("")}
       ${cells}`;
   }

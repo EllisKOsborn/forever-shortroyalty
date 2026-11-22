@@ -7,13 +7,18 @@
 --
 --   away = { d = { "2026-12-11", ... } (local dates), w = { 1..7 } (Monday = 1), u = changed }
 --
--- Pure parts (tested): Weekday, IsAway, Field, Of.
+-- v0.16.0 (owner): no more "away every weekday" chips; players enter a
+-- range of days instead (SetRange, ClearRun). Our own `w` is cleared once
+-- (DB migrate); weekdays from older versions still count when received.
+--
+-- Pure parts (tested): Weekday, IsAway, Field, Of, Run, DayAt.
 local _, SK = ...
 
 local Abs = SK:NewModule("Absences")
 local Compat = SK.Compat
 
 Abs.MAX_DAYS = 40
+Abs.RANGE_DAYS = 28 -- longest range entered in one go
 Abs.WEEKDAYS = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" }
 
 -- Monday = 1 … Sunday = 7, in local time.
@@ -28,6 +33,35 @@ function Abs.IsAway(away, at)
 	local wd = Abs.Weekday(at)
 	for _, w in ipairs(away.w or {}) do if w == wd then return true end end
 	return false
+end
+
+-- Noon on the day `offset` days after `at`'s day (local time, safe over
+-- summer/winter time changes). Pure.
+function Abs.DayAt(at, offset)
+	local t = date("*t", at)
+	return time({ year = t.year, month = t.month, day = t.day + (offset or 0), hour = 12 })
+end
+
+-- The run of back-to-back away days (single days only) around `at`:
+-- firstAt, lastAt, or nil when that day isn't marked. Pure.
+function Abs.Run(saved, at)
+	local d = type(saved) == "table" and saved.d or {}
+	local function on(off) return d[date("%Y-%m-%d", Abs.DayAt(at, off))] == true end
+	if not on(0) then return nil end
+	local lo, hi = 0, 0
+	while lo > -Abs.MAX_DAYS and on(lo - 1) do lo = lo - 1 end
+	while hi < Abs.MAX_DAYS and on(hi + 1) do hi = hi + 1 end
+	return Abs.DayAt(at, lo), Abs.DayAt(at, hi)
+end
+
+-- "10-14 Dec", "30 Nov-2 Dec", "10 Dec". Pure.
+function Abs.RangeText(firstAt, lastAt)
+	local a, b = date("*t", firstAt), date("*t", lastAt)
+	if a.year == b.year and a.month == b.month and a.day == b.day then return (date("%d %b", firstAt):gsub("^0", "")) end
+	if a.year == b.year and a.month == b.month then
+		return tostring(a.day) .. "-" .. (date("%d %b", lastAt):gsub("^0", ""))
+	end
+	return (date("%d %b", firstAt):gsub("^0", "")) .. "-" .. (date("%d %b", lastAt):gsub("^0", ""))
 end
 
 -- What goes in the profile: dates from today on, sorted, at most MAX_DAYS;
@@ -111,10 +145,30 @@ function Abs:ToggleDay(at)
 	return true
 end
 
-function Abs:ToggleWeekday(wd)
-	if type(wd) ~= "number" or wd < 1 or wd > 7 then return false end
+-- v0.16.0: away from `fromAt`'s day for `days` days (1 = just that day).
+function Abs:SetRange(fromAt, days)
+	local now = Compat.Now()
+	if type(days) ~= "number" or days < 1 or days > Abs.RANGE_DAYS then return false, "too many days" end
+	if date("%Y-%m-%d", fromAt) < date("%Y-%m-%d", now) then return false, "that day has passed" end
 	local s = self:Saved()
-	s.w[wd] = not s.w[wd] or nil
+	for i = 0, days - 1 do s.d[date("%Y-%m-%d", Abs.DayAt(fromAt, i))] = true end
+	changed()
+	return true
+end
+
+-- Not away after all: clears the whole run of days around `at`.
+function Abs:ClearRun(at)
+	local s = self:Saved()
+	local first, last = Abs.Run(s, at)
+	if not first then return false end
+	local today = date("%Y-%m-%d", Compat.Now())
+	local i = 0
+	while true do
+		local key = date("%Y-%m-%d", Abs.DayAt(first, i))
+		if key >= today then s.d[key] = nil end
+		if key >= date("%Y-%m-%d", last) then break end
+		i = i + 1
+	end
 	changed()
 	return true
 end

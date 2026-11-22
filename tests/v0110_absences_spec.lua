@@ -31,14 +31,13 @@ describe("v0.11.0 absences", function()
 
 	it("my days and weekdays go into my profile; past days drop out", function()
 		assert.is_true(A:ToggleDay(at(11)))
-		assert.is_true(A:ToggleWeekday(2))
 		local own = SK.Profile:Own()
 		assert.same({ "2026-12-11" }, own.away.d)
-		assert.same({ 2 }, own.away.w)
+		assert.same({}, own.away.w) -- v0.16.0: weekdays can't be set any more
 		assert.is_true(SK.Merge.Validate(SK.DBM:Guild().profiles[W.player.guid]))
 		assert.same({ false, "that day has passed" }, { A:ToggleDay(at(1)) })
 		W.now = at(12, 12)
-		assert.same({}, A.Field(A:Saved(), W.now).d)
+		assert.is_nil(A.Field(A:Saved(), W.now)) -- nothing left from today on
 		assert.is_true(A:ToggleDay(at(14)))
 		assert.is_true(A:ToggleDay(at(14))) -- off again
 		assert.is_false(A:IsMyDay(at(14)))
@@ -73,7 +72,7 @@ describe("v0.11.0 absences", function()
 		assert.is_false((SK.Merge.Validate(p)))
 	end)
 
-	it("the calendar: right-click marks a day, the weekday chips mark every week", function()
+	it("the calendar: right-click marks a day", function()
 		H.loadUI(SK)
 		SK.DB.settings.raidsView = "calendar"
 		SK.MainFrame:Open("raids")
@@ -83,9 +82,7 @@ describe("v0.11.0 absences", function()
 		fri:GetScript("OnClick")(fri, "RightButton")
 		assert.is_true(A:IsMyDay(at(11)))
 		assert.is_true(RT.calCells[12].cell.away)
-		RT.calWeek[2]:GetScript("OnClick")(RT.calWeek[2])
-		assert.is_true(A:IsMyDay(at(8)))
-		assert.is_true(RT.calWeek[2].active)
+		assert.is_nil(RT.calWeek) -- v0.16.0: the "Away every" chips are gone
 		assert.equal(0, #SK.errors)
 	end)
 end)

@@ -1363,22 +1363,8 @@ function RT:BuildCalendar(page, top)
 	self.calTitle:SetPoint("LEFT", self.calNext, "RIGHT", SP.m, 0)
 	self.calToday = W.Button(cal, "Today", nil, S.control, function() RT.calMonth = nil; RT:Refresh() end)
 	self.calToday:SetPoint("TOPRIGHT", 0, 0)
-	-- v0.11.0: weekdays you're never available.
-	self.calWeek = {}
-	local nextChip = self.calToday
-	for wd = 7, 1, -1 do
-		local c = W.Chip(cal, SK.Absences.WEEKDAYS[wd], function()
-			SK.Absences:ToggleWeekday(wd)
-			RT:Refresh()
-		end)
-		c.wd = wd
-		c.tooltip = "Away every " .. SK.Absences.WEEKDAYS[wd] .. ": you can't raid that day any week. Guildmates and officers see it."
-		c:SetPoint("RIGHT", nextChip, "LEFT", wd == 7 and -SP.m or -SP.xxs, 0)
-		self.calWeek[wd] = c
-		nextChip = c
-	end
-	self.calHint = Theme.Text(cal, "small", "dim")
-	self.calHint:SetPoint("RIGHT", nextChip, "LEFT", -SP.s, 0)
+	-- (v0.16.0: the "Away every" weekday chips were removed, owner; away
+	-- dates are entered as a range in the day box.)
 	local cw = math.floor(S.contentW / 7)
 	local headY = S.control + SP.s
 	for i, name in ipairs(RT.WEEKDAYS) do
@@ -1452,6 +1438,20 @@ function RT:BuildCalendar(page, top)
 end
 
 ---------------------------------------------------------------------------
+-- v0.16.0: the away menu: "Just this day", then "Until Mon 14 Dec" for
+-- up to Absences.RANGE_DAYS days. Pure apart from date().
+function RT.AwayItems(fromAt)
+	local A = SK.Absences
+	local out = { { value = 1, text = "Just this day" } }
+	if not fromAt then return out end
+	for n = 2, A.RANGE_DAYS do
+		local at = A.DayAt(fromAt, n - 1)
+		out[#out + 1] = { value = n, text = "Until " .. date("%a ", at) .. (date("%d %b", at):gsub("^0", "")) }
+	end
+	return out
+end
+
+---------------------------------------------------------------------------
 -- The day box (v0.14.0): click a Calendar day. Everyone: that day's raids
 -- and "I'm away this day". Officers: New raid there, with the start time
 -- and the night's instances (none picked = to be decided), any day up to
@@ -1491,12 +1491,28 @@ function RT:BuildDay(cal)
 		b:SetScript("OnLeave", function() GameTooltip:Hide() end)
 		box.lines[j] = b
 	end
-	box.away = W.Button(box, "I'm away this day", nil, S.control, function()
-		if RT.dayCell then SK.Absences:ToggleDay(RT.dayCell.at) end
+	-- v0.16.0 (owner): away for a range of days, e.g. 10-14 Dec: the day
+	-- clicked is the first, the menu picks the last.
+	box.awayUntil = W.Menu(box, {
+		width = 170,
+		items = function() return RT.AwayItems(RT.dayCell and RT.dayCell.at) end,
+		get = function() return RT.awayDays or 1 end,
+		set = function(v)
+			RT.awayDays = v
+			RT:DrawDay()
+		end,
+	})
+	box.awayUntil.tooltip = "The last day you're away. The day you clicked is the first."
+	box.away = W.Button(box, "I'm away", nil, S.control, function()
+		local cell = RT.dayCell
+		if not cell then return end
+		local A = SK.Absences
+		if A.Run(A:Saved(), cell.at) then A:ClearRun(cell.at) else A:SetRange(cell.at, RT.awayDays or 1) end
+		RT.awayDays = nil
 		RT:Refresh()
 		RT:DrawDay()
 	end)
-	box.away.tooltip = "Officers and guildmates see it, and raids you'd signed up for that day are answered Can't come."
+	box.away.tooltip = "Officers and guildmates see it, and raids you'd signed up for on those days are answered Can't come."
 	-- Officers: New raid.
 	box.newLabel = Theme.Text(box, "label", "dim")
 	box.newLabel:SetText("NEW RAID")
@@ -1565,7 +1581,7 @@ end
 function RT:CalendarDay(cell, frame, index)
 	if not cell or cell.past then return self:CloseDay() end
 	if self.dayCell and self.dayCell.at == cell.at and self.dayBox:IsShown() then return self:CloseDay() end
-	self.dayCell, self.dayResult = cell, nil
+	self.dayCell, self.dayResult, self.awayDays = cell, nil, nil
 	local box = self.dayBox
 	box:ClearAllPoints()
 	if frame then
@@ -1618,10 +1634,21 @@ function RT:DrawDay()
 		end
 	end
 	if #raids == 0 then y = y + SP.xxs end
-	local away = SK.Absences.IsAway(SK.Absences:Mine(now), cell.at)
-	box.away:SetText(away and "I'm not away after all" or "I'm away this day")
+	local A = SK.Absences
+	local first, last = A.Run(A:Saved(), cell.at)
+	box.awayUntil:SetShown(first == nil)
 	box.away:ClearAllPoints()
-	box.away:SetPoint("TOPLEFT", SP.m, -(y + SP.xs))
+	if first then
+		-- Away already: one button clears the whole run (e.g. 10-14 Dec).
+		box.away:SetText("Not away " .. A.RangeText(first, last) .. " after all")
+		box.away:SetPoint("TOPLEFT", SP.m, -(y + SP.xs))
+	else
+		box.away:SetText("I'm away")
+		box.awayUntil:ClearAllPoints()
+		box.awayUntil:SetPoint("TOPLEFT", SP.m, -(y + SP.xs))
+		box.awayUntil:Refresh()
+		box.away:SetPoint("LEFT", box.awayUntil, "RIGHT", SP.xs, 0)
+	end
 	y = y + SP.xs + S.control
 	local officer = Board.OfficerView()
 	-- The start time counts, not the day (v0.15.1: the last day was offered,
@@ -1688,9 +1715,6 @@ function RT:RefreshCalendar(now)
 	local grid = RT.MonthGrid(cur.year, cur.month, Board:Get() or Board.New(), now, Compat.PlayerGUID(),
 		SK.Absences:Mine(now), SK.DBM:Guild())
 	self.calTitle:SetText(grid.title)
-	self.calHint:SetText("Away every")
-	local mine = SK.Absences:Saved()
-	for wd, c in pairs(self.calWeek) do c:SetActive(mine.w[wd] == true) end
 	for i, c in ipairs(self.calCells) do
 		local cell = grid.cells[i]
 		c.cell = cell

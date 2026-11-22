@@ -67,6 +67,12 @@ local function migrate(db)
 	-- schema 1 is the first version; future migrations go here, e.g.
 	-- if db.schema < 2 then ... db.schema = 2 end
 	db.rosterProgress = nil -- v0.14.2: the planner's "+" gains were removed (owner)
+	-- v0.16.0: "away every weekday" can't be set any more, so clear ours
+	-- (it would otherwise stay on with no way to turn it off).
+	if type(db.away) == "table" and type(db.away.w) == "table" and next(db.away.w) then
+		db.away.w = {}
+		db.away.u = time()
+	end
 	db.schema = SK.SCHEMA
 end
 

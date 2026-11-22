@@ -45,7 +45,15 @@ bridged to the addon only by copy and paste.
   `RT:CreateRaid` returns (first, why, count); ··· "Cancel this and the N
   later in the series"; raid detail `reserveBtn` (signed y/t, not TBD, not
   cancelled; "Reserve loot n/limit") → `LootTab:ShowRaid(id)`. Tests
-  `tests/v0160_series_spec.lua` + security case. TESTING 88–90.
+  `tests/v0160_series_spec.lua` + security case. TESTING 88–91.
+  Also (owner, screenshot: "remove this part and instead make it possible
+  to enter a date range"): the Calendar's "Away every" weekday chips
+  (`RT.calWeek`, `Abs:ToggleWeekday`) are gone; day box `awayUntil` menu
+  (`RT.AwayItems`, `RT.awayDays`, up to `Abs.RANGE_DAYS` 28) + `away`
+  button → `Abs:SetRange(fromAt, days)`; on an away day it reads "Not away
+  10-14 Dec after all" → `Abs:ClearRun(at)` (pure `Abs.Run/DayAt/
+  RangeText`). DB migrate clears our own `away.w` once (u = now);
+  weekdays received from older clients still count.
 - **v0.15.1 (released 22 Nov on `main`, owner: "push to main"; owner 22 Nov: "there shouldn't really be a
   limit, let them make it whenever they want"):** `Board.AHEAD` 400 days
   (only clearly broken dates refused; older clients keep 60 and pick far

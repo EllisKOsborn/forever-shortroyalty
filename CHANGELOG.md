@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.0 (not released yet): weekly raids, Reserve loot button
+## v0.16.0 (not released yet): weekly raids, away date ranges, Reserve loot button
 
 - **Weekly raids:** the Calendar's day box has a **Repeat** menu: *Just this
   day*, or *Weekly, 2–12 raids*. Create raid then makes them all at once,
@@ -10,6 +10,12 @@
 - Room for **60 raids** at a time (was 30); cancelled raids don't count.
   Players still on v0.15.1 or older keep 30 and miss the rest until older
   raids drop off.
+- **Away for a range of days** (owner: "enter a date range when you will be
+  gone, e.g. 10-14 Dec"): click the first day on the Calendar, pick the
+  last under **Until …**, press **I'm away**. Clicking one of those days
+  again offers **Not away 10-14 Dec after all**, which clears them all.
+  The **Away every** weekday chips are gone; weekdays you'd ticked are
+  cleared once.
 - **Reserve loot** button on the Raids page: once you've signed up (or are
   tentative) and the raid's instances are picked, it shows your reserves
   ("1/2") and opens the Loot page on that raid.
