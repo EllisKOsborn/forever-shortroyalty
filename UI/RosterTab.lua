@@ -487,8 +487,8 @@ local function tierRank(role) return function(a, b)
 end end
 
 Roster.PLAN_COLUMNS = {
-	{ key = "name", title = "Name", width = 124, sort = function(a, b) return a.name:lower() < b.name:lower() end },
-	{ key = "spec", title = "Spec", width = 64, sort = function(a, b) return (a.spec or "~") < (b.spec or "~") end },
+	{ key = "name", title = "Name", width = 116, sort = function(a, b) return a.name:lower() < b.name:lower() end },
+	{ key = "spec", title = "Spec", width = 60, sort = function(a, b) return (a.spec or "~") < (b.spec or "~") end },
 	{ key = "status", title = "Status", width = 58, click = true, sort = RP.DefaultOrder },
 	{ key = "TANK", title = "Tank", width = 48, click = true, sort = tierRank("TANK") },
 	{ key = "HEALER", title = "Healer", width = 48, click = true, sort = tierRank("HEALER") },
@@ -498,11 +498,27 @@ Roster.PLAN_COLUMNS = {
 		sort = function(a, b) return (a.awayDays[1] and a.awayDays[1].at or 1e12) < (b.awayDays[1] and b.awayDays[1].at or 1e12) end },
 	{ key = "level", title = "Level", width = 40, align = "RIGHT", sort = function(a, b) return a.level < b.level end },
 	{ key = "ilvl", title = "iLvl", width = 40, align = "RIGHT", sort = function(a, b) return (a.ilvl or 0) < (b.ilvl or 0) end },
-	{ key = "att", title = "Ony", width = 40, align = "RIGHT",
+	-- v0.16.1: Ony / Ench / Seen centred and wider (owner: "cramped together
+	-- and unreadable"; Ench's text had 14 px, Seen cut "none" to "n...").
+	{ key = "att", title = "Ony", width = 40, align = "CENTER",
 		sort = function(a, b) return (a.att == "yes" and 1 or 0) < (b.att == "yes" and 1 or 0) end },
-	{ key = "ench", title = "Ench", width = 30, align = "RIGHT", sort = function(a, b) return (a.ench or 99) < (b.ench or 99) end },
-	{ key = "seen", title = "Seen", width = 40, align = "RIGHT", sort = ageSort },
-	{ key = "note", title = "Note", width = S.contentW - SP.m - 652, click = true },
+	{ key = "ench", title = "Ench", width = 42, align = "CENTER", sort = function(a, b) return (a.ench or 99) < (b.ench or 99) end },
+	{ key = "seen", title = "Seen", width = 52, align = "CENTER", sort = ageSort },
+	{ key = "note", title = "Note", width = 0, click = true },
+}
+do -- Note takes what's left at the Normal width.
+	local used = 0
+	for _, col in ipairs(Roster.PLAN_COLUMNS) do used = used + col.width end
+	Roster.PLAN_COLUMNS[#Roster.PLAN_COLUMNS].width = S.contentW - SP.m - used
+end
+
+-- v0.16.1: how a wider window's extra room is shared out in the planner
+-- (owner: only Name, Spec and Note grew, so the small columns stayed
+-- squeezed). Note comes last (owner: "the least important part as it
+-- will be clickable to expand"). Shares add up to 1.
+Roster.PLAN_GROW = {
+	name = 0.18, spec = 0.12, status = 0.06, TANK = 0.05, HEALER = 0.05, DPS = 0.05, away = 0.10,
+	level = 0.05, ilvl = 0.05, att = 0.06, ench = 0.06, seen = 0.09, note = 0.08,
 }
 
 local SIGNED_TEXT = { y = { "good", "Yes" }, t = { "accent", "Maybe" }, n = { "bad", "No" } }
@@ -1159,8 +1175,12 @@ Theme.OnWidth(function()
 	local half = math.floor(extra / 2)
 	Theme.Grow(COLUMNS, { name = half, profs = extra - half })
 	Theme.Grow(ATT_COLUMNS, { name = half, att = extra - half })
-	local name, spec = math.floor(extra * 0.35), math.floor(extra * 0.15)
-	Theme.Grow(Roster.PLAN_COLUMNS, { name = name, spec = spec, note = extra - name - spec })
+	local add, given = {}, 0
+	for key, share in pairs(Roster.PLAN_GROW) do
+		if key ~= "note" then add[key] = math.floor(extra * share); given = given + add[key] end
+	end
+	add.note = extra - given
+	Theme.Grow(Roster.PLAN_COLUMNS, add)
 end)
 
 SK.MainFrame:AddTab("roster", "Roster", Roster, { group = "guild",

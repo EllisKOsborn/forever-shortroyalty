@@ -267,7 +267,7 @@ describe("v0.13.0 roster planner page", function()
 		local total = 0
 		for _, c in ipairs(R.PLAN_COLUMNS) do total = total + c.width end
 		assert.equal(SK.Theme.SIZES.contentW - SK.Theme.SPACE.m, total)
-		assert.is_true(R.PLAN_COLUMNS[#R.PLAN_COLUMNS].width >= 80) -- the note keeps some room
+		assert.is_true(R.PLAN_COLUMNS[#R.PLAN_COLUMNS].width >= 60) -- the note keeps some room (click opens it)
 	end)
 
 	it("lists players with counts on the chips and the guild summary", function()

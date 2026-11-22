@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.16.1 (not released yet): roster planner columns
+
+- **Roster planner readable at every window width** (owner: "Why is
+  ony/ench/seen etc so cramped together and unreadable?"): Ony, Ench and
+  Seen are wider and centred (Seen no longer shows "n..." for "none").
+  On Wide and Extra wide, the extra room now goes to every column; Note
+  gets the least (click a note to read it all).
+
 ## v0.16.0 (22 Nov 2026): weekly raids, away date ranges, Reserve loot button
 
 - **Weekly raids:** the Calendar's day box has a **Repeat** menu: *Just this

@@ -352,3 +352,9 @@ addon read.
     "10-14 Dec". Click any of those days: the button reads **Not away 10-14
     Dec after all** and clears all five. The "Away every" chips are gone,
     and anyone who had ticked one isn't away every week any more.
+
+## v0.16.1 Roster planner columns
+
+92. [ ] Settings → Window width **Wide**, reload, Roster → Officers: Ony,
+    Ench and Seen are easy to read and apart ("none" in full); Status,
+    roles, Away, Level and iLvl have room; Note is the narrowest.

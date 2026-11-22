@@ -552,7 +552,7 @@ function rosterPlanner() {
     return `<span class="faint" style="display:inline-block;width:42px;text-align:center">·</span>`;
   };
   // Column widths as built (UI/RosterTab.lua PLAN_COLUMNS).
-  const W = { n: 100, sp: 64, st: 58, T: 48, H: 48, D: 48, wk: 72, l: 52, i: 52, a: 40, e: 30, seen: 40 };
+  const W = { n: 116, sp: 60, st: 58, T: 48, H: 48, D: 48, wk: 72, l: 40, i: 40, a: 40, e: 42, seen: 52 };
   // Away, in words (made up). Red = clashes with a raid on the calendar.
   const AW = { Brannoc: ["9-15 Dec", 1], Mirrel: ["Every Tue", 0], Plopper: ["23 Dec", 0], Procella: ["16-20 Dec", 1], Merrin: ["30 Dec", 0] };
   const awayCell = (name) => AW[name] ? `<span class="small ${AW[name][1] ? "bad" : "dim"}">${AW[name][0]}</span>` : `<span class="faint">-</span>`;
@@ -567,9 +567,9 @@ function rosterPlanner() {
       cell(W.wk, awayCell(r[0].name)),
       cell(W.l, r[4] === 60 ? `<span class="good">60</span>` : `${r[4]}`, 1),
       cell(W.i, `${r[6]}`, 1),
-      cell(W.a, r[7] ? `<span class="good">yes</span>` : `<span class="faint">no</span>`, 1),
-      cell(W.e, r[8] ? `<span class="spark">${r[8]}</span>` : `<span class="faint">0</span>`, 1),
-      cell(W.seen, r[9] >= 7 ? `<span class="spark">${r[9]}d</span>` : r[9] ? `${r[9]}d` : `<span class="good">now</span>`, 1),
+      cell(W.a, r[7] ? `<span class="good">yes</span>` : `<span class="faint">no</span>`, 0, 0),
+      cell(W.e, r[8] ? `<span class="spark">${r[8]}</span>` : `<span class="faint">0</span>`, 0, 0),
+      cell(W.seen, r[9] >= 7 ? `<span class="spark">${r[9]}d</span>` : r[9] ? `${r[9]}d` : `<span class="good">now</span>`, 0, 0),
       cell(NW, r[10] ? `<span class="dim">${esc(r[10])}</span>` : `<span class="faint">add</span>`)];
     return `<div class="row click">${cells.join("")}</div>`;
   };
@@ -586,8 +586,8 @@ function rosterPlanner() {
       + sep(line("BACKUP", backs)) + backs.map(row).join("")
       + sep("NOT SORTED YET, SPEC FITS") + P.filter((r) => !r[2] && r[15] === filter).map(row).join("");
   }
-  const headCols = [["n", "Name"], ["sp", "Spec"], ["st", "Status"], ["T", "Tank"], ["H", "Healer"], ["D", "DPS"], ["wk", "Away"], ["l", "Level", 1], ["i", "iLvl", 1], ["a", "Ony", 1], ["e", "Ench", 1], ["seen", "Seen", 1]];
-  const head = `<div class="lhead">${headCols.map(([k, t, r]) => `<span class="${r ? "r" : ""}" style="width:${W[k]}px;${"THD".includes(k) && k.length === 1 ? "justify-content:center" : ""}">${t}</span>`).join("")}<span style="width:${NW}px">Note</span></div>`;
+  const headCols = [["n", "Name"], ["sp", "Spec"], ["st", "Status"], ["T", "Tank"], ["H", "Healer"], ["D", "DPS"], ["wk", "Away"], ["l", "Level", 1], ["i", "iLvl", 1], ["a", "Ony", 0, 1], ["e", "Ench", 0, 1], ["seen", "Seen", 0, 1]];
+  const head = `<div class="lhead">${headCols.map(([k, t, r, c]) => `<span class="${r ? "r" : ""}" style="width:${W[k]}px;${c || ("THD".includes(k) && k.length === 1) ? "justify-content:center" : ""}">${t}</span>`).join("")}<span style="width:${NW}px">Note</span></div>`;
   const chips = [["A", "All", 46], ["T", "Tanks", "2+3"], ["H", "Healers", "4+3"], ["D", "DPS", "25+3"], ["N", "Not sorted", 12]]
     .map(([k, t, n]) => `<span class="chip ${filter === k ? "on" : ""}" style="white-space:nowrap">${t}&nbsp;&nbsp;<span class="${filter === k ? "" : "faint"}">${n}</span></span>`).join("");
   const summary = filter === "A"

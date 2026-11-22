@@ -32,6 +32,15 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.16.1 (built 22 Nov on the branch, NOT released; owner's Wide
+  screenshot: "Why is ony/ench/seen etc so cramped together and
+  unreadable?"; "Note is the least important part as it will be clickable
+  to expand. The rest should be easily viewable."):** planner columns
+  (`Roster.PLAN_COLUMNS`) Name 116, Spec 60, Ony 40 / Ench 42 / Seen 52
+  `align = "CENTER"` (List headers centre too, `W.List`), Note = the rest at
+  Normal (56). `Roster.PLAN_GROW` shares a wider window's extra room over
+  every column (Note 8 %). Cause: List cells are `width - 16` wide, so
+  Ench had 14 px; v0.15.0 grew only Name/Spec/Note. TESTING 92.
 - **v0.16.0 (released 22 Nov on `main`, owner: "push to main"; owner: "the ability
   to create recurring raids would be very useful"; "after signing up and the
   raid is no longer TBD" → go to the soft reserves):** events carry `sr`

@@ -483,7 +483,8 @@ function W.List(parent, opts)
 		hb:SetSize(col.width, headH)
 		hb.text = Theme.Text(hb, "small", "dim")
 		local right = col.align == "RIGHT"
-		hb.text:SetPoint(right and "RIGHT" or "LEFT", right and -SP.s or SP.s, 0)
+		if col.align == "CENTER" then hb.text:SetPoint("CENTER", 0, 0)
+		else hb.text:SetPoint(right and "RIGHT" or "LEFT", right and -SP.s or SP.s, 0) end
 		hb.text:SetText(col.title)
 		hb.arrow = hb:CreateTexture(nil, "ARTWORK")
 		hb.arrow:SetSize(8, 8)
