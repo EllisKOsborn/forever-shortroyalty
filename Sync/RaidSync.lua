@@ -24,7 +24,7 @@ RS.DIGEST_DELAY = 75       -- RD this long after login (after Sync's SQ)
 RS.ANSWER_MIN, RS.ANSWER_MAX = 2, 8
 RS.CHANGE_DELAY = 3        -- RB this long after our own change
 RS.MAX_ITEMS = 120         -- raids + sign-ups per RB
-RS.MAX_DIGEST = 60         -- raids per RD
+RS.MAX_DIGEST = 150        -- raids per RD (v0.16.2: was 60; a player can hold Board.MAX_STORED 150)
 RS.DIGEST_AGAIN = 300      -- an RD in answer to someone else's, at most every 5 minutes
 
 RS.heard = {}              -- item key -> newest `u` seen on the channel

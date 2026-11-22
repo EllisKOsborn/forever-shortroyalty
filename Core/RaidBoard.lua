@@ -340,6 +340,16 @@ function Board.Upcoming(board, now)
 	return out
 end
 
+-- v0.16.2: upcoming raids whose instances are decided: the ones reserves
+-- are for (a raid "to be decided" has no loot list yet). Pure.
+function Board.ReserveRaids(board, now)
+	local out = {}
+	for _, e in ipairs(Board.Upcoming(board, now)) do
+		if #Board.Keys(e) > 0 then out[#out + 1] = e end
+	end
+	return out
+end
+
 -- Counts of one raid's sign-ups: { y, t, n }.
 function Board.Counts(board, id)
 	local c = { y = 0, t = 0, n = 0 }

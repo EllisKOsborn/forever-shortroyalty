@@ -269,7 +269,7 @@ function LT:Build(page)
 		width = 260,
 		items = function()
 			local out = {}
-			for _, e in ipairs(Board.Upcoming(Board:Get() or Board.New(), Compat.Now())) do
+			for _, e in ipairs(Board.ReserveRaids(Board:Get() or Board.New(), Compat.Now())) do
 				out[#out + 1] = { value = e.id, text = Board.EventName(e) .. ", " .. Board.ShortWhen(e.at, Compat.Now()) }
 			end
 			return out
@@ -763,18 +763,21 @@ end
 
 function LT:RefreshReserves(st, me, now)
 	local board = Board:Get() or Board.New()
-	local up = Board.Upcoming(board, now)
+	-- v0.16.2: raids still "to be decided" have nothing to reserve yet.
+	local up = Board.ReserveRaids(board, now)
 	local valid = false
 	for _, e in ipairs(up) do if e.id == LT.raidID then valid = true end end
 	if not valid then
 		local tonight = LN.Tonight(board, now)
+		if tonight and #Board.Keys(tonight) == 0 then tonight = nil end
 		LT.raidID = tonight and tonight.id or (up[1] and up[1].id) or nil
 	end
 	self.raidMenu:Refresh()
 	local ev = LT.raidID and board.events[LT.raidID]
 	local store = R:Get()
 	if not ev or not store then
-		self.mineLine:SetText(Theme.Paint("dim", "No raids yet. Reserves open when officers make a raid (Raids page)."))
+		self.mineLine:SetText(Theme.Paint("dim",
+			"No raids to reserve for yet. Reserves open once officers pick a raid's instances (Raids page)."))
 		self.itemList:SetItems({})
 		self.whoList:SetItems({})
 		self.reserveBtn:SetDisabled(true)

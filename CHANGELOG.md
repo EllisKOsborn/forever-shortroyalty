@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.16.3 (not released yet): raid fixes from a full check
+
+A walk through the whole raid section (owner: "run some tests on the raid
+section as a whole to spot bugs or errors"):
+
+- **No reserve reminders for raids still to be decided.** Signing up for a
+  "TBD" night brought up "reserve your loot" although it has no loot list
+  yet. The Loot page's raid menu also leaves those nights out until an
+  officer picks the instances.
+- **Raid sharing with many raids:** each player's "the raids I hold" check
+  listed only 60 raids, so with weekly series (and cancelled raids) others
+  re-sent the rest at every login. It now lists up to 150.
+- The "made by …" line on a raid no longer runs under the officers'
+  Barrow / Hyjal / Onyxia buttons when the name is long.
+
 ## v0.16.2 (22 Nov 2026): away players in the line-up, calendar "away" count, day box button
 
 - **Away players show on the raid** (owner: "it shouldn't only show away

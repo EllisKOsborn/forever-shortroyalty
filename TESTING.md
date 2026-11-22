@@ -369,3 +369,9 @@ addon read.
     the addon): the Calendar shows **1 away** on it, not one per character.
 93. [ ] Calendar → click a day you're marked away on: **Not away … after
     all** fits inside its button and the box.
+
+## v0.16.3 Raid fixes
+
+96. [ ] Sign up for a raid still "to be decided": no "reserve your loot"
+    reminder, and the Loot page doesn't offer it. Once an officer picks
+    Onyxia, it appears there.

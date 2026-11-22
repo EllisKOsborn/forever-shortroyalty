@@ -310,6 +310,8 @@ function RT:Build(page)
 	self.title:SetPoint("TOPLEFT", 0, -SP.xxs)
 	self.sub = Theme.Text(d, "small", "dim")
 	self.sub:SetPoint("TOPLEFT", self.title, "BOTTOMLEFT", 0, -SP.xs)
+	self.sub:SetJustifyH("LEFT")
+	self.sub:SetWordWrap(false)
 	self.options = W.OptionsButton(d, function() return RT:DetailOptions() end, "Copy the line-up, cancel the raid")
 	self.options:SetPoint("TOPRIGHT", 0, 0)
 	self.title:SetPoint("RIGHT", self.options, "LEFT", -SP.s, 0)
@@ -720,6 +722,15 @@ function RT:RefreshUpcoming(board, now, me)
 	local on = {}
 	for _, k in ipairs(keys) do on[k] = true end
 	for _, c in ipairs(self.keyChips) do c:SetActive(on[c.value] == true) end
+	-- v0.16.2: the line stops before the officers' instance chips (a long
+	-- name ran under them).
+	self.sub:ClearAllPoints()
+	self.sub:SetPoint("TOPLEFT", self.title, "BOTTOMLEFT", 0, -SP.xs)
+	if officer then
+		self.sub:SetPoint("RIGHT", self.keyChips[#self.keyChips], "LEFT", -SP.s, 0)
+	else
+		self.sub:SetPoint("RIGHT", self.detail, "RIGHT", 0, 0)
+	end
 	self.sub:SetText(Board.When(ev.at) .. (creator and ("  ·  made by " .. Theme.ClassText(creator.name, creator.class)) or ""))
 	local mine = board.signups[ev.id] and board.signups[ev.id][me or ""]
 	for _, b in ipairs(self.signButtons) do

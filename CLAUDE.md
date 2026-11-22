@@ -32,6 +32,16 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.16.3 (built 22 Nov on the branch, NOT released; owner: "run some
+  tests on the raid section as a whole to spot bugs or errors", the GM
+  reported bugs not yet named):** `tests/v0162_raids_scenario_spec.lua`
+  walks an officer's and a member's evening through every view, the
+  calendar's day box on every day, groups/assignments/menus/import/cancel
+  series, a full RB round trip into an empty board. Fixes: pure
+  `Board.ReserveRaids(board, now)` (upcoming with decided instances) for
+  the Loot raid menu/default and `Rem.Raids` (no reminders for TBD nights);
+  `RS.MAX_DIGEST` 150 (was 60 < `MAX_STORED`); raid detail `sub` line
+  anchored left of the key chips (officers). TESTING 96.
 - **v0.16.2 (released 22 Nov on `main`, owner: "push to main"; owner's screenshot:
   "fix the text going outside the box & button"):** `W.Button` doesn't
   resize on `SetText`, so `DrawDay` sets `box.away`'s width: full box
