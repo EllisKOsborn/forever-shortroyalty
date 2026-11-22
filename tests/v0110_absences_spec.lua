@@ -85,4 +85,24 @@ describe("v0.11.0 absences", function()
 		assert.is_nil(RT.calWeek) -- v0.16.0: the "Away every" chips are gone
 		assert.equal(0, #SK.errors)
 	end)
+
+	it("v0.16.2: counts players, not each of their characters", function()
+		local guild = SK.DBM:Guild()
+		local ALT1, ALT2, DOG = "Player-1-A1", "Player-1-A2", "Player-1-D"
+		W.member("Alt One", ALT1, { class = "MAGE" })
+		W.member("Alt Two", ALT2, { class = "ROGUE" })
+		W.member("Dog Star", DOG, { class = "HUNTER" })
+		SK.Identity:ReadRoster()
+		local away = { d = { "2026-12-11" }, u = W.now }
+		local fam = { CAT, ALT1, ALT2 }
+		guild.profiles[CAT] = { guid = CAT, name = "Cat Fern", level = 60, family = fam, away = away }
+		guild.profiles[ALT1] = { guid = ALT1, name = "Alt One", level = 20, family = fam, away = away }
+		guild.profiles[ALT2] = { guid = ALT2, name = "Alt Two", level = 10, family = fam }
+		-- a stranger listing Cat as family (one-way) doesn't pick up her days
+		guild.profiles[DOG] = { guid = DOG, name = "Dog Star", level = 60, family = { DOG, CAT } }
+		assert.same({ CAT }, A.AwayOn(guild, at(11)))
+		H.loadUI(SK)
+		local g = SK.RaidsTab.MonthGrid(2026, 12, B:Get(), W.now, W.player.guid, nil, guild)
+		assert.equal(1, g.cells[12].awayCount)
+	end)
 end)

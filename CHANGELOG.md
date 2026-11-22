@@ -1,6 +1,11 @@
 # Changelog
 
-## v0.16.2 (not released yet): day box button fix
+## v0.16.2 (not released yet): calendar "away" count, day box button
+
+- **"3 away" on the Calendar counted characters, not players** (owner's
+  screenshot): each of a player's alts carries their away days, so one
+  player with two alts showed as 3. It now counts each player once (linked
+  characters together), and only two-way alt links share away days.
 
 - The Calendar day box's **Not away … after all** button is now as wide as
   the box, so its text no longer runs outside the button and the box

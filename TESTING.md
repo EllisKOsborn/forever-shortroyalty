@@ -361,5 +361,7 @@ addon read.
 
 ## v0.16.2 Day box button
 
+94. [ ] Mark yourself away on a day (with alts that have logged in with
+    the addon): the Calendar shows **1 away** on it, not one per character.
 93. [ ] Calendar → click a day you're marked away on: **Not away … after
     all** fits inside its button and the box.

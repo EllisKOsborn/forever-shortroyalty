@@ -37,6 +37,13 @@ bridged to the addon only by copy and paste.
   resize on `SetText`, so `DrawDay` sets `box.away`'s width: full box
   (`RT.DAY_W - 2*SP.m`) for "Not away … after all", the rest beside the
   `awayUntil` menu (`RT.AWAY_MENU_W` 170) for "I'm away". TESTING 93.
+  Also (owner: "its saying 3 away but there aren't 3 people away"): the
+  Calendar's count used `Abs.AwayOn` per **character**, and every alt
+  carries (or inherits via `Abs.Of`) the player's away days. Now
+  `Abs.Players(guild)` (= `Alts.Groups` over members) and `AwayOn(guild,
+  at, groupOf)` return one guid per player (the group's main); `MonthGrid`
+  builds the groups once. `Abs.Of` only follows two-way family links.
+  Tooltip "N players away". TESTING 94.
 - **v0.16.1 (released 22 Nov on `main`, owner: "push to main"; owner's Wide
   screenshot: "Why is ony/ench/seen etc so cramped together and
   unreadable?"; "Note is the least important part as it will be clickable

@@ -85,16 +85,42 @@ function Abs.Of(guild, guid)
 	local best = p and p.away
 	for _, alt in ipairs(p and p.family or {}) do
 		local ap = guild.profiles[alt]
-		if ap and ap.away and (not best or (ap.away.u or 0) > (best.u or 0)) then best = ap.away end
+		-- v0.16.2: only a two-way link counts (as in Alts), so nobody picks up
+		-- someone else's away days by listing them as family.
+		local linked = false
+		for _, back in ipairs(ap and type(ap.family) == "table" and ap.family or {}) do
+			if back == guid then linked = true end
+		end
+		if linked and ap.away and (not best or (ap.away.u or 0) > (best.u or 0)) then best = ap.away end
 	end
 	return best
 end
 
--- Guild members (with the addon) away on that day: { guid... }.
-function Abs.AwayOn(guild, at)
-	local out = {}
+-- Linked characters grouped per player (Alts.Groups over current members).
+function Abs.Players(guild)
+	local members = guild and guild.members or {}
+	return (SK.Alts.Groups(guild and guild.profiles or {}, function(guid)
+		return members[guid] ~= nil and not members[guid].leftAt
+	end))
+end
+
+-- Players (with the addon) away on that day: { guid... }, one per player
+-- (the main of linked characters). v0.16.2: it counted every character, and
+-- each alt carries its player's away days, so one player with two alts
+-- showed as "3 away" (owner's screenshot). groupOf: Abs.Players(guild),
+-- passed in when asking for many days.
+function Abs.AwayOn(guild, at, groupOf)
+	groupOf = groupOf or Abs.Players(guild)
+	local out, seen = {}, {}
 	for guid, m in pairs(guild and guild.members or {}) do
-		if not m.leftAt and Abs.IsAway(Abs.Of(guild, guid), at) then out[#out + 1] = guid end
+		if not m.leftAt and Abs.IsAway(Abs.Of(guild, guid), at) then
+			local group = groupOf[guid]
+			local key = group and group.main or guid
+			if not seen[key] then
+				seen[key] = true
+				out[#out + 1] = key
+			end
+		end
 	end
 	return out
 end

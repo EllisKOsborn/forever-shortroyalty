@@ -105,6 +105,7 @@ function RT.MonthGrid(year, month, board, now, me, mine, guild)
 	end
 	local todayKey = date("%Y-%m-%d", now)
 	local todayStart = Board.DayStart(now, 0)
+	local players = guild and SK.Absences.Players(guild) -- v0.16.2: count players, not characters
 	local cells = {}
 	for i = 1, 42 do
 		local at = time({ year = year, month = month, day = 1 - back + (i - 1), hour = 12 })
@@ -120,7 +121,7 @@ function RT.MonthGrid(year, month, board, now, me, mine, guild)
 		end
 		cells[i] = { at = at, day = d.day, inMonth = d.month == month, today = key == todayKey,
 			past = at < todayStart, raids = raids, away = SK.Absences.IsAway(mine, at),
-			awayCount = guild and at >= todayStart and #SK.Absences.AwayOn(guild, at) or 0 }
+			awayCount = guild and at >= todayStart and #SK.Absences.AwayOn(guild, at, players) or 0 }
 	end
 	return { title = date("%B %Y", first), cells = cells }
 end
@@ -1393,7 +1394,7 @@ function RT:BuildCalendar(page, top)
 			GameTooltip:SetOwner(selfC, "ANCHOR_RIGHT")
 			Theme.TipLine(GameTooltip, date("%A %d %B", cell.at))
 			if cell.away then Theme.TipLine(GameTooltip, "You're away", "bad") end
-			if cell.awayCount > 0 then Theme.TipLine(GameTooltip, Theme.Count(cell.awayCount, "member") .. " away", "dim") end
+			if cell.awayCount > 0 then Theme.TipLine(GameTooltip, Theme.Count(cell.awayCount, "player") .. " away", "dim") end
 			if not cell.past then
 				Theme.TipLine(GameTooltip, Board.OfficerView() and "Click: mark yourself away, or make a raid on this day."
 					or "Click: mark yourself away (or not).", "accent")
