@@ -105,4 +105,38 @@ describe("v0.11.0 absences", function()
 		local g = SK.RaidsTab.MonthGrid(2026, 12, B:Get(), W.now, W.player.guid, nil, guild)
 		assert.equal(1, g.cells[12].awayCount)
 	end)
+
+	it("v0.16.2: the raid's line-up lists players away that day who didn't sign up", function()
+		local guild = SK.DBM:Guild()
+		local DOG, EEL = "Player-1-D", "Player-1-E"
+		W.member("Dog Star", DOG, { class = "HUNTER" })
+		W.member("Eel Wave", EEL, { class = "MAGE" })
+		SK.Identity:ReadRoster()
+		local e = B:Create("ony", at(11))
+		B:Get().signups[e.id] = { [CAT] = { s = "y", r = "HEALER", u = W.now } }
+		guild.profiles[CAT] = { guid = CAT, name = "Cat Fern", class = "PRIEST", away = { d = { "2026-12-11" }, u = W.now } }
+		guild.profiles[DOG] = { guid = DOG, name = "Dog Star", class = "HUNTER", away = { d = { "2026-12-11" }, u = W.now } }
+		local ctx = B.Ctx()
+		local rows = B.LineUp(B:Get(), e, ctx)
+		local extra = B.AwayRows(B:Get(), e, ctx, rows)
+		-- Cat signed up (her row already says away); Dog didn't, so he gets a row
+		assert.equal(1, #extra)
+		assert.equal(DOG, extra[1].guid)
+		assert.equal("Away", extra[1].statusName)
+		assert.is_true(extra[1].awayOnly)
+		-- a day an officer set counts only when the officer directory is passed
+		local dir = { [SK.OfficerDir.Key("d", EEL)] = { v = "2026-12-11", u = W.now, by = W.player.guid } }
+		assert.equal(1, #B.AwayRows(B:Get(), e, ctx, rows))
+		assert.equal(2, #B.AwayRows(B:Get(), e, ctx, rows, dir))
+		-- the Raids page shows them, with the count
+		H.loadUI(SK)
+		SK.DB.settings.raidsView = "upcoming"
+		SK.MainFrame:Open("raids")
+		SK.RaidsTab:ShowRaid(e.id)
+		local found
+		for _, r in ipairs(SK.RaidsTab.lineup.items) do if r.guid == DOG then found = r end end
+		assert.truthy(found)
+		assert.truthy(SK.RaidsTab.counts:GetText():find("1 away", 1, true))
+		assert.equal(0, #SK.errors)
+	end)
 end)

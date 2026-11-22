@@ -64,7 +64,7 @@ RT.TOTAL_COLUMNS = {
 		align = "RIGHT", sort = pctSort },
 }
 
-local STATUS_TONE = { y = "good", t = "text", n = "faint" }
+local STATUS_TONE = { y = "good", t = "text", n = "faint", a = "bad" }
 -- Short names in the list; the full ones are in the tooltip and the spreadsheet.
 RT.RESULT_SHORT = { full = "On time", late = "Late / part", missed = "Didn't attend", declined = "Can't come" }
 local RESULT_TONE = { full = "good", late = "spark", missed = "bad", maybe = "dim", declined = "faint" }
@@ -405,9 +405,10 @@ function RT:Build(page)
 		onEnter = function(row, r)
 			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
 			Theme.TipLine(GameTooltip, Theme.ClassText(r.name, r.class))
-			Theme.TipLine(GameTooltip, r.statusName .. (r.place and ("  ·  " .. Board.PLACE_NAME[r.place]) or "") ..
-				(r.byOfficer and "  ·  added by an officer" or ""), "dim")
-			if Board.OfficerView() then
+			Theme.TipLine(GameTooltip, r.awayOnly and "Away that day (marked away, not signed up)" or
+				(r.statusName .. (r.place and ("  ·  " .. Board.PLACE_NAME[r.place]) or "") ..
+				(r.byOfficer and "  ·  added by an officer" or "")), r.awayOnly and "bad" or "dim")
+			if Board.OfficerView() and not r.awayOnly then
 				Theme.TipLine(GameTooltip, "Click: In, then Bench, then undecided. Right-click: their character.", "accent", true)
 			else
 				Theme.TipLine(GameTooltip, "Click to open their character", "accent")
@@ -563,6 +564,7 @@ end
 RT.NEXT_PLACE = { i = "b", b = "-" }
 function RT:CyclePlace(r)
 	if not RT.selected then return end
+	if r.awayOnly then return SK.CharacterTab:ShowCharacter(r.guid) end -- not signed up: nothing to place
 	local ok, why = Board:SetPlace(RT.selected, r.guid, RT.NEXT_PLACE[r.place or ""] or "i")
 	if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
 	RT:Refresh()
@@ -721,7 +723,11 @@ function RT:RefreshUpcoming(board, now, me)
 	self.mine:SetText(RT.MineText(mine, Board.PlaceOf(board, ev.id, me or ""), myGroup,
 		SK.RaidAssign.JobsOf(board, ev.id, me or "")))
 	local rows2, sum = Board.LineUp(board, ev, RT.Ctx())
-	self.counts:SetText(Board.CountsText(sum) .. "  ·  " .. sum.maybe .. " tentative  ·  " .. sum.out .. " can't come")
+	-- v0.16.2: players away that day who didn't answer, after everyone else.
+	local awayRows = Board.AwayRows(board, ev, RT.Ctx(), rows2, Board.OfficerView() and SK.OfficerDir:Get() or nil)
+	for _, r in ipairs(awayRows) do rows2[#rows2 + 1] = r end
+	self.counts:SetText(Board.CountsText(sum) .. "  ·  " .. sum.maybe .. " tentative  ·  " .. sum.out .. " can't come" ..
+		(#awayRows > 0 and ("  ·  " .. Theme.Paint("bad", #awayRows .. " away")) or ""))
 	local parts = {}
 	for i, r in ipairs(Board.Readiness(sum)) do
 		if i > 4 then break end

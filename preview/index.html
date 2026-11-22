@@ -1071,7 +1071,7 @@ function raids() {
       <span class="menu" style="width:110px">${btn("Healer").replace("</span>", '<i class="arrow"></i></span>')}</span></div>
     <div class="abs" style="left:${RX}px;top:${t0 + 80}px">You: <span class="good">Signed up</span> as Healer  ·  <span class="good">You're in</span></div>
     ${btn("Reserve loot  1/2", "primary", `style="position:absolute;right:0;top:${t0 + 76}px;width:140px;justify-content:center;height:22px"`)}
-    <div class="abs dim small" style="left:${RX}px;top:${t0 + 100}px">In 18 / 40: Tanks 3  ·  Healers 5  ·  DPS 10  ·  Bench 3  ·  3 tentative  ·  2 can't come</div>
+    <div class="abs dim small" style="left:${RX}px;top:${t0 + 100}px">In 18 / 40: Tanks 3  ·  Healers 5  ·  DPS 10  ·  Bench 3  ·  3 tentative  ·  2 can't come  ·  <span class="bad">2 away</span></div>
     <div class="abs dim small" style="left:${RX}px;right:0;top:${t0 + 120}px;line-height:1.4">3 tentative<span class="faint">  ·  </span><span class="bad">3 not attuned</span><span class="faint">  ·  </span><span class="spark">2 without the amulet in their bags</span><span class="faint">  ·  </span>Item level 52 to 75</div>` +
     list([{ key: "n", t: "Name", w: 118 }, { key: "s", t: "Status", w: 78 }, { key: "p", t: "Raid", w: 48 }, { key: "r", t: "Role", w: 56 }, { key: "sp", t: "Spec", w: 60 }, { key: "i", t: "ilvl", w: 32, r: 1 }, { key: "a", t: "Attuned", w: 52, r: 1 }], lineup,
       (r, c) => c.key === "n" ? (r.m.online ? dot("good") : "") + nm(r.m) : c.key === "s" ? `<span class="${r.st[1]}">${r.st[0]}</span>`

@@ -361,6 +361,10 @@ addon read.
 
 ## v0.16.2 Day box button
 
+95. [ ] Mark yourself away on a raid day **without** signing up: the raid
+    on the Raids page lists you as **Away** (red) and the counts end with
+    "1 away". An officer marking someone away in the planner: officers see
+    that player as Away too; other players don't.
 94. [ ] Mark yourself away on a day (with alts that have logged in with
     the addon): the Calendar shows **1 away** on it, not one per character.
 93. [ ] Calendar → click a day you're marked away on: **Not away … after

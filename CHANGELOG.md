@@ -1,6 +1,13 @@
 # Changelog
 
-## v0.16.2 (not released yet): calendar "away" count, day box button
+## v0.16.2 (not released yet): away players in the line-up, calendar "away" count, day box button
+
+- **Away players show on the raid** (owner: "it shouldn't only show away
+  if they're signed, as they realistically wouldn't be signing"): a raid's
+  line-up now also lists everyone marked away that day who hasn't answered,
+  with the status **Away** in red, and the counts end with "N away".
+  Officers also see days an officer marked in the roster planner; other
+  players only see days people marked themselves.
 
 - **"3 away" on the Calendar counted characters, not players** (owner's
   screenshot): each of a player's alts carries their away days, so one

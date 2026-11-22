@@ -495,6 +495,52 @@ function Board.LineUp(board, ev, ctx)
 	return rows, s
 end
 
+-- v0.16.2 (owner: "if someone's absence overlaps with a scheduled raid,
+-- show it in this view; it shouldn't only show away if they're signed, as
+-- they realistically wouldn't be signing"): extra line-up rows for players
+-- away on the raid's day who have no sign-up on any of their characters.
+-- One row per player (the main of linked characters). officerDir: only
+-- passed for officers, so days an officer set never reach members. Pure
+-- apart from the ctx.
+function Board.AwayRows(_, ev, ctx, rows, officerDir)
+	local A = SK.Absences
+	local guild = ctx.guild
+	if not (A and guild and ev and ev.at) then return {} end
+	local groupOf = A.Players(guild)
+	local answered = {}
+	for _, r in ipairs(rows or {}) do
+		local g = groupOf[r.guid]
+		answered[g and g.main or r.guid] = true
+	end
+	local day = date("%Y-%m-%d", ev.at)
+	local out = {}
+	for guid, m in pairs(guild.members or {}) do
+		local g = groupOf[guid]
+		local key = g and g.main or guid
+		if not m.leftAt and not answered[key] then
+			local away = A.IsAway(A.Of(guild, guid), ev.at)
+				or (officerDir ~= nil and SK.OfficerDir.AwayOf(officerDir, guid)[day] == true)
+			if away then
+				answered[key] = true
+				local mm = guild.members[key] or m
+				local p = ctx.profile(key)
+				local gearHidden = p and p.hidden and p.hidden.gear
+				local tree
+				if p and not gearHidden then local _, t = SK.Talents.Summary(p.talents); tree = t end
+				local att = SK.Attunements.StateOf(p, Board.AttRaid(ev) or { status = "none" })
+				out[#out + 1] = {
+					guid = key, name = mm.name or (p and p.name) or "?", class = mm.class or (p and p.class),
+					level = mm.level or (p and p.level) or 0, status = "a", statusName = "Away",
+					group = "away", awayOnly = true, away = false, online = mm.online or false,
+					tree = tree, ilvl = (p and not gearHidden) and p.ilvl or nil, att = att, hasData = p ~= nil,
+				}
+			end
+		end
+	end
+	table.sort(out, function(a, b) return a.name:lower() < b.name:lower() end)
+	return out
+end
+
 -- The usual ctx for LineUp: this guild, now, saved profiles.
 function Board.Ctx()
 	local guild = SK.DBM:Guild()

@@ -44,6 +44,15 @@ bridged to the addon only by copy and paste.
   at, groupOf)` return one guid per player (the group's main); `MonthGrid`
   builds the groups once. `Abs.Of` only follows two-way family links.
   Tooltip "N players away". TESTING 94.
+  Also (owner: away should show on the raid even if not signed up):
+  `Board.AwayRows(board, ev, ctx, rows, officerDir)` (pure) = one row per
+  player away that day with no sign-up on any of their characters (status
+  "a", `statusName` "Away", `awayOnly`); officer-set days only when
+  `officerDir` is passed (`RefreshUpcoming` passes it for `OfficerView`),
+  so members never see them. Appended to the Raids line-up (not to
+  `LineUp`, so Groups/Auto-fill/Discord/bot text are unchanged); counts
+  end "· N away"; clicking such a row opens the character (no In/Bench).
+  TESTING 95.
 - **v0.16.1 (released 22 Nov on `main`, owner: "push to main"; owner's Wide
   screenshot: "Why is ony/ench/seen etc so cramped together and
   unreadable?"; "Note is the least important part as it will be clickable
