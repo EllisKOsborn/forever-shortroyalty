@@ -147,6 +147,8 @@ people who were offline get them when they log in. `/sr raids` opens the page.
 
 <p align="center"><img src="docs/images/raids-calendar-day.png" alt="Raids calendar: the day box with I'm away this day and New raid (time and instances)" width="100%"></p>
 
+- **Weekly raids** (v0.16.0): the day box's **Repeat** menu makes the same raid every week, up to 12 at once; each can be changed or cancelled on its own, and the raid's ··· menu cancels the rest of the series.
+- **Reserve loot** (v0.16.0): once you've signed up and the raid's instances are picked, a button on the raid shows your reserves and opens the Loot page on it.
 - **Several instances a night, or to be decided** (v0.14.0): officers change a night's instances any time with the chips next to its title on the Raids page. A night with Hyjal and Onyxia shows "Hyjal + Onyxia (40)", has **groups per instance** on the Groups page (chips pick which), and one reserve list on the Loot page with both raids' loot.
 
 <p align="center"><img src="docs/images/raids-multi.png" alt="A raid night with Hyjal and Onyxia; officers' instance chips by the title" width="100%"></p>

@@ -336,3 +336,14 @@ addon read.
 
 87. [ ] As an officer, make a raid four months ahead from the Calendar: it
     appears, and the line under Create raid reads in full.
+
+## v0.16.0 Weekly raids, Reserve loot button
+
+88. [ ] Officer: Calendar → a Monday → Repeat **Weekly, 6 raids**, Onyxia,
+    Create raid. "Made 6 raids … until …"; six Mondays on the calendar, same
+    time; other players see them all.
+89. [ ] Open the third one → ··· → **Cancel this and the 3 later in the
+    series**: those four disappear, the first two stay.
+90. [ ] Member: sign up for an Onyxia raid → **Reserve loot 0/1** appears
+    under the buttons; it opens Loot → Reserves on that raid. Not shown for
+    a raid still to be decided, or after Can't come.

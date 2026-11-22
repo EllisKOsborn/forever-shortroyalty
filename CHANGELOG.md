@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.16.0 (not released yet): weekly raids, Reserve loot button
+
+- **Weekly raids:** the Calendar's day box has a **Repeat** menu: *Just this
+  day*, or *Weekly, 2–12 raids*. Create raid then makes them all at once,
+  same day of the week and same time (summer/winter time is handled). Each
+  raid can still be changed or cancelled on its own, and the raid's **···**
+  menu has **Cancel this and the N later in the series**.
+- Room for **60 raids** at a time (was 30); cancelled raids don't count.
+  Players still on v0.15.1 or older keep 30 and miss the rest until older
+  raids drop off.
+- **Reserve loot** button on the Raids page: once you've signed up (or are
+  tentative) and the raid's instances are picked, it shows your reserves
+  ("1/2") and opens the Loot page on that raid.
+
 ## v0.15.1 (22 Nov 2026): raids any time ahead
 
 - **Raids can be made any time ahead** (owner: "there shouldn't really be

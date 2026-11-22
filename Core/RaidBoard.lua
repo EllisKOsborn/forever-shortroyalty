@@ -11,7 +11,8 @@
 --              raid = key in Data/Attunements, at = start (server time),
 --              u = last change, x = true when cancelled, eb = who changed it,
 --              rs = v0.14.0 the night's instances "hyjal,ony", "" = to be
---                   decided (then raid = "tbd"); absent = just `raid` }
+--                   decided (then raid = "tbd"); absent = just `raid`,
+--              sr = v0.16.0 the first raid's id when made as a weekly series }
 --   signup = { s = "y" (signed up) | "t" (tentative) | "n" (can't come),
 --              r = "TANK" | "HEALER" | "DPS" | nil, u = last change,
 --              w = v0.14.0 when they changed from Signed up to Tentative or
@@ -28,7 +29,12 @@ local _, SK = ...
 local Board = SK:NewModule("RaidBoard")
 local Compat = SK.Compat
 
-Board.MAX_EVENTS = 30           -- raids kept (upcoming and recent)
+-- v0.16.0 (weekly series): up to 60 raids that aren't cancelled, 150 in all
+-- (cancelled ones are kept until a week after their date, so the cancel
+-- reaches everyone). v0.15.1 and older keep 30 in all.
+Board.MAX_EVENTS = 60
+Board.MAX_STORED = 150
+Board.MAX_WEEKS = 12            -- a weekly series made at once
 Board.MAX_SIGNUPS = 100         -- sign-ups per raid
 Board.MAX_FUTURE = 300          -- a change dated more than 5 minutes ahead is refused
 -- v0.15.1 (owner: "there shouldn't really be a limit, let them make it
@@ -173,6 +179,7 @@ function Board.ValidEvent(e, now)
 	if e.at > now + Board.AHEAD or e.at < now - Board.KEEP_AFTER - 86400 then return false, "too far away" end
 	if e.x ~= nil and e.x ~= true then return false, "bad cancel" end
 	if e.eb ~= nil and not str(e.eb, 64) then return false, "bad editor" end
+	if e.sr ~= nil and not str(e.sr, 80) then return false, "bad series" end
 	return true
 end
 
@@ -211,6 +218,24 @@ end
 ---------------------------------------------------------------------------
 -- Merging (pure: board, item, now, roster checks)
 ---------------------------------------------------------------------------
+-- Raids that aren't cancelled.
+function Board.LiveCount(board)
+	local n = 0
+	for _, e in pairs(board.events) do if not e.x then n = n + 1 end end
+	return n
+end
+
+-- v0.16.0: the start times of a weekly series, same local time each week
+-- (whatever the clocks do). Pure.
+function Board.WeeklyStarts(firstAt, weeks)
+	local t = date("*t", firstAt)
+	local out = {}
+	for i = 0, (weeks or 1) - 1 do
+		out[#out + 1] = time({ year = t.year, month = t.month, day = t.day + 7 * i, hour = t.hour, min = t.min, sec = 0 })
+	end
+	return out
+end
+
 function Board.New() return { events = {}, signups = {}, places = {}, slots = {}, assign = {} } end
 
 -- isLead(guid) -> bool. Returns accepted, reason.
@@ -220,8 +245,12 @@ function Board.MergeEvent(board, e, now, isLead)
 	if not isLead(e.by) or (e.eb and not isLead(e.eb)) then return false, "not an officer or raid leader" end
 	local have = board.events[e.id]
 	if have and have.u >= e.u then return false, "not newer" end
-	if not have and SK.Count(board.events) >= Board.MAX_EVENTS then return false, "too many raids" end
-	board.events[e.id] = { id = e.id, by = e.by, c = e.c, raid = e.raid, rs = e.rs, at = e.at, u = e.u, x = e.x, eb = e.eb }
+	if not have then
+		if SK.Count(board.events) >= Board.MAX_STORED then return false, "too many raids" end
+		if not e.x and Board.LiveCount(board) >= Board.MAX_EVENTS then return false, "too many raids" end
+	end
+	board.events[e.id] = { id = e.id, by = e.by, c = e.c, raid = e.raid, rs = e.rs, at = e.at, u = e.u, x = e.x, eb = e.eb,
+		sr = e.sr }
 	return true
 end
 
@@ -696,8 +725,9 @@ local function changed(keys)
 end
 
 -- keys = a raid key, or a list of keys (v0.14.0; empty = to be decided).
+-- sr = v0.16.0 series id, or true for "this raid starts a series".
 -- Returns the new event, or nil and why.
-function Board:Create(keys, at)
+function Board:Create(keys, at, sr)
 	local board, guid, now = self:Get(), me(), Compat.Now()
 	if not board or not guid then return nil, "no guild" end
 	if not Board.CanLead(guid) then return nil, "only officers and raid leaders can make raids" end
@@ -706,7 +736,9 @@ function Board:Create(keys, at)
 	if not keys then return nil, "pick a raid" end
 	if at < now - 3600 then return nil, "that time has passed" end
 	if at > now + Board.AHEAD then return nil, "that's more than a year ahead" end
-	if SK.Count(board.events) >= Board.MAX_EVENTS then Board.Prune(board, now) end
+	if Board.LiveCount(board) >= Board.MAX_EVENTS or SK.Count(board.events) >= Board.MAX_STORED then
+		Board.Prune(board, now)
+	end
 	local raid, rs = Board.RaidFields(keys)
 	local e = { by = guid, c = now, raid = raid, rs = rs, at = at, u = now }
 	e.id = guid .. ":" .. string.format("%d", now)
@@ -714,10 +746,64 @@ function Board:Create(keys, at)
 		e.c = e.c + 1
 		e.id = guid .. ":" .. string.format("%d", e.c)
 	end
+	if sr == true then e.sr = e.id elseif type(sr) == "string" then e.sr = sr end
 	local ok, why = Board.MergeEvent(board, e, now, function(g) return Board.CanLead(g) end)
 	if not ok then return nil, why end
 	changed({ "E:" .. e.id })
 	return board.events[e.id]
+end
+
+-- v0.16.0: a weekly series (owner: "the ability to create recurring raids
+-- would be very useful"): the same time and instances, `weeks` raids from
+-- firstAt. Returns the raids made, or nil and why (nothing is made then).
+function Board:CreateSeries(keys, firstAt, weeks)
+	local board, now = self:Get(), Compat.Now()
+	if not board then return nil, "no guild" end
+	weeks = math.max(1, math.min(Board.MAX_WEEKS, math.floor(tonumber(weeks) or 1)))
+	if weeks == 1 then
+		local e, why = self:Create(keys, firstAt)
+		return e and { e } or nil, why
+	end
+	local starts = Board.WeeklyStarts(firstAt, weeks)
+	if starts[#starts] > now + Board.AHEAD then return nil, "the last one would be more than a year ahead" end
+	Board.Prune(board, now)
+	local room = Board.MAX_EVENTS - Board.LiveCount(board)
+	if room < weeks then
+		return nil, "only room for " .. math.max(0, room) .. " more raids (" .. Board.MAX_EVENTS .. " at most)"
+	end
+	local out = {}
+	for i, at in ipairs(starts) do
+		local e, why = self:Create(keys, at, i == 1 and true or out[1].sr)
+		if not e then return (#out > 0) and out or nil, why end
+		out[#out + 1] = e
+	end
+	return out
+end
+
+-- The raids of a series from this one on (not cancelled), by date. Pure.
+function Board.SeriesFrom(board, id)
+	local ev = board.events[id]
+	local out = {}
+	if not ev or not ev.sr then return out end
+	for _, e in pairs(board.events) do
+		if e.sr == ev.sr and not e.x and e.at >= ev.at then out[#out + 1] = e end
+	end
+	table.sort(out, function(a, b) return a.at < b.at end)
+	return out
+end
+
+-- Officers: cancel this raid and the later ones of its series.
+function Board:CancelSeries(id)
+	local board, guid, now = self:Get(), me(), Compat.Now()
+	if not board or not board.events[id] then return 0, "unknown raid" end
+	if not Board.CanLead(guid) then return 0, "only officers and raid leaders can cancel raids" end
+	local keys = {}
+	for _, e in ipairs(Board.SeriesFrom(board, id)) do
+		e.x, e.eb, e.u = true, guid, math.max(now, e.u + 1)
+		keys[#keys + 1] = "E:" .. e.id
+	end
+	if #keys > 0 then changed(keys) end
+	return #keys
 end
 
 -- v0.14.0: officers choose (or change) the night's instances later.

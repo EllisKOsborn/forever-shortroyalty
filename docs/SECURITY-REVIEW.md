@@ -236,3 +236,11 @@ the Officers view and its tooltip.
   numbers, `pb` only true, sign-ups y/t/n). They have no `total`, so older
   versions refuse them instead of misreading them. Online status comes from
   each officer's own guild roster; merging keeps the best result per player.
+
+## Addendum (22 Nov 2026, v0.16.0 weekly raids)
+
+- Raid events may carry `sr` (a series id, a string of at most 80
+  characters). It only groups raids for "cancel the rest"; every raid is
+  still checked and merged on its own.
+- At most 60 raids that aren't cancelled and 150 in all are kept, so a flood
+  of raids (from an officer) can't grow saved data without bound.

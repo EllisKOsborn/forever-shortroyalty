@@ -41,7 +41,8 @@ local function wireItem(board, key)
 	local id = key:match("^E:(.+)$")
 	if id then
 		local e = board.events[id]
-		return e and "e", e and { id = e.id, by = e.by, c = e.c, raid = e.raid, rs = e.rs, at = e.at, u = e.u, x = e.x, eb = e.eb }
+		return e and "e", e and { id = e.id, by = e.by, c = e.c, raid = e.raid, rs = e.rs, at = e.at, u = e.u, x = e.x, eb = e.eb,
+			sr = e.sr }
 	end
 	local aid, akey = key:match("^A:(.+)|(.+)$")
 	if aid then

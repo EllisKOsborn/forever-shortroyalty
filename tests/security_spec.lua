@@ -367,3 +367,24 @@ describe("Security: v0.14.0 raid nights, sign-up changes, attendance records", f
 		assert.is_false((A.ValidRecord(rec, W.now)))
 	end)
 end)
+
+describe("Security: v0.16.0 raid series", function()
+	it("refuses a bad series id and keeps the raid count bounded", function()
+		local SK, W = H.load()
+		W.member("Pip", W.player.guid)
+		W.member("Bob", "Player-1-B", { rank = "Officer", rankIndex = 1 })
+		SK.Identity:ReadRoster()
+		local B = SK.RaidBoard
+		local board = B.New()
+		local lead = function() return true end
+		local function ev(i, extra)
+			local e = { id = "Player-1-B:" .. i, by = "Player-1-B", c = i, raid = "ony", at = W.now + 3600 + i, u = i }
+			for k, v in pairs(extra or {}) do e[k] = v end
+			return e
+		end
+		assert.is_false((B.MergeEvent(board, ev(1, { sr = {} }), W.now, lead)))
+		for i = 1, B.MAX_STORED + 5 do B.MergeEvent(board, ev(i + 10, { x = true }), W.now, lead) end
+		assert.equal(B.MAX_STORED, SK.Count(board.events))
+		assert.equal(0, #SK.errors)
+	end)
+end)

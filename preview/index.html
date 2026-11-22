@@ -1010,6 +1010,7 @@ function raids() {
         <div style="margin-top:8px">${btn("I'm away this day")}</div>
         ${officer ? `<div class="display dim" style="font-size:11px;letter-spacing:.08em;margin-top:12px">NEW RAID</div>
         <div style="display:flex;gap:2px;align-items:center;margin-top:4px"><span class="menu" style="width:90px;margin-right:6px">${btn("20:00").replace("</span>", '<i class="arrow"></i></span>')}</span><span class="chip">Barrow</span><span class="chip on">Hyjal</span><span class="chip on">Onyxia</span></div>
+        <div style="margin-top:6px"><span class="menu" style="width:170px">${btn("Weekly, 8 raids").replace("</span>", '<i class="arrow"></i></span>')}</span></div>
         <div class="small dim" style="margin-top:6px">Hyjal Summit + Onyxia's Lair (40)</div>
         <div style="margin-top:8px">${btn("Create raid", "primary")}</div>` : ""}</div>`;
     }
@@ -1070,6 +1071,7 @@ function raids() {
     <div class="abs" style="left:${RX}px;top:${t0 + 48}px;display:flex;gap:8px">${btn("Sign up", "on")}${btn("Tentative")}${btn("Can't come")}<span style="width:4px"></span>
       <span class="menu" style="width:110px">${btn("Healer").replace("</span>", '<i class="arrow"></i></span>')}</span></div>
     <div class="abs" style="left:${RX}px;top:${t0 + 80}px">You: <span class="good">Signed up</span> as Healer  ·  <span class="good">You're in</span></div>
+    ${btn("Reserve loot  1/2", "primary", `style="position:absolute;right:0;top:${t0 + 76}px;width:140px;justify-content:center;height:22px"`)}
     <div class="abs dim small" style="left:${RX}px;top:${t0 + 100}px">In 18 / 40: Tanks 3  ·  Healers 5  ·  DPS 10  ·  Bench 3  ·  3 tentative  ·  2 can't come</div>
     <div class="abs dim small" style="left:${RX}px;right:0;top:${t0 + 120}px;line-height:1.4">3 tentative<span class="faint">  ·  </span><span class="bad">3 not attuned</span><span class="faint">  ·  </span><span class="spark">2 without the amulet in their bags</span><span class="faint">  ·  </span>Item level 52 to 75</div>` +
     list([{ key: "n", t: "Name", w: 118 }, { key: "s", t: "Status", w: 78 }, { key: "p", t: "Raid", w: 48 }, { key: "r", t: "Role", w: 56 }, { key: "sp", t: "Spec", w: 60 }, { key: "i", t: "ilvl", w: 32, r: 1 }, { key: "a", t: "Attuned", w: 52, r: 1 }], lineup,

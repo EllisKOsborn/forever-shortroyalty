@@ -372,8 +372,18 @@ function RT:Build(page)
 	})
 	self.role:SetPoint("LEFT", prev, "RIGHT", SP.m, 0)
 	self.role.tooltip = "Your role for raids (remembered). Until you pick one, it's a guess from your talents."
+	-- v0.16.0 (owner: "after signing up and the raid is no longer TBD" I
+	-- should be able to go to the soft reserves): opens the Loot page on it.
+	self.reserveBtn = W.Button(d, "Reserve loot", 140, S.controlSmall + 2, function()
+		if RT.selected then SK.LootTab:ShowRaid(RT.selected) end
+	end, "primary")
+	self.reserveBtn:SetPoint("TOPRIGHT", 0, -(44 + SP.xs + S.control + SP.s - 3))
+	self.reserveBtn.tooltip = "Pick your soft reserves for this raid on the Loot page."
 	self.mine = Theme.Text(d, "body", "text")
 	self.mine:SetPoint("TOPLEFT", 0, -(44 + SP.xs + S.control + SP.s))
+	self.mine:SetPoint("RIGHT", self.reserveBtn, "LEFT", -SP.s, 0)
+	self.mine:SetJustifyH("LEFT")
+	self.mine:SetWordWrap(false)
 	self.counts = Theme.Text(d, "small", "dim")
 	self.counts:SetPoint("TOPLEFT", self.mine, "BOTTOMLEFT", 0, -SP.xs)
 	self.ready = Theme.Text(d, "small", "dim")
@@ -514,10 +524,20 @@ end
 function RT:CreateRaid(dayAt)
 	local form = RT.NewRaidForm()
 	local at = Board.StartAt(Board.DayStart(dayAt or Compat.Now(), 0), form.minutes or 20 * 60)
-	local e, why = Board:Create(form.keys, at)
+	-- v0.16.0: form.weeks > 1 = a weekly series. Returns the first raid,
+	-- or nil and why; and how many were made.
+	local list, why = Board:CreateSeries(form.keys, at, form.weeks or 1)
+	local e = list and list[1]
 	if e then RT.selected = e.id end
 	RT:Refresh()
-	return e, why
+	return e, why, list and #list or 0
+end
+
+-- "Just this day", "Weekly, 4 raids" ... (the day box's Repeat menu).
+function RT.RepeatItems()
+	local out = { { value = 1, text = "Just this day" } }
+	for n = 2, Board.MAX_WEEKS do out[#out + 1] = { value = n, text = "Weekly, " .. n .. " raids" } end
+	return out
 end
 
 function RT.NewRaidForm()
@@ -607,6 +627,17 @@ function RT:DetailOptions()
 			RT.selected = nil
 			RT:Refresh()
 		end }
+		-- v0.16.0: a weekly series.
+		local board = Board:Get()
+		local later = board and #Board.SeriesFrom(board, RT.selected) or 0
+		if later > 1 then
+			items[#items + 1] = { text = "Cancel this and the " .. (later - 1) .. " later in the series", onClick = function()
+				local n = Board:CancelSeries(RT.selected)
+				SK:Print("Cancelled %d raids.", n)
+				RT.selected = nil
+				RT:Refresh()
+			end }
+		end
 	end
 	return items
 end
@@ -656,6 +687,7 @@ function RT:RefreshUpcoming(board, now, me)
 	end
 	local officer = Board.OfficerView()
 	for _, c in ipairs(self.keyChips) do c:SetShown(shown and officer) end
+	self.reserveBtn:SetShown(false)
 	for _, b in ipairs(self.signButtons) do b:SetShown(shown) end
 	self.empty:SetShown(not shown)
 	if not shown then
@@ -676,6 +708,14 @@ function RT:RefreshUpcoming(board, now, me)
 		b:Paint("rest")
 	end
 	self.role:Refresh()
+	-- Reserve loot: signed up or tentative, and the instances are decided.
+	local canReserve = mine ~= nil and (mine.s == "y" or mine.s == "t") and #keys > 0 and not ev.x
+	self.reserveBtn:SetShown(canReserve)
+	if canReserve then
+		local R = SK.Reserves
+		local picks = #R:MyPicks(ev.id)
+		self.reserveBtn:SetText(string.format("Reserve loot  %d/%d", picks, R.EventPicks(R:State(), ev)))
+	end
 	local myGroup = SK.RaidGroups.SlotOf(board, SK.RaidGroups.SlotId(ev), me or "")
 	self.mine:SetText(RT.MineText(mine, Board.PlaceOf(board, ev.id, me or ""), myGroup,
 		SK.RaidAssign.JobsOf(board, ev.id, me or "")))
@@ -1488,9 +1528,24 @@ function RT:BuildDay(cal)
 		box.keys[#box.keys + 1] = c
 		prev = c
 	end
+	-- v0.16.0: repeat weekly.
+	box.repeatMenu = W.Menu(box, {
+		width = 170,
+		items = RT.RepeatItems,
+		get = function() return RT.NewRaidForm().weeks or 1 end,
+		set = function(v)
+			RT.NewRaidForm().weeks = v
+			RT:DrawDay()
+		end,
+	})
+	box.repeatMenu.tooltip = "Make the same raid every week (same day and time), up to " .. Board.MAX_WEEKS ..
+		" at once. Each one can be changed or cancelled on its own; the ··· menu cancels the rest of a series."
 	box.create = W.Button(box, "Create raid", nil, S.control, function()
-		local e, why = RT:CreateRaid(RT.dayCell and RT.dayCell.at)
-		if e then
+		local e, why, n = RT:CreateRaid(RT.dayCell and RT.dayCell.at)
+		if e and n > 1 then
+			RT.dayResult = Theme.Paint("good", "Made " .. n .. " raids: ") .. Board.EventName(e, true) .. ", " ..
+				date("%As %H:%M", e.at) .. ", until " .. date("%d %b", Board.WeeklyStarts(e.at, n)[n])
+		elseif e then
 			RT.dayResult = Theme.Paint("good", "Made: ") .. Board.EventName(e, true) .. ", " .. date("%H:%M", e.at)
 		else
 			RT.dayResult = Theme.Paint("bad", "Not made: " .. tostring(why))
@@ -1573,7 +1628,7 @@ function RT:DrawDay()
 	-- then refused).
 	local startAt = Board.StartAt(Board.DayStart(cell.at, 0), RT.NewRaidForm().minutes or 20 * 60)
 	local canMake = officer and startAt <= now + Board.AHEAD
-	for _, f in ipairs({ box.newLabel, box.time, box.create, box.what, box.result }) do f:SetShown(canMake) end
+	for _, f in ipairs({ box.newLabel, box.time, box.repeatMenu, box.create, box.what, box.result }) do f:SetShown(canMake) end
 	for _, c in ipairs(box.keys) do c:SetShown(canMake) end
 	if canMake then
 		box.newLabel:ClearAllPoints()
@@ -1586,6 +1641,10 @@ function RT:DrawDay()
 		local on = {}
 		for _, k in ipairs(form.keys) do on[k] = true end
 		for _, c in ipairs(box.keys) do c:SetActive(on[c.value] == true) end
+		y = y + S.control + SP.xs
+		box.repeatMenu:ClearAllPoints()
+		box.repeatMenu:SetPoint("TOPLEFT", SP.m, -y)
+		box.repeatMenu:Refresh()
 		y = y + S.control + SP.xs
 		local probe = { raid = (form.keys[1] or Board.TBD), rs = #form.keys == 1 and nil or table.concat(form.keys, ",") }
 		box.what:ClearAllPoints()

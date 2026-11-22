@@ -32,6 +32,20 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.16.0 (built 22 Nov on the branch, NOT released; owner: "the ability
+  to create recurring raids would be very useful"; "after signing up and the
+  raid is no longer TBD" → go to the soft reserves):** events carry `sr`
+  (series id = the first raid's id; `ValidEvent` str ≤ 80; RB carries it).
+  `Board.WeeklyStarts(firstAt, weeks)` (same local time), `Board:Create(keys,
+  at, sr)` (sr true = itself), `Board:CreateSeries(keys, firstAt, weeks)`
+  (≤ `MAX_WEEKS` 12, room check first, all or nothing), `Board.SeriesFrom`,
+  `Board:CancelSeries`. Limits: `MAX_EVENTS` 60 **live** (not cancelled,
+  `Board.LiveCount`) + `MAX_STORED` 150 in all (v0.15.1 keeps 30 in all).
+  UI: day box `repeatMenu` (`RT.RepeatItems`, `settings.newRaid.weeks`),
+  `RT:CreateRaid` returns (first, why, count); ··· "Cancel this and the N
+  later in the series"; raid detail `reserveBtn` (signed y/t, not TBD, not
+  cancelled; "Reserve loot n/limit") → `LootTab:ShowRaid(id)`. Tests
+  `tests/v0160_series_spec.lua` + security case. TESTING 88–90.
 - **v0.15.1 (released 22 Nov on `main`, owner: "push to main"; owner 22 Nov: "there shouldn't really be a
   limit, let them make it whenever they want"):** `Board.AHEAD` 400 days
   (only clearly broken dates refused; older clients keep 60 and pick far

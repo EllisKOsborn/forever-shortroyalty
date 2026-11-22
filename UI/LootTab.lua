@@ -1016,6 +1016,12 @@ function LT:Refresh()
 	end
 end
 
+-- v0.16.0: the Reserves page on one raid (the Raids page's Reserve loot).
+function LT:ShowRaid(id)
+	LT.raidID = id
+	self:Show("reserves")
+end
+
 -- Open on a tab (from /sr loot).
 function LT:Show(view)
 	if view then SK.DB.settings.lootView = view end
