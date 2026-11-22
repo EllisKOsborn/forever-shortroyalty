@@ -264,6 +264,42 @@ function R.LootList(st, raidKey, journal)
 	return out, added
 end
 
+-- What an item looks like (v0.14.1): { name, q (quality), icon (texture),
+-- slot, type, listed }. The game names only items its own data holds, and
+-- Forever holds raid loot back until the raid opens, so the page showed
+-- "item 17068". The game's name, quality and icon win once it knows the
+-- item; until then Data/Loot.lua's look (from the item's wiki tooltip,
+-- tools/loot.js). Slot and type come only from the list. nil name = not
+-- known anywhere (an item learned from a drop on another player's game
+-- still loading here).
+R.ICON_PATH = "Interface\\Icons\\"
+function R.ItemLook(id)
+	local data = SK.Data.LOOT_ITEMS and SK.Data.LOOT_ITEMS[id]
+	local name = SK.CraftIndex.ItemName(id)
+	local look = { listed = data ~= nil, slot = data and data.slot, type = data and data.type }
+	if name then
+		look.name, look.q, look.icon = name, Compat.ItemQuality(id), Compat.ItemIcon(id)
+	end
+	if data then
+		look.name = look.name or data.name
+		if look.q == nil then look.q = data.q end
+		-- The game's icon for an item it doesn't know is a question mark: use
+		-- the listed one unless the game knows the item.
+		if (not name or not look.icon) and data.icon then look.icon = R.ICON_PATH .. data.icon end
+	end
+	return look
+end
+
+-- "Head, Cloth" / "One-Hand Axe" / "Trinket" / nil.
+function R.SlotText(look)
+	local slot, kind = look and look.slot, look and look.type
+	if slot and kind then
+		if slot:find("Hand$") then return slot .. " " .. kind end
+		return slot .. ", " .. kind
+	end
+	return slot or kind
+end
+
 -- Reserves per player in a raid (1 until officers set it for that raid).
 function R.PicksFor(st, raidKey)
 	return st and st.picks[raidKey] or 1

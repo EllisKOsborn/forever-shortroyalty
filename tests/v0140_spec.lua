@@ -374,7 +374,7 @@ describe("v0.14.0 attendance: online at the start", function()
 	end)
 end)
 
-describe("v0.14.1 roster planner gains", function()
+describe("v0.14.2 roster planner gains", function()
 	it("doesn't show an item level rise that rounds to +0", function()
 		local SK = setup()
 		local RP = SK.RosterPlan

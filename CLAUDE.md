@@ -32,6 +32,28 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.14.1 (released 22 Nov on `main`, owner: "push to main"): item names on the Loot page** (owner, 22 Nov,
+  screenshot of "item 16900" rows: "WoWhead should have an API we can use,
+  if not … somewhere else … reliable and updated frequently"). Cause:
+  Forever's data holds only 4 of Onyxia's 20 items (raid loot held back),
+  so the client can't name them. **Wowhead not used** (terms forbid
+  scraping; its tooltip JSON isn't a public API; addons can't go online
+  anyway). `tools/loot.js` now also reads each item page's
+  `{{#data:Itemtip}}` box (name, quality, icon, slot, type; batched
+  `prop=revisions`) and Forever's ItemSparse `OverallQualityID`; writes
+  `SK.Data.LOOT_ITEMS[id] = { name, q, icon, slot, type, f }` (f = in
+  Forever's data: its name/quality win). Kept lists keep their looks.
+  `R.ItemLook(id)` (game name/quality/icon first, then the list; icon
+  path `R.ICON_PATH .. icon`), `R.SlotText`, `Compat.ItemQuality/
+  QualityHex`. `UI/LootTab.lua`: `LT.ItemName/ItemText(id, noIcon)` (inline
+  `|T…|t`, `SIZES.itemIcon` 14), `LT.ItemTip` on every item list
+  (game tooltip if known, else slot + "not in the game's data yet"),
+  `byName` column sorts, Reserves rows A–Z. Loot workflow now **daily**
+  (it never ran: 0 runs on 22 Nov although active since 16 Nov).
+  Tests `tests/v0141_loot_names_spec.lua`; pictures loot*.png (icon
+  stand-in squares in the preview; Blizzard icons aren't in the repo).
+  TESTING 84–85. Unverified in game: whether `Interface\Icons\<name>`
+  paths load in Forever (else blank icons; the game's file IDs once known).
 - **v0.14.0 (released 21 Nov on `main`, owner: "Push to main"; officers'
   second round, owner relayed the list): raids from the calendar, attendance at
   the start time.** Owner's answers (21 Nov): third status **Social**; late
@@ -379,7 +401,7 @@ bridged to the addon only by copy and paste.
     one ID per item (forever link > in Forever's ItemSparse > lowest, so no
     SoD 228xxx copies) → checked against Forever's ItemSparse; never
     Wowhead pages) + ledger kind l (drops/officers). `.github/workflows/
-    loot.yml` reruns it weekly (and by hand) and commits Data/Loot.lua to
+    loot.yml` reruns it daily since v0.14.1 (and by hand) and commits Data/Loot.lua to
     main only if a list changed (active once on main). Onyxia = the wiki's
     Classic page until a Forever page exists; `RAIDS` in tools/loot.js
     lists the page names to try (update when the wiki names them).
@@ -1009,7 +1031,7 @@ bridged to the addon only by copy and paste.
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
   (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed); **v0.5.7** (12 Nov, cooldown
-  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet); **v0.8.2** (16 Nov, "No player named" fix); **v0.9.0** (16 Nov, Reserve+: soft reserves with bonus points; the weekly loot-list workflow becomes active on `main`); **v0.9.1** (18 Nov, reserve reminders, Short Words Alt-F4 fix, creator as officer); **v0.9.2** (18 Nov, Milestones without Grats, times not cut off); **v0.9.3** (19 Nov, failed sends by kind in /sr debug, no nag for GeneralError); **v0.9.4** (19 Nov, cooldowns 49 days too long: client timer wrap); **v0.10.0–v0.10.2** (20 Nov, In/Bench + Discord copy/paste, officer roster, calendar); **v0.11.0** (20 Nov, groups, Auto-fill, Invite & arrange, away days, boss assignments); **v0.12.0** (20 Nov, our own Discord bot; the "Discord bot" workflow deploys it once the owner adds the secrets); **v0.13.0** (21 Nov, raid roster planner); **v0.14.0** (21 Nov, raids from the calendar, several instances a night, attendance at the start time). Tag only when
+  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet); **v0.8.2** (16 Nov, "No player named" fix); **v0.9.0** (16 Nov, Reserve+: soft reserves with bonus points; the weekly loot-list workflow becomes active on `main`); **v0.9.1** (18 Nov, reserve reminders, Short Words Alt-F4 fix, creator as officer); **v0.9.2** (18 Nov, Milestones without Grats, times not cut off); **v0.9.3** (19 Nov, failed sends by kind in /sr debug, no nag for GeneralError); **v0.9.4** (19 Nov, cooldowns 49 days too long: client timer wrap); **v0.10.0–v0.10.2** (20 Nov, In/Bench + Discord copy/paste, officer roster, calendar); **v0.11.0** (20 Nov, groups, Auto-fill, Invite & arrange, away days, boss assignments); **v0.12.0** (20 Nov, our own Discord bot; the "Discord bot" workflow deploys it once the owner adds the secrets); **v0.13.0** (21 Nov, raid roster planner); **v0.14.0** (21 Nov, raids from the calendar, several instances a night, attendance at the start time); **v0.14.1** (22 Nov, item names, icons and slots on the Loot page; loot-list job daily). Tag only when
   the user asks.
 
 ## Layout

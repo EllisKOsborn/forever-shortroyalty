@@ -96,12 +96,19 @@ game and the result ships with the addon. Three sources, merged:
 2. **warcraft.wiki.gg** (public API; content reusable with credit):
    `node tools/loot.js` finds each raid's loot page, takes its loot
    entries, looks up each item's ID and checks it against Forever's own
-   item data (wago.tools). A weekly GitHub job (`.github/workflows/loot.yml`)
+   item data (wago.tools). A daily GitHub job (`.github/workflows/loot.yml`; weekly before v0.14.1)
    reruns it and commits `Data/Loot.lua` when a list changed; the next
    release ships it. Wowhead is not read (its terms forbid scraping).
 3. **Drops and officers:** the officer's addon adds every rare+ item it
    sees in a loot window (shared with everyone); officers can still add an
    item by hand.
+
+**What items look like (v0.14.1, 22 Nov):** Forever's game data doesn't
+hold raid loot until the raid opens, so the game can't name those items
+(the page showed "item 16900"). `tools/loot.js` also saves each item's
+name, quality, icon and slot from its wiki tooltip box, so the page shows
+them until the game knows the item; then the game's own wins. The job runs
+daily now.
 
 On 16 Nov: Onyxia = the wiki's original-game list (20 items; 4 in
 Forever's data, the rest probably held back until the raid opens);
