@@ -373,3 +373,15 @@ describe("v0.14.0 attendance: online at the start", function()
 		assert.equal(0, #SK.errors)
 	end)
 end)
+
+describe("v0.14.1 roster planner gains", function()
+	it("doesn't show an item level rise that rounds to +0", function()
+		local SK = setup()
+		local RP = SK.RosterPlan
+		local now = 30 * 86400
+		local h = { { d = 20, l = 58, i = 57.0 } }
+		assert.is_nil(RP.Gain(h, now, "i", 57.3))
+		assert.equal(0.6, RP.Gain(h, now, "i", 57.6))
+		assert.equal(2, RP.Gain(h, now, "l", 60))
+	end)
+end)

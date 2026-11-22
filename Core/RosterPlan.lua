@@ -125,7 +125,11 @@ function RP.Gain(h, now, field, current)
 	if not base or not base[field] then return nil end
 	local g = current - base[field]
 	if g <= 0 then return nil end
-	if field == "i" then g = math.floor(g * 10 + 0.5) / 10 end
+	if field == "i" then
+		-- Shown as a whole number: a rise that rounds to 0 isn't shown ("+0").
+		if g < 0.5 then return nil end
+		g = math.floor(g * 10 + 0.5) / 10
+	end
 	return g
 end
 

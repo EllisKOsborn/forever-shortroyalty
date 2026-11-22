@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.14.1 (not released yet)
+
+- Roster planner: an item level that rose by less than half a point no
+  longer shows as "+0".
+
 ## v0.14.0 (21 Nov 2026): raids from the calendar, attendance at the start time
 
 From the officers' second round of feedback.
