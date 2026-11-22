@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.0 (not released yet): weekly raids, away date ranges, Reserve loot button
+## v0.16.0 (22 Nov 2026): weekly raids, away date ranges, Reserve loot button
 
 - **Weekly raids:** the Calendar's day box has a **Repeat** menu: *Just this
   day*, or *Weekly, 2–12 raids*. Create raid then makes them all at once,
