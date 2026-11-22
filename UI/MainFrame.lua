@@ -69,6 +69,8 @@ function Main.ApplyLook()
 	local s = SK.DB and SK.DB.settings
 	if not s then return end
 	Theme.body = (s.font == "narrow") and "narrow" or "inter"
+	-- v0.15.0: before any page is built (pages lay out from this width).
+	Theme.SetWidth(s.window.width or "normal")
 	Theme.SetAccent(s.accent or "pink", SK.Compat.PlayerClassRGB())
 end
 

@@ -670,5 +670,18 @@ function Prof:RefreshOne(ctx)
 		(picked and ((picked.name:match("^(%S+)") or picked.name) .. " knows ") or "") .. Theme.Count(#rows, "recipe"))
 end
 
+-- v0.15.0: a wider window (Theme.SetWidth) gives the room to names.
+Theme.OnWidth(function()
+	local extra = S.contentW - Theme.BASE_CONTENT_W
+	local half = math.floor(extra / 2)
+	Prof.CRAFTERS_W = 380 + half
+	Prof.RECIPES_W = S.contentW - Prof.CRAFTERS_W - SP.l
+	Theme.Grow(BOARD_COLUMNS, "name", extra)
+	Theme.Grow(CRAFTER_COLUMNS, "name", half)
+	Theme.Grow(RECIPE_COLUMNS, "name", extra - half)
+	Theme.Grow(ALL_COLUMNS, { name = half, group = extra - half })
+	Theme.Grow(COOLDOWN_COLUMNS, { name = half, who = extra - half })
+end)
+
 SK.MainFrame:AddTab("professions", "Professions", Prof, { group = "crafting",
 	desc = "Who crafts what in the guild, every recipe in the game, and cooldowns." })

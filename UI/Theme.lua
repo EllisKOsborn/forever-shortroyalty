@@ -334,6 +334,40 @@ Theme.BORDER = { hairline = 1, slot = 1 }
 -- The width a tab's page gets: the window minus the sidebar and margins.
 Theme.SIZES.contentW = Theme.SIZES.window[1] - Theme.SIZES.sidebar - 2 * Theme.SPACE.l
 
+-- v0.15.0: the window's width is a setting (Settings > Display; owner: "we
+-- need to make the UI bigger so things aren't being cut off"). Pages lay
+-- out from SIZES.contentW when they're first built, so files that work out
+-- widths ahead of time register a function here; SetWidth (MainFrame's
+-- OnInit, before any page is built) re-runs them. A change needs a reload.
+Theme.WIDTHS = { normal = 960, wide = 1200, wider = 1440 }
+Theme.WIDTH_ORDER = { "normal", "wide", "wider" }
+Theme.WIDTH_NAME = { normal = "Normal", wide = "Wide", wider = "Extra wide" }
+Theme.width = "normal"
+Theme.BASE_CONTENT_W = Theme.SIZES.contentW -- 744: what every layout was drawn for
+
+-- Extra width on the chosen column(s): columns keep the width they were
+-- written with (`base`) and `key` gets `extra` more; or key = { [key] = px }.
+function Theme.Grow(columns, key, extra)
+	local add = type(key) == "table" and key or { [key] = extra or 0 }
+	for _, col in ipairs(columns) do
+		col.base = col.base or col.width
+		col.width = col.base + (add[col.key] or 0)
+	end
+end
+
+local sizers = {}
+function Theme.OnWidth(fn)
+	sizers[#sizers + 1] = fn
+	fn()
+end
+function Theme.SetWidth(choice)
+	if not Theme.WIDTHS[choice] then choice = "normal" end
+	Theme.width = choice
+	Theme.SIZES.window[1] = Theme.WIDTHS[choice]
+	Theme.SIZES.contentW = Theme.SIZES.window[1] - Theme.SIZES.sidebar - 2 * Theme.SPACE.l
+	for _, fn in ipairs(sizers) do fn() end
+end
+
 ---------------------------------------------------------------------------
 -- Textures (all power-of-two .tga, drawn by tools/textures.js)
 ---------------------------------------------------------------------------

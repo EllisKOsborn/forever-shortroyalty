@@ -112,6 +112,26 @@ function Settings:Build(page)
 		})
 		return menu
 	end)
+	-- v0.15.0: more room rather than bigger text (owner: things were cut off
+	-- even at 130%). Changes after a reload.
+	self.widthMenu = display:AddControl("Window width", "Room for names. After a reload.",
+		function(r)
+			return W.Menu(r, {
+				width = 150,
+				items = function()
+					local out = {}
+					for _, k in ipairs(Theme.WIDTH_ORDER) do
+						out[#out + 1] = { value = k, text = Theme.WIDTH_NAME[k] .. " (" .. Theme.WIDTHS[k] .. ")" }
+					end
+					return out
+				end,
+				get = function() return s.window.width or "normal" end,
+				set = function(v)
+					s.window.width = v
+					Settings:Refresh()
+				end,
+			})
+		end)
 	self.scale = display:AddControl("Window size", nil, function(r)
 		return W.Slider(r, { width = 110, min = 0.7, max = 1.3, step = 0.1,
 			get = function() return s.window.scale or 1 end,
@@ -132,10 +152,10 @@ function Settings:Build(page)
 	-- Reload button, shown once the font choice differs from the one in use.
 	self.reload = W.Button(general, "Reload now", nil, S.control, function() SK.Compat.ReloadUI() end, "primary")
 	self.reload:SetPoint("TOPRIGHT", display, "BOTTOMRIGHT", 0, -SP.s)
-	self.reload.tooltip = "Reloads the interface (like /reload) so the new font is used."
+	self.reload.tooltip = "Reloads the interface (like /reload) so the new font or window width is used."
 	self.reloadText = Theme.Text(general, "small", "dim")
 	self.reloadText:SetPoint("RIGHT", self.reload, "LEFT", -SP.s, 0)
-	self.reloadText:SetText("The new font shows after a reload.")
+	self.reloadText:SetText("This shows after a reload.")
 
 	-------------------------------------------------------------------------
 	-- Advanced
@@ -226,14 +246,19 @@ function Settings:Refresh()
 	self.sharing:Refresh()
 	self.profs:Refresh()
 	self.display:Refresh()
+	self.widthMenu:Refresh()
 	self.tools:Refresh()
 	self.swatches:SetColours(Settings.AccentItems())
 	local pending = (s.font == "narrow" and "narrow" or "inter") ~= Theme.body
+		or (Theme.WIDTHS[s.window.width or ""] and s.window.width or "normal") ~= Theme.width
 	self.reload:SetShown(pending)
 	self.reloadText:SetShown(pending)
 	self.sections = Settings.StatusSections()
 	self.status:SetSections(self.sections)
 end
+
+-- v0.15.0: a wider window (Theme.SetWidth) gives the room to these columns.
+Theme.OnWidth(function() Settings.COL_W = math.floor((S.contentW - SP.l) / 2) end)
 
 SK.MainFrame:AddTab("settings", "Settings", Settings, { group = "settings",
 	desc = "What you share, how the window looks, and reminders." })

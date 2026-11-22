@@ -857,6 +857,7 @@ function settings() {
   }
   const swatches = `<span class="swatches">${[["pink", "#F06BB0"], ["gold", "#FFC000"], ["class", CLASS.MAGE]].map((a) => `<i class="${S.accent === a[0] ? "on" : ""}" data-accent="${a[0]}" style="background:${a[1]}"></i>`).join("")}</span>`;
   const font = `<span class="menu" style="width:150px">${btn(S.font === "narrow" ? "Arial Narrow (game)" : "Inter", "", 'id="fontMenu"').replace("</span>", '<i class="arrow"></i></span>')}</span>`;
+  const widthMenu = `<span class="menu" style="width:150px">${btn("Wide (1200)").replace("</span>", '<i class="arrow"></i></span>')}</span>`;
   const slider = `<span class="slider"><span class="track"><b style="width:${(S.scale - 0.7) / 0.6 * 100}%"></b><i style="left:${(S.scale - 0.7) / 0.6 * 100}%"></i></span><span>${Math.round(S.scale * 100)}%</span></span>`;
   return top + setCard("Sharing", [{ name: "Share and receive guild data", desc: "Off: nothing is sent or received.", ctl: sw("sync") },
       { name: "Share my gear and talents", desc: "Gear, item level and talents.", ctl: sw("gear") },
@@ -866,7 +867,7 @@ function settings() {
       { name: "Remind me to reopen profession windows", desc: "In chat, at most every few days.", ctl: sw("nudges") },
       { name: "Record guild milestones", desc: "For the Overview; kept on this computer.", ctl: sw("feed") }], `left:0;top:${t0 + 20 + 4 * T.sizes.settingRow + 2 + 22 + T.space.l}px;width:${W}px`)
     + setCard("Display", [{ name: "Accent colour", desc: "Pink like the crest, gold, or your class.", ctl: swatches }, { name: "Font", desc: "Changes after a reload.", ctl: font },
-      { name: "Window size", ctl: slider }, { name: "Minimap button", ctl: sw("minimap") }, { name: "Reduce motion", desc: "No window, tab or sync animations.", ctl: sw("reduce") },
+      { name: "Window width", desc: "Room for names. After a reload.", ctl: widthMenu }, { name: "Window size", ctl: slider }, { name: "Minimap button", ctl: sw("minimap") }, { name: "Reduce motion", desc: "No window, tab or sync animations.", ctl: sw("reduce") },
       { name: "Short Words on flights", desc: "A small box offers a game on flight paths.", ctl: sw("flight") }],
       `left:${x2}px;top:${t0}px;width:${W}px`);
 }

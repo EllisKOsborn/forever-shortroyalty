@@ -1657,4 +1657,25 @@ function RT:RefreshCalendar(now)
 	end
 end
 
+-- v0.15.0: a wider window (Theme.SetWidth) gives the lists room: a third
+-- to the raid lists on the left, the rest to names.
+Theme.OnWidth(function()
+	local extra = S.contentW - Theme.BASE_CONTENT_W
+	local left = math.floor(extra / 3)
+	RT.LEFT_W = 270 + left
+	RT.RIGHT_W = S.contentW - RT.LEFT_W - SP.xl
+	RT.ATT_LEFT_W = 270 + left
+	RT.ATT_RIGHT_W = S.contentW - RT.ATT_LEFT_W - SP.xl
+	Theme.Grow(RT.EVENT_COLUMNS, "raid", left)
+	Theme.Grow(RT.LINEUP_COLUMNS, "name", extra - left)
+	Theme.Grow(RT.RECORD_COLUMNS, "raid", left)
+	Theme.Grow(RT.PEOPLE_COLUMNS, "name", extra - left)
+	Theme.Grow(RT.TOTAL_COLUMNS, "name", extra)
+	RT.GRP_SIDE_W = 200 + math.floor(extra / 4)
+	RT.GRP_W = S.contentW - RT.GRP_SIDE_W - SP.l
+	RT.ASG_BOSS_W = 190 + math.floor(extra / 4)
+	RT.ASG_IN_W = 190 + math.floor(extra / 4)
+	RT.ASG_MID_W = S.contentW - RT.ASG_BOSS_W - RT.ASG_IN_W - 2 * SP.l
+end)
+
 SK.MainFrame:AddTab("raids", "Raids", RT, { group = "guild", icon = Theme.TEX.raids })

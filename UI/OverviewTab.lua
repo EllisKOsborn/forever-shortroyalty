@@ -275,4 +275,7 @@ function Ov.StartRows(steps)
 	return rows
 end
 
+-- v0.15.0: a wider window (Theme.SetWidth) gives the room to these columns.
+Theme.OnWidth(function() Ov.COL_W = math.floor((S.contentW - SP.l) / 2) end)
+
 SK.MainFrame:AddTab("overview", "Overview", Ov, { group = "guild" })

@@ -321,3 +321,13 @@ addon read.
 85. [ ] Hover an item the game doesn't know yet (e.g. Stormrage Cover): the
     tooltip says "Head, Leather" and "Not in the game's item data yet".
     Hover Onyxia Hide Backpack: the game's own item tooltip.
+
+## v0.15.0 A wider window
+
+84. [ ] Settings → Display → **Window width: Extra wide**, *Reload now*.
+    The window is much wider and still fits the screen (at 130% it shrinks
+    to fit). The roster planner shows full names and longer notes.
+85. [ ] Click through every page at Extra wide: nothing overlaps, lists
+    fill the width (Raids, Groups, Loot, Find a crafter, Professions,
+    Short Words, Character, Settings).
+86. [ ] Back to **Normal**, reload: the window looks as before.

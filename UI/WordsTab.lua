@@ -498,4 +498,11 @@ function Words:Refresh()
 	self.boardCount:SetText(Theme.Count(#rows, "player"))
 end
 
+-- v0.15.0: a wider window (Theme.SetWidth) gives the room to these columns.
+Theme.OnWidth(function()
+	local extra = S.contentW - Theme.BASE_CONTENT_W
+	Words.RIGHT_W = S.contentW - Words.LEFT_W - SP.xl - SP.xs
+	for _, columns in pairs(Words.COLUMNS) do Theme.Grow(columns, "name", extra) end
+end)
+
 SK.MainFrame:AddTab("words", "Short Words", Words, { group = "games", icon = Theme.TEX.words })

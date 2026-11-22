@@ -114,7 +114,9 @@ end
 -- The details area: two scrolling columns of sections.
 Char.DOLL_W = 236
 -- content width = doll + gap + column + (gap + scroll bar) + column + scroll bar
-Char.DETAIL_COL_W = math.floor((S.contentW - Char.DOLL_W - SP.xl - (SP.xl + SP.m) - SP.m) / 2)
+Theme.OnWidth(function() -- v0.15.0: wider window, wider columns
+	Char.DETAIL_COL_W = math.floor((S.contentW - Char.DOLL_W - SP.xl - (SP.xl + SP.m) - SP.m) / 2)
+end)
 
 function Char:Build(page)
 	-- Header: back link, then actions on the right (Whisper, and a quiet

@@ -54,6 +54,21 @@ bridged to the addon only by copy and paste.
   stand-in squares in the preview; Blizzard icons aren't in the repo).
   TESTING 84–85. Unverified in game: whether `Interface\Icons\<name>`
   paths load in Forever (else blank icons; the game's file IDs once known).
+- **v0.15.0 (built 22 Nov on the branch, NOT released; owner: "We need to
+  make the UI bigger so things aren't being cut off" → "Build that"): window
+  width setting.** `Theme.WIDTHS` normal 960 / wide 1200 / wider 1440,
+  `settings.window.width`, `Theme.SetWidth(choice)` (called from
+  `Main.ApplyLook` in MainFrame's OnInit, before any page builds) sets
+  `SIZES.window[1]`/`contentW` and re-runs every `Theme.OnWidth(fn)` sizer;
+  each UI file registers one (before its `AddTab`) that recomputes its
+  widths and calls `Theme.Grow(columns, key | {key = px}, extra)` (columns
+  keep `base`, flexible ones get `extra` = contentW − `BASE_CONTENT_W` 744).
+  **New width-dependent constants must go in a sizer**, never plain
+  file-level `S.contentW` maths. Settings: `widthMenu`, Reload now when the
+  width differs from `Theme.width`. Planner: Name 124, Level/iLvl 40.
+  `FitScale` still shrinks a window bigger than the screen. Tests
+  `tests/v0150_width_spec.lua`; picture `settings.png`. TESTING 84–86.
+  The preview draws Normal width only. The v0.14.2 entry below ships in it.
 - **v0.14.2 (not released yet; owner 22 Nov: "Remove the + feature
   altogether, we don't need it"):** the planner's level/item level gains
   are gone: `RP.Record/Gain`, `HISTORY_DAYS/GAIN_DAYS`, rows

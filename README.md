@@ -49,7 +49,7 @@
 | ⚒️ **Find a crafter** | Search an item or recipe and see who in the guild can make it, online first, with its reagents and your bag counts |
 | 🧪 **Professions** | Three page tabs: **Guild** (every profession in the guild, then each profession's crafters and recipes), **Recipes** (**every recipe in the game**, by name, group or material) and **Cooldowns**; specialisations, favourites, skill-up colours from Forever's own data, and where to learn each recipe |
 | 🔤 **Short Words** | A five-letter word game: **Daily** (one word a day for the whole guild) and **Free for all** (keep going), each with **Today** and **All time** guild leaderboards; today's word offered on flight paths |
-| ⚙️ **Settings** | Sharing and privacy switches, accent colour, font, window size and reminders; tools and a live status read-out under **Advanced** |
+| ⚙️ **Settings** | Sharing and privacy switches, accent colour, font, window width and size, and reminders; tools and a live status read-out under **Advanced** |
 | 🧨 **Everywhere** | A sidebar window in your pick of accent colour, `/sr`, a minimap button, short guild lines on item tooltips, chat reminders and a copyable debug report |
 
 ### 🏰 Overview
@@ -329,7 +329,7 @@ Two page tabs. **General** is rows of switches, each with one line saying
 what it does:
 
 - **Sharing:** *Share and receive guild data* (sync on or off), *Share my gear and talents*, *Share my recipes* (recipes, skill levels and cooldowns), *Share my Short Words results*. Notes and officer notes are never shared.
-- **Display:** **Accent colour** (pink like the crest, gold, or your class colour: it changes at once), **Font** (Inter or the game's Arial Narrow, after a reload: a *Reload now* button appears), **Window size** (a slider, 70% to 130%), *Minimap button*, **Reduce motion**, *Short Words on flights*.
+- **Display:** **Accent colour** (pink like the crest, gold, or your class colour: it changes at once), **Font** (Inter or the game's Arial Narrow, after a reload: a *Reload now* button appears), **Window width** (v0.15.0: Normal, Wide or Extra wide, after a reload; every page uses the extra room, so names and notes aren't cut off), **Window size** (a slider, 70% to 130%: makes everything bigger, text included), *Minimap button*, **Reduce motion**, *Short Words on flights*.
 - **Professions and tooltips:** *Guild lines in item tooltips*, *Remind me to reopen profession windows*, *Record guild milestones*.
 
 **Advanced** holds the rest:

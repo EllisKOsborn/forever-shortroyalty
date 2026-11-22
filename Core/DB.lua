@@ -11,7 +11,7 @@ local DEFAULTS = {
 		sync = true,
 		debug = false,
 		minimap = { hide = false, minimapPos = 210 },
-		window = { point = "CENTER", x = 0, y = 0, scale = 1, tall = 0 }, -- tall: extra height (v0.13.0)
+		window = { point = "CENTER", x = 0, y = 0, scale = 1, tall = 0, width = "normal" }, -- tall (v0.13.0), width (v0.15.0)
 		share = { gear = true, recipes = true, words = true }, -- privacy toggles (A7; words v0.7.0)
 		groupAlts = true,                         -- Roster: alts under their main
 		main = nil,                               -- guid of the player's main

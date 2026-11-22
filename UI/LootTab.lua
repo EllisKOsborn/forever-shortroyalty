@@ -1022,4 +1022,23 @@ function LT:Show(view)
 	SK.MainFrame:Select("loot")
 end
 
+-- v0.15.0: a wider window (Theme.SetWidth) gives the room to these columns.
+Theme.OnWidth(function()
+	local extra = S.contentW - Theme.BASE_CONTENT_W
+	local left = math.floor(extra / 3)
+	LT.LEFT_W = 330 + left
+	LT.RIGHT_W = S.contentW - LT.LEFT_W - SP.xl
+	LT.NIGHT_LEFT_W = 270 + left
+	LT.NIGHT_RIGHT_W = S.contentW - LT.NIGHT_LEFT_W - SP.xl
+	Theme.Grow(LT.ITEM_COLUMNS, "item", left)
+	Theme.Grow(LT.WHO_COLUMNS, "item", extra - left)
+	Theme.Grow(LT.WHY_COLUMNS, "what", extra)
+	Theme.Grow(LT.ALL_COLUMNS, "item", extra)
+	local half = math.floor(extra / 2)
+	Theme.Grow(LT.HISTORY_COLUMNS, { item = half, why = extra - half })
+	Theme.Grow(LT.DROP_COLUMNS, "item", left)
+	Theme.Grow(LT.ROLL_COLUMNS, "name", extra - left)
+	Theme.Grow(LT.END_COLUMNS, { items = half, why = extra - half })
+end)
+
 SK.MainFrame:AddTab("loot", "Loot", LT, { group = "guild", icon = Theme.TEX.loot })

@@ -487,7 +487,7 @@ local function tierRank(role) return function(a, b)
 end end
 
 Roster.PLAN_COLUMNS = {
-	{ key = "name", title = "Name", width = 100, sort = function(a, b) return a.name:lower() < b.name:lower() end },
+	{ key = "name", title = "Name", width = 124, sort = function(a, b) return a.name:lower() < b.name:lower() end },
 	{ key = "spec", title = "Spec", width = 64, sort = function(a, b) return (a.spec or "~") < (b.spec or "~") end },
 	{ key = "status", title = "Status", width = 58, click = true, sort = RP.DefaultOrder },
 	{ key = "TANK", title = "Tank", width = 48, click = true, sort = tierRank("TANK") },
@@ -496,8 +496,8 @@ Roster.PLAN_COLUMNS = {
 	-- v0.13.0: away days in words ("9-15 Dec", "Every Tue"); click for a mini calendar.
 	{ key = "away", title = "Away", width = 72, click = true,
 		sort = function(a, b) return (a.awayDays[1] and a.awayDays[1].at or 1e12) < (b.awayDays[1] and b.awayDays[1].at or 1e12) end },
-	{ key = "level", title = "Level", width = 52, align = "RIGHT", sort = function(a, b) return a.level < b.level end },
-	{ key = "ilvl", title = "iLvl", width = 52, align = "RIGHT", sort = function(a, b) return (a.ilvl or 0) < (b.ilvl or 0) end },
+	{ key = "level", title = "Level", width = 40, align = "RIGHT", sort = function(a, b) return a.level < b.level end },
+	{ key = "ilvl", title = "iLvl", width = 40, align = "RIGHT", sort = function(a, b) return (a.ilvl or 0) < (b.ilvl or 0) end },
 	{ key = "att", title = "Ony", width = 40, align = "RIGHT",
 		sort = function(a, b) return (a.att == "yes" and 1 or 0) < (b.att == "yes" and 1 or 0) end },
 	{ key = "ench", title = "Ench", width = 30, align = "RIGHT", sort = function(a, b) return (a.ench or 99) < (b.ench or 99) end },
@@ -1151,6 +1151,17 @@ function Roster:Refresh()
 	self.list:SetEmptyText(Roster.EmptyText(guild ~= nil, self.filter))
 	self.list:SetItems(rows)
 end
+
+-- v0.15.0: a wider window (Theme.SetWidth): names, professions and notes
+-- get the room.
+Theme.OnWidth(function()
+	local extra = S.contentW - Theme.BASE_CONTENT_W
+	local half = math.floor(extra / 2)
+	Theme.Grow(COLUMNS, { name = half, profs = extra - half })
+	Theme.Grow(ATT_COLUMNS, { name = half, att = extra - half })
+	local name, spec = math.floor(extra * 0.35), math.floor(extra * 0.15)
+	Theme.Grow(Roster.PLAN_COLUMNS, { name = name, spec = spec, note = extra - name - spec })
+end)
 
 SK.MainFrame:AddTab("roster", "Roster", Roster, { group = "guild",
 	desc = "Everyone in the guild. Click a name for their gear, talents and professions." })

@@ -1,7 +1,16 @@
 # Changelog
 
-## v0.14.2 (not released yet)
+## v0.15.0 (not released yet): a wider window
 
+- **Window width** in Settings → Display: **Normal** (960, as before),
+  **Wide** (1200) or **Extra wide** (1440), after a reload (a *Reload now*
+  button appears). Every page uses the extra room: names, notes, raid
+  titles, items and recipes get it first, so less is cut off with "…".
+  The window size slider (70–130%) still makes everything bigger; if the
+  window wouldn't fit the screen, it's shrunk to fit. Tip: Wide or Extra
+  wide at 100–110% shows the most.
+- Roster planner: the Name column is wider and Level / iLvl narrower, even
+  at Normal width.
 - **Roster planner: the green "+" gains are gone** (owner: "we don't need
   it"). Level and item level no longer show "+1" / "+2", the "All" line no
   longer says how many reached 60 this week, and each officer's saved

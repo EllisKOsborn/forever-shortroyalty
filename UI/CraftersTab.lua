@@ -339,5 +339,15 @@ function Crafters:Refresh()
 		(skillUps and ("\n" .. skillUps) or ""))
 end
 
+-- v0.15.0: a wider window (Theme.SetWidth) gives the room to these columns.
+Theme.OnWidth(function()
+	local extra = S.contentW - Theme.BASE_CONTENT_W
+	local half = math.floor(extra / 2)
+	Crafters.RESULTS_W = 404 + half
+	Crafters.SIDE_W = S.contentW - Crafters.RESULTS_W - SP.l
+	Theme.Grow(RESULT_COLUMNS, "name", half)
+	Theme.Grow(CRAFTER_COLUMNS, "name", extra - half)
+end)
+
 SK.MainFrame:AddTab("crafters", "Find a crafter", Crafters, { group = "crafting",
 	desc = "Search an item or recipe to see who in the guild can make it, and whisper them." })
