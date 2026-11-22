@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.14.1 (not released yet): item names on the Loot page
+## v0.14.1 (22 Nov 2026): item names on the Loot page
 
 - **The Loot page shows items by name** (the guild saw "item 16900",
   "item 17064"… for most of Onyxia's loot). Forever's game data doesn't hold
