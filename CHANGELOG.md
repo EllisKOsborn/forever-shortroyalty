@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.3 (not released yet): raid fixes from a full check
+## v0.16.3 (22 Nov 2026): raid fixes from a full check
 
 A walk through the whole raid section (owner: "run some tests on the raid
 section as a whole to spot bugs or errors"):
