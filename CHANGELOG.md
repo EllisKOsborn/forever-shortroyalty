@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.2 (not released yet): away players in the line-up, calendar "away" count, day box button
+## v0.16.2 (22 Nov 2026): away players in the line-up, calendar "away" count, day box button
 
 - **Away players show on the raid** (owner: "it shouldn't only show away
   if they're signed, as they realistically wouldn't be signing"): a raid's
