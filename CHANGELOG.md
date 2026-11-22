@@ -2,8 +2,11 @@
 
 ## v0.14.2 (not released yet)
 
-- Roster planner: an item level that rose by less than half a point no
-  longer shows as "+0".
+- **Roster planner: the green "+" gains are gone** (owner: "we don't need
+  it"). Level and item level no longer show "+1" / "+2", the "All" line no
+  longer says how many reached 60 this week, and each officer's saved
+  history of levels and item levels is deleted. The faint "+3" next to a
+  name (alts) stays.
 
 ## v0.14.1 (22 Nov 2026): item names on the Loot page
 

@@ -558,7 +558,6 @@ function rosterPlanner() {
   const awayCell = (name) => AW[name] ? `<span class="small ${AW[name][1] ? "bad" : "dim"}">${AW[name][0]}</span>` : `<span class="faint">-</span>`;
   const NW = 744 - Object.values(W).reduce((a, b) => a + b, 0) - 12;
   const cell = (w, html, r, pad) => `<span class="cell ${r ? "r" : ""}" style="width:${w}px;${pad === 0 ? "padding:0;text-align:center" : pad === 1 ? "overflow:visible" : ""}">${html}</span>`;
-  const ILG = { Jumpwick: 3, Plopper: 4, Procella: 2, Thalgrim: 2 };
   const row = (r) => {
     const extra = r[13] ? ` <span class="faint small">+${r[13]}</span>` : "";
     const cells = [cell(W.n, cls(r[0]) + extra),
@@ -566,8 +565,8 @@ function rosterPlanner() {
       cell(W.st, r[2] ? `<span class="${r[2] === "Raider" ? "dim" : r[2] === "Social" ? "faint" : "acc"}">${r[2]}</span>` : `<span class="spark">Not set</span>`, 0, 0),
       cell(W.T, roleCell(r, "T"), 0, 0), cell(W.H, roleCell(r, "H"), 0, 0), cell(W.D, roleCell(r, "D"), 0, 0),
       cell(W.wk, awayCell(r[0].name)),
-      cell(W.l, r[4] === 60 ? `<span class="good">60</span>` : `${r[4]}${r[5] ? ` <span class="good small">+${r[5]}</span>` : ""}`, 1),
-      cell(W.i, `${r[6]}${ILG[r[0].name] ? ` <span class="good small">+${ILG[r[0].name]}</span>` : ""}`, 1),
+      cell(W.l, r[4] === 60 ? `<span class="good">60</span>` : `${r[4]}`, 1),
+      cell(W.i, `${r[6]}`, 1),
       cell(W.a, r[7] ? `<span class="good">yes</span>` : `<span class="faint">no</span>`, 1),
       cell(W.e, r[8] ? `<span class="spark">${r[8]}</span>` : `<span class="faint">0</span>`, 1),
       cell(W.seen, r[9] >= 7 ? `<span class="spark">${r[9]}d</span>` : r[9] ? `${r[9]}d` : `<span class="good">now</span>`, 1),
@@ -592,7 +591,7 @@ function rosterPlanner() {
   const chips = [["A", "All", 46], ["T", "Tanks", "2+3"], ["H", "Healers", "4+3"], ["D", "DPS", "25+3"], ["N", "Not sorted", 12]]
     .map(([k, t, n]) => `<span class="chip ${filter === k ? "on" : ""}" style="white-space:nowrap">${t}&nbsp;&nbsp;<span class="${filter === k ? "" : "faint"}">${n}</span></span>`).join("");
   const summary = filter === "A"
-    ? "46 players  ·  31 at 60 (6 this week)  ·  8 at 55-59  ·  22 attuned to Onyxia  ·  11 missing enchants  ·  5 without the addon"
+    ? "46 players  ·  31 at 60  ·  8 at 55-59  ·  22 attuned to Onyxia  ·  11 missing enchants  ·  5 without the addon"
     : "Click a status, role, away or note cell to change it. Click a name for their character.";
   const top = `<div class="search abs" style="left:0;top:0;width:240px"><input placeholder="Search name, profession, note" value=""></div>
     <div class="menu abs" style="left:248px;top:0;width:28px">${btn("···", "", 'style="padding:0;width:28px;justify-content:center"')}</div>

@@ -43,7 +43,6 @@ local DEFAULTS = {
 	},
 	officer = {},   -- [guid] = true: /sr officer turned the officer tools on for this character (v0.8.0)
 	raidRole = {},  -- [guid] = "TANK" | "HEALER" | "DPS", the role picked for raid sign-ups (v0.8.0)
-	rosterProgress = {}, -- [guid] = { { d = day, l = level, i = item level } } seen by this officer (v0.13.0, local)
 	lootNight = {}, -- [raid id] = the loot officer's night: kills, drops, rolls, wins (v0.9.0, local)
 	own = {},             -- [guid] = full profile of our own characters (never sent)
 	cooldownSpells = {},  -- [guid] = { [recipeID] = true } recipes with cooldowns
@@ -67,6 +66,7 @@ local DEFAULTS = {
 local function migrate(db)
 	-- schema 1 is the first version; future migrations go here, e.g.
 	-- if db.schema < 2 then ... db.schema = 2 end
+	db.rosterProgress = nil -- v0.14.2: the planner's "+" gains were removed (owner)
 	db.schema = SK.SCHEMA
 end
 

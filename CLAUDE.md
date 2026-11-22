@@ -54,6 +54,14 @@ bridged to the addon only by copy and paste.
   stand-in squares in the preview; Blizzard icons aren't in the repo).
   TESTING 84–85. Unverified in game: whether `Interface\Icons\<name>`
   paths load in Forever (else blank icons; the game's file IDs once known).
+- **v0.14.2 (not released yet; owner 22 Nov: "Remove the + feature
+  altogether, we don't need it"):** the planner's level/item level gains
+  are gone: `RP.Record/Gain`, `HISTORY_DAYS/GAIN_DAYS`, rows
+  `levelGain/ilvlGain`, Summary `gained` ("N this week"), the
+  `SK.DB.rosterProgress` default (cleared in `migrate`), preview `ILG`.
+  The owner had found the gains misleading (history only started when
+  each officer installed v0.13.0). Don't bring back item level tracking
+  unless asked (proposed: shared per-player history; owner declined).
 - **v0.14.0 (released 21 Nov on `main`, owner: "Push to main"; officers'
   second round, owner relayed the list): raids from the calendar, attendance at
   the start time.** Owner's answers (21 Nov): third status **Social**; late
@@ -123,8 +131,8 @@ bridged to the addon only by copy and paste.
     `AwayDays(officerDays, selfAway, now)` (next `AWAY_AHEAD` 28 days, officer
     days and the player's own `Absences`), `AwayText` ("9-15 Dec", "Every
     Tue"), rows `awayText/awayClash` (a raid that day, `ctx.raidDays`)/
-    `awayNow` (next 7 days → header "AWAY THIS WEEK: …"), progress `Record/Gain`
-    (`SK.DB.rosterProgress`, local, 35 days, gain vs ≥7 days ago).
+    `awayNow` (next 7 days → header "AWAY THIS WEEK: …"); progress `Record/Gain`
+    (`SK.DB.rosterProgress`) were removed in v0.14.2.
   - `UI/RosterTab.lua`: the Officers chip shows the planner
     (`BuildOfficers/RefreshOfficers`; `PLAN_COLUMNS` with `click` cells drawn
     as pill buttons via List `decorate/update`; `W.PopMenu` cell menus,

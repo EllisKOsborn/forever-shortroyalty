@@ -518,10 +518,9 @@ local function setPlanCell(fs, r, col)
 		fs:SetText(r.spec and Theme.Paint("dim", r.spec) or Theme.DASH)
 	elseif k == "level" then
 		local lvl = r.level >= RP.MAX_LEVEL and Theme.Paint("good", tostring(r.level)) or tostring(r.level)
-		fs:SetText(lvl .. (r.levelGain and Theme.Paint("good", " +" .. r.levelGain) or ""))
+		fs:SetText(lvl)
 	elseif k == "ilvl" then
-		fs:SetText(r.ilvl and (string.format("%d", r.ilvl) .. (r.ilvlGain and Theme.Paint("good", " +" .. math.floor(r.ilvlGain + 0.5)) or ""))
-			or Theme.DASH)
+		fs:SetText(r.ilvl and string.format("%d", r.ilvl) or Theme.DASH)
 	elseif k == "att" then
 		fs:SetText(r.att == "yes" and Theme.Paint("good", "yes") or (r.att == "no" and Theme.Paint("faint", "no") or Theme.DASH))
 	elseif k == "ench" then
@@ -1001,10 +1000,9 @@ function Roster:PlanRows()
 		if not e.x and e.at >= now - 86400 then raidDays[date("%Y-%m-%d", e.at)] = true end
 	end
 	local rows = RP.Build({ guild = guild, dir = SK.OfficerDir:Get(guild) or {}, now = now, me = SK.Compat.PlayerGUID(),
-		progress = SK.DB.rosterProgress, signups = signups, raidDays = raidDays,
+		signups = signups, raidDays = raidDays,
 		profile = function(g) return SK.Profile:Get(g, guild) end,
 		isOwn = function(g) return SK.DB.account[g] == true end })
-	RP.Record(SK.DB.rosterProgress, rows, now)
 	return rows, guild, now
 end
 

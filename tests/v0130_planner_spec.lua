@@ -147,7 +147,7 @@ describe("v0.13.0 roster planner rows and views", function()
 
 	local function build()
 		return RP.Build({ guild = SK.DBM:Guild(), dir = OD:Get(), now = W.now, me = W.player.guid,
-			progress = SK.DB.rosterProgress, isOwn = function(g) return SK.DB.account[g] == true end })
+			isOwn = function(g) return SK.DB.account[g] == true end })
 	end
 	local function byName(rows)
 		local out = {}
@@ -222,24 +222,6 @@ describe("v0.13.0 roster planner rows and views", function()
 		table.sort(items, function(a, b) return cmp(b, a) end)
 		assert.is_true(items[1].section)
 		assert.equal("Bob Stone", items[2].name)
-	end)
-
-	it("remembers progress once a day and shows the last week's gain", function()
-		local store = SK.DB.rosterProgress
-		local rows = build()
-		W.now = W.now - 8 * 86400
-		RP.Record(store, { { guid = CAT, level = 54, ilvl = 50 } }, W.now)
-		W.now = W.now + 8 * 86400
-		RP.Record(store, rows, W.now)
-		RP.Record(store, rows, W.now)
-		assert.equal(2, #store[CAT])
-		local r = byName(build())
-		assert.equal(4, r["Cat Fern"].levelGain)
-		assert.equal(4.4, r["Cat Fern"].ilvlGain)
-		assert.is_nil(r["Bob Stone"].levelGain)
-		W.now = W.now + 60 * 86400
-		RP.Record(store, rows, W.now)
-		assert.equal(1, #store[CAT])
 	end)
 
 	it("sums up the guild and says away days in words", function()

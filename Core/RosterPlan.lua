@@ -4,13 +4,12 @@
 -- gear and attunement are going (from the addon's profiles), and officers'
 -- notes. Officers only; members never see it.
 --
--- Everything here is pure apart from Record (the local progress history).
+-- Everything here is pure.
 --   Build(ctx)         -> rows, one per player (alts folded into their main)
 --   View(rows, opts)   -> items for the table: rows, and for a role its group
 --                         headers (mains, backups, unsorted whose spec fits)
 --   Counts(rows)       -> chip counts; Summary(rows) -> the "All" line
 --   AwayDays / AwayText: who's away in the next four weeks, in words
---   Record / Gain      -> each officer's own daily level / item level history
 local _, SK = ...
 
 local RP = SK:NewModule("RosterPlan")
@@ -18,8 +17,6 @@ local RP = SK:NewModule("RosterPlan")
 RP.MAX_LEVEL = 60          -- Forever's level cap
 RP.CLOSE_LEVEL = 55        -- "close": 55 to 59
 RP.STALE = 7 * 86400       -- data older than this needs a look
-RP.HISTORY_DAYS = 35
-RP.GAIN_DAYS = 7
 RP.ROLE_KEYS = { T = "TANK", H = "HEALER", D = "DPS" }
 RP.ROLE_TITLE = { T = "Tanks", H = "Healers", D = "DPS" }
 RP.STATUS_NAME = { r = "Raider", b = "Backup", s = "Social" }
@@ -92,48 +89,6 @@ function RP.AwayText(days, selfAway)
 end
 
 ---------------------------------------------------------------------------
--- Progress history (local to each officer's game, never sent)
----------------------------------------------------------------------------
--- store[guid] = { { d = day, l = level, i = item level }, ... } oldest first.
-function RP.Record(store, rows, now)
-	local day = math.floor(now / 86400)
-	for _, r in ipairs(rows) do
-		if r.level and r.level > 0 then
-			local h = store[r.guid] or {}
-			store[r.guid] = h
-			local last = h[#h]
-			if last and last.d == day then
-				last.l, last.i = r.level, r.ilvl or last.i
-			else
-				h[#h + 1] = { d = day, l = r.level, i = r.ilvl }
-			end
-			while #h > 0 and h[1].d < day - RP.HISTORY_DAYS do table.remove(h, 1) end
-		end
-	end
-end
-
--- How much `field` ("l" or "i") rose over the last GAIN_DAYS days (nil when
--- unknown or not up). The baseline is the newest entry at least GAIN_DAYS
--- old, else the oldest entry from before today.
-function RP.Gain(h, now, field, current)
-	if not h or not current then return nil end
-	local today = math.floor(now / 86400)
-	local base
-	for _, e in ipairs(h) do
-		if e.d <= today - RP.GAIN_DAYS then base = e elseif not base and e.d < today then base = e end
-	end
-	if not base or not base[field] then return nil end
-	local g = current - base[field]
-	if g <= 0 then return nil end
-	if field == "i" then
-		-- Shown as a whole number: a rise that rounds to 0 isn't shown ("+0").
-		if g < 0.5 then return nil end
-		g = math.floor(g * 10 + 0.5) / 10
-	end
-	return g
-end
-
----------------------------------------------------------------------------
 -- Rows
 ---------------------------------------------------------------------------
 local function onyRaid()
@@ -142,7 +97,7 @@ local function onyRaid()
 	end
 end
 
--- ctx = { guild, dir, now, me, progress, isOwn(guid), signups = { [guid] = "y" | "t" | "n" },
+-- ctx = { guild, dir, now, me, isOwn(guid), signups = { [guid] = "y" | "t" | "n" },
 --         raidDays = { ["2026-12-09"] = true } days with a raid on the board }
 function RP.Build(ctx)
 	local guild, dir, now = ctx.guild, ctx.dir or {}, ctx.now
@@ -191,7 +146,6 @@ function RP.Build(ctx)
 			local level = (p and p.level) or m.level or 0
 			local own = ctx.isOwn and ctx.isOwn(guid)
 			local age = p and (own and 0 or (type(p.updated) == "number" and math.max(0, now - p.updated) or nil)) or nil
-			local hist = ctx.progress and ctx.progress[guid]
 			local tiers = OD.TiersOf(dir, guid)
 			local selfAway = SK.Absences and SK.Absences.Of(guild, guid) or nil
 			local awayDays = RP.AwayDays(OD.AwayOf(dir, guid), selfAway, now)
@@ -209,7 +163,6 @@ function RP.Build(ctx)
 				status = OD.StatusOf(dir, guid), tiers = tiers,
 				awayDays = awayDays, awayText = RP.AwayText(awayDays, selfAway), awayClash = clash, awayNow = soon,
 				notes = notes, note = notes[1] and notes[1].text or nil,
-				levelGain = RP.Gain(hist, now, "l", level), ilvlGain = RP.Gain(hist, now, "i", ilvl),
 				alts = alts[guid] or {}, signed = ctx.signups and ctx.signups[guid] or nil,
 			}
 			table.sort(r.alts)
@@ -246,13 +199,12 @@ function RP.Counts(rows)
 end
 
 function RP.Summary(rows)
-	local s = { people = #rows, at60 = 0, close = 0, attuned = 0, ench = 0, noAddon = 0, gained = 0 }
+	local s = { people = #rows, at60 = 0, close = 0, attuned = 0, ench = 0, noAddon = 0 }
 	for _, r in ipairs(rows) do
 		if r.level >= RP.MAX_LEVEL then s.at60 = s.at60 + 1 elseif r.close then s.close = s.close + 1 end
 		if r.att == "yes" then s.attuned = s.attuned + 1 end
 		if (r.ench or 0) > 0 then s.ench = s.ench + 1 end
 		if not r.hasData then s.noAddon = s.noAddon + 1 end
-		if r.level >= RP.MAX_LEVEL and r.levelGain then s.gained = s.gained + 1 end
 	end
 	return s
 end
@@ -260,7 +212,7 @@ end
 function RP.SummaryText(s)
 	local parts = {
 		s.people .. (s.people == 1 and " player" or " players"),
-		s.at60 .. " at 60" .. (s.gained > 0 and (" (" .. s.gained .. " this week)") or ""),
+		s.at60 .. " at 60",
 		s.close .. " at 55-59",
 		s.attuned .. " attuned to Onyxia",
 		s.ench .. " missing enchants",

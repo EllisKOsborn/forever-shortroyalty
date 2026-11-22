@@ -286,8 +286,7 @@ addon read.
 72. [ ] **Needs a look**, **Raider**, **Backup** filters; column titles sort;
     **Sign-ups** menu shows who signed up for a raid.
 73. [ ] ··· → **Taller window**: the window grows; the list shows more rows.
-74. [ ] Tomorrow, level and item level show "+N" for people who levelled or
-    upgraded (each officer's game remembers what it saw each day).
+74. [x] (Removed in v0.14.2: the "+N" level and item level gains.)
 
 ## v0.14.0 Raids from the calendar, attendance at the start time
 

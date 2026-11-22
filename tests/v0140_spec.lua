@@ -374,14 +374,12 @@ describe("v0.14.0 attendance: online at the start", function()
 	end)
 end)
 
-describe("v0.14.2 roster planner gains", function()
-	it("doesn't show an item level rise that rounds to +0", function()
+describe("v0.14.2 no progress gains", function()
+	it("has no level or item level gain, and forgets the old history", function()
 		local SK = setup()
-		local RP = SK.RosterPlan
-		local now = 30 * 86400
-		local h = { { d = 20, l = 58, i = 57.0 } }
-		assert.is_nil(RP.Gain(h, now, "i", 57.3))
-		assert.equal(0.6, RP.Gain(h, now, "i", 57.6))
-		assert.equal(2, RP.Gain(h, now, "l", 60))
+		assert.is_nil(SK.RosterPlan.Gain)
+		assert.is_nil(SK.RosterPlan.Record)
+		local db = SK.DBM:Load({ rosterProgress = { x = { { d = 1, l = 2 } } } })
+		assert.is_nil(db.rosterProgress)
 	end)
 end)
