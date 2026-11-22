@@ -358,3 +358,8 @@ addon read.
 92. [ ] Settings → Window width **Wide**, reload, Roster → Officers: Ony,
     Ench and Seen are easy to read and apart ("none" in full); Status,
     roles, Away, Level and iLvl have room; Note is the narrowest.
+
+## v0.16.2 Day box button
+
+93. [ ] Calendar → click a day you're marked away on: **Not away … after
+    all** fits inside its button and the box.

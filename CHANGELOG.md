@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.16.2 (not released yet): day box button fix
+
+- The Calendar day box's **Not away … after all** button is now as wide as
+  the box, so its text no longer runs outside the button and the box
+  (owner's screenshot). The **I'm away** button fills the space beside the
+  Until menu.
+
 ## v0.16.1 (22 Nov 2026): roster planner columns
 
 - **Roster planner readable at every window width** (owner: "Why is

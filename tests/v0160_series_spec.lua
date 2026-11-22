@@ -121,6 +121,11 @@ describe("v0.16.0 weekly series", function()
 		assert.is_false(A:IsMyDay(on(15)))
 		assert.same({ "2026-12-10", "2026-12-11", "2026-12-12", "2026-12-13", "2026-12-14" }, SK.Profile:Own().away.d)
 		assert.equal("Not away 10-14 Dec after all", RT.dayBox.away.label:GetText())
+		-- v0.16.2: the button is as wide as the box, so the text stays inside
+		local widths = {}
+		RT.dayBox.away.SetWidth = function(_, w) widths[#widths + 1] = w end
+		RT:DrawDay()
+		assert.equal(RT.DAY_W - 2 * SK.Theme.SPACE.m, widths[#widths])
 		assert.is_false(RT.dayBox.awayUntil:IsShown())
 		-- clicking it again clears all five days
 		RT.dayBox.away:GetScript("OnClick")(RT.dayBox.away)

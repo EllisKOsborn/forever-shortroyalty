@@ -1458,6 +1458,7 @@ end
 -- a year ahead (Board.AHEAD; v0.15.1, was 60 days).
 ---------------------------------------------------------------------------
 RT.DAY_W = 300
+RT.AWAY_MENU_W = 170
 RT.DAY_LINES = 4
 
 function RT:BuildDay(cal)
@@ -1494,7 +1495,7 @@ function RT:BuildDay(cal)
 	-- v0.16.0 (owner): away for a range of days, e.g. 10-14 Dec: the day
 	-- clicked is the first, the menu picks the last.
 	box.awayUntil = W.Menu(box, {
-		width = 170,
+		width = RT.AWAY_MENU_W,
 		items = function() return RT.AwayItems(RT.dayCell and RT.dayCell.at) end,
 		get = function() return RT.awayDays or 1 end,
 		set = function(v)
@@ -1641,9 +1642,13 @@ function RT:DrawDay()
 	if first then
 		-- Away already: one button clears the whole run (e.g. 10-14 Dec).
 		box.away:SetText("Not away " .. A.RangeText(first, last) .. " after all")
+		-- v0.16.2: buttons don't resize with their text, so set the width
+		-- (the label ran out of the button and the box).
+		box.away:SetWidth(RT.DAY_W - 2 * SP.m)
 		box.away:SetPoint("TOPLEFT", SP.m, -(y + SP.xs))
 	else
 		box.away:SetText("I'm away")
+		box.away:SetWidth(RT.DAY_W - 2 * SP.m - RT.AWAY_MENU_W - SP.xs)
 		box.awayUntil:ClearAllPoints()
 		box.awayUntil:SetPoint("TOPLEFT", SP.m, -(y + SP.xs))
 		box.awayUntil:Refresh()

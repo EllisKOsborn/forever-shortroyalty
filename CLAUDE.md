@@ -32,6 +32,11 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.16.2 (built 22 Nov on the branch, NOT released; owner's screenshot:
+  "fix the text going outside the box & button"):** `W.Button` doesn't
+  resize on `SetText`, so `DrawDay` sets `box.away`'s width: full box
+  (`RT.DAY_W - 2*SP.m`) for "Not away … after all", the rest beside the
+  `awayUntil` menu (`RT.AWAY_MENU_W` 170) for "I'm away". TESTING 93.
 - **v0.16.1 (released 22 Nov on `main`, owner: "push to main"; owner's Wide
   screenshot: "Why is ony/ench/seen etc so cramped together and
   unreadable?"; "Note is the least important part as it will be clickable
