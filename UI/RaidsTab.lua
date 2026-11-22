@@ -562,6 +562,22 @@ end
 
 -- Officers: undecided -> In -> Bench -> undecided.
 RT.NEXT_PLACE = { i = "b", b = "-" }
+-- v0.16.2 (owner: keep Away and Can't come separate, count them together):
+-- "3 can't come (1 away)". Away = no answer but marked away that day, or
+-- answered Can't come and marked away. Pure.
+function RT.OutText(rows)
+	local out, away = 0, 0
+	for _, r in ipairs(rows) do
+		if r.awayOnly then
+			out, away = out + 1, away + 1
+		elseif r.group == "out" then
+			out = out + 1
+			if r.away then away = away + 1 end
+		end
+	end
+	return out .. " can't come" .. (away > 0 and (" (" .. Theme.Paint("bad", away .. " away") .. ")") or "")
+end
+
 function RT:CyclePlace(r)
 	if not RT.selected then return end
 	if r.awayOnly then return SK.CharacterTab:ShowCharacter(r.guid) end -- not signed up: nothing to place
@@ -726,8 +742,7 @@ function RT:RefreshUpcoming(board, now, me)
 	-- v0.16.2: players away that day who didn't answer, after everyone else.
 	local awayRows = Board.AwayRows(board, ev, RT.Ctx(), rows2, Board.OfficerView() and SK.OfficerDir:Get() or nil)
 	for _, r in ipairs(awayRows) do rows2[#rows2 + 1] = r end
-	self.counts:SetText(Board.CountsText(sum) .. "  ·  " .. sum.maybe .. " tentative  ·  " .. sum.out .. " can't come" ..
-		(#awayRows > 0 and ("  ·  " .. Theme.Paint("bad", #awayRows .. " away")) or ""))
+	self.counts:SetText(Board.CountsText(sum) .. "  ·  " .. sum.maybe .. " tentative  ·  " .. RT.OutText(rows2))
 	local parts = {}
 	for i, r in ipairs(Board.Readiness(sum)) do
 		if i > 4 then break end

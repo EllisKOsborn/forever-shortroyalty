@@ -50,8 +50,10 @@ bridged to the addon only by copy and paste.
   "a", `statusName` "Away", `awayOnly`); officer-set days only when
   `officerDir` is passed (`RefreshUpcoming` passes it for `OfficerView`),
   so members never see them. Appended to the Raids line-up (not to
-  `LineUp`, so Groups/Auto-fill/Discord/bot text are unchanged); counts
-  end "· N away"; clicking such a row opens the character (no In/Bench).
+  `LineUp`, so Groups/Auto-fill/Discord/bot text are unchanged); owner:
+  Away stays a separate label but counts with Can't come, `RT.OutText(rows)`
+  → "3 can't come (1 away)" (away = away-only rows + declined rows marked
+  away); clicking such a row opens the character (no In/Bench).
   TESTING 95.
 - **v0.16.1 (released 22 Nov on `main`, owner: "push to main"; owner's Wide
   screenshot: "Why is ony/ench/seen etc so cramped together and

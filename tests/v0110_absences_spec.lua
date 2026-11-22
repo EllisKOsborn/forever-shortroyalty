@@ -136,7 +136,13 @@ describe("v0.11.0 absences", function()
 		local found
 		for _, r in ipairs(SK.RaidsTab.lineup.items) do if r.guid == DOG then found = r end end
 		assert.truthy(found)
+		assert.truthy(SK.RaidsTab.counts:GetText():find("1 can't come (", 1, true))
 		assert.truthy(SK.RaidsTab.counts:GetText():find("1 away", 1, true))
+		-- counted together with Can't come, the labels stay apart
+		local out = SK.RaidsTab.OutText({ { group = "out" }, { group = "out", away = true }, { awayOnly = true } })
+		assert.truthy(out:find("^3 can't come %("))
+		assert.truthy(out:find("2 away", 1, true))
+		assert.equal("1 can't come", SK.RaidsTab.OutText({ { group = "out" }, { group = "coming", away = true } }))
 		assert.equal(0, #SK.errors)
 	end)
 end)

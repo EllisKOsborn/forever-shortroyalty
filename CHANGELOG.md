@@ -5,7 +5,8 @@
 - **Away players show on the raid** (owner: "it shouldn't only show away
   if they're signed, as they realistically wouldn't be signing"): a raid's
   line-up now also lists everyone marked away that day who hasn't answered,
-  with the status **Away** in red, and the counts end with "N away".
+  with the status **Away** in red. Away and Can't come stay separate
+  labels but are counted together: "3 can't come (1 away)".
   Officers also see days an officer marked in the roster planner; other
   players only see days people marked themselves.
 
