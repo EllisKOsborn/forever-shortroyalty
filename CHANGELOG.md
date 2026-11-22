@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.15.0 (not released yet): a wider window
+## v0.15.0 (22 Nov 2026): a wider window
 
 - **Window width** in Settings → Display: **Normal** (960, as before),
   **Wide** (1200) or **Extra wide** (1440), after a reload (a *Reload now*

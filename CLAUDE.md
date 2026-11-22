@@ -54,7 +54,7 @@ bridged to the addon only by copy and paste.
   stand-in squares in the preview; Blizzard icons aren't in the repo).
   TESTING 84–85. Unverified in game: whether `Interface\Icons\<name>`
   paths load in Forever (else blank icons; the game's file IDs once known).
-- **v0.15.0 (built 22 Nov on the branch, NOT released; owner: "We need to
+- **v0.15.0 (released 22 Nov on `main`, owner: "push to main"; owner: "We need to
   make the UI bigger so things aren't being cut off" → "Build that"): window
   width setting.** `Theme.WIDTHS` normal 960 / wide 1200 / wider 1440,
   `settings.window.width`, `Theme.SetWidth(choice)` (called from
@@ -69,7 +69,7 @@ bridged to the addon only by copy and paste.
   `FitScale` still shrinks a window bigger than the screen. Tests
   `tests/v0150_width_spec.lua`; picture `settings.png`. TESTING 84–86.
   The preview draws Normal width only. The v0.14.2 entry below ships in it.
-- **v0.14.2 (not released yet; owner 22 Nov: "Remove the + feature
+- **v0.14.2 (never released on its own, shipped in v0.15.0; owner 22 Nov: "Remove the + feature
   altogether, we don't need it"):** the planner's level/item level gains
   are gone: `RP.Record/Gain`, `HISTORY_DAYS/GAIN_DAYS`, rows
   `levelGain/ilvlGain`, Summary `gained` ("N this week"), the
@@ -1054,7 +1054,7 @@ bridged to the addon only by copy and paste.
   menu hover fix); **v0.4.7** (11 Nov, colour-check fix; Profit hidden,
   owner-only); **v0.4.8** (11 Nov, cheapest levelling route); **v0.5.5**
   (11 Nov, professions upgrade); **v0.5.6** (12 Nov, levelling tools removed); **v0.5.7** (12 Nov, cooldown
-  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet); **v0.8.2** (16 Nov, "No player named" fix); **v0.9.0** (16 Nov, Reserve+: soft reserves with bonus points; the weekly loot-list workflow becomes active on `main`); **v0.9.1** (18 Nov, reserve reminders, Short Words Alt-F4 fix, creator as officer); **v0.9.2** (18 Nov, Milestones without Grats, times not cut off); **v0.9.3** (19 Nov, failed sends by kind in /sr debug, no nag for GeneralError); **v0.9.4** (19 Nov, cooldowns 49 days too long: client timer wrap); **v0.10.0–v0.10.2** (20 Nov, In/Bench + Discord copy/paste, officer roster, calendar); **v0.11.0** (20 Nov, groups, Auto-fill, Invite & arrange, away days, boss assignments); **v0.12.0** (20 Nov, our own Discord bot; the "Discord bot" workflow deploys it once the owner adds the secrets); **v0.13.0** (21 Nov, raid roster planner); **v0.14.0** (21 Nov, raids from the calendar, several instances a night, attendance at the start time); **v0.14.1** (22 Nov, item names, icons and slots on the Loot page; loot-list job daily). Tag only when
+  fix); **v0.6.0** (12 Nov, the redesign: sidebar, one accent, Inter); **v0.7.0** (13 Nov, Short Words); **v0.7.1** (14 Nov, guild streak, red letters, colour-blind colours); **v0.7.2** (14 Nov, Short Words on flights); **v0.8.0** (15 Nov, raids, sign-ups, attendance); **v0.8.1** (15 Nov, attendance shared between officers, no spreadsheet); **v0.8.2** (16 Nov, "No player named" fix); **v0.9.0** (16 Nov, Reserve+: soft reserves with bonus points; the weekly loot-list workflow becomes active on `main`); **v0.9.1** (18 Nov, reserve reminders, Short Words Alt-F4 fix, creator as officer); **v0.9.2** (18 Nov, Milestones without Grats, times not cut off); **v0.9.3** (19 Nov, failed sends by kind in /sr debug, no nag for GeneralError); **v0.9.4** (19 Nov, cooldowns 49 days too long: client timer wrap); **v0.10.0–v0.10.2** (20 Nov, In/Bench + Discord copy/paste, officer roster, calendar); **v0.11.0** (20 Nov, groups, Auto-fill, Invite & arrange, away days, boss assignments); **v0.12.0** (20 Nov, our own Discord bot; the "Discord bot" workflow deploys it once the owner adds the secrets); **v0.13.0** (21 Nov, raid roster planner); **v0.14.0** (21 Nov, raids from the calendar, several instances a night, attendance at the start time); **v0.15.0** (22 Nov, window width setting; planner "+" gains removed); **v0.14.1** (22 Nov, item names, icons and slots on the Loot page; loot-list job daily). Tag only when
   the user asks.
 
 ## Layout
