@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.15.1 (not released yet)
+## v0.15.1 (22 Nov 2026): raids any time ahead
 
 - **Raids can be made any time ahead** (owner: "there shouldn't really be
   a limit"): the 60-day limit is gone (only dates more than a year ahead
