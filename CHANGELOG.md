@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.15.1 (not released yet)
+
+- **Raids can be made any time ahead** (owner: "there shouldn't really be
+  a limit"): the 60-day limit is gone (only dates more than a year ahead
+  are turned away, as clearly wrong). Players still on v0.15.0 or older
+  get a far-off raid once it's within 60 days.
+- The Calendar's day box no longer offers **Create raid** on a day it then
+  refuses, and its "Made" / "Not made" line is shown in full under the
+  button instead of being cut off.
+
 ## v0.15.0 (22 Nov 2026): a wider window
 
 - **Window width** in Settings → Display: **Normal** (960, as before),

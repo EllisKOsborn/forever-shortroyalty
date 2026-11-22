@@ -1415,7 +1415,7 @@ end
 -- The day box (v0.14.0): click a Calendar day. Everyone: that day's raids
 -- and "I'm away this day". Officers: New raid there, with the start time
 -- and the night's instances (none picked = to be decided), any day up to
--- 60 days ahead (Board.AHEAD).
+-- a year ahead (Board.AHEAD; v0.15.1, was 60 days).
 ---------------------------------------------------------------------------
 RT.DAY_W = 300
 RT.DAY_LINES = 4
@@ -1468,7 +1468,10 @@ function RT:BuildDay(cal)
 			return out
 		end,
 		get = function() return RT.NewRaidForm().minutes or 20 * 60 end,
-		set = function(v) RT.NewRaidForm().minutes = v end,
+		set = function(v)
+			RT.NewRaidForm().minutes = v
+			RT:DrawDay()
+		end,
 	})
 	box.time.tooltip = "Start time, in your own time zone (everyone sees it in theirs)."
 	box.keys = {}
@@ -1499,7 +1502,8 @@ function RT:BuildDay(cal)
 	box.what:SetWordWrap(true)
 	box.result = Theme.Text(box, "small", "text")
 	box.result:SetJustifyH("LEFT")
-	box.result:SetWordWrap(false)
+	box.result:SetJustifyV("TOP")
+	box.result:SetWordWrap(true)
 end
 
 -- Click on a day: the day box next to it (nothing for days before today).
@@ -1565,7 +1569,10 @@ function RT:DrawDay()
 	box.away:SetPoint("TOPLEFT", SP.m, -(y + SP.xs))
 	y = y + SP.xs + S.control
 	local officer = Board.OfficerView()
-	local canMake = officer and cell.at <= now + Board.AHEAD
+	-- The start time counts, not the day (v0.15.1: the last day was offered,
+	-- then refused).
+	local startAt = Board.StartAt(Board.DayStart(cell.at, 0), RT.NewRaidForm().minutes or 20 * 60)
+	local canMake = officer and startAt <= now + Board.AHEAD
 	for _, f in ipairs({ box.newLabel, box.time, box.create, box.what, box.result }) do f:SetShown(canMake) end
 	for _, c in ipairs(box.keys) do c:SetShown(canMake) end
 	if canMake then
@@ -1589,18 +1596,21 @@ function RT:DrawDay()
 		y = y + 28
 		box.create:ClearAllPoints()
 		box.create:SetPoint("TOPLEFT", SP.m, -y)
+		y = y + S.control
+		-- v0.15.1: the result on its own lines under the button (it was cut off).
 		box.result:ClearAllPoints()
-		box.result:SetPoint("LEFT", box.create, "RIGHT", SP.s, 0)
+		box.result:SetPoint("TOPLEFT", SP.m, -(y + SP.xs))
 		box.result:SetPoint("RIGHT", -SP.m, 0)
 		box.result:SetText(RT.dayResult or "")
-		y = y + S.control
+		box.result:SetShown(RT.dayResult ~= nil)
+		if RT.dayResult then y = y + SP.xs + 28 end
 	elseif officer then
 		y = y + SP.s
 		box.what:Show()
 		box.what:ClearAllPoints()
 		box.what:SetPoint("TOPLEFT", SP.m, -y)
 		box.what:SetPoint("RIGHT", -SP.m, 0)
-		box.what:SetText("Raids can be made up to 60 days ahead.")
+		box.what:SetText("Raids can be made up to a year ahead.")
 		y = y + 16
 	end
 	box:SetHeight(y + SP.m)

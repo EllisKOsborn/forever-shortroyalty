@@ -31,7 +31,11 @@ local Compat = SK.Compat
 Board.MAX_EVENTS = 30           -- raids kept (upcoming and recent)
 Board.MAX_SIGNUPS = 100         -- sign-ups per raid
 Board.MAX_FUTURE = 300          -- a change dated more than 5 minutes ahead is refused
-Board.AHEAD = 60 * 86400        -- a raid can start at most 60 days ahead
+-- v0.15.1 (owner: "there shouldn't really be a limit, let them make it
+-- whenever they want"): no practical limit. A year and a bit only turns
+-- away clearly broken dates. (v0.15.0 and older still drop raids more than
+-- 60 days ahead until they're within 60 days, then pick them up.)
+Board.AHEAD = 400 * 86400
 Board.KEEP_AFTER = 7 * 86400    -- raids are deleted this long after they started
 Board.LISTED_AFTER = 6 * 3600   -- still listed under Upcoming this long after the start
 
@@ -701,7 +705,7 @@ function Board:Create(keys, at)
 	keys = type(keys) == "table" and Board.ParseKeys(table.concat(keys, ",")) or nil
 	if not keys then return nil, "pick a raid" end
 	if at < now - 3600 then return nil, "that time has passed" end
-	if at > now + Board.AHEAD then return nil, "that's more than 60 days ahead" end
+	if at > now + Board.AHEAD then return nil, "that's more than a year ahead" end
 	if SK.Count(board.events) >= Board.MAX_EVENTS then Board.Prune(board, now) end
 	local raid, rs = Board.RaidFields(keys)
 	local e = { by = guid, c = now, raid = raid, rs = rs, at = at, u = now }

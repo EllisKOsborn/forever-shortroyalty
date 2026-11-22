@@ -331,3 +331,8 @@ addon read.
     fill the width (Raids, Groups, Loot, Find a crafter, Professions,
     Short Words, Character, Settings).
 86. [ ] Back to **Normal**, reload: the window looks as before.
+
+## v0.15.1 Raids any time ahead
+
+87. [ ] As an officer, make a raid four months ahead from the Calendar: it
+    appears, and the line under Create raid reads in full.

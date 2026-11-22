@@ -32,6 +32,12 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.15.1 (not released yet; owner 22 Nov: "there shouldn't really be a
+  limit, let them make it whenever they want"):** `Board.AHEAD` 400 days
+  (only clearly broken dates refused; older clients keep 60 and pick far
+  raids up later). Day box: `canMake` checks the start time (StartAt with
+  the form's minutes), the time menu redraws, `box.result` wraps on its own
+  lines under Create. TESTING 87.
 - **v0.14.1 (released 22 Nov on `main`, owner: "push to main"): item names on the Loot page** (owner, 22 Nov,
   screenshot of "item 16900" rows: "WoWhead should have an API we can use,
   if not … somewhere else … reliable and updated frequently"). Cause:

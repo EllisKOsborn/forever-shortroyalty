@@ -143,7 +143,7 @@ people who were offline get them when they log in. `/sr raids` opens the page.
 <p align="center"><img src="docs/images/discord-bot.png" alt="Short Royalty and Discord: post the raid from the addon, sign up with buttons in Discord, import the sign-ups back into the game" width="100%"></p>
 <p align="center"><img src="docs/images/discord-bot-post.png" alt="The bot's raid post in Discord with sign-up buttons" width="62%"></p>
 - **Calendar** (v0.10.2): a month view with each raid on its day, coloured by your answer (green signed up or in, pink bench). Click a raid to open it. **<** / **>** change month, **Today** comes back.
-- **Click a day** (v0.14.0) for the day box: that day's raids and **I'm away this day** for everyone. Officers also make a raid there: start time, and the night's instances (Barrow, Hyjal, Onyxia, one or several; none = **to be decided**), up to 60 days ahead. The **New raid** tab is gone.
+- **Click a day** (v0.14.0) for the day box: that day's raids and **I'm away this day** for everyone. Officers also make a raid there: start time, and the night's instances (Barrow, Hyjal, Onyxia, one or several; none = **to be decided**), any time ahead (v0.15.1). The **New raid** tab is gone.
 
 <p align="center"><img src="docs/images/raids-calendar-day.png" alt="Raids calendar: the day box with I'm away this day and New raid (time and instances)" width="100%"></p>
 

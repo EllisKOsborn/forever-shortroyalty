@@ -68,7 +68,9 @@ describe("v0.14.0 raid nights", function()
 		local one = B:Create("barrow", W.now + 3600)
 		assert.is_nil(one.rs) -- one instance keeps the v0.8.0 shape
 		assert.same({ "barrow" }, B.Keys(one))
-		assert.is_nil((B:Create({}, W.now + 61 * 86400)))
+		-- v0.15.1: no practical limit (a year and a bit).
+		assert.truthy(B:Create({}, W.now + 200 * 86400))
+		assert.is_nil((B:Create({}, W.now + 401 * 86400)))
 	end)
 
 	it("checks rs against raid when it arrives", function()
@@ -186,7 +188,7 @@ describe("v0.14.0 Raids page", function()
 		SK.DB.officer[W.player.guid] = true
 	end)
 
-	it("has no New raid tab; the Calendar's day box makes raids up to 60 days ahead", function()
+	it("has no New raid tab; the Calendar's day box makes raids, months ahead too", function()
 		for _, t in ipairs(RT.VIEWS) do assert.are_not.equal("new", t[1]) end
 		SK.DB.settings.raidsView = "new" -- a saved old tab
 		assert.equal("calendar", RT.View(true))
@@ -207,8 +209,16 @@ describe("v0.14.0 Raids page", function()
 		RT.dayBox.keys[2]:GetScript("OnClick")(RT.dayBox.keys[2]) -- Hyjal
 		assert.same({ "hyjal", "ony" }, RT.NewRaidForm().keys)
 		RT:CloseDay()
-		-- Three months on: too far.
+		-- v0.15.1: three months on works too; a refusal shows in full.
 		RT:MoveMonth(2)
+		RT:CalendarDay(RT.calCells[20].cell, RT.calCells[20], 20)
+		assert.is_true(RT.dayBox.create:IsShown())
+		RT.dayBox.create:GetScript("OnClick")(RT.dayBox.create)
+		assert.truthy(RT.dayResult:find("Made", 1, true))
+		assert.is_true(RT.dayBox.result:IsShown())
+		RT:CloseDay()
+		-- More than a year on: the day box says so instead of offering Create.
+		RT:MoveMonth(12)
 		RT:CalendarDay(RT.calCells[20].cell, RT.calCells[20], 20)
 		assert.is_false(RT.dayBox.create:IsShown())
 		assert.equal(0, #SK.errors)

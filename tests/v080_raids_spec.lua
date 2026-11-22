@@ -108,7 +108,7 @@ describe("v0.8.0 raid board", function()
 		assert.is_false(B.MergeEvent(board, eventFrom(BOB, now + 1, now + 3600, { id = "x" }), now, lead))
 		assert.is_false(B.MergeEvent(board, eventFrom(BOB, now + 2, now + 3600, { raid = "naxx" }), now, lead))
 		assert.is_false(B.MergeEvent(board, eventFrom(BOB, now + 3, now + 3600, { u = now + 3600 }), now, lead))
-		assert.is_false(B.MergeEvent(board, eventFrom(BOB, now + 4, now + 90 * 86400), now, lead))
+		assert.is_false(B.MergeEvent(board, eventFrom(BOB, now + 4, now + 500 * 86400), now, lead))
 		assert.is_false(B.MergeEvent(board, eventFrom(BOB, now + 5, now + 3600, { x = "yes" }), now, lead))
 		assert.is_false(B.MergeEvent(board, "raid", now, lead))
 		-- a real cancellation by an officer
