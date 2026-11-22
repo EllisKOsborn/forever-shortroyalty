@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.1 (not released yet): roster planner columns
+## v0.16.1 (22 Nov 2026): roster planner columns
 
 - **Roster planner readable at every window width** (owner: "Why is
   ony/ench/seen etc so cramped together and unreadable?"): Ony, Ench and
