@@ -32,6 +32,28 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.14.1 (not released): item names on the Loot page** (owner, 22 Nov,
+  screenshot of "item 16900" rows: "WoWhead should have an API we can use,
+  if not … somewhere else … reliable and updated frequently"). Cause:
+  Forever's data holds only 4 of Onyxia's 20 items (raid loot held back),
+  so the client can't name them. **Wowhead not used** (terms forbid
+  scraping; its tooltip JSON isn't a public API; addons can't go online
+  anyway). `tools/loot.js` now also reads each item page's
+  `{{#data:Itemtip}}` box (name, quality, icon, slot, type; batched
+  `prop=revisions`) and Forever's ItemSparse `OverallQualityID`; writes
+  `SK.Data.LOOT_ITEMS[id] = { name, q, icon, slot, type, f }` (f = in
+  Forever's data: its name/quality win). Kept lists keep their looks.
+  `R.ItemLook(id)` (game name/quality/icon first, then the list; icon
+  path `R.ICON_PATH .. icon`), `R.SlotText`, `Compat.ItemQuality/
+  QualityHex`. `UI/LootTab.lua`: `LT.ItemName/ItemText(id, noIcon)` (inline
+  `|T…|t`, `SIZES.itemIcon` 14), `LT.ItemTip` on every item list
+  (game tooltip if known, else slot + "not in the game's data yet"),
+  `byName` column sorts, Reserves rows A–Z. Loot workflow now **daily**
+  (it never ran: 0 runs on 22 Nov although active since 16 Nov).
+  Tests `tests/v0141_loot_names_spec.lua`; pictures loot*.png (icon
+  stand-in squares in the preview; Blizzard icons aren't in the repo).
+  TESTING 84–85. Unverified in game: whether `Interface\Icons\<name>`
+  paths load in Forever (else blank icons; the game's file IDs once known).
 - **v0.14.0 (released 21 Nov on `main`, owner: "Push to main"; officers'
   second round, owner relayed the list): raids from the calendar, attendance at
   the start time.** Owner's answers (21 Nov): third status **Social**; late
@@ -379,7 +401,7 @@ bridged to the addon only by copy and paste.
     one ID per item (forever link > in Forever's ItemSparse > lowest, so no
     SoD 228xxx copies) → checked against Forever's ItemSparse; never
     Wowhead pages) + ledger kind l (drops/officers). `.github/workflows/
-    loot.yml` reruns it weekly (and by hand) and commits Data/Loot.lua to
+    loot.yml` reruns it daily since v0.14.1 (and by hand) and commits Data/Loot.lua to
     main only if a list changed (active once on main). Onyxia = the wiki's
     Classic page until a Forever page exists; `RAIDS` in tools/loot.js
     lists the page names to try (update when the wiki names them).

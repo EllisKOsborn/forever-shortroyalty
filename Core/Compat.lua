@@ -822,11 +822,21 @@ function Compat.RequestSpell(spellID)
 	return false
 end
 
+-- The item's quality (0 poor .. 5 legendary), or nil while it isn't cached.
+function Compat.ItemQuality(itemID)
+	if not itemID or itemID == 0 or not has("C_Item", "GetItemQualityByID") then return nil end
+	return clean(C_Item.GetItemQualityByID(itemID))
+end
+
 -- "ffRRGGBB" for the item's quality, or nil while the item isn't cached.
 function Compat.ItemQualityHex(itemID)
-	if not itemID or itemID == 0 or not has("C_Item", "GetItemQualityByID") then return nil end
-	local q = clean(C_Item.GetItemQualityByID(itemID))
-	if not q then return nil end
+	return Compat.QualityHex(Compat.ItemQuality(itemID))
+end
+
+-- "ffRRGGBB" for a quality number, in the game's own colours (v0.14.1: the
+-- Loot page colours items the game doesn't hold yet by their listed quality).
+function Compat.QualityHex(q)
+	if type(q) ~= "number" then return nil end
 	local r, g, b
 	if has("C_Item", "GetItemQualityColor") then
 		r, g, b = C_Item.GetItemQualityColor(q)

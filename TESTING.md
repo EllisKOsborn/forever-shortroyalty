@@ -312,3 +312,13 @@ addon read.
     count it under **Changed** and **<24h**.
 83. [ ] `/sr debug` "Attendance (v0.14.0, online at the start)" line: checking
     yes during the first 15 minutes of a raid.
+
+
+## v0.14.1 Item names on the Loot page
+
+84. [ ] Loot → Reserves on an Onyxia night: every item has a **name**, an
+    **icon** and purple (epic) text, in A–Z order; no "item 16900" rows.
+    Say whether the icons show (or are blank / a green square).
+85. [ ] Hover an item the game doesn't know yet (e.g. Stormrage Cover): the
+    tooltip says "Head, Leather" and "Not in the game's item data yet".
+    Hover Onyxia Hide Backpack: the game's own item tooltip.

@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.14.1 (not released yet): item names on the Loot page
+
+- **The Loot page shows items by name** (the guild saw "item 16900",
+  "item 17064"… for most of Onyxia's loot). Forever's game data doesn't hold
+  raid loot until the raid opens, so the game couldn't name those items. The
+  loot list now carries each item's **name, quality, icon and slot**, read
+  from the item's warcraft.wiki.gg page by `tools/loot.js`; once the game
+  knows an item, its own name, colour and icon are used instead.
+- Items have their **icon** and quality colour everywhere on the Loot page
+  (Reserves, Points, History, Loot night, menus, raid chat posts), and the
+  Reserves lists are in **name order**.
+- **Hover an item** for the game's tooltip, or, while the game doesn't know
+  it yet, its slot ("Head, Leather") and a note that Forever may still
+  change it.
+- The loot-list job now runs **every day** (it was weekly), so a raid's
+  loot page on the wiki is picked up the day it appears. Wowhead isn't
+  used: its terms don't allow reading it with a script.
+
 ## v0.14.0 (21 Nov 2026): raids from the calendar, attendance at the start time
 
 From the officers' second round of feedback.

@@ -29,12 +29,45 @@ local function who(guid)
 	local n, cls = nameOf(guid)
 	return Theme.ClassText(n, cls)
 end
-local function itemText(id)
-	local name = SK.CraftIndex.ItemName(id) or ("item " .. id)
-	local hex = Compat.ItemQualityHex(id)
-	return hex and ("|c" .. hex .. name .. "|r") or name
+-- v0.14.1: items by name, in their quality colour, with their icon, even
+-- the ones the game can't name yet (R.ItemLook: Data/Loot.lua's look).
+local function itemName(id)
+	return R.ItemLook(id).name or ("item " .. id)
 end
-LT.ItemText = itemText
+local function itemText(id, noIcon)
+	local look = R.ItemLook(id)
+	local name = look.name or ("item " .. id)
+	local hex = Compat.QualityHex(look.q)
+	local text = hex and ("|c" .. hex .. name .. "|r") or name
+	if look.icon and not noIcon then
+		text = "|T" .. look.icon .. ":" .. S.itemIcon .. ":" .. S.itemIcon .. "|t " .. text
+	end
+	return text
+end
+LT.ItemName, LT.ItemText = itemName, itemText
+
+-- Hovering an item: the game's own tooltip when it knows the item, else
+-- what the loot list says (name, slot, and that Forever may still change it).
+function LT.ItemTip(owner, id)
+	if not id then return end
+	GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+	if SK.CraftIndex.ItemName(id) and GameTooltip.SetItemByID then
+		GameTooltip:SetItemByID(id)
+	else
+		local look = R.ItemLook(id)
+		GameTooltip:SetText(itemText(id, true))
+		local slot = R.SlotText(look)
+		if slot then Theme.TipLine(GameTooltip, slot, "text") end
+		Theme.TipLine(GameTooltip, look.listed
+			and ("Not in the game's item data yet: Forever adds raid loot when the raid opens, so details may change."
+				.. " From the loot list (warcraft.wiki.gg).")
+			or "The game is still loading this item.", "dim", true)
+	end
+	GameTooltip:Show()
+end
+local function rowTip(row, r) LT.ItemTip(row, r.item or (r.e and r.e.i)) end
+-- Sort rows by item name (the list's own order is by item ID).
+local function byName(a, b) return itemName(a.item):lower() < itemName(b.item):lower() end
 local function pts(n)
 	if not n or n == 0 then return Theme.DASH end
 	return Theme.Paint(n < 0 and "bad" or "accent", tostring(n))
@@ -114,17 +147,17 @@ end
 -- Columns and cells
 ---------------------------------------------------------------------------
 LT.ITEM_COLUMNS = {
-	{ key = "item", title = "Item", width = 200 },
+	{ key = "item", title = "Item", width = 200, sort = byName },
 	{ key = "mine", title = "Points", width = 64, align = "RIGHT" },
 	{ key = "count", title = "Reserved", width = LT.LEFT_W - 264 - SP.m, align = "RIGHT" },
 }
 LT.WHO_COLUMNS = {
 	{ key = "name", title = "Name", width = 120 },
-	{ key = "item", title = "Reserve", width = LT.RIGHT_W - 120 - 64 - SP.m },
+	{ key = "item", title = "Reserve", width = LT.RIGHT_W - 120 - 64 - SP.m, sort = byName },
 	{ key = "points", title = "Points", width = 64, align = "RIGHT" },
 }
 LT.MINE_COLUMNS = {
-	{ key = "item", title = "Item", width = 210 },
+	{ key = "item", title = "Item", width = 210, sort = byName },
 	{ key = "points", title = "Points", width = 60, align = "RIGHT" },
 	{ key = "note", title = "", width = 120 },
 }
@@ -135,7 +168,7 @@ LT.WHY_COLUMNS = {
 }
 LT.ALL_COLUMNS = {
 	{ key = "name", title = "Name", width = 130 },
-	{ key = "item", title = "Item", width = 200 },
+	{ key = "item", title = "Item", width = 200, sort = byName },
 	{ key = "points", title = "Points", width = 70, align = "RIGHT" },
 }
 LT.HISTORY_COLUMNS = {
@@ -148,7 +181,7 @@ LT.HISTORY_COLUMNS = {
 	{ key = "why", title = "Reason", width = S.contentW - 92 - 112 - 100 - 160 - 60 - 70 - SP.m },
 }
 LT.DROP_COLUMNS = {
-	{ key = "item", title = "Dropped", width = 190 },
+	{ key = "item", title = "Dropped", width = 190, sort = byName },
 	{ key = "count", title = "Reserved", width = LT.NIGHT_LEFT_W - 190 - SP.m, align = "RIGHT" },
 }
 LT.ROLL_COLUMNS = {
@@ -251,7 +284,7 @@ function LT:Build(page)
 	self.mineLine:SetHeight(18)
 	local listTop = -(S.control + SP.s + 18 + SP.m)
 	self.itemList = W.List(rv, {
-		columns = LT.ITEM_COLUMNS, setCell = setCell,
+		columns = LT.ITEM_COLUMNS, setCell = setCell, onEnter = rowTip,
 		onClick = function(r) LT.item = r.item; LT:Refresh() end,
 	})
 	self.itemList:SetPoint("TOPLEFT", 0, listTop)
@@ -267,7 +300,7 @@ function LT:Build(page)
 	self.resNote:SetPoint("RIGHT")
 	self.whoLabel = label(rv, "Who reserved what")
 	self.whoLabel:SetPoint("TOPLEFT", LT.LEFT_W + SP.xl, listTop + 16)
-	self.whoList = W.List(rv, { columns = LT.WHO_COLUMNS, setCell = setCell })
+	self.whoList = W.List(rv, { columns = LT.WHO_COLUMNS, setCell = setCell, onEnter = rowTip })
 	self.whoList:SetPoint("TOPLEFT", LT.LEFT_W + SP.xl, listTop)
 	self.whoList:SetPoint("BOTTOMRIGHT")
 	self.whoList:SetEmptyText("Nobody has reserved yet.")
@@ -293,7 +326,7 @@ function LT:Build(page)
 	self.ptsNote:SetPoint("RIGHT")
 	local pTop = -(S.control + SP.m)
 	self.mineList = W.List(pv, {
-		columns = LT.MINE_COLUMNS, setCell = setCell,
+		columns = LT.MINE_COLUMNS, setCell = setCell, onEnter = rowTip,
 		onClick = function(r) LT.whyItem = r.item; LT:Refresh() end,
 	})
 	self.mineList:SetPoint("TOPLEFT", 0, pTop)
@@ -310,7 +343,7 @@ function LT:Build(page)
 	self.whyList:SetPoint("TOPLEFT", 410 + SP.xl, pTop - 28)
 	self.whyList:SetPoint("BOTTOMRIGHT")
 	self.allList = W.List(pv, {
-		columns = LT.ALL_COLUMNS, setCell = setCell,
+		columns = LT.ALL_COLUMNS, setCell = setCell, onEnter = rowTip,
 		onClick = function(r) LT.form.g, LT.form.i = r.guid, r.item; LT:Refresh() end,
 	})
 	self.allList:SetPoint("TOPLEFT", 0, pTop)
@@ -334,7 +367,7 @@ function LT:Build(page)
 		prev = c
 	end
 	self.histList = W.List(hv, {
-		columns = LT.HISTORY_COLUMNS,
+		columns = LT.HISTORY_COLUMNS, onEnter = rowTip,
 		setCell = function(fs, r, col) LT.HistoryCell(fs, r, col) end,
 		onClick = function(r, button)
 			if button == "RightButton" and Board.OfficerView() and not r.undone and r.e.k ~= "x" then
@@ -365,7 +398,7 @@ function LT:Build(page)
 	self.lockBtn:SetPoint("RIGHT", self.endBtn, "LEFT", -SP.s, 0)
 	local nTop = -(S.control + SP.m)
 	self.dropList = W.List(nv, {
-		columns = LT.DROP_COLUMNS, setCell = setCell,
+		columns = LT.DROP_COLUMNS, setCell = setCell, onEnter = rowTip,
 		onClick = function(r) if LT.night then LN:Select(LT.night.e, r.item) end; LT:Refresh() end,
 	})
 	self.dropList:SetPoint("TOPLEFT", 0, nTop)
@@ -551,13 +584,13 @@ function LT:BuildForm(pv, pTop)
 		local st = R:State()
 		for _, it in ipairs(guid and st and R.ItemsOf(st, guid) or {}) do
 			seen[it.item] = true
-			out[#out + 1] = { value = it.item, text = (SK.CraftIndex.ItemName(it.item) or ("item " .. it.item)) .. " (" .. it.points .. ")" }
+			out[#out + 1] = { value = it.item, text = itemName(it.item) .. " (" .. it.points .. ")" }
 		end
 		for _, raid in ipairs(SK.Data.ShownAttunements()) do
 			for _, i in ipairs((R.LootList(st, raid.key))) do
 				if not seen[i] then
 					seen[i] = true
-					out[#out + 1] = { value = i, text = SK.CraftIndex.ItemName(i) or ("item " .. i) }
+					out[#out + 1] = { value = i, text = itemName(i) }
 				end
 			end
 		end
@@ -651,7 +684,7 @@ end
 function LT:Post()
 	local night = LT.night
 	if not night or not night.current then return end
-	local name = SK.CraftIndex.ItemName(night.current) or ("item " .. night.current)
+	local name = itemName(night.current)
 	Compat.OpenChat("/ra " .. LN.PostText(name, (self:Reservers(night, night.current))))
 end
 
@@ -660,7 +693,7 @@ function LT:Award()
 	if not night or not night.current or not LT.winner then return end
 	local e = self:Result(LN:Award(night.e, night.current, LT.winner))
 	if e then
-		local name = SK.CraftIndex.ItemName(night.current) or ("item " .. night.current)
+		local name = itemName(night.current)
 		Compat.OpenChat("/ra " .. LN.AwardText(name, (nameOf(LT.winner)), LT.winnerTotal))
 		LT.winner = nil
 	end
@@ -710,7 +743,7 @@ function LT.HistoryCell(fs, r, col)
 			local tgt = R:Get().ledger[e.x]
 			return t(tgt and (R.KIND_NAME[tgt.k] or tgt.k) or "?", "dim")
 		end
-		return fs:SetText(i and (faint and Theme.Paint("faint", SK.CraftIndex.ItemName(i) or tostring(i)) or itemText(i)) or Theme.DASH)
+		return fs:SetText(i and (faint and Theme.Paint("faint", itemName(i)) or itemText(i)) or Theme.DASH)
 	end
 	if k == "d" then
 		if e.k == "n" then return t("+" .. e.b .. " each", "good") end
@@ -763,6 +796,7 @@ function LT:RefreshReserves(st, me, now)
 		for _, r in ipairs(R.ReservedBy(picks, i)) do count = count + r.count end
 		rows[#rows + 1] = { item = i, mine = me and R.PointsOf(st, me, i) or 0, count = count }
 	end
+	table.sort(rows, byName)
 	if not LT.item then LT.item = rows[1] and rows[1].item end
 	self.itemList:SetItems(rows)
 	self.itemList:SetSelected(function(r) return r.item == LT.item end)
@@ -773,7 +807,11 @@ function LT:RefreshReserves(st, me, now)
 		end
 	end
 	table.sort(whoRows, function(a, b)
-		if a.item ~= b.item then return a.item < b.item end
+		if a.item ~= b.item then
+			local an, bn = itemName(a.item):lower(), itemName(b.item):lower()
+			if an ~= bn then return an < bn end
+			return a.item < b.item
+		end
 		if a.points ~= b.points then return a.points > b.points end
 		return a.name < b.name
 	end)
@@ -818,7 +856,7 @@ function LT:RefreshPoints(st, me, officer)
 		return
 	end
 	self.allList:SetWidth(officer and (S.contentW - LT.FORM_W - SP.xl) or S.contentW)
-	self.allList:SetItems(LT.AllPoints(st, LT.query, function(g) return (nameOf(g)) end, SK.CraftIndex.ItemName))
+	self.allList:SetItems(LT.AllPoints(st, LT.query, function(g) return (nameOf(g)) end, function(i) return R.ItemLook(i).name end))
 	self.allList:SetSelected(function(r) return officer and r.guid == self.form.g and r.item == self.form.i end)
 	if officer then
 		local f = self.form
@@ -829,7 +867,7 @@ function LT:RefreshPoints(st, me, officer)
 		for _, m in ipairs({ self.fWho, self.fItem, self.fWho2, self.fItem2 }) do m:Refresh() end
 		local have = f.g and f.i and R.PointsOf(st, f.g, f.i)
 		self.fNote:SetText(have and string.format("%s has %d on %s. It goes in the History with your name, and any officer can undo it.",
-			(nameOf(f.g)), have, SK.CraftIndex.ItemName(f.i) or "it") or "Pick a character and an item (or click a row).")
+			(nameOf(f.g)), have, R.ItemLook(f.i).name or "it") or "Pick a character and an item (or click a row).")
 	end
 end
 

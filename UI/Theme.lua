@@ -311,6 +311,7 @@ Theme.SIZES = {
 	flightBox = { 320, 56 },-- v0.7.2 "Flying? Play Short Words" box
 	flightBoxY = 140,       -- its distance from the top of the screen
 	reminderBox = { 400, 56 }, -- v0.9.1 "Reserve for <raid>" box, just under the flight box
+	itemIcon = 14,            -- v0.14.1 item icons in Loot page lists (inline |T…|t)
 	titleBar = 52,          -- (v0.5) kept for older callers
 	tabBar = 32,
 	pad = 16,           -- window inner margin

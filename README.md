@@ -199,6 +199,7 @@ reserve the same trinket for months and nobody new can take it from you.
 - **Points:** yours, with *why* each number is what it is (night by night), and everyone's (searchable).
 - **History:** every change, who made it and why: night bonuses, wins, changes by hand, moves, rule changes. Kept by everyone.
 - **Rolls:** reservers always beat everyone else; among them the highest *roll + points* wins; equal totals go to whoever has more points, then a re-roll. Only the first 1–100 roll of each player counts.
+- **Items by name** (v0.14.1), with their icon and quality colour, in name order, also while the game doesn't hold an item yet (Forever adds raid loot when the raid opens): the loot list carries each item's name, icon and slot. Hover an item for the game's own tooltip, or for its slot and a note that details may still change.
 - **Item tooltips** on a raid night: "Reserve+: Reserved by 3: Cat 120, Bob 30, Dan" (in your bags, the loot window, AtlasLoot…).
 - **Reminders** (v0.9.1), with a **Reserve** button: a calm one at login when you're signed up for a raid this week without your reserves, and an orange one on raid day (from 00:01, and when you join tonight's raid group) that comes back every 30 minutes. Both stop once you've reserved or an officer locks reserves. Reserve before going in: sharing pauses inside instances.
 
@@ -214,7 +215,7 @@ reserve the same trinket for months and nobody new can take it from you.
 
 **Loot lists fill themselves in**, from three places:
 1. **The game's Encounter Journal**, if Forever turns it on for its raids: every player's addon reads the loot from it. `/sr debug` says whether it's on.
-2. **warcraft.wiki.gg**: `tools/loot.js` reads each raid's loot page, finds the item IDs and checks them against Forever's own item data. A weekly GitHub job reruns it and saves any change, so a new loot page is picked up by itself and ships with the next release. Onyxia's list comes from the original game for now; Barrow Deeps and Hyjal Summit have no loot page yet.
+2. **warcraft.wiki.gg**: `tools/loot.js` reads each raid's loot page, finds the item IDs and checks them against Forever's own item data. It also saves each item's name, quality, icon and slot from the item's wiki tooltip (Forever's own name and quality win once its data has the item). A daily GitHub job reruns it and saves any change, so a new loot page is picked up by itself and ships with the next release. Onyxia's list comes from the original game for now; Barrow Deeps and Hyjal Summit have no loot page yet.
 3. **Drops:** the officer's addon adds every rare or better item it sees in a loot window, for everyone.
 
 <p align="center"><img src="docs/images/loot-rules.png" alt="Rules: reserves per raid, bonus per night, loot lists" width="100%"></p>
