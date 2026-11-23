@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.5 (not released yet): clearer raid page
+## v0.16.5 (23 Nov 2026): clearer raid page
 
 - A raid's page labels its two kinds of buttons: **YOUR ANSWER** above
   Sign up / Tentative / Can't come (they set your own answer, they don't
