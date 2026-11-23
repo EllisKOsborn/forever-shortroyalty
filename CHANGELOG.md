@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.4 (not released yet): the GM's away requests
+## v0.16.4 (23 Nov 2026): the GM's away requests, remove from a raid
 
 From the GM's list (relayed by the owner):
 
