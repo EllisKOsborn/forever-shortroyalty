@@ -32,6 +32,11 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.16.5 (built 23 Nov on the branch, NOT released; an officer read the
+  answer buttons as tabs, owner: "Do it"):** raid detail labels
+  `RT.answerLabel` "YOUR ANSWER" (`RT.SIGN_LABEL_H` 18, everything below
+  moved down via `RT.SIGN_Y`) and `RT.officerLabel` "OFFICERS" left of the
+  key chips (officers only; `sub` now stops at it). TESTING 101.
 - **v0.16.4 (released 23 Nov on `main`, owner: "push to main"; the GM's list, owner
   relayed 23 Nov):** non-officers: sign up per raid (existed), a date range
   of "can't come" that also answers raids made later; officers: a roster

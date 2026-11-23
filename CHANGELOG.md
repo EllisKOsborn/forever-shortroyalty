@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.16.5 (not released yet): clearer raid page
+
+- A raid's page labels its two kinds of buttons: **YOUR ANSWER** above
+  Sign up / Tentative / Can't come (they set your own answer, they don't
+  filter the list), and **OFFICERS** beside the Barrow / Hyjal / Onyxia
+  buttons. A guild officer had read the answer buttons as tabs.
+
 ## v0.16.4 (23 Nov 2026): the GM's away requests, remove from a raid
 
 From the GM's list (relayed by the owner):

@@ -275,6 +275,12 @@ end
 ---------------------------------------------------------------------------
 -- Building
 ---------------------------------------------------------------------------
+-- v0.16.5 (a guild officer thought the Sign up / Tentative / Can't come
+-- buttons were tabs filtering the list): "YOUR ANSWER" above them and
+-- "OFFICERS" beside the instance chips, so the two are clearly apart.
+RT.SIGN_LABEL_H = 18
+RT.SIGN_Y = 44 + SP.xs + RT.SIGN_LABEL_H
+
 function RT:Build(page)
 	self.page = page
 	local s = SK.DB.settings
@@ -338,6 +344,12 @@ function RT:Build(page)
 		kprev = c
 	end
 
+	self.answerLabel = Theme.Text(d, "label", "dim")
+	self.answerLabel:SetText("YOUR ANSWER")
+	self.answerLabel:SetPoint("TOPLEFT", 0, -(RT.SIGN_Y - RT.SIGN_LABEL_H + 2))
+	self.officerLabel = Theme.Text(d, "label", "dim")
+	self.officerLabel:SetText("OFFICERS")
+	self.officerLabel:SetPoint("RIGHT", self.keyChips[#self.keyChips], "LEFT", -SP.s, 0)
 	self.signButtons = {}
 	local prev
 	for _, b in ipairs({ { "y", "Sign up" }, { "t", "Tentative" }, { "n", "Can't come" } }) do
@@ -352,7 +364,7 @@ function RT:Build(page)
 				Theme.SetBorderColor(self, "accent")
 			end
 		end
-		if prev then btn:SetPoint("LEFT", prev, "RIGHT", SP.s, 0) else btn:SetPoint("TOPLEFT", 0, -(44 + SP.xs)) end
+		if prev then btn:SetPoint("LEFT", prev, "RIGHT", SP.s, 0) else btn:SetPoint("TOPLEFT", 0, -(RT.SIGN_Y)) end
 		self.signButtons[#self.signButtons + 1] = btn
 		prev = btn
 	end
@@ -380,10 +392,10 @@ function RT:Build(page)
 	self.reserveBtn = W.Button(d, "Reserve loot", 140, S.controlSmall + 2, function()
 		if RT.selected then SK.LootTab:ShowRaid(RT.selected) end
 	end, "primary")
-	self.reserveBtn:SetPoint("TOPRIGHT", 0, -(44 + SP.xs + S.control + SP.s - 3))
+	self.reserveBtn:SetPoint("TOPRIGHT", 0, -(RT.SIGN_Y + S.control + SP.s - 3))
 	self.reserveBtn.tooltip = "Pick your soft reserves for this raid on the Loot page."
 	self.mine = Theme.Text(d, "body", "text")
-	self.mine:SetPoint("TOPLEFT", 0, -(44 + SP.xs + S.control + SP.s))
+	self.mine:SetPoint("TOPLEFT", 0, -(RT.SIGN_Y + S.control + SP.s))
 	self.mine:SetPoint("RIGHT", self.reserveBtn, "LEFT", -SP.s, 0)
 	self.mine:SetJustifyH("LEFT")
 	self.mine:SetWordWrap(false)
@@ -423,7 +435,7 @@ function RT:Build(page)
 		end,
 	})
 	self.rowMenu = W.PopMenu(d, 190)
-	self.lineup:SetPoint("TOPLEFT", 0, -(44 + SP.xs + S.control + SP.s + 18 + SP.xs + 16 + SP.xs + 32 + SP.s))
+	self.lineup:SetPoint("TOPLEFT", 0, -(RT.SIGN_Y + S.control + SP.s + 18 + SP.xs + 16 + SP.xs + 32 + SP.s))
 	self.lineup:SetPoint("BOTTOMRIGHT")
 	self.lineup:SetEmptyText("Nobody has answered yet.")
 	self.empty = Theme.Text(d, "body", "dim")
@@ -727,11 +739,13 @@ function RT:RefreshUpcoming(board, now, me)
 
 	local ev = board and RT.selected and board.events[RT.selected]
 	local shown = ev ~= nil
-	for _, f in ipairs({ self.title, self.sub, self.options, self.role, self.mine, self.counts, self.ready, self.lineup }) do
+	for _, f in ipairs({ self.title, self.sub, self.options, self.role, self.mine, self.counts, self.ready, self.lineup,
+		self.answerLabel }) do
 		f:SetShown(shown)
 	end
 	local officer = Board.OfficerView()
 	for _, c in ipairs(self.keyChips) do c:SetShown(shown and officer) end
+	self.officerLabel:SetShown(shown and officer)
 	self.reserveBtn:SetShown(false)
 	for _, b in ipairs(self.signButtons) do b:SetShown(shown) end
 	self.empty:SetShown(not shown)
@@ -751,7 +765,7 @@ function RT:RefreshUpcoming(board, now, me)
 	self.sub:ClearAllPoints()
 	self.sub:SetPoint("TOPLEFT", self.title, "BOTTOMLEFT", 0, -SP.xs)
 	if officer then
-		self.sub:SetPoint("RIGHT", self.keyChips[#self.keyChips], "LEFT", -SP.s, 0)
+		self.sub:SetPoint("RIGHT", self.officerLabel, "LEFT", -SP.s, 0)
 	else
 		self.sub:SetPoint("RIGHT", self.detail, "RIGHT", 0, 0)
 	end

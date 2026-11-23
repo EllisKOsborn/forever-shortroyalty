@@ -391,3 +391,9 @@ addon read.
     raid**: it disappears for everyone on v0.16.4, the counts drop by one.
     As a non-officer, right-clicking someone else only offers "Open their
     character".
+
+## v0.16.5 Clearer raid page
+
+101. [ ] Raids → pick a raid: "YOUR ANSWER" sits above the three answer
+    buttons; with `/sr officer` on, "OFFICERS" sits left of the instance
+    buttons and the "made by" line stops before it.

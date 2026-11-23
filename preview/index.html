@@ -1064,20 +1064,21 @@ function raids() {
       (e, c) => c.key === "w" ? e[0] : c.key === "r" ? e[1] + dotFor(e[4]) : `${e[2]}<span class="faint"> / ${e[3]}</span>`,
       { click: true, sel: (e) => e === events[0], sort: { key: "w" }, style: `left:0;top:${t0}px;bottom:0;width:${LW}px` }) +
     `<div class="abs" style="left:${RX}px;top:${t0 + 2}px;font-size:15px">${S.multi ? "Hyjal + Onyxia (40)" : "Onyxia's Lair (40)"}</div>
-    ${officer ? `<div class="abs" style="right:0;top:${t0 + 26}px;display:flex;gap:2px"><span class="chip">Barrow</span><span class="chip ${S.multi ? "on" : ""}">Hyjal</span><span class="chip on">Onyxia</span></div>` : ""}
+    ${officer ? `<div class="abs" style="right:0;top:${t0 + 26}px;display:flex;gap:2px;align-items:center"><span class="display dim" style="font-size:11px;letter-spacing:.08em;margin-right:8px">OFFICERS</span><span class="chip">Barrow</span><span class="chip ${S.multi ? "on" : ""}">Hyjal</span><span class="chip on">Onyxia</span></div>` : ""}
     <div class="abs dim small" style="left:${RX}px;top:${t0 + 24}px">Fri 11 Dec, 20:00  ·  made by ${nm(M[3])}</div>
     ${btn("···", "", `style="position:absolute;right:0;top:${t0}px;width:28px;padding:0;justify-content:center"`)}
-    <div class="abs" style="left:${RX}px;top:${t0 + 48}px;display:flex;gap:8px">${btn("Sign up", "on")}${btn("Tentative")}${btn("Can't come")}<span style="width:4px"></span>
+    <div class="abs display dim" style="left:${RX}px;top:${t0 + 46}px;font-size:11px;letter-spacing:.08em">YOUR ANSWER</div>
+    <div class="abs" style="left:${RX}px;top:${t0 + 64}px;display:flex;gap:8px">${btn("Sign up", "on")}${btn("Tentative")}${btn("Can't come")}<span style="width:4px"></span>
       <span class="menu" style="width:110px">${btn("Healer").replace("</span>", '<i class="arrow"></i></span>')}</span></div>
-    <div class="abs" style="left:${RX}px;top:${t0 + 80}px">You: <span class="good">Signed up</span> as Healer  ·  <span class="good">You're in</span></div>
-    ${btn("Reserve loot  1/2", "primary", `style="position:absolute;right:0;top:${t0 + 76}px;width:140px;justify-content:center;height:22px"`)}
-    <div class="abs dim small" style="left:${RX}px;top:${t0 + 100}px">In 18 / 40: Tanks 3  ·  Healers 5  ·  DPS 10  ·  Bench 3  ·  3 tentative  ·  4 can't come (<span class="bad">2 away</span>)</div>
-    <div class="abs dim small" style="left:${RX}px;right:0;top:${t0 + 120}px;line-height:1.4">3 tentative<span class="faint">  ·  </span><span class="bad">3 not attuned</span><span class="faint">  ·  </span><span class="spark">2 without the amulet in their bags</span><span class="faint">  ·  </span>Item level 52 to 75</div>` +
+    <div class="abs" style="left:${RX}px;top:${t0 + 96}px">You: <span class="good">Signed up</span> as Healer  ·  <span class="good">You're in</span></div>
+    ${btn("Reserve loot  1/2", "primary", `style="position:absolute;right:0;top:${t0 + 92}px;width:140px;justify-content:center;height:22px"`)}
+    <div class="abs dim small" style="left:${RX}px;top:${t0 + 116}px">In 18 / 40: Tanks 3  ·  Healers 5  ·  DPS 10  ·  Bench 3  ·  3 tentative  ·  4 can't come (<span class="bad">2 away</span>)</div>
+    <div class="abs dim small" style="left:${RX}px;right:0;top:${t0 + 136}px;line-height:1.4">3 tentative<span class="faint">  ·  </span><span class="bad">3 not attuned</span><span class="faint">  ·  </span><span class="spark">2 without the amulet in their bags</span><span class="faint">  ·  </span>Item level 52 to 75</div>` +
     list([{ key: "n", t: "Name", w: 118 }, { key: "s", t: "Status", w: 78 }, { key: "p", t: "Raid", w: 48 }, { key: "r", t: "Role", w: 56 }, { key: "sp", t: "Spec", w: 60 }, { key: "i", t: "ilvl", w: 32, r: 1 }, { key: "a", t: "Attuned", w: 52, r: 1 }], lineup,
       (r, c) => c.key === "n" ? (r.m.online ? dot("good") : "") + nm(r.m) : c.key === "s" ? `<span class="${r.st[1]}">${r.st[0]}</span>`
         : c.key === "p" ? (r.place === "i" ? '<span class="good">In</span>' : r.place === "b" ? '<span class="acc">Bench</span>' : DASH) : c.key === "r" ? `<span class="${r.guess ? "faint" : ""}">${r.role}</span>`
         : c.key === "sp" ? `<span class="dim">${r.m.spec || "-"}</span>` : c.key === "i" ? (r.m.ilvl || DASH) : r.att,
-      { click: true, style: `left:${RX}px;right:0;top:${t0 + 164}px;bottom:0` });
+      { click: true, style: `left:${RX}px;right:0;top:${t0 + 180}px;bottom:0` });
 }
 
 // ---------------------------------------------------------------- loot (v0.9.0 Reserve+, mock-up)
