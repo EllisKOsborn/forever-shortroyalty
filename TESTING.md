@@ -375,3 +375,12 @@ addon read.
 96. [ ] Sign up for a raid still "to be decided": no "reserve your loot"
     reminder, and the Loot page doesn't offer it. Once an officer picks
     Onyxia, it appears there.
+
+## v0.16.4 Away requests
+
+97. [ ] Mark yourself away 10-14 Dec on the Calendar. Every raid on those
+    days now shows you as Can't come, also ones you never answered. An
+    officer then makes a raid on 12 Dec: within a minute (or at your next
+    login) you're Can't come on it too. Press Sign up on it: it stays.
+98. [ ] Officers: Roster → Officers, hover someone's Away cell: every date
+    range in the next three months, e.g. "10-14 Dec  they marked it".

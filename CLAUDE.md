@@ -32,6 +32,17 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.16.4 (built 23 Nov on the branch, NOT released; the GM's list, owner
+  relayed 23 Nov):** non-officers: sign up per raid (existed), a date range
+  of "can't come" that also answers raids made later; officers: a roster
+  column with everyone's away dates, and one table per raid with everyone's
+  status (existed: the Raids line-up). Built: `Abs.DeclineClashes(now,
+  all)` (all = when marking days: y/t too; else only raids I haven't
+  answered), run on `RAIDS_UPDATED` (2 s debounce) and 20 s after login
+  (`Abs:OnLogin`), so raids made later get Can't come and a later Sign up
+  sticks. `RP.AWAY_AHEAD` 90 (was 28), `RP.AwayRuns/RunText`, rows carry
+  `selfAway`; the Away cell tooltip lists ranges. The shared away field
+  stays ≤ 40 dates (older clients' `Merge.FIELDS.away` limit). TESTING 97–98.
 - **v0.16.3 (released 22 Nov on `main`, owner: "push to main"; owner: "run some
   tests on the raid section as a whole to spot bugs or errors", the GM
   reported bugs not yet named):** `tests/v0162_raids_scenario_spec.lua`

@@ -641,14 +641,16 @@ local function decoratePlanRow(row)
 					end
 					Theme.TipLine(GameTooltip, "Click to read or add notes.", "accent")
 				elseif self.key == "away" then
-					if #r.awayDays == 0 then Theme.TipLine(GameTooltip, "Not away in the next four weeks.", "dim") end
-					for i, d in ipairs(r.awayDays) do
-						if i > 8 then
-							Theme.TipLine(GameTooltip, "+" .. (#r.awayDays - 8) .. " more", "faint")
+					-- v0.16.4: every range in the next three months, not single days.
+					local runs = RP.AwayRuns(r.awayDays, r.selfAway)
+					if #runs == 0 then Theme.TipLine(GameTooltip, "Not away in the next three months.", "dim") end
+					for i, run in ipairs(runs) do
+						if i > 12 then
+							Theme.TipLine(GameTooltip, "+" .. (#runs - 12) .. " more", "faint")
 							break
 						end
-						Theme.TipDouble(GameTooltip, date("%a %d %b", d.at), d.officer and "set by an officer" or "they marked it",
-							"text", "dim")
+						Theme.TipDouble(GameTooltip, RP.RunText(run), (run.officer and not run.self) and "set by an officer"
+							or (run.officer and "they marked it, and an officer" or "they marked it"), "text", "dim")
 					end
 					if r.awayClash then Theme.TipLine(GameTooltip, "Clashes with a raid on the calendar.", "bad") end
 					Theme.TipLine(GameTooltip, "Click for the calendar.", "accent")

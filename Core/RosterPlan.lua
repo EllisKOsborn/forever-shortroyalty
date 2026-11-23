@@ -9,7 +9,7 @@
 --   View(rows, opts)   -> items for the table: rows, and for a role its group
 --                         headers (mains, backups, unsorted whose spec fits)
 --   Counts(rows)       -> chip counts; Summary(rows) -> the "All" line
---   AwayDays / AwayText: who's away in the next four weeks, in words
+--   AwayDays / AwayText: who's away in the next three months (v0.16.4), in words
 local _, SK = ...
 
 local RP = SK:NewModule("RosterPlan")
@@ -33,7 +33,9 @@ RP.SHORT_SPEC = {
 ---------------------------------------------------------------------------
 -- Away days (officer-set, and the player's own from Raids → Calendar)
 ---------------------------------------------------------------------------
-RP.AWAY_AHEAD = 28 -- days looked at from today
+-- days looked at from today (v0.16.4: was 28; the GM wants every date
+-- people marked, "regardless if there is a raid on that date or not")
+RP.AWAY_AHEAD = 90
 local WEEKDAY = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" }
 
 local function dayAt(now, i)
@@ -56,13 +58,12 @@ end
 
 local function dayText(at) return tostring(tonumber(date("%d", at))) end
 
--- "9-15 Dec", "9 Dec, 20 Dec", "Every Tue", "Every Tue, 9-15 Dec" ... or nil. Pure.
-function RP.AwayText(days, selfAway)
-	local weekly, parts = {}, {}
+-- Back-to-back away days as ranges: { { first, last, officer, self } }
+-- (officer/self: any day in it set by an officer / by the player). Days
+-- covered by a weekly "Away every" (older versions) are left to that. Pure.
+function RP.AwayRuns(days, selfAway)
+	local weekly = {}
 	for _, w in ipairs(selfAway and selfAway.w or {}) do weekly[w] = true end
-	local every = {}
-	for i = 1, 7 do if weekly[i] then every[#every + 1] = WEEKDAY[i] end end
-	if #every > 0 then parts[#parts + 1] = "Every " .. table.concat(every, ", ") end
 	local runs, run = {}, nil
 	for _, d in ipairs(days) do
 		local wd = SK.Absences and SK.Absences.Weekday(d.at)
@@ -72,17 +73,35 @@ function RP.AwayText(days, selfAway)
 				run = { first = d.at, last = d.at }
 				runs[#runs + 1] = run
 			end
+			run.officer = run.officer or d.officer or nil
+			run.self = run.self or d.self or nil
 		end
 	end
+	return runs
+end
+
+-- "9-15 Dec", "30 Nov-2 Dec", "9 Dec". Pure.
+function RP.RunText(r)
+	local m1, m2 = date("%b", r.first), date("%b", r.last)
+	if r.first == r.last then return dayText(r.first) .. " " .. m1 end
+	if m1 == m2 then return dayText(r.first) .. "-" .. dayText(r.last) .. " " .. m2 end
+	return dayText(r.first) .. " " .. m1 .. "-" .. dayText(r.last) .. " " .. m2
+end
+
+-- "9-15 Dec", "9 Dec, 20 Dec", "Every Tue", "Every Tue, 9-15 Dec" ... or nil. Pure.
+function RP.AwayText(days, selfAway)
+	local weekly, parts = {}, {}
+	for _, w in ipairs(selfAway and selfAway.w or {}) do weekly[w] = true end
+	local every = {}
+	for i = 1, 7 do if weekly[i] then every[#every + 1] = WEEKDAY[i] end end
+	if #every > 0 then parts[#parts + 1] = "Every " .. table.concat(every, ", ") end
+	local runs = RP.AwayRuns(days, selfAway)
 	for i, r in ipairs(runs) do
 		if i > 2 then
 			parts[#parts + 1] = "+" .. (#runs - 2)
 			break
 		end
-		local m1, m2 = date("%b", r.first), date("%b", r.last)
-		if r.first == r.last then parts[#parts + 1] = dayText(r.first) .. " " .. m1
-		elseif m1 == m2 then parts[#parts + 1] = dayText(r.first) .. "-" .. dayText(r.last) .. " " .. m2
-		else parts[#parts + 1] = dayText(r.first) .. " " .. m1 .. "-" .. dayText(r.last) .. " " .. m2 end
+		parts[#parts + 1] = RP.RunText(r)
 	end
 	if #parts == 0 then return nil end
 	return table.concat(parts, ", ")
@@ -161,7 +180,7 @@ function RP.Build(ctx)
 				hasData = p ~= nil, spec = spec, ilvl = ilvl, att = att, ench = ench, age = age,
 				guess = p and SK.Data.GuessRole(m.class or p.class, p.talents) or nil,
 				status = OD.StatusOf(dir, guid), tiers = tiers,
-				awayDays = awayDays, awayText = RP.AwayText(awayDays, selfAway), awayClash = clash, awayNow = soon,
+				awayDays = awayDays, selfAway = selfAway, awayText = RP.AwayText(awayDays, selfAway), awayClash = clash, awayNow = soon,
 				notes = notes, note = notes[1] and notes[1].text or nil,
 				alts = alts[guid] or {}, signed = ctx.signups and ctx.signups[guid] or nil,
 			}

@@ -239,7 +239,7 @@ describe("v0.13.0 roster planner rows and views", function()
 		assert.truthy(text:find(day(10), 1, true))
 		local weekly = { w = { 2 } }
 		local wd = RP.AwayDays({}, weekly, W.now)
-		assert.equal(4, #wd)
+		assert.equal(13, #wd) -- v0.16.4: 90 days ahead (13 Tuesdays)
 		assert.equal("Every Tue", RP.AwayText(wd, weekly))
 		assert.is_nil(RP.AwayText({}, nil))
 	end)

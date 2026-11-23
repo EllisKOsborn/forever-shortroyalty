@@ -139,17 +139,31 @@ function Abs:Mine(now)
 	return Abs.Field(self:Saved(), now or Compat.Now())
 end
 
--- Raids on days I'm now away: answer Can't come where I'd said yes or maybe.
-local function declineClashes(now)
+-- Raids on days I'm away: answer Can't come. all = true (I've just marked
+-- the days): also where I'd said yes or maybe. v0.16.4 (GM: "automatically
+-- select can't come for any raids that are or will be created on those
+-- dates"): raids I haven't answered get Can't come too, also raids made
+-- later (on RAIDS_UPDATED and at login). A later Sign up of my own stays:
+-- only unanswered raids are answered for me. Returns how many.
+function Abs.DeclineClashes(now, all)
 	local B = SK.RaidBoard
-	local board = B:Get()
+	local board = B and B:Get()
 	local me = Compat.PlayerGUID()
+	if not board or not me then return 0 end
 	local mine = Abs:Mine(now)
-	for _, e in ipairs(board and B.Upcoming(board, now) or {}) do
-		local su = board.signups[e.id] and board.signups[e.id][me or ""]
-		if su and (su.s == "y" or su.s == "t") and Abs.IsAway(mine, e.at) then B:SignUp(e.id, "n", su.r) end
+	if not mine then return 0 end
+	local n = 0
+	for _, e in ipairs(B.Upcoming(board, now)) do
+		if Abs.IsAway(mine, e.at) then
+			local su = board.signups[e.id] and board.signups[e.id][me]
+			if not su or (all and (su.s == "y" or su.s == "t")) then
+				if B:SignUp(e.id, "n", su and su.r or nil) then n = n + 1 end
+			end
+		end
 	end
+	return n
 end
+local declineClashes = function(now) return Abs.DeclineClashes(now, true) end
 
 local function changed()
 	local now = Compat.Now()
@@ -197,6 +211,13 @@ function Abs:ClearRun(at)
 	end
 	changed()
 	return true
+end
+
+function Abs:OnLogin()
+	SK:On("RAIDS_UPDATED", function()
+		SK:Debounce("awaydecline", 2, function() Abs.DeclineClashes(Compat.Now(), false) end)
+	end)
+	SK.After(20, function() Abs.DeclineClashes(Compat.Now(), false) end)
 end
 
 function Abs:IsMyDay(at)

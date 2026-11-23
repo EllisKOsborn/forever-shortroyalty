@@ -207,4 +207,42 @@ describe("v0.16.2 raid section walk-through", function()
 		assert.equal(ony.id, SK.LootTab.raidID) -- moved off the undecided raid
 		noErrors("reserves")
 	end)
+
+	it("v0.16.4: away days answer Can't come for raids made before and after, but never undo a Sign up", function()
+		local A = SK.Absences
+		local function at(day) return os.time({ year = 2026, month = 12, day = day, hour = 20 }) end
+		local before = B:Create("ony", at(11))
+		local signed = B:Create("hyjal", at(12))
+		B:SignUp(signed.id, "y", "TANK")
+		assert.is_true(A:SetRange(at(10), 5)) -- 10-14 Dec
+		local board = B:Get()
+		assert.equal("n", board.signups[before.id][OFF].s) -- hadn't answered: Can't come
+		assert.equal("n", board.signups[signed.id][OFF].s) -- had signed up: Can't come
+		-- a raid made later on one of those days
+		local later = B:Create("ony", at(13))
+		assert.equal(1, A.DeclineClashes(W.now, false))
+		assert.equal("n", board.signups[later.id][OFF].s)
+		-- changed plans: signing up again sticks
+		B:SignUp(later.id, "y", "DPS")
+		assert.equal(0, A.DeclineClashes(W.now, false))
+		assert.equal("y", board.signups[later.id][OFF].s)
+		-- a raid on a day not marked is left alone
+		local free = B:Create("ony", at(20))
+		A.DeclineClashes(W.now, false)
+		assert.is_nil(board.signups[free.id] and board.signups[free.id][OFF])
+		noErrors("auto can't come")
+	end)
+
+	it("v0.16.4: the planner's Away column covers three months, as ranges", function()
+		local RP = SK.RosterPlan
+		local function key(d) return os.date("%Y-%m-%d", os.time({ year = 2026, month = 12, day = d, hour = 12 })) end
+		local days = RP.AwayDays({ [key(10)] = true, [key(11)] = true, [key(12)] = true },
+			{ d = { "2027-02-20", "2027-02-21" }, u = 1 }, W.now)
+		local runs = RP.AwayRuns(days)
+		assert.equal(2, #runs)
+		assert.equal("10-12 Dec", RP.RunText(runs[1]))
+		assert.is_true(runs[1].officer)
+		assert.equal("20-21 Feb", RP.RunText(runs[2]))
+		assert.is_true(runs[2].self)
+	end)
 end)

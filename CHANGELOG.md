@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.16.4 (not released yet): the GM's away requests
+
+From the GM's list (relayed by the owner):
+
+- **Away days answer Can't come for you** on every raid on those days, not
+  only raids you'd signed up for, and also raids an officer makes later
+  (when they reach your game, or at your next login). If you sign up
+  afterwards anyway, that sticks.
+- **The planner's Away column covers the next three months** (was four
+  weeks), and hovering it lists every date range with who marked it.
+
 ## v0.16.3 (22 Nov 2026): raid fixes from a full check
 
 A walk through the whole raid section (owner: "run some tests on the raid
