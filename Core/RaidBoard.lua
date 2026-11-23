@@ -47,6 +47,18 @@ Board.LISTED_AFTER = 6 * 3600   -- still listed under Upcoming this long after t
 
 Board.STATUS_NAME = { y = "Signed up", t = "Tentative", n = "Can't come" }
 Board.STATUS_GROUP = { y = "coming", t = "maybe", n = "out" }
+-- v0.16.4 (owner: "I signed on Mana Tea but this is just an alt and now
+-- needs to be removed"): a removed sign-up is kept as status "x" so the
+-- removal syncs (newest wins); everything else treats it as no answer.
+-- Older versions refuse "x" and keep showing the old answer.
+Board.REMOVED = "x"
+
+-- A sign-up that counts (nil when there's none or it was removed). Pure.
+function Board.SignupOf(board, id, guid)
+	local su = board and board.signups[id] and board.signups[id][guid or ""]
+	if su and su.s ~= Board.REMOVED then return su end
+	return nil
+end
 local GROUP_ORDER = { coming = 1, maybe = 2, out = 3 }
 local ROLE_ORDER = { TANK = 1, HEALER = 2, DPS = 3 }
 
@@ -186,18 +198,18 @@ end
 function Board.ValidSignup(s, now)
 	if type(s) ~= "table" then return false, "not a table" end
 	if not str(s.e, 80) or not str(s.g, 64) then return false, "bad id" end
-	if not Board.STATUS_NAME[s.s] then return false, "bad status" end
+	if not Board.STATUS_NAME[s.s] and s.s ~= Board.REMOVED then return false, "bad status" end
 	if s.r ~= nil and not ROLE_ORDER[s.r] then return false, "bad role" end
 	if not finite(s.u) or s.u > now + Board.MAX_FUTURE then return false, "bad time" end
 	if s.b ~= nil and not str(s.b, 64) then return false, "bad officer" end
-	if s.w ~= nil and (not finite(s.w) or s.w > s.u or s.s == "y") then return false, "bad change" end
+	if s.w ~= nil and (not finite(s.w) or s.w > s.u or s.s == "y" or s.s == Board.REMOVED) then return false, "bad change" end
 	return true
 end
 
 -- v0.14.0: when a sign-up moves away from "y", remember when (attendance
 -- counts changed sign-ups); back to "y" forgets it. Pure.
 function Board.ChangedAt(have, status, now)
-	if status == "y" then return nil end
+	if status == "y" or status == Board.REMOVED then return nil end
 	if have and have.s == "y" then return now end
 	return have and have.w or nil
 end
@@ -353,7 +365,7 @@ end
 -- Counts of one raid's sign-ups: { y, t, n }.
 function Board.Counts(board, id)
 	local c = { y = 0, t = 0, n = 0 }
-	for _, s in pairs(board.signups[id] or {}) do c[s.s] = c[s.s] + 1 end
+	for _, s in pairs(board.signups[id] or {}) do if c[s.s] then c[s.s] = c[s.s] + 1 end end
 	return c
 end
 
@@ -420,29 +432,31 @@ function Board.LineUp(board, ev, ctx)
 	local raid = Board.AttRaid(ev) or { status = "none" }
 	local rows, profiles = {}, {}
 	for guid, su in pairs(board.signups[ev.id] or {}) do
-		local p = ctx.profile(guid)
-		local m = ctx.guild and ctx.guild.members[guid]
-		local class = (m and m.class) or (p and p.class)
-		local role, guess = su.r, false
-		if not role then role, guess = SK.Data.GuessRole(class, p and p.talents), true end
-		local gearHidden = p and p.hidden and p.hidden.gear
-		local spec, tree
-		if p and not gearHidden then spec, tree = SK.Talents.Summary(p.talents) end
-		local att, attNote = SK.Attunements.StateOf(p, raid)
-		rows[#rows + 1] = {
-			guid = guid, name = (m and m.name) or (p and p.name) or "?", class = class,
-			level = (m and m.level) or (p and p.level) or 0,
-			status = su.s, statusName = Board.STATUS_NAME[su.s], group = Board.STATUS_GROUP[su.s],
-			role = role, roleGuess = role ~= nil and guess or false,
-			spec = spec, tree = tree, ilvl = (p and not gearHidden) and p.ilvl or nil,
-			att = att, attNote = attNote, hasData = p ~= nil, online = m and m.online or false,
-			stale = p ~= nil and not ctx.isOwn(guid) and type(p.updated) == "number"
-				and ctx.now - p.updated > SK.Overview.STALE_AFTER or false,
-			enchants = (p and p.gear and not gearHidden) and #SK.Data.Enchants.Missing(p.gear, p.class, p.level) or 0,
-			place = Board.PlaceOf(board, ev.id, guid), byOfficer = su.b ~= nil,
-			away = SK.Absences and SK.Absences.IsAway(SK.Absences.Of(ctx.guild, guid), ev.at) or false, -- v0.11.0
-		}
-		if p and ctx.guild then profiles[guid] = ctx.guild.profiles[guid] or p end
+		if su.s ~= Board.REMOVED then -- v0.16.4: a removed sign-up is as if never signed up
+			local p = ctx.profile(guid)
+			local m = ctx.guild and ctx.guild.members[guid]
+			local class = (m and m.class) or (p and p.class)
+			local role, guess = su.r, false
+			if not role then role, guess = SK.Data.GuessRole(class, p and p.talents), true end
+			local gearHidden = p and p.hidden and p.hidden.gear
+			local spec, tree
+			if p and not gearHidden then spec, tree = SK.Talents.Summary(p.talents) end
+			local att, attNote = SK.Attunements.StateOf(p, raid)
+			rows[#rows + 1] = {
+				guid = guid, name = (m and m.name) or (p and p.name) or "?", class = class,
+				level = (m and m.level) or (p and p.level) or 0,
+				status = su.s, statusName = Board.STATUS_NAME[su.s], group = Board.STATUS_GROUP[su.s],
+				role = role, roleGuess = role ~= nil and guess or false,
+				spec = spec, tree = tree, ilvl = (p and not gearHidden) and p.ilvl or nil,
+				att = att, attNote = attNote, hasData = p ~= nil, online = m and m.online or false,
+				stale = p ~= nil and not ctx.isOwn(guid) and type(p.updated) == "number"
+					and ctx.now - p.updated > SK.Overview.STALE_AFTER or false,
+				enchants = (p and p.gear and not gearHidden) and #SK.Data.Enchants.Missing(p.gear, p.class, p.level) or 0,
+				place = Board.PlaceOf(board, ev.id, guid), byOfficer = su.b ~= nil,
+				away = SK.Absences and SK.Absences.IsAway(SK.Absences.Of(ctx.guild, guid), ev.at) or false, -- v0.11.0
+			}
+			if p and ctx.guild then profiles[guid] = ctx.guild.profiles[guid] or p end
+		end
 	end
 
 	-- The same player signed up on two characters (mutually linked alts).
@@ -902,6 +916,26 @@ function Board:SignUp(id, status, role)
 	list[guid] = { s = status, r = ROLE_ORDER[role or ""] and role or nil, u = u, w = Board.ChangedAt(have, status, u) }
 	if role and ROLE_ORDER[role] then SK.DB.raidRole[guid] = role end
 	changed({ "S:" .. id .. "|" .. guid })
+	return true
+end
+
+-- v0.16.4: take a character off a raid. Officers can remove anyone; a
+-- player can remove their own characters (this account). Returns ok, why.
+function Board:RemoveSignup(id, guid)
+	local board, now, mine = self:Get(), Compat.Now(), me()
+	local e = board and board.events[id]
+	if not e then return false, "unknown raid" end
+	local have = board.signups[id] and board.signups[id][guid or ""]
+	if not have or have.s == Board.REMOVED then return false, "not signed up" end
+	local own = SK.DB.account[guid] ~= nil or guid == mine
+	if not own and not Board.CanLead(mine) then return false, "only officers can remove someone else" end
+	board.signups[id][guid] = { s = Board.REMOVED, u = math.max(now, have.u + 1), b = (not own) and mine or nil }
+	local keys = { "S:" .. id .. "|" .. guid }
+	if board.places[id] and board.places[id][guid] and Board.CanLead(mine) then
+		board.places[id][guid] = { v = "-", u = math.max(now, board.places[id][guid].u + 1), by = mine }
+		keys[#keys + 1] = "P:" .. id .. "|" .. guid
+	end
+	changed(keys)
 	return true
 end
 

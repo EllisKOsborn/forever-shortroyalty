@@ -84,7 +84,17 @@ end
 
 -- inGroup / online = { [guid] = true }; names = { [guid] = { name, class } };
 -- signups = the raid's sign-ups { [guid] = { s, r } } at that moment.
+-- v0.16.4: sign-ups without the removed ones ("x"). Pure.
+function Att.Counted(signups)
+	local out = {}
+	for guid, su in pairs(signups or {}) do
+		if su.s ~= "x" then out[guid] = su end
+	end
+	return out
+end
+
 function Att.AddSnapshot(rec, t, inGroup, online, names, signups)
+	signups = Att.Counted(signups)
 	local from = math.max(rec.last or rec.at, rec.at)
 	local dt = 0
 	if t > rec.at then dt = math.max(0, math.min(t - from, Att.MAX_GAP)) end
@@ -134,6 +144,7 @@ end
 -- can't tell who was online before them; another officer's record from
 -- the start wins when they merge).
 function Att.AddCheck(rec, t, online, names, signups, places)
+	signups = Att.Counted(signups)
 	local first = rec.snaps == 0
 	rec.began = math.min(rec.began or t, t)
 	for guid, su in pairs(signups or {}) do

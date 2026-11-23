@@ -61,7 +61,7 @@ function Rem.Raids(now, me)
 	if not board or not store or not st then return out end
 	-- v0.16.2: not for raids still "to be decided" (nothing to reserve yet).
 	for _, ev in ipairs(Board.ReserveRaids(board, now)) do
-		local su = board.signups[ev.id] and board.signups[ev.id][me or ""]
+		local su = Board.SignupOf(board, ev.id, me)
 		local lock = store.locks[ev.id]
 		out[#out + 1] = { ev = ev, signed = su ~= nil and (su.s == "y" or su.s == "t"), mine = R:MyPicks(ev.id),
 			limit = R.EventPicks(st, ev), locked = lock ~= nil and not lock.x }

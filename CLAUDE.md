@@ -43,6 +43,18 @@ bridged to the addon only by copy and paste.
   sticks. `RP.AWAY_AHEAD` 90 (was 28), `RP.AwayRuns/RunText`, rows carry
   `selfAway`; the Away cell tooltip lists ranges. The shared away field
   stays ≤ 40 dates (older clients' `Merge.FIELDS.away` limit). TESTING 97–98.
+  Also (owner's screenshot, 23 Nov): "away" stayed after clearing: an
+  empty `Abs.Field` was nil (no `u`), so `Abs.Of` picked an alt's older
+  copy; now an empty field still goes out once `saved.u` exists. And
+  removing a sign-up: status **"x"** (`Board.REMOVED`, kept so the removal
+  syncs; `ValidSignup` accepts it, never with `w`; older clients reject it),
+  `Board:RemoveSignup(id, guid)` (own account characters, or officers →
+  `b` = officer; also resets In/Bench to "-"), `Board.SignupOf` (nil for
+  removed) used for every "my sign-up" read, `LineUp`/`Counts`/
+  `Att.Counted`/planner Signed column skip "x". Line-up right-click =
+  `RT.rowMenu` (`W.PopMenu`; `RT.RowItems`: Open their character, Remove
+  from this raid); `W.List` onClick now also passes the row frame.
+  TESTING 99–100.
 - **v0.16.3 (released 22 Nov on `main`, owner: "push to main"; owner: "run some
   tests on the raid section as a whole to spot bugs or errors", the GM
   reported bugs not yet named):** `tests/v0162_raids_scenario_spec.lua`

@@ -569,7 +569,7 @@ function W.List(parent, opts)
 				cx = cx + col.width
 			end
 			row:SetScript("OnClick", function(self, button)
-				if self.item and opts.onClick then opts.onClick(self.item, button) end
+				if self.item and opts.onClick then opts.onClick(self.item, button, self) end
 			end)
 			row:SetScript("OnEnter", function(self)
 				if not self.item then return end

@@ -10,6 +10,15 @@ From the GM's list (relayed by the owner):
   afterwards anyway, that sticks.
 - **The planner's Away column covers the next three months** (was four
   weeks), and hovering it lists every date range with who marked it.
+- **Fix: "away" stayed after clearing your away days** (owner's
+  screenshot). Clearing sent "no away days" without a time, so the older
+  copy on your alts still won. It now goes out with its time and wins.
+- **Remove a character from a raid** (owner: "I signed on Mana Tea but this
+  is just an alt and now needs to be removed"): right-click a name in the
+  raid's list → **Remove from this raid**. Officers can remove anyone;
+  everyone can remove their own characters. Their In/Bench choice is
+  cleared too, and they can sign up again later. Players still on v0.16.3
+  or older keep showing the old answer until they update.
 
 ## v0.16.3 (22 Nov 2026): raid fixes from a full check
 

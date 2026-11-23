@@ -245,4 +245,71 @@ describe("v0.16.2 raid section walk-through", function()
 		assert.equal("20-21 Feb", RP.RunText(runs[2]))
 		assert.is_true(runs[2].self)
 	end)
+
+	it("v0.16.4: clearing your away days wins over your alts' older copies", function()
+		local A = SK.Absences
+		local guild = SK.DBM:Guild()
+		local fam = { OFF, ALT }
+		local mark = W.now
+		A:SetRange(os.time({ year = 2026, month = 12, day = 10, hour = 20 }), 3)
+		-- the alt last logged in while away (its copy is older)
+		guild.profiles[ALT] = { guid = ALT, name = "Alt Ber", family = fam, away = { d = { "2026-12-10" }, u = mark } }
+		guild.profiles[OFF].family = fam
+		SK.Profile:Own().family = fam
+		W.now = W.now + 60
+		A:ClearRun(os.time({ year = 2026, month = 12, day = 10, hour = 20 }))
+		local mine = guild.profiles[OFF].away
+		assert.truthy(mine) -- sent empty, with its time
+		assert.same({}, mine.d)
+		assert.is_true(SK.Merge.Validate(guild.profiles[OFF]))
+		local at = os.time({ year = 2026, month = 12, day = 10, hour = 20 })
+		assert.is_false(A.IsAway(A.Of(guild, OFF), at))
+		assert.is_false(A.IsAway(A.Of(guild, ALT), at))
+	end)
+
+	it("v0.16.4: take a character off a raid (your alt, or anyone as an officer)", function()
+		local e = B:Create("ony", os.time({ year = 2026, month = 12, day = 11, hour = 20 }))
+		local board = B:Get()
+		board.signups[e.id] = { [ALT] = { s = "y", r = "DPS", u = W.now - 10 }, [MEM] = { s = "t", u = W.now - 10 } }
+		board.places[e.id] = { [ALT] = { v = "i", u = W.now - 10, by = OFF } }
+		SK.DB.account[ALT] = { name = "Alt Ber" } -- one of my characters
+		-- a member (not an officer) can remove their own alt, not someone else
+		SK.DB.officer[OFF] = nil
+		W.roster[1].rank, W.roster[1].rankIndex = "Member", 5
+		SK.Identity:ReadRoster()
+		assert.is_true(B:RemoveSignup(e.id, ALT))
+		assert.same({ false, "only officers can remove someone else" }, { B:RemoveSignup(e.id, MEM) })
+		assert.equal("x", board.signups[e.id][ALT].s)
+		assert.is_nil(board.signups[e.id][ALT].b) -- own character: no officer mark
+		local rows = B.LineUp(board, e, B.Ctx())
+		assert.equal(1, #rows)
+		assert.equal(MEM, rows[1].guid)
+		assert.same({ y = 0, t = 1, n = 0 }, B.Counts(board, e.id))
+		assert.is_nil(B.SignupOf(board, e.id, ALT))
+		assert.same({ false, "not signed up" }, { B:RemoveSignup(e.id, ALT) })
+		-- signing up again afterwards works
+		W.now = W.now + 5
+		W.player.guid = ALT
+		assert.is_true(B:SignUp(e.id, "y", "DPS"))
+		assert.equal("y", board.signups[e.id][ALT].s)
+		W.player.guid = OFF
+		-- an officer removes anyone; the In/Bench choice is cleared too
+		W.roster[1].rank, W.roster[1].rankIndex = "Officer", 1
+		SK.Identity:ReadRoster()
+		W.now = W.now + 5
+		assert.is_true(B:RemoveSignup(e.id, MEM))
+		assert.equal(OFF, board.signups[e.id][MEM].b)
+		-- received: "x" passes the checks, but never with a change time
+		local ok = B.ValidSignup({ e = e.id, g = MEM, s = "x", u = W.now }, W.now)
+		assert.is_true(ok)
+		assert.is_false((B.ValidSignup({ e = e.id, g = MEM, s = "x", u = W.now, w = W.now }, W.now)))
+		-- the menu: officers and own characters get "Remove"
+		SK.DB.officer[OFF] = true
+		local items = RT.RowItems({ guid = MEM, name = "Mem Ber" })
+		assert.equal("Remove from this raid", items[2].text)
+		assert.equal(1, #RT.RowItems({ guid = MEM, name = "Mem Ber", awayOnly = true }))
+		openView("upcoming")
+		RT:ShowRaid(e.id)
+		noErrors("remove")
+	end)
 end)

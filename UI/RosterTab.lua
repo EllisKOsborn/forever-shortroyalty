@@ -1010,7 +1010,9 @@ function Roster:PlanRows()
 	if self.signupsFor then
 		local board = SK.RaidBoard:Get(guild)
 		signups = {}
-		for guid, su in pairs(board and board.signups[self.signupsFor] or {}) do signups[guid] = su.s end
+		for guid, su in pairs(board and board.signups[self.signupsFor] or {}) do
+			if su.s ~= "x" then signups[guid] = su.s end -- v0.16.4: not removed ones
+		end
 	end
 	local raidDays = {}
 	local board = SK.RaidBoard:Get(guild)

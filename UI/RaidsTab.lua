@@ -115,7 +115,7 @@ function RT.MonthGrid(year, month, board, now, me, mine, guild)
 		local list = byDay[key] or {}
 		table.sort(list, function(a, b) return a.at < b.at end)
 		for _, e in ipairs(list) do
-			local su = board.signups[e.id] and board.signups[e.id][me or ""]
+			local su = Board.SignupOf(board, e.id, me)
 			raids[#raids + 1] = { id = e.id, at = e.at, text = date("%H:%M", e.at) .. " " .. Board.EventName(e, true),
 				mine = su and su.s or nil, place = Board.PlaceOf(board, e.id, me or "") }
 		end
@@ -136,7 +136,7 @@ end
 function RT.EventRows(board, now, me)
 	local rows = {}
 	for _, e in ipairs(Board.Upcoming(board, now)) do
-		local mine = board.signups[e.id] and board.signups[e.id][me or ""]
+		local mine = Board.SignupOf(board, e.id, me)
 		rows[#rows + 1] = { id = e.id, at = e.at, when = Board.ShortWhen(e.at, now), raidName = Board.EventName(e, true),
 			size = Board.EventSize(e), counts = Board.Counts(board, e.id), mine = mine and mine.s, ev = e }
 	end
@@ -368,7 +368,7 @@ function RT:Build(page)
 			local guid = Compat.PlayerGUID()
 			if guid then SK.DB.raidRole[guid] = v end
 			local board = Board:Get()
-			local mine = RT.selected and board and board.signups[RT.selected] and board.signups[RT.selected][guid or ""]
+			local mine = RT.selected and board and Board.SignupOf(board, RT.selected, guid)
 			if mine then Board:SignUp(RT.selected, mine.s, v) end
 			RT:Refresh()
 		end,
@@ -400,8 +400,11 @@ function RT:Build(page)
 		columns = RT.LINEUP_COLUMNS, setCell = setLineUpCell,
 		-- Officers: click = In, Bench, undecided in turn; right-click = their
 		-- character. Everyone else: click = their character.
-		onClick = function(r, button)
-			if Board.OfficerView() and button ~= "RightButton" then return RT:CyclePlace(r) end
+		onClick = function(r, button, row)
+			-- v0.16.4: right-click = a small menu (their character; remove from
+			-- this raid for officers and for your own characters).
+			if button == "RightButton" and row then return RT.rowMenu:Open(row, RT.RowItems(r)) end
+			if Board.OfficerView() then return RT:CyclePlace(r) end
 			SK.CharacterTab:ShowCharacter(r.guid)
 		end,
 		onEnter = function(row, r)
@@ -411,13 +414,15 @@ function RT:Build(page)
 				(r.statusName .. (r.place and ("  ·  " .. Board.PLACE_NAME[r.place]) or "") ..
 				(r.byOfficer and "  ·  added by an officer" or "")), r.awayOnly and "bad" or "dim")
 			if Board.OfficerView() and not r.awayOnly then
-				Theme.TipLine(GameTooltip, "Click: In, then Bench, then undecided. Right-click: their character.", "accent", true)
+				Theme.TipLine(GameTooltip, "Click: In, then Bench, then undecided. Right-click: their character, or remove them.",
+					"accent", true)
 			else
-				Theme.TipLine(GameTooltip, "Click to open their character", "accent")
+				Theme.TipLine(GameTooltip, "Click to open their character. Right-click for more.", "accent", true)
 			end
 			GameTooltip:Show()
 		end,
 	})
+	self.rowMenu = W.PopMenu(d, 190)
 	self.lineup:SetPoint("TOPLEFT", 0, -(44 + SP.xs + S.control + SP.s + 18 + SP.xs + 16 + SP.xs + 32 + SP.s))
 	self.lineup:SetPoint("BOTTOMRIGHT")
 	self.lineup:SetEmptyText("Nobody has answered yet.")
@@ -580,6 +585,25 @@ function RT.OutText(rows)
 	return out .. " can't come" .. (away > 0 and (" (" .. Theme.Paint("bad", away .. " away") .. ")") or "")
 end
 
+-- v0.16.4: the line-up's right-click menu. Remove = officers, or one of
+-- your own characters; not for "Away" rows (nothing to remove).
+function RT.RowItems(r)
+	local items = { { text = "Open their character", onClick = function() SK.CharacterTab:ShowCharacter(r.guid) end } }
+	local own = SK.DB.account[r.guid] ~= nil or r.guid == Compat.PlayerGUID()
+	if not r.awayOnly and (own or Board.OfficerView()) then
+		items[#items + 1] = { text = "Remove from this raid", onClick = function() RT:RemoveRow(r) end }
+	end
+	return items
+end
+
+function RT:RemoveRow(r)
+	if not RT.selected then return end
+	local ok, why = Board:RemoveSignup(RT.selected, r.guid)
+	if ok then SK:Print("%s was taken off this raid.", r.name)
+	else SK:Print("Couldn't remove them: %s.", tostring(why)) end
+	RT:Refresh()
+end
+
 function RT:CyclePlace(r)
 	if not RT.selected then return end
 	if r.awayOnly then return SK.CharacterTab:ShowCharacter(r.guid) end -- not signed up: nothing to place
@@ -732,7 +756,7 @@ function RT:RefreshUpcoming(board, now, me)
 		self.sub:SetPoint("RIGHT", self.detail, "RIGHT", 0, 0)
 	end
 	self.sub:SetText(Board.When(ev.at) .. (creator and ("  ·  made by " .. Theme.ClassText(creator.name, creator.class)) or ""))
-	local mine = board.signups[ev.id] and board.signups[ev.id][me or ""]
+	local mine = Board.SignupOf(board, ev.id, me)
 	for _, b in ipairs(self.signButtons) do
 		b.active = mine ~= nil and mine.s == b.status
 		b:Paint("rest")
@@ -1653,7 +1677,7 @@ function RT:DrawDay()
 		local e = raids[j]
 		if e then
 			local me = Compat.PlayerGUID() or ""
-			local su = board.signups[e.id] and board.signups[e.id][me]
+			local su = Board.SignupOf(board, e.id, me)
 			b.id = e.id
 			b.text:SetText(date("%H:%M", e.at) .. "  " .. Board.EventName(e, true) .. Theme.Paint("dim", "  ·  " ..
 				(su and Board.STATUS_NAME[su.s] or "not signed up")))

@@ -65,7 +65,10 @@ function Abs.RangeText(firstAt, lastAt)
 end
 
 -- What goes in the profile: dates from today on, sorted, at most MAX_DAYS;
--- nil when there's nothing. Pure.
+-- nil when nothing was ever marked. v0.16.4 (owner: "I've marked myself as
+-- no longer being away … but it's still showing as away"): once marked,
+-- an empty list still goes out with its time, so it beats the older copy
+-- on the player's alts (Abs.Of takes the newest). Pure.
 function Abs.Field(saved, now)
 	if type(saved) ~= "table" then return nil end
 	local today = date("%Y-%m-%d", now)
@@ -74,7 +77,7 @@ function Abs.Field(saved, now)
 	table.sort(d)
 	while #d > Abs.MAX_DAYS do table.remove(d) end
 	for i = 1, 7 do if saved.w and saved.w[i] then w[#w + 1] = i end end
-	if #d == 0 and #w == 0 then return nil end
+	if #d == 0 and #w == 0 and not saved.u then return nil end
 	return { d = d, w = w, u = saved.u or now }
 end
 

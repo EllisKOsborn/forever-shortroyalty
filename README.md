@@ -153,6 +153,7 @@ people who were offline get them when they log in. `/sr raids` opens the page.
 
 <p align="center"><img src="docs/images/raids-multi.png" alt="A raid night with Hyjal and Onyxia; officers' instance chips by the title" width="100%"></p>
 
+- **Remove from a raid** (v0.16.4): right-click a name in a raid's list → *Remove from this raid*; officers can remove anyone, everyone can remove their own characters (e.g. an alt signed up by mistake).
 - **Away days** (v0.11.0): click the first day you're away on the Calendar, pick the last one under **Until** (e.g. 10-14 Dec; v0.16.0) and press **I'm away**; right-click marks a single day. It counts for all your characters and answers *Can't come* for you to every raid on those days, including raids made later (v0.16.4; signing up again afterwards sticks). Officers see "away" on the calendar, in the line-up, in the groups and in the planner's Away column (the next three months, as date ranges).
 - **Groups** (v0.11.0): the raid as groups of five, with **Available** and **Bench** beside them. Everyone sees the groups ("You're in group 3"). Officers drag a name into a group, onto the Bench or back to Available (or click, then click where it goes); a full group swaps the two players; right-click marks **late**, **leaving early** or **absent**.
   - **Auto-fill** fills the empty spots from the sign-ups (signed up before tentative, then attendance and item level), with enough tanks and healers, healers spread over the groups and nobody marked away. What's already placed stays.

@@ -384,3 +384,10 @@ addon read.
     login) you're Can't come on it too. Press Sign up on it: it stays.
 98. [ ] Officers: Roster → Officers, hover someone's Away cell: every date
     range in the next three months, e.g. "10-14 Dec  they marked it".
+99. [ ] Mark yourself away, then click one of those days → **Not away …
+    after all**. On the Raids page, "away" is gone from your name **and**
+    from your alts' names (no reload needed on their side once synced).
+100. [ ] Right-click an alt's name in a raid's list → **Remove from this
+    raid**: it disappears for everyone on v0.16.4, the counts drop by one.
+    As a non-officer, right-clicking someone else only offers "Open their
+    character".

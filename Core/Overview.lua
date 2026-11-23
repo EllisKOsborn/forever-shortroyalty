@@ -156,7 +156,7 @@ function Overview.Build(guild, now)
 	local board = guild.raidBoard
 	local nextRaid = board and SK.RaidBoard.Next(board, now)
 	if nextRaid then
-		local mine = board.signups[nextRaid.id] and board.signups[nextRaid.id][SK.Compat.PlayerGUID() or ""]
+		local mine = SK.RaidBoard.SignupOf(board, nextRaid.id, SK.Compat.PlayerGUID())
 		o.nextRaid = { ev = nextRaid, counts = SK.RaidBoard.Counts(board, nextRaid.id), mine = mine and mine.s,
 			place = SK.RaidBoard.PlaceOf(board, nextRaid.id, SK.Compat.PlayerGUID() or ""),
 			more = #SK.RaidBoard.Upcoming(board, now) - 1 }

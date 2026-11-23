@@ -37,7 +37,7 @@ describe("v0.11.0 absences", function()
 		assert.is_true(SK.Merge.Validate(SK.DBM:Guild().profiles[W.player.guid]))
 		assert.same({ false, "that day has passed" }, { A:ToggleDay(at(1)) })
 		W.now = at(12, 12)
-		assert.is_nil(A.Field(A:Saved(), W.now)) -- nothing left from today on
+		assert.same({}, A.Field(A:Saved(), W.now).d) -- nothing left from today on (v0.16.4: still sent, with its time)
 		assert.is_true(A:ToggleDay(at(14)))
 		assert.is_true(A:ToggleDay(at(14))) -- off again
 		assert.is_false(A:IsMyDay(at(14)))
