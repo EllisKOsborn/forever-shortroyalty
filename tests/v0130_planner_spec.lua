@@ -350,7 +350,8 @@ describe("v0.13.0 Officers on the Character page", function()
 		assert.equal("Backup", sec.rows[1].value)
 		assert.equal("Main", sec.rows[3].value)
 		assert.equal("-", sec.rows[5].value) -- Away
-		assert.truthy(sec.rows[6].text:find("Keen healer", 1, true))
+		assert.equal("Raider check", sec.rows[6].label) -- v0.16.7
+		assert.truthy(sec.rows[7].text:find("Keen healer", 1, true))
 		assert.is_true(OD:ToggleAway(CAT, date("%Y-%m-%d", W.now + 86400)))
 		C:Refresh()
 		assert.truthy(C.colA.sections[1].rows[5].value:find(tostring(tonumber(date("%d", W.now + 86400))), 1, true))

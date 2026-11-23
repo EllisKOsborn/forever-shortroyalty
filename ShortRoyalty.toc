@@ -36,6 +36,7 @@ Core\RaidAssign.lua
 Core\Attendance.lua
 Core\OfficerDir.lua
 Core\RosterPlan.lua
+Core\Promotion.lua
 Core\Reserves.lua
 Core\LootNight.lua
 

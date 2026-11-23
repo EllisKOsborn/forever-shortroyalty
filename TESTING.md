@@ -404,3 +404,17 @@ addon read.
     "officer tools on", the Attendance tab and Roster → Officers appear.
     `/sr debug` "Guild ranks" shows "(raids)" next to Loot Master and
     Addon Jesus.
+
+## v0.16.7 Raider check
+
+103. [ ] (Once there are two months of attendance, ~February.) Roster →
+    Officers: someone with 13+ of the last 16 raids shows **Ready** in the
+    Status column; hover it: "Raider check: 13 of 16 raids (81%): ready".
+    The line above the table says "N ready for Raider", and a chat line
+    about it appears ~3 minutes after login.
+104. [ ] An officer whose rank may promote: click their **Ready** cell →
+    **Make Raider**. Their status becomes Raider and their guild rank goes
+    up one step (check the guild window). **Unverified:** whether the game
+    takes the roster name ("First Surname") for the promotion; if their
+    rank doesn't change, the chat line says to use the guild window; tell
+    me what it printed.

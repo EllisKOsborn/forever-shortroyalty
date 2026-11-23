@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.16.7 (not released yet): Raider check
+
+For the guild's rule "promoted to Raider with at least 80% attendance over a
+two-month period" (owner: "attended 13 out of the last 16 raids"):
+
+- **Roster → Officers shows who's ready for Raider.** A player attended a
+  raid when they signed up and were online at its start (on time or late,
+  as on the Attendance page), or were on the Bench, on any of their
+  characters. Ready = at least **80% of all raids in the last 60 days**
+  (raids they didn't sign up for count as missed), at least 8 raids, and
+  two months of attendance records (so the first can be ready around early
+  February).
+- Their **Status** cell reads **Ready**; the line above the table says how
+  many are ready; officers get one chat line a few minutes after login; the
+  Character page's Officers section shows "Raider check: 13 of 16 raids
+  (81%)".
+- **Make Raider (status and guild rank)** at the top of the Status menu:
+  sets Raider in the planner and asks the game to promote their guild rank,
+  one rank per press, up to the rank called "Raider". It only works if your
+  own guild rank may promote people. Nothing changes without an officer
+  pressing it.
+
 ## v0.16.6 (23 Nov 2026): Loot Master and Addon Jesus count as officers
 
 - Ranks named **Loot Master** and **Addon Jesus** now get the officer tools

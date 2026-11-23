@@ -290,13 +290,20 @@ function Char:OfficerSection(guild, guid, now)
 			attText = SK.RosterTab.AttendanceText({ raids = row.full + row.late + row.missed, pct = row.pct, bench = row.bench }, 30)
 		end
 	end
+	-- v0.16.7: the Raider check for their player (alts included).
+	local promoText
+	for _, r in ipairs(SK.RosterTab:PlanRows()) do
+		for _, g in ipairs(r.chars or {}) do
+			if g == guid and r.promo then promoText = SK.Promotion.Text(r.promo) end
+		end
+	end
 	return { title = "Officers", rows = Char.OfficerRows(SK.OfficerDir:Get(guild), guid, Compat.PlayerGUID(), attText,
-		function(g) local mm = guild.members[g]; return mm and mm.name end) }
+		function(g) local mm = guild.members[g]; return mm and mm.name end, promoText) }
 end
 
 -- The Officers section for the Character page (officers only). Pure apart
 -- from reading the stored officer roster. Returns rows for a Sheet block.
-function Char.OfficerRows(dir, guid, me, att, nameOf)
+function Char.OfficerRows(dir, guid, me, att, nameOf, promoText)
 	local OD, RP = SK.OfficerDir, SK.RosterPlan
 	local rows = {}
 	local status = OD.StatusOf(dir, guid)
@@ -313,6 +320,10 @@ function Char.OfficerRows(dir, guid, me, att, nameOf)
 	local awayText = RP.AwayText(RP.AwayDays(OD.AwayOf(dir, guid), selfAway, Compat.Now()), selfAway)
 	rows[#rows + 1] = { label = "Away", value = awayText or "-", tone = awayText and "bad" or "faint" }
 	if att then rows[#rows + 1] = { text = att, tone = "dim" } end
+	if promoText then
+		rows[#rows + 1] = { label = "Raider check", value = promoText,
+			tone = promoText:find("ready for Raider", 1, true) and "good" or "dim" }
+	end
 	for _, n in ipairs(OD.NotesOf(dir, guid, me)) do
 		rows[#rows + 1] = { text = Theme.Paint("dim", (nameOf(n.by) or "?") .. ": ") .. n.text, tone = "text" }
 	end

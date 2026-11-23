@@ -143,10 +143,12 @@ function RP.Build(ctx)
 		end
 		if main and main ~= guid then mainOf[guid] = main end
 	end
-	local alts = {}
+	local alts, chars = {}, {}
 	for guid, main in pairs(mainOf) do
 		alts[main] = alts[main] or {}
 		table.insert(alts[main], live[guid].name or "?")
+		chars[main] = chars[main] or { main }
+		table.insert(chars[main], guid)
 	end
 	local weekEnd = dayAt(now, 7)
 	for guid, m in pairs(live) do
@@ -182,7 +184,7 @@ function RP.Build(ctx)
 				status = OD.StatusOf(dir, guid), tiers = tiers,
 				awayDays = awayDays, selfAway = selfAway, awayText = RP.AwayText(awayDays, selfAway), awayClash = clash, awayNow = soon,
 				notes = notes, note = notes[1] and notes[1].text or nil,
-				alts = alts[guid] or {}, signed = ctx.signups and ctx.signups[guid] or nil,
+				alts = alts[guid] or {}, chars = chars[guid] or { guid }, signed = ctx.signups and ctx.signups[guid] or nil,
 			}
 			table.sort(r.alts)
 			r.ready = level >= RP.MAX_LEVEL and att == "yes"

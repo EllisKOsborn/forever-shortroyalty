@@ -192,6 +192,23 @@ function Compat.RequestRoster()
 	end
 end
 
+-- v0.16.7: guild promotions for the Raider check (Core/Promotion.lua).
+-- C_GuildInfo.Promote(name) moves a member up one rank; it has no
+-- HasRestrictions in Forever's API docs (SetGuildRankOrder does, so we
+-- don't use that). CanGuildPromote is the old global Blizzard's guild
+-- roster still calls; when it's missing we let the server decide.
+function Compat.CanGuildPromote()
+	local f = rawget(_G, "CanGuildPromote")
+	if type(f) ~= "function" then return true end
+	local ok, v = pcall(f)
+	return not ok or v and true or false
+end
+
+function Compat.GuildPromote(name)
+	if type(name) ~= "string" or name == "" or not has("C_GuildInfo", "Promote") then return false end
+	return (pcall(C_GuildInfo.Promote, name))
+end
+
 -- Officer notes are read only where the game allows it, and never synced.
 function Compat.CanViewOfficerNote()
 	if has("C_GuildInfo", "CanViewOfficerNote") then
@@ -1291,7 +1308,7 @@ Compat.PROBES = {
 	"C_Calendar.GetNumGuildEvents", "C_Calendar.GetGuildEventInfo", "C_Calendar.EventGetInvite",
 	"C_Calendar.AddEvent", "C_PartyInfo.InviteUnit", "C_PartyInfo.ConvertToRaid",
 	"C_Item.GetItemIconByID", "C_Item.GetItemInfoInstant", "C_Spell.GetSpellName", "C_Spell.GetSpellCooldown",
-	"C_GuildInfo.CanViewOfficerNote",
+	"C_GuildInfo.CanViewOfficerNote", "C_GuildInfo.Promote", "CanGuildPromote",
 	-- v0.2 Crafters and tooltips
 	"C_Item.GetItemNameByID", "C_Item.RequestLoadItemDataByID", "C_Item.GetItemQualityByID",
 	"C_Item.GetItemQualityColor", "C_Item.GetItemInfo", "C_Spell.RequestLoadSpellData",

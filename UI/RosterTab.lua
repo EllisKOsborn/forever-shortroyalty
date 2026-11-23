@@ -561,12 +561,22 @@ function Roster.CellItems(r, key)
 		Roster:Refresh()
 	end
 	if key == "status" then
-		return {
+		local items = {}
+		-- v0.16.7: the Raider check (Core/Promotion.lua).
+		if r.promo and r.promo.todo then
+			items[1] = { text = Theme.Paint("accent", "Make Raider (status and guild rank)"), onClick = function()
+				local ok, msg = SK.Promotion:MakeRaider(r)
+				SK:Print("%s: %s.", r.name, msg)
+				if ok then Roster:Refresh() end
+			end }
+		end
+		for _, it in ipairs({
 			{ text = "Raider", checked = r.status == "r", onClick = function() done(OD:SetStatus(r.guid, "r")) end },
 			{ text = "Backup", checked = r.status == "b", onClick = function() done(OD:SetStatus(r.guid, "b")) end },
 			{ text = "Social", checked = r.status == "s", onClick = function() done(OD:SetStatus(r.guid, "s")) end },
 			{ text = "Not set", checked = r.status == nil, onClick = function() done(OD:SetStatus(r.guid, nil)) end },
-		}
+		}) do items[#items + 1] = it end
+		return items
 	end
 	local t = r.tiers[key]
 	return {
@@ -655,7 +665,13 @@ local function decoratePlanRow(row)
 					if r.awayClash then Theme.TipLine(GameTooltip, "Clashes with a raid on the calendar.", "bad") end
 					Theme.TipLine(GameTooltip, "Click for the calendar.", "accent")
 				elseif self.key == "status" then
-					Theme.TipLine(GameTooltip, "Raider, Backup or Social (not their guild rank). Click to change.", "accent", true)
+					Theme.TipLine(GameTooltip, "Raider, Backup or Social. Click to change.", "accent", true)
+					if r.promo then
+						Theme.TipLine(GameTooltip, "Raider check: " .. SK.Promotion.Text(r.promo), r.promo.ready and "good" or "dim", true)
+						if r.promo.todo then
+							Theme.TipLine(GameTooltip, "Click, then Make Raider: sets Raider here and promotes their guild rank.", "dim", true)
+						end
+					end
 				else
 					Theme.TipLine(GameTooltip, SK.Data.ROLE_NAMES[self.key] .. ": Main, Off or no. Click to change.", "accent", true)
 				end
@@ -690,7 +706,8 @@ local function updatePlanRow(row, r)
 					(n > 1 and Theme.Paint("faint", " (+" .. (n - 1) .. ")") or "")))
 			elseif b.key == "status" then
 				local tone = r.status == "b" and "accent" or (r.status == "s" and "faint" or "dim")
-				if r.status then pill(b, "plain", Theme.Paint(tone, RP.STATUS_NAME[r.status]))
+				if r.promo and r.promo.todo then pill(b, "fill", "Ready")
+				elseif r.status then pill(b, "plain", Theme.Paint(tone, RP.STATUS_NAME[r.status]))
 				else pill(b, "plain", Theme.Paint("spark", "Not set")) end
 			else
 				local t = r.tiers[b.key]
@@ -1023,6 +1040,8 @@ function Roster:PlanRows()
 		signups = signups, raidDays = raidDays,
 		profile = function(g) return SK.Profile:Get(g, guild) end,
 		isOwn = function(g) return SK.DB.account[g] == true end })
+	-- v0.16.7: who's ready for Raider (80% of raids over two months).
+	self.promoReady = SK.Promotion.Annotate(rows, SK.Promotion:Records(guild), now, guild and guild.members or {})
 	return rows, guild, now
 end
 
@@ -1047,10 +1066,12 @@ function Roster:RefreshOfficers()
 	self.needsChip:SetText("Needs a look  " .. Theme.Paint(ps.needs and "text" or "faint", tostring(needs)))
 	self.needsChip:SetActive(ps.needs == true)
 	local items = RP.View(rows, { role = ps.role or "A", status = ps.status, needs = ps.needs, search = self.filter })
+	local ready = #(self.promoReady or {})
+	local lead = ready > 0 and (Theme.Paint("accent", ready .. " ready for Raider") .. "  ·  ") or ""
 	if (ps.role or "A") == "A" then
-		self.planSummary:SetText(RP.SummaryText(RP.Summary(rows)))
+		self.planSummary:SetText(lead .. RP.SummaryText(RP.Summary(rows)))
 	else
-		self.planSummary:SetText("Click a status, role, away or note cell to change it. Click a name for their character.")
+		self.planSummary:SetText(lead .. "Click a status, role, away or note cell to change it. Click a name for their character.")
 	end
 	self.count:SetText(Theme.Count(#rows, "player") .. "  ·  officers only")
 	self.signupMenu:Refresh()

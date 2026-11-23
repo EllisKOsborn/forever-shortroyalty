@@ -545,6 +545,7 @@ function rosterPlanner() {
     [C("DRUID", "Dorna"), "Feral", "", {}, 55, 5, 50, 0, 2, 1, "", "", 0, 0, "Member", "T"],
   ];
   const filter = S.planRole || "T";
+  const READY = new Set(["Quillon", "Mirrel"]);
   const roleCell = (r, k) => {
     const t = r[3][k];
     if (t === "m") return `<span style="display:inline-block;width:42px;text-align:center;background:var(--accent);color:var(--onAccent);font-size:11px;line-height:17px">Main</span>`;
@@ -562,7 +563,8 @@ function rosterPlanner() {
     const extra = r[13] ? ` <span class="faint small">+${r[13]}</span>` : "";
     const cells = [cell(W.n, cls(r[0]) + extra),
       cell(W.sp, `<span class="dim">${r[1]}</span>`),
-      cell(W.st, r[2] ? `<span class="${r[2] === "Raider" ? "dim" : r[2] === "Social" ? "faint" : "acc"}">${r[2]}</span>` : `<span class="spark">Not set</span>`, 0, 0),
+      // v0.16.7: Raider check, "Ready" filled (Core/Promotion.lua).
+      cell(W.st, READY.has(r[0].name) ? `<span style="display:inline-block;width:42px;text-align:center;background:var(--accent);color:var(--onAccent);font-size:11px;line-height:17px">Ready</span>` : r[2] ? `<span class="${r[2] === "Raider" ? "dim" : r[2] === "Social" ? "faint" : "acc"}">${r[2]}</span>` : `<span class="spark">Not set</span>`, 0, 0),
       cell(W.T, roleCell(r, "T"), 0, 0), cell(W.H, roleCell(r, "H"), 0, 0), cell(W.D, roleCell(r, "D"), 0, 0),
       cell(W.wk, awayCell(r[0].name)),
       cell(W.l, r[4] === 60 ? `<span class="good">60</span>` : `${r[4]}`, 1),
@@ -590,9 +592,10 @@ function rosterPlanner() {
   const head = `<div class="lhead">${headCols.map(([k, t, r, c]) => `<span class="${r ? "r" : ""}" style="width:${W[k]}px;${c || ("THD".includes(k) && k.length === 1) ? "justify-content:center" : ""}">${t}</span>`).join("")}<span style="width:${NW}px">Note</span></div>`;
   const chips = [["A", "All", 46], ["T", "Tanks", "2+3"], ["H", "Healers", "4+3"], ["D", "DPS", "25+3"], ["N", "Not sorted", 12]]
     .map(([k, t, n]) => `<span class="chip ${filter === k ? "on" : ""}" style="white-space:nowrap">${t}&nbsp;&nbsp;<span class="${filter === k ? "" : "faint"}">${n}</span></span>`).join("");
-  const summary = filter === "A"
+  const ready = `<span class="acc">2 ready for Raider</span>  ·  `;
+  const summary = ready + (filter === "A"
     ? "46 players  ·  31 at 60  ·  8 at 55-59  ·  22 attuned to Onyxia  ·  11 missing enchants  ·  5 without the addon"
-    : "Click a status, role, away or note cell to change it. Click a name for their character.";
+    : "Click a status, role, away or note cell to change it. Click a name for their character.");
   const top = `<div class="search abs" style="left:0;top:0;width:240px"><input placeholder="Search name, profession, note" value=""></div>
     <div class="menu abs" style="left:248px;top:0;width:28px">${btn("···", "", 'style="padding:0;width:28px;justify-content:center"')}</div>
     <span class="chip on" style="position:absolute;left:284px;top:1px">Officers</span>
@@ -665,6 +668,7 @@ function offBlock(w) {
   return `<div class="block"><div class="bhead"><span class="h display">Officers</span></div>
     ${r("Status", "Backup", "acc")}${r("Tank", "Off")}${r("Healer", "Main", "acc")}${r("DPS", "Off")}${r("Away", "Every Tue, 16-20 Dec", "bad")}
     <div class="small dim" style="margin-top:4px">Attendance (30 days): no recorded raids yet</div>
+    ${r("Raider check", "11 of 16 raids (69%)", "dim")}
     <div class="small" style="margin-top:6px;line-height:1.35"><span class="dim">Pocus:</span> Great raider, plays any role. Can't commit to a schedule: ask on the day.</div>
     <div class="small" style="margin-top:4px;line-height:1.35"><span class="dim">Nura:</span> Said yes to week 1 as healer.</div>
     <div class="small faint" style="margin-top:6px">Change these in Roster → Officers (click a cell).</div></div>`;

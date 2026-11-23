@@ -32,6 +32,30 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.16.7 (built 23 Nov on the branch, NOT released; owner asked whether the
+  guild's rule "automatically promoted to Raider when they have had at least
+  80% attendance over a two-month period" can be tracked; owner's answers:
+  "signed and been available at raid start … for 80% of the raids in a 2
+  month window … 13 out of the last 16 raids", bench counts, "Raider in both
+  areas"):** `Core/Promotion.lua` (`SK.Promotion`): pure `Raids(records,
+  now)` (attendance records started in the last `DAYS` 60, start check
+  over), `Covered` (records reach back `FULL_DAYS` 56), `AttendedIn(rec)`
+  (On time / Late / Bench), `Check(records, now, players)` (players =
+  main → its characters; % of ALL raids; `MIN_RAIDS` 8; `PCT` 80), `Text`,
+  `RaiderRank(members)` (rank named exactly Raider(s), else a "raider" rank
+  that isn't Trial), `StepsToRaider`, `CanPromoteTo(me, idx)`,
+  `Annotate(rows, records, now, members)` (r.promo = {attended, raids, pct,
+  ready, covered, steps, todo}), `NoticeText`; `Pr:MakeRaider(r)` (planner
+  status r + one `Compat.GuildPromote(name)` per press, `pending` guard
+  `PROMOTE_WAIT` 15 s), `Pr:Notice` (one chat line ~200 s after login,
+  OfficerView). `Compat.CanGuildPromote/GuildPromote` (`C_GuildInfo.Promote`
+  has no HasRestrictions; `SetGuildRankOrder` does, not used). RosterPlan
+  rows carry `chars`. Planner: Status pill "Ready" (filled), status menu
+  starts with "Make Raider (status and guild rank)", summary "N ready for
+  Raider"; Character page Officers row "Raider check". Nothing promotes
+  without a press. Tests `tests/v0167_raider_check_spec.lua`. TESTING
+  103–104. Unverified: whether Promote takes the roster name "First
+  Surname". Officer guide: add a Raider check section on release.
 - **v0.16.6 (released 23 Nov on `main`, owner: "push to main"; owner: an officer
   "can't see the officer part even after typing /sr officer", rank "Loot
   Master"; the owner: "my rank is 'Addon Jesus' … add this too"):**
@@ -1179,6 +1203,7 @@ Core/     Init (events, timers, modules), Log (+ error capture: SK:Safe,
           ShortWords (v0.7.0 word game: rules, results, leaderboards),
           RaidBoard (v0.8.0 raids + sign-ups), Attendance (v0.8.0, local),
           OfficerDir (v0.10.1 officer roster: roles, notes, alt links),
+          Promotion (v0.16.7 Raider check: 80% over two months),
           RaidGroups, Absences, RaidAssign (v0.11.0 groups, away days, boss jobs),
           Reserves (v0.9.0 points ledger, reserves, locks), LootNight
           (v0.9.0 officer's rolls, drops, awards, end of night; local)
