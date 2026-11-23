@@ -397,3 +397,9 @@ addon read.
 101. [ ] Raids → pick a raid: "YOUR ANSWER" sits above the three answer
     buttons; with `/sr officer` on, "OFFICERS" sits left of the instance
     buttons and the "made by" line stops before it.
+
+## v0.16.6 Loot Master
+
+102. [ ] The officer with the **Loot Master** rank types `/sr officer`:
+    "officer tools on", the Attendance tab and Roster → Officers appear.
+    `/sr debug` "Guild ranks" shows "(raids)" next to Loot Master.

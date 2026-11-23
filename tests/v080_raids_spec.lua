@@ -39,6 +39,9 @@ describe("v0.8.0 who may make raids", function()
 		assert.is_true(lead({ rank = "RaidLeader", rankIndex = 2 }))
 		assert.is_true(lead({ rank = "Raid Lead", rankIndex = 2 }))
 		assert.is_true(lead({ rank = "Officer Alt", rankIndex = 3 }))
+		assert.is_true(lead({ rank = "Loot Master", rankIndex = 2 })) -- v0.16.6
+		assert.is_true(lead({ rank = "LootMaster", rankIndex = 2 }))
+		assert.is_false(lead({ rank = "Loot", rankIndex = 4 }))
 		assert.is_true(lead({ rank = "Short King", rankIndex = 0 })) -- the Guild Master, whatever the rank is called
 		assert.is_false(lead({ rank = "Member", rankIndex = 4 }))
 		assert.is_false(lead({ rank = "Raider", rankIndex = 3 }))

@@ -32,6 +32,12 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
+- **v0.16.6 (built 23 Nov on the branch, NOT released; owner: an officer
+  "can't see the officer part even after typing /sr officer", rank "Loot
+  Master"):** `Board.IsLeadRank` also accepts "loot master(s)"/"lootmaster"
+  (all lead-rank powers: raids, attendance, officer roster, Reserve+).
+  Older clients still reject that officer's raids/changes until they
+  update. TESTING 102.
 - **v0.16.5 (released 23 Nov on `main`, owner: "Push to main"; an officer read the
   answer buttons as tabs, owner: "Do it"):** raid detail labels
   `RT.answerLabel` "YOUR ANSWER" (`RT.SIGN_LABEL_H` 18, everything below

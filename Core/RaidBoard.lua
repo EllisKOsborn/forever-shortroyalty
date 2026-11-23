@@ -75,8 +75,9 @@ function Board.IsLeadRank(m)
 	if m.rankIndex == 0 then return true end -- the Guild Master
 	if type(m.rank) ~= "string" then return false end
 	local words = " " .. (m.rank:lower():gsub("[%p%c]", " "):gsub("%s+", " ")) .. " "
+	-- v0.16.6 (owner: an officer's rank is "Loot Master"): loot masters too.
 	return words:find(" officers? ") ~= nil or words:find(" raid ?leaders? ") ~= nil
-		or words:find(" raid ?leads? ") ~= nil
+		or words:find(" raid ?leads? ") ~= nil or words:find(" loot ?masters? ") ~= nil
 end
 
 -- The addon's creator (owner, 16 Nov: "Just give me access to all these
