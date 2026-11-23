@@ -34,7 +34,8 @@ bridged to the addon only by copy and paste.
 ## Start here (handover, 14 Nov 2026)
 - **v0.16.6 (built 23 Nov on the branch, NOT released; owner: an officer
   "can't see the officer part even after typing /sr officer", rank "Loot
-  Master"):** `Board.IsLeadRank` also accepts "loot master(s)"/"lootmaster"
+  Master"; the owner: "my rank is 'Addon Jesus' … add this too"):**
+  `Board.IsLeadRank` also accepts "loot master(s)"/"lootmaster" and "addon jesus"
   (all lead-rank powers: raids, attendance, officer roster, Reserve+).
   Older clients still reject that officer's raids/changes until they
   update. TESTING 102.

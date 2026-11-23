@@ -1,10 +1,10 @@
 # Changelog
 
-## v0.16.6 (not released yet): Loot Master counts as an officer
+## v0.16.6 (not released yet): Loot Master and Addon Jesus count as officers
 
-- Ranks named **Loot Master** now get the officer tools (`/sr officer`),
-  like Officer and Raid Leader ranks: an officer with that rank couldn't
-  see them. Everyone needs v0.16.6 for raids and changes made by a Loot
+- Ranks named **Loot Master** and **Addon Jesus** now get the officer tools
+  (`/sr officer`), like Officer and Raid Leader ranks: an officer with the
+  Loot Master rank couldn't see them. Everyone needs v0.16.6 for raids and changes made by a Loot
   Master to be accepted in their game.
 
 ## v0.16.5 (23 Nov 2026): clearer raid page

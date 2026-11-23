@@ -168,7 +168,7 @@ people who were offline get them when they log in. `/sr raids` opens the page.
 
 **Officer tools.** Officers, raid leaders, loot masters (v0.16.6) and the
 Guild Master (any rank whose name has "Officer", "Raid Leader" or "Loot
-Master" in it) type
+Master" in it, and the rank "Addon Jesus") type
 `/sr officer` to switch on the officer tools (per character; type it again to
 switch them off): making raids on the Calendar, Attendance, and the Roster's
 Officers view. For anyone else the command just prints the help. Every

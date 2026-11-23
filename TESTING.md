@@ -402,4 +402,5 @@ addon read.
 
 102. [ ] The officer with the **Loot Master** rank types `/sr officer`:
     "officer tools on", the Attendance tab and Roster → Officers appear.
-    `/sr debug` "Guild ranks" shows "(raids)" next to Loot Master.
+    `/sr debug` "Guild ranks" shows "(raids)" next to Loot Master and
+    Addon Jesus.
