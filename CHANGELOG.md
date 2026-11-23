@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.6 (not released yet): Loot Master and Addon Jesus count as officers
+## v0.16.6 (23 Nov 2026): Loot Master and Addon Jesus count as officers
 
 - Ranks named **Loot Master** and **Addon Jesus** now get the officer tools
   (`/sr officer`), like Officer and Raid Leader ranks: an officer with the
