@@ -38,6 +38,18 @@ SK.Data.ATTUNEMENTS = {
 -- 00:00 UTC; the exact unlock hour differs by region, so the UI says "about".
 SK.Data.RAIDS_OPEN_AT = 1796774400
 
+-- v0.16.8 (owner: "create dungeon groups as well - for UBRS being the main
+-- one"): dungeons a group can be made for on the Raids calendar. Any member
+-- can make one (raids stay officers-only); they don't count for attendance
+-- or the Raider check, and have no soft reserves. Size from Forever's own
+-- data: Map 229 "Blackrock Spire" MaxPlayers 10 (wago.tools, build
+-- 1.60.1.71091, 25 Nov 2026). The key to enter (Seal of Ascension) isn't
+-- checked: status "none" only means "nothing for the addon to check".
+SK.Data.DUNGEONS = {
+	{ key = "ubrs", name = "Upper Blackrock Spire", short = "UBRS", size = 10, status = "none", dungeon = true, quests = {},
+	  note = "Dungeon group (10 players). The addon doesn't check the key." },
+}
+
 -- Entries shown in the UI (the first raid wave), in display order.
 function SK.Data.ShownAttunements()
 	local out = {}

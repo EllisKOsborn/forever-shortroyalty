@@ -994,7 +994,7 @@ function raids() {
     // v0.10.2: December 2026 starts on a Tuesday; today = Wed 2 Dec.
     const CW = Math.floor(T.sizes.contentW / 7), gy = t0 + 24 + 8 + 20;
     const CH = Math.floor((600 - 60 - 4 - 16 - 30 - 12 - (24 + 8 + 20)) / 6);
-    const RAIDS = { 4: [["20:00 Onyxia", "good"]], 9: [["19:30 Barrow", ""]], 11: [["18:30 Hyjal", "acc"], ["20:00 Onyxia", "good"]], 16: [["19:30 Hyjal + Onyxia", ""]],
+    const RAIDS = { 4: [["20:00 Onyxia", "good"]], 6: [["19:00 UBRS", "acc"]], 9: [["19:30 Barrow", ""]], 11: [["18:30 Hyjal", "acc"], ["20:00 Onyxia", "good"]], 16: [["19:30 Hyjal + Onyxia", ""]],
       18: [["20:00 Onyxia", "faint"]], 23: [["19:30 Barrow", ""]], 30: [["20:00 TBD", ""]] };
     let cells = "";
     for (let i = 0; i < 42; i++) {
@@ -1012,11 +1012,16 @@ function raids() {
       dayBox = `<div class="abs" style="left:${bx}px;top:${by}px;width:300px;background:var(--raised);border:1px solid var(--accent);padding:8px 12px 12px;box-shadow:0 6px 18px rgba(0,0,0,.6);z-index:5">
         <div style="display:flex"><span>Thursday 17 December</span><span class="faint" style="margin-left:auto">×</span></div>
         <div style="margin-top:8px;display:flex;gap:4px"><span class="menu" style="width:170px">${btn("Until Mon 21 Dec").replace("</span>", '<i class="arrow"></i></span>')}</span>${btn("I'm away")}</div>
-        ${officer ? `<div class="display dim" style="font-size:11px;letter-spacing:.08em;margin-top:12px">NEW RAID</div>
+        ${officer ? `<div class="display dim" style="font-size:11px;letter-spacing:.08em;margin-top:12px">NEW RAID OR DUNGEON GROUP</div>
         <div style="display:flex;gap:2px;align-items:center;margin-top:4px"><span class="menu" style="width:90px;margin-right:6px">${btn("20:00").replace("</span>", '<i class="arrow"></i></span>')}</span><span class="chip">Barrow</span><span class="chip on">Hyjal</span><span class="chip on">Onyxia</span></div>
-        <div style="margin-top:6px"><span class="menu" style="width:170px">${btn("Weekly, 8 raids").replace("</span>", '<i class="arrow"></i></span>')}</span></div>
+        <div style="margin-top:6px;display:flex;align-items:center"><span class="menu" style="width:170px;margin-right:6px">${btn("Weekly, 8 raids").replace("</span>", '<i class="arrow"></i></span>')}</span><span class="chip">UBRS</span></div>
         <div class="small dim" style="margin-top:6px">Hyjal Summit + Onyxia's Lair (40)</div>
-        <div style="margin-top:8px">${btn("Create raid", "primary")}</div>` : ""}</div>`;
+        <div style="margin-top:8px">${btn("Create raid", "primary")}</div>`
+        : `<div class="display dim" style="font-size:11px;letter-spacing:.08em;margin-top:12px">NEW DUNGEON GROUP</div>
+        <div style="display:flex;gap:2px;align-items:center;margin-top:4px"><span class="menu" style="width:90px;margin-right:6px">${btn("19:00").replace("</span>", '<i class="arrow"></i></span>')}</span><span class="chip on">UBRS</span></div>
+        <div style="margin-top:6px"><span class="menu" style="width:170px">${btn("Just this day").replace("</span>", '<i class="arrow"></i></span>')}</span></div>
+        <div class="small dim" style="margin-top:6px">Upper Blackrock Spire (10): a dungeon group, no attendance or reserves.</div>
+        <div style="margin-top:8px">${btn("Create group", "primary")}</div>`}</div>`;
     }
     return head + dayBox + `${btn("<", "", `style="position:absolute;left:0;top:${t0}px;width:32px;padding:0;justify-content:center"`)}${btn(">", "", `style="position:absolute;left:36px;top:${t0}px;width:32px;padding:0;justify-content:center"`)}
       <div class="abs" style="left:80px;top:${t0 + 3}px;font-size:15px">December 2026</div>
@@ -1068,7 +1073,7 @@ function raids() {
       (e, c) => c.key === "w" ? e[0] : c.key === "r" ? e[1] + dotFor(e[4]) : `${e[2]}<span class="faint"> / ${e[3]}</span>`,
       { click: true, sel: (e) => e === events[0], sort: { key: "w" }, style: `left:0;top:${t0}px;bottom:0;width:${LW}px` }) +
     `<div class="abs" style="left:${RX}px;top:${t0 + 2}px;font-size:15px">${S.multi ? "Hyjal + Onyxia (40)" : "Onyxia's Lair (40)"}</div>
-    ${officer ? `<div class="abs" style="right:0;top:${t0 + 26}px;display:flex;gap:2px;align-items:center"><span class="display dim" style="font-size:11px;letter-spacing:.08em;margin-right:8px">OFFICERS</span><span class="chip">Barrow</span><span class="chip ${S.multi ? "on" : ""}">Hyjal</span><span class="chip on">Onyxia</span></div>` : ""}
+    ${officer ? `<div class="abs" style="right:0;top:${t0 + 26}px;display:flex;gap:2px;align-items:center"><span class="display dim" style="font-size:11px;letter-spacing:.08em;margin-right:8px">OFFICERS</span><span class="chip">Barrow</span><span class="chip ${S.multi ? "on" : ""}">Hyjal</span><span class="chip on">Onyxia</span><span class="chip">UBRS</span></div>` : ""}
     <div class="abs dim small" style="left:${RX}px;top:${t0 + 24}px">Fri 11 Dec, 20:00  ·  made by ${nm(M[3])}</div>
     ${btn("···", "", `style="position:absolute;right:0;top:${t0}px;width:28px;padding:0;justify-content:center"`)}
     <div class="abs display dim" style="left:${RX}px;top:${t0 + 46}px;font-size:11px;letter-spacing:.08em">YOUR ANSWER</div>
@@ -1271,7 +1276,7 @@ function windowHTML() {
   const members = G.members.length, players = members - G.members.reduce((a, m) => a + (m.alts ? 1 : 0), 0);
   if (S.screen === "loot" && S.officer === "1") DESC.loot = "Reserves, bonus points and loot nights (officer tools on: /sr officer turns them off)";
   if (S.screen === "raids" && S.officer === "1") DESC.raids = "Guild raids, sign-ups and attendance (officer tools on: /sr officer turns them off)";
-  if (S.screen === "raids" && S.raidsView === "calendar") DESC.raids = S.officer === "1" ? "Click a day to make a raid on it, or to mark yourself away." : "Click a day to mark yourself away. Officers see it when they plan raids.";
+  if (S.screen === "raids" && S.raidsView === "calendar") DESC.raids = S.officer === "1" ? "Click a day to make a raid or a dungeon group on it, or to mark yourself away." : "Click a day to mark yourself away, or to make a dungeon group (UBRS) on it.";
   const desc = S.screen === "overview" ? (G.name ? `${esc(G.name)}  ·  ${plural(members, "member")}  ·  ${plural(players, "player")}  ·  ${online} online` : "No guild  ·  join a guild to see guildmates here") : DESC[S.screen];
   const title = TABS.find((t) => t[0] === S.screen)[1];
   return `<div class="side"><div class="crest" role="img" aria-label="Short Royalty crest"></div><div class="brand display">Short<br>Royalty</div>${nav}

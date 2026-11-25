@@ -73,10 +73,11 @@ end
 function RG.MergeSlot(board, s, now, isMember, isLead)
 	local ok, why = RG.ValidSlot(s, now)
 	if not ok then return false, why end
-	if not isLead(s.by) then return false, "not an officer or raid leader" end
-	if not isMember(s.g) then return false, "not a member" end
 	local id, key = RG.SplitId(s.e)
 	if not board.events[id] or (key and not SK.RaidBoard.Raid(key)) then return false, "unknown raid" end
+	-- v0.16.8: officers, or a dungeon group's maker.
+	if not SK.RaidBoard.MayManage(board, id, s.by, isLead, isMember) then return false, "not an officer or raid leader" end
+	if not isMember(s.g) then return false, "not a member" end
 	board.slots = board.slots or {}
 	local list = board.slots[s.e]
 	if not list then
@@ -171,7 +172,7 @@ function RG:Move(id, guid, target, swap, key)
 	local board, officer, now = B:Get(), Compat.PlayerGUID(), Compat.Now()
 	local ev = board and board.events[id]
 	if not ev or ev.x then return false, "unknown raid" end
-	if not B.CanLead(officer) then return false, "only officers and raid leaders can arrange the raid" end
+	if not B.CanManage(id, officer) then return false, "only officers and raid leaders can arrange the raid" end
 	key = key or B.Keys(ev)[1]
 	local sid = RG.SlotId(ev, key)
 	local fromN = RG.SlotOf(board, sid, guid)
@@ -219,7 +220,7 @@ function RG:CycleMark(id, guid, raidKey)
 	local B = SK.RaidBoard
 	local board, officer, now = B:Get(), Compat.PlayerGUID(), Compat.Now()
 	if not board or not board.events[id] then return false, "unknown raid" end
-	if not B.CanLead(officer) then return false, "only officers and raid leaders can mark players" end
+	if not B.CanManage(id, officer) then return false, "only officers and raid leaders can mark players" end
 	local sid = RG.SlotId(board.events[id], raidKey)
 	local n, m = RG.SlotOf(board, sid, guid)
 	local key = setSlot(board, sid, guid, n, RG.NEXT_MARK[m] or "", officer, now)
@@ -295,7 +296,7 @@ end
 -- The button. Returns the sentence to show.
 function RG:Setup(id, key)
 	local B = SK.RaidBoard
-	if not B.CanLead(Compat.PlayerGUID()) then return "Only officers and raid leaders can set the raid up." end
+	if not B.CanManage(id, Compat.PlayerGUID()) then return "Only officers and raid leaders can set the raid up." end
 	if Compat.InCombat() then return "Not in combat." end
 	local L = self:Plan(id, key)
 	if not L then return "Pick a raid first." end
@@ -485,7 +486,7 @@ end
 -- The button. Returns how many players it placed and benched.
 function RG:Fill(id, key)
 	local B = SK.RaidBoard
-	if not B.CanLead(Compat.PlayerGUID()) then return nil, "only officers and raid leaders can fill the raid" end
+	if not B.CanManage(id, Compat.PlayerGUID()) then return nil, "only officers and raid leaders can fill the raid" end
 	local board = B:Get()
 	local ev = board and board.events[id]
 	if not ev then return nil, "unknown raid" end

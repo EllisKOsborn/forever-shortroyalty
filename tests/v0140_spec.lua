@@ -229,16 +229,16 @@ describe("v0.14.0 Raids page", function()
 		RT:ShowRaid(e.id)
 		RT:Refresh()
 		assert.equal("Raid (to be decided)", RT.title:GetText())
-		RT.keyChips[1]:GetScript("OnClick")(RT.keyChips[1]) -- the last chip first: Onyxia
+		RT.keyChips[2]:GetScript("OnClick")(RT.keyChips[2]) -- the last chip first (UBRS, v0.16.8), then Onyxia
 		assert.same({ "ony" }, B.Keys(B:Get().events[e.id]))
-		RT.keyChips[2]:GetScript("OnClick")(RT.keyChips[2]) -- Hyjal
+		RT.keyChips[3]:GetScript("OnClick")(RT.keyChips[3]) -- Hyjal
 		assert.same({ "hyjal", "ony" }, B.Keys(B:Get().events[e.id]))
 		SK.DB.settings.raidsView = "groups"
 		RT:Refresh()
 		assert.equal("hyjal", RT.grpKey)
 		assert.is_true(RT.grpBoxes[4]:IsShown())
 		assert.is_false(RT.grpBoxes[5]:IsShown())
-		RT.grpKeys[1]:GetScript("OnClick")(RT.grpKeys[1]) -- Onyxia
+		RT.grpKeys[2]:GetScript("OnClick")(RT.grpKeys[2]) -- Onyxia (1 = UBRS, v0.16.8)
 		assert.equal("ony", RT.grpKey)
 		assert.is_true(RT.grpBoxes[8]:IsShown())
 		assert.equal(0, #SK.errors)
@@ -251,7 +251,7 @@ describe("v0.14.0 Raids page", function()
 		local c = RT.calCells[10]
 		RT:CalendarDay(c.cell, c, 10)
 		assert.is_true(RT.dayBox:IsShown())
-		assert.is_false(RT.dayBox.create:IsShown())
+		assert.equal("Create group", RT.dayBox.create.label:GetText()) -- v0.16.8: a dungeon group only
 		RT.dayBox.away:GetScript("OnClick")(RT.dayBox.away)
 		assert.is_true(SK.Absences.IsAway(SK.Absences:Mine(W.now), c.cell.at))
 		assert.equal("Not away 9 Dec after all", RT.dayBox.away.label:GetText())

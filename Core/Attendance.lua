@@ -462,7 +462,10 @@ end
 function Att.EventsNow(board, now)
 	local out = {}
 	for _, e in pairs(board and board.events or {}) do
-		if not e.x and now >= e.at - Att.ROSTER_BEFORE and now <= e.at + Att.LONGEST then out[#out + 1] = e end
+		-- v0.16.8: dungeon groups aren't checked (owner: "raids only").
+		if not e.x and not SK.RaidBoard.IsDungeon(e) and now >= e.at - Att.ROSTER_BEFORE and now <= e.at + Att.LONGEST then
+			out[#out + 1] = e
+		end
 	end
 	table.sort(out, function(a, b) return a.at < b.at end)
 	return out

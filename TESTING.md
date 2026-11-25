@@ -405,6 +405,18 @@ addon read.
     `/sr debug` "Guild ranks" shows "(raids)" next to Loot Master and
     Addon Jesus.
 
+## v0.16.8 Dungeon groups
+
+105. [ ] A member (not an officer) clicks a day on Raids → Calendar: the box
+    says **NEW DUNGEON GROUP** with a UBRS chip; **Create group** makes an
+    "Upper Blackrock Spire (10)" group. Guildmates on this version see it and
+    can sign up.
+106. [ ] The group's maker: click names in its list (In / Bench), Groups
+    page (two groups, Auto-fill, Invite & arrange), ··· → Cancel this
+    dungeon group. Another member can't change it; an officer can.
+107. [ ] No attendance check runs for a UBRS group, and it has no Reserve
+    loot button.
+
 ## v0.16.7 Raider check
 
 103. [ ] (Once there are two months of attendance, ~February.) Roster →

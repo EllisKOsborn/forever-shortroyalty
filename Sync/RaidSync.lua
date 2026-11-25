@@ -154,7 +154,7 @@ function RS:HandleRB(msg, from)
 	for _, e in ipairs(type(msg.e) == "table" and msg.e or {}) do
 		n = n + 1
 		if n > RS.MAX_ITEMS then break end
-		local ok, why = Board.MergeEvent(board, e, now, isLead)
+		local ok, why = Board.MergeEvent(board, e, now, isLead, isMember)
 		if ok then changed = true; self.stats.accepted = self.stats.accepted + 1
 		elseif why ~= "not newer" then self.stats.rejected = self.stats.rejected + 1; self.lastReject = why end
 		if type(e) == "table" and type(e.id) == "string" and (ok or why == "not newer") then
@@ -194,7 +194,7 @@ function RS:HandleRB(msg, from)
 	for _, b in ipairs(type(msg.as) == "table" and msg.as or {}) do
 		n = n + 1
 		if n > RS.MAX_ITEMS then break end
-		local ok, why = SK.RaidAssign.MergeBlock(board, b, now, isLead)
+		local ok, why = SK.RaidAssign.MergeBlock(board, b, now, isLead, isMember)
 		if ok then changed = true; self.stats.accepted = self.stats.accepted + 1
 		elseif why ~= "not newer" then self.stats.rejected = self.stats.rejected + 1; self.lastReject = why end
 		if type(b) == "table" and type(b.e) == "string" and type(b.k) == "string" and (ok or why == "not newer") then

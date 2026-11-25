@@ -68,11 +68,12 @@ local function copyLines(lines)
 end
 RA.CopyLines = copyLines
 
-function RA.MergeBlock(board, b, now, isLead)
+function RA.MergeBlock(board, b, now, isLead, isMember)
 	local ok, why = RA.ValidBlock(b, now)
 	if not ok then return false, why end
-	if not isLead(b.by) then return false, "not an officer or raid leader" end
 	if not board.events[b.e] then return false, "unknown raid" end
+	-- v0.16.8: officers, or a dungeon group's maker.
+	if not SK.RaidBoard.MayManage(board, b.e, b.by, isLead, isMember) then return false, "not an officer or raid leader" end
 	board.assign = board.assign or {}
 	local list = board.assign[b.e] or {}
 	board.assign[b.e] = list
@@ -113,7 +114,7 @@ local function save(id, key, block)
 	local B = SK.RaidBoard
 	local board, officer, now = B:Get(), Compat.PlayerGUID(), Compat.Now()
 	if not board or not board.events[id] then return false, "unknown raid" end
-	if not B.CanLead(officer) then return false, "only officers and raid leaders can change assignments" end
+	if not B.CanManage(id, officer) then return false, "only officers and raid leaders can change assignments" end
 	board.assign = board.assign or {}
 	local list = board.assign[id] or {}
 	board.assign[id] = list

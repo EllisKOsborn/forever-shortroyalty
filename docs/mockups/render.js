@@ -48,6 +48,7 @@ const SHOTS = {
   "roster-planner-note": ["shot=1&screen=roster&data=full&officer=1&rosterView=planner&planRole=H&noteOpen=1", W, H],
   "roster-planner-character": ["shot=1&screen=character&data=full&officer=1&offCard=1", W, H],
   "raids-calendar-day": ["shot=1&screen=raids&data=full&officer=1&raidsView=calendar&dayBox=1", W, H],
+  "raids-calendar-dungeon": ["shot=1&screen=raids&data=full&raidsView=calendar&dayBox=1", W, H],
   "raids-multi": ["shot=1&screen=raids&data=full&officer=1&multi=1", W, H],
   "raids-groups-multi": ["shot=1&screen=raids&data=full&officer=1&raidsView=groups&multi=1", W, H],
   "raids-attendance": ["shot=1&screen=raids&data=full&officer=1&raidsView=attendance", W, H],

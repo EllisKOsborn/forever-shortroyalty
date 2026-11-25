@@ -32,7 +32,38 @@ our own **Discord bot** (v0.12.0, `discord-bot/`, a Cloudflare Worker),
 bridged to the addon only by copy and paste.
 
 ## Start here (handover, 14 Nov 2026)
-- **v0.16.7 (built 23 Nov on the branch, NOT released; owner asked whether the
+- **v0.16.8 (built 25 Nov on the branch, NOT released; ships v0.16.7 too;
+  owner: "add a change where you can create dungeon groups as well - for
+  UBRS being the main one"; owner's answers: **anyone** can make one,
+  **UBRS only**, **raids only** count for attendance / Raider check, **no
+  reserves** for now):** `SK.Data.DUNGEONS` (Data/Attunements.lua: `ubrs`
+  "Upper Blackrock Spire", short UBRS, size 10 from Forever's Map 229
+  MaxPlayers via wago.tools build 1.60.1.71091; `dungeon = true`, status
+  "none" = nothing checked, the Seal of Ascension key isn't). RaidBoard:
+  `Board.Instances()` (raids then dungeons; `Raid`/`ParseKeys` use it),
+  `IsDungeonKey`, `IsDungeon(ev)` (keys non-empty, all dungeons), `Kind`,
+  `MAX_MEMBER_GROUPS` 3, `GROUP_OVER` 6 h, `LiveBy`, pure `MayManage(board,
+  id, who, isLead, isMember)` (lead rank, or a dungeon group's maker while a
+  member), `CanManage(id, guid)`, `ManageView(ev)` (UI). `MergeEvent(board,
+  e, now, isLead, isMember)`: non-lead `by` only for dungeon events, member,
+  `eb` = maker or lead, cap. `MergePlace`, `RG.MergeSlot`,
+  `RA.MergeBlock(…, isLead, isMember)` use `MayManage`. Actions Create
+  (non-lead: dungeons only, cap), CreateSeries (room ≤ cap), Cancel/
+  CancelSeries/SetRaids (+ a member's group stays dungeons)/SetPlace/RG
+  Move/CycleMark/Setup/Fill/RA save use `CanManage`. Left out of dungeon
+  groups: `Att.EventsNow`, `Board.ReserveRaids`, `LN.Tonight`, the planner's
+  raid clash days, the Reserve loot button. UI: `RT.Manage()` replaces
+  OfficerView for per-raid controls (line-up click, row menu, Groups,
+  Assignments, ··· "Cancel this dungeon group"); keyChips/grpKeys over
+  `Board.Instances()`; `RT.ToggleKey` never mixes kinds; day box for
+  everyone: `box.dkeys` (after the time for members, beside Repeat for
+  officers), `RT.FormKeys(officer)` (members: dungeon keys, default UBRS),
+  label NEW RAID OR DUNGEON GROUP / NEW DUNGEON GROUP, Create raid / Create
+  group. Older clients reject UBRS events ("unknown raid", no strikes).
+  Tests `tests/v0168_dungeon_groups_spec.lua`; picture
+  `raids-calendar-dungeon.png`. TESTING 105–107. Officer guide: add a
+  dungeon groups line on release.
+- **v0.16.7 (built 23 Nov on the branch, NOT released; ships in v0.16.8; owner asked whether the
   guild's rule "automatically promoted to Raider when they have had at least
   80% attendance over a two-month period" can be tracked; owner's answers:
   "signed and been available at raid start … for 80% of the raids in a 2

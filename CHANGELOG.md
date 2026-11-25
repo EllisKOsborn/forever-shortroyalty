@@ -1,6 +1,23 @@
 # Changelog
 
-## v0.16.7 (not released yet): Raider check
+## v0.16.8 (not released yet): dungeon groups (UBRS)
+
+- **Anyone can make a dungeon group for Upper Blackrock Spire** (10 players,
+  from Forever's own game data) on the Raids calendar: click a day, pick the
+  time, **Create group**. It works like a raid: sign-ups, In / Bench, two
+  groups of five, Auto-fill, Invite & arrange and assignments. Its maker
+  runs it like an officer runs a raid; officers can change or cancel any
+  group. Raids stay officers-only.
+- Each member can have **3 dungeon groups** coming up at once.
+- Dungeon groups **don't count** for attendance or the Raider check, and have
+  **no soft reserves** (no Reserve loot button, not on the Loot page or the
+  loot night).
+- Officers get a **UBRS** chip in the day box (beside Repeat) and next to a
+  raid's title. A night is raids or a dungeon group, never both.
+- Members need this version to see dungeon groups; older versions leave
+  them out.
+
+## v0.16.7 (not released on its own, ships in v0.16.8): Raider check
 
 For the guild's rule "promoted to Raider with at least 80% attendance over a
 two-month period" (owner: "attended 13 out of the last 16 raids"):

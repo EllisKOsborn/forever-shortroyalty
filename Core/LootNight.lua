@@ -36,7 +36,7 @@ LN.KEEP = 10               -- nights kept on this computer
 function LN.Tonight(board, now)
 	local best, bestD
 	for _, e in pairs(board and board.events or {}) do
-		if not e.x and e.at - LN.BEFORE <= now and now <= e.at + LN.AFTER then
+		if not e.x and not SK.RaidBoard.IsDungeon(e) and e.at - LN.BEFORE <= now and now <= e.at + LN.AFTER then
 			local d = math.abs(now - e.at)
 			if not bestD or d < bestD or (d == bestD and e.id < best.id) then best, bestD = e, d end
 		end

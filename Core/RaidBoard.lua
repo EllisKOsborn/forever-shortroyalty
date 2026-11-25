@@ -97,11 +97,42 @@ function Board.CanLead(guid, guild)
 	return Board.IsLeadRank(m)
 end
 
--- The raids shown (first wave: Barrow Deeps, Hyjal Summit, Onyxia's Lair).
+-- The raids shown (first wave: Barrow Deeps, Hyjal Summit, Onyxia's Lair),
+-- then (v0.16.8) the dungeons (UBRS).
+function Board.Instances()
+	local out = {}
+	for _, r in ipairs(SK.Data.ShownAttunements()) do out[#out + 1] = r end
+	for _, r in ipairs(SK.Data.DUNGEONS or {}) do out[#out + 1] = r end
+	return out
+end
+
 function Board.Raid(key)
-	for _, r in ipairs(SK.Data.ShownAttunements()) do
+	for _, r in ipairs(Board.Instances()) do
 		if r.key == key then return r end
 	end
+end
+
+-- v0.16.8: dungeon groups. A key is a dungeon's; an event is a dungeon
+-- group when it has instances and all of them are dungeons. Pure.
+function Board.IsDungeonKey(key)
+	local r = Board.Raid(key)
+	return r ~= nil and r.dungeon == true
+end
+
+function Board.IsDungeon(ev)
+	if type(ev) ~= "table" then return false end
+	local keys
+	if ev.rs ~= nil then keys = Board.ParseKeys(ev.rs) else keys = { ev.raid } end
+	if not keys or #keys == 0 then return false end
+	for _, k in ipairs(keys) do
+		if not Board.IsDungeonKey(k) then return false end
+	end
+	return true
+end
+
+-- "raid" or "dungeon group", for messages.
+function Board.Kind(ev)
+	return Board.IsDungeon(ev) and "dungeon group" or "raid"
 end
 
 ---------------------------------------------------------------------------
@@ -122,7 +153,7 @@ function Board.ParseKeys(rs)
 	end
 	if rs ~= "" and (rs:sub(1, 1) == "," or rs:sub(-1) == "," or rs:find(",,", 1, true)) then return nil end
 	local out = {}
-	for _, r in ipairs(SK.Data.ShownAttunements()) do
+	for _, r in ipairs(Board.Instances()) do
 		if want[r.key] then out[#out + 1] = r.key end
 	end
 	return out
@@ -253,16 +284,53 @@ end
 
 function Board.New() return { events = {}, signups = {}, places = {}, slots = {}, assign = {} } end
 
--- isLead(guid) -> bool. Returns accepted, reason.
-function Board.MergeEvent(board, e, now, isLead)
+-- v0.16.8: dungeon groups a member (not an officer) may have at once, and
+-- how long after its start a group stops counting towards that.
+Board.MAX_MEMBER_GROUPS = 3
+Board.GROUP_OVER = 6 * 3600
+
+-- Live (not cancelled, not over) events made by `by`, leaving out `id`.
+function Board.LiveBy(board, by, now, id)
+	local n = 0
+	for eid, e in pairs(board.events) do
+		if e.by == by and eid ~= id and not e.x and e.at >= now - Board.GROUP_OVER then n = n + 1 end
+	end
+	return n
+end
+
+-- v0.16.8: may `who` change event `id` (In/Bench, groups, assignments)?
+-- Officers and raid leaders always; a dungeon group's maker too, while
+-- they're a member. Pure (isLead / isMember from the caller).
+function Board.MayManage(board, id, who, isLead, isMember)
+	if type(who) ~= "string" then return false end
+	if isLead(who) then return true end
+	local ev = board.events[id]
+	return ev ~= nil and ev.by == who and Board.IsDungeon(ev) and (not isMember or isMember(who) == true)
+end
+
+-- isLead(guid) -> bool; isMember(guid) -> bool (v0.16.8, optional).
+-- Returns accepted, reason. Raids: made and changed by lead ranks only.
+-- Dungeon groups (v0.16.8): any member may make one (at most
+-- MAX_MEMBER_GROUPS live); only its maker or a lead rank may change it.
+function Board.MergeEvent(board, e, now, isLead, isMember)
 	local ok, why = Board.ValidEvent(e, now)
 	if not ok then return false, why end
-	if not isLead(e.by) or (e.eb and not isLead(e.eb)) then return false, "not an officer or raid leader" end
+	local lead = isLead(e.by)
+	if lead then
+		if e.eb and not isLead(e.eb) then return false, "not an officer or raid leader" end
+	else
+		if not Board.IsDungeon(e) then return false, "not an officer or raid leader" end
+		if isMember and not isMember(e.by) then return false, "not a member" end
+		if e.eb and e.eb ~= e.by and not isLead(e.eb) then return false, "not the group's maker" end
+	end
 	local have = board.events[e.id]
 	if have and have.u >= e.u then return false, "not newer" end
 	if not have then
 		if SK.Count(board.events) >= Board.MAX_STORED then return false, "too many raids" end
 		if not e.x and Board.LiveCount(board) >= Board.MAX_EVENTS then return false, "too many raids" end
+		if not lead and not e.x and Board.LiveBy(board, e.by, now, e.id) >= Board.MAX_MEMBER_GROUPS then
+			return false, "too many dungeon groups"
+		end
 	end
 	board.events[e.id] = { id = e.id, by = e.by, c = e.c, raid = e.raid, rs = e.rs, at = e.at, u = e.u, x = e.x, eb = e.eb,
 		sr = e.sr }
@@ -294,9 +362,9 @@ end
 function Board.MergePlace(board, p, now, isMember, isLead)
 	local ok, why = Board.ValidPlace(p, now)
 	if not ok then return false, why end
-	if not isLead(p.by) then return false, "not an officer or raid leader" end
-	if not isMember(p.g) then return false, "not a member" end
 	if not board.events[p.e] then return false, "unknown raid" end
+	if not Board.MayManage(board, p.e, p.by, isLead, isMember) then return false, "not an officer or raid leader" end
+	if not isMember(p.g) then return false, "not a member" end
 	board.places = board.places or {}
 	local list = board.places[p.e]
 	if not list then
@@ -360,7 +428,8 @@ end
 function Board.ReserveRaids(board, now)
 	local out = {}
 	for _, e in ipairs(Board.Upcoming(board, now)) do
-		if #Board.Keys(e) > 0 then out[#out + 1] = e end
+		-- v0.16.8: no soft reserves for dungeon groups (owner: "not now").
+		if #Board.Keys(e) > 0 and not Board.IsDungeon(e) then out[#out + 1] = e end
 	end
 	return out
 end
@@ -792,6 +861,22 @@ function Board.OfficerView()
 	return guid ~= nil and SK.DB.officer[guid] == true and Board.CanLead(guid)
 end
 
+local function isMember(g) return SK.Identity:IsMember(g) end
+
+-- v0.16.8: may I change this event (In/Bench, groups, assignments, cancel)?
+function Board.CanManage(id, guid)
+	local board = Board:Get()
+	return board ~= nil and Board.MayManage(board, id, guid or me(), function(g) return Board.CanLead(g) end, isMember)
+end
+
+-- The UI's switch: officers with /sr officer on, or this dungeon group's
+-- maker (v0.16.8).
+function Board.ManageView(ev)
+	if Board.OfficerView() then return true end
+	local guid = me()
+	return ev ~= nil and guid ~= nil and ev.by == guid and Board.IsDungeon(ev) and Board.CanManage(ev.id, guid)
+end
+
 local function changed(keys)
 	SK:Fire("RAIDS_UPDATED")
 	if SK.RaidSync then SK.RaidSync:Queue(keys) end
@@ -803,10 +888,18 @@ end
 function Board:Create(keys, at, sr)
 	local board, guid, now = self:Get(), me(), Compat.Now()
 	if not board or not guid then return nil, "no guild" end
-	if not Board.CanLead(guid) then return nil, "only officers and raid leaders can make raids" end
 	if type(keys) == "string" then keys = { keys } end
 	keys = type(keys) == "table" and Board.ParseKeys(table.concat(keys, ",")) or nil
 	if not keys then return nil, "pick a raid" end
+	local lead = Board.CanLead(guid)
+	if not lead then
+		-- v0.16.8: anyone can make a dungeon group (UBRS); raids stay with officers.
+		local probe = { raid = keys[1] or Board.TBD, rs = #keys ~= 1 and table.concat(keys, ",") or nil }
+		if not Board.IsDungeon(probe) then return nil, "only officers and raid leaders can make raids (you can make a dungeon group)" end
+		if Board.LiveBy(board, guid, now) >= Board.MAX_MEMBER_GROUPS then
+			return nil, "you already have " .. Board.MAX_MEMBER_GROUPS .. " dungeon groups coming up"
+		end
+	end
 	if at < now - 3600 then return nil, "that time has passed" end
 	if at > now + Board.AHEAD then return nil, "that's more than a year ahead" end
 	if Board.LiveCount(board) >= Board.MAX_EVENTS or SK.Count(board.events) >= Board.MAX_STORED then
@@ -820,7 +913,7 @@ function Board:Create(keys, at, sr)
 		e.id = guid .. ":" .. string.format("%d", e.c)
 	end
 	if sr == true then e.sr = e.id elseif type(sr) == "string" then e.sr = sr end
-	local ok, why = Board.MergeEvent(board, e, now, function(g) return Board.CanLead(g) end)
+	local ok, why = Board.MergeEvent(board, e, now, function(g) return Board.CanLead(g) end, isMember)
 	if not ok then return nil, why end
 	changed({ "E:" .. e.id })
 	return board.events[e.id]
@@ -841,6 +934,10 @@ function Board:CreateSeries(keys, firstAt, weeks)
 	if starts[#starts] > now + Board.AHEAD then return nil, "the last one would be more than a year ahead" end
 	Board.Prune(board, now)
 	local room = Board.MAX_EVENTS - Board.LiveCount(board)
+	local guid = me()
+	if guid and not Board.CanLead(guid) then -- v0.16.8: a member's dungeon groups
+		room = math.min(room, Board.MAX_MEMBER_GROUPS - Board.LiveBy(board, guid, now))
+	end
 	if room < weeks then
 		return nil, "only room for " .. math.max(0, room) .. " more raids (" .. Board.MAX_EVENTS .. " at most)"
 	end
@@ -869,7 +966,7 @@ end
 function Board:CancelSeries(id)
 	local board, guid, now = self:Get(), me(), Compat.Now()
 	if not board or not board.events[id] then return 0, "unknown raid" end
-	if not Board.CanLead(guid) then return 0, "only officers and raid leaders can cancel raids" end
+	if not Board.CanManage(id, guid) then return 0, "only officers and raid leaders can cancel raids" end
 	local keys = {}
 	for _, e in ipairs(Board.SeriesFrom(board, id)) do
 		e.x, e.eb, e.u = true, guid, math.max(now, e.u + 1)
@@ -884,9 +981,14 @@ function Board:SetRaids(id, keys)
 	local board, guid, now = self:Get(), me(), Compat.Now()
 	local e = board and board.events[id]
 	if not e or e.x then return false, "unknown raid" end
-	if not Board.CanLead(guid) then return false, "only officers and raid leaders can change raids" end
+	if not Board.CanManage(id, guid) then return false, "only officers and raid leaders can change raids" end
 	keys = type(keys) == "table" and Board.ParseKeys(table.concat(keys, ",")) or nil
 	if not keys then return false, "bad raids" end
+	-- v0.16.8: a member's dungeon group stays a dungeon group.
+	local probe = { raid = keys[1] or Board.TBD, rs = #keys ~= 1 and table.concat(keys, ",") or nil }
+	if not Board.CanLead(e.by) and not Board.IsDungeon(probe) then
+		return false, "a member's dungeon group can only hold dungeons"
+	end
 	local before = { id = e.id, raid = e.raid, rs = e.rs }
 	e.raid, e.rs = Board.RaidFields(keys)
 	e.eb, e.u = guid, math.max(now, e.u + 1)
@@ -900,7 +1002,7 @@ function Board:Cancel(id)
 	local board, guid, now = self:Get(), me(), Compat.Now()
 	local e = board and board.events[id]
 	if not e then return false, "unknown raid" end
-	if not Board.CanLead(guid) then return false, "only officers and raid leaders can cancel raids" end
+	if not Board.CanManage(id, guid) then return false, "only officers and raid leaders can cancel raids" end
 	e.x, e.eb, e.u = true, guid, math.max(now, e.u + 1)
 	changed({ "E:" .. id })
 	return true
@@ -931,10 +1033,11 @@ function Board:RemoveSignup(id, guid)
 	local have = board.signups[id] and board.signups[id][guid or ""]
 	if not have or have.s == Board.REMOVED then return false, "not signed up" end
 	local own = SK.DB.account[guid] ~= nil or guid == mine
-	if not own and not Board.CanLead(mine) then return false, "only officers can remove someone else" end
+	local lead = Board.CanLead(mine)
+	if not own and not lead then return false, "only officers can remove someone else" end
 	board.signups[id][guid] = { s = Board.REMOVED, u = math.max(now, have.u + 1), b = (not own) and mine or nil }
 	local keys = { "S:" .. id .. "|" .. guid }
-	if board.places[id] and board.places[id][guid] and Board.CanLead(mine) then
+	if board.places[id] and board.places[id][guid] and Board.CanManage(id, mine) then
 		board.places[id][guid] = { v = "-", u = math.max(now, board.places[id][guid].u + 1), by = mine }
 		keys[#keys + 1] = "P:" .. id .. "|" .. guid
 	end
@@ -947,7 +1050,7 @@ end
 function Board:SetPlace(id, guid, v)
 	local board, officer, now = self:Get(), Compat.PlayerGUID(), Compat.Now()
 	if not board or not board.events[id] then return false, "unknown raid" end
-	if not Board.CanLead(officer) then return false, "only officers and raid leaders can pick the raid" end
+	if not Board.CanManage(id, officer) then return false, "only officers and raid leaders can pick the raid" end
 	if v ~= "i" and v ~= "b" and v ~= "-" then return false, "bad place" end
 	local list = board.places[id] or {}
 	board.places[id] = list

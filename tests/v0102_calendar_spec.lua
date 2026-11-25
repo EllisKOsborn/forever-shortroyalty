@@ -57,7 +57,10 @@ describe("v0.10.2 raid calendar", function()
 		-- v0.14.0: a day opens the day box; members get "I'm away", officers New raid.
 		RT:CalendarDay(RT.calCells[7].cell, RT.calCells[7], 7)   -- Sunday 6 Dec
 		assert.is_true(RT.dayBox:IsShown())
-		assert.is_false(RT.dayBox.create:IsShown())
+		-- v0.16.8: members can make a dungeon group (UBRS), never a raid.
+		assert.is_true(RT.dayBox.create:IsShown())
+		assert.equal("NEW DUNGEON GROUP", RT.dayBox.newLabel:GetText())
+		assert.is_false(RT.dayBox.keys[1]:IsShown())
 		RT.dayBox.away:GetScript("OnClick")(RT.dayBox.away)
 		assert.is_true(SK.Absences.IsAway(SK.Absences:Mine(W.now), RT.calCells[7].cell.at))
 		RT:CloseDay()

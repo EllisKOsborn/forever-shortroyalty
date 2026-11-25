@@ -1034,7 +1034,7 @@ function Roster:PlanRows()
 	local raidDays = {}
 	local board = SK.RaidBoard:Get(guild)
 	for _, e in pairs(board and board.events or {}) do
-		if not e.x and e.at >= now - 86400 then raidDays[date("%Y-%m-%d", e.at)] = true end
+		if not e.x and not SK.RaidBoard.IsDungeon(e) and e.at >= now - 86400 then raidDays[date("%Y-%m-%d", e.at)] = true end
 	end
 	local rows = RP.Build({ guild = guild, dir = SK.OfficerDir:Get(guild) or {}, now = now, me = SK.Compat.PlayerGUID(),
 		signups = signups, raidDays = raidDays,

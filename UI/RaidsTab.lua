@@ -72,6 +72,13 @@ local RESULT_TONE = { full = "good", late = "spark", missed = "bad", maybe = "di
 ---------------------------------------------------------------------------
 -- Pure helpers (tested)
 ---------------------------------------------------------------------------
+-- v0.16.8: can I change the selected raid or dungeon group (officers, or
+-- the dungeon group's maker)?
+function RT.Manage()
+	local board = Board:Get()
+	return Board.ManageView(board and RT.selected and board.events[RT.selected] or nil)
+end
+
 -- Which page tab to show: officer tabs fall back to Raids for everyone else.
 function RT.View(officer)
 	local v = SK.DB.settings.raidsView
@@ -326,7 +333,7 @@ function RT:Build(page)
 	-- v0.14.0 officers: which instances this night is (none = to be decided).
 	self.keyChips = {}
 	local kprev
-	local avail = SK.Data.ShownAttunements()
+	local avail = Board.Instances() -- v0.16.8: raids, then dungeons (UBRS)
 	for i = #avail, 1, -1 do
 		local r = avail[i]
 		local c = W.Chip(d, r.short or r.name, function()
@@ -338,7 +345,8 @@ function RT:Build(page)
 			RT:Refresh()
 		end)
 		c.value = r.key
-		c.tooltip = "Officers: is this night " .. r.name .. "? Pick one or more; none = to be decided."
+		c.tooltip = r.dungeon and ("Officers: make this a " .. r.name .. " dungeon group (no attendance, no reserves).")
+			or ("Officers: is this night " .. r.name .. "? Pick one or more; none = to be decided.")
 		if kprev then c:SetPoint("RIGHT", kprev, "LEFT", -SP.xxs, 0) else c:SetPoint("TOPRIGHT", 0, -(S.control + SP.xxs)) end
 		self.keyChips[#self.keyChips + 1] = c
 		kprev = c
@@ -416,7 +424,7 @@ function RT:Build(page)
 			-- v0.16.4: right-click = a small menu (their character; remove from
 			-- this raid for officers and for your own characters).
 			if button == "RightButton" and row then return RT.rowMenu:Open(row, RT.RowItems(r)) end
-			if Board.OfficerView() then return RT:CyclePlace(r) end
+			if RT.Manage() then return RT:CyclePlace(r) end
 			SK.CharacterTab:ShowCharacter(r.guid)
 		end,
 		onEnter = function(row, r)
@@ -425,7 +433,7 @@ function RT:Build(page)
 			Theme.TipLine(GameTooltip, r.awayOnly and "Away that day (marked away, not signed up)" or
 				(r.statusName .. (r.place and ("  ·  " .. Board.PLACE_NAME[r.place]) or "") ..
 				(r.byOfficer and "  ·  added by an officer" or "")), r.awayOnly and "bad" or "dim")
-			if Board.OfficerView() and not r.awayOnly then
+			if RT.Manage() and not r.awayOnly then
 				Theme.TipLine(GameTooltip, "Click: In, then Bench, then undecided. Right-click: their character, or remove them.",
 					"accent", true)
 			else
@@ -547,7 +555,7 @@ function RT:CreateRaid(dayAt)
 	local at = Board.StartAt(Board.DayStart(dayAt or Compat.Now(), 0), form.minutes or 20 * 60)
 	-- v0.16.0: form.weeks > 1 = a weekly series. Returns the first raid,
 	-- or nil and why; and how many were made.
-	local list, why = Board:CreateSeries(form.keys, at, form.weeks or 1)
+	local list, why = Board:CreateSeries(RT.FormKeys(Board.OfficerView()), at, form.weeks or 1)
 	local e = list and list[1]
 	if e then RT.selected = e.id end
 	RT:Refresh()
@@ -569,11 +577,25 @@ function RT.NewRaidForm()
 	return form
 end
 
--- Officers: the night's instances, toggled one at a time.
+-- v0.16.8: the keys the day box makes. Officers: what they picked. Everyone
+-- else: dungeon keys only, and the first dungeon when none is picked.
+function RT.FormKeys(officer)
+	local keys = RT.NewRaidForm().keys
+	if officer then return keys end
+	local out = {}
+	for _, k in ipairs(keys) do if Board.IsDungeonKey(k) then out[#out + 1] = k end end
+	if #out == 0 and SK.Data.DUNGEONS and SK.Data.DUNGEONS[1] then out[1] = SK.Data.DUNGEONS[1].key end
+	return out
+end
+
+-- Officers: the night's instances, toggled one at a time. v0.16.8: a
+-- night is raids or a dungeon group, never both (picking one kind drops
+-- the other).
 function RT.ToggleKey(keys, key)
 	local out, had = {}, false
+	local dungeon = Board.IsDungeonKey(key)
 	for _, k in ipairs(keys) do
-		if k == key then had = true else out[#out + 1] = k end
+		if k == key then had = true elseif Board.IsDungeonKey(k) == dungeon then out[#out + 1] = k end
 	end
 	if not had then out[#out + 1] = key end
 	return Board.ParseKeys(table.concat(out, ",")) or {}
@@ -602,7 +624,7 @@ end
 function RT.RowItems(r)
 	local items = { { text = "Open their character", onClick = function() SK.CharacterTab:ShowCharacter(r.guid) end } }
 	local own = SK.DB.account[r.guid] ~= nil or r.guid == Compat.PlayerGUID()
-	if not r.awayOnly and (own or Board.OfficerView()) then
+	if not r.awayOnly and (own or RT.Manage()) then
 		items[#items + 1] = { text = "Remove from this raid", onClick = function() RT:RemoveRow(r) end }
 	end
 	return items
@@ -678,7 +700,11 @@ function RT:DetailOptions()
 	if Board.OfficerView() and RT.selected then
 		items[#items + 1] = { text = "Post with the Discord bot", onClick = function() RT:CopyBot() end }
 		items[#items + 1] = { text = "Import sign-ups from Discord", onClick = function() RT:ImportDiscord() end }
-		items[#items + 1] = { text = "Cancel this raid", onClick = function()
+	end
+	if RT.Manage() and RT.selected then
+		local board0 = Board:Get()
+		local ev0 = board0 and board0.events[RT.selected]
+		items[#items + 1] = { text = "Cancel this " .. Board.Kind(ev0), onClick = function()
 			local ok, why = Board:Cancel(RT.selected)
 			if not ok then SK:Print("Couldn't cancel: %s.", tostring(why)) end
 			RT.selected = nil
@@ -720,11 +746,11 @@ RT.Ctx = Board.Ctx
 ---------------------------------------------------------------------------
 function RT:Description()
 	if RT.View(Board.OfficerView()) == "calendar" then
-		return Board.OfficerView() and "Click a day to make a raid on it, or to mark yourself away."
-			or "Click a day to mark yourself away. Officers see it when they plan raids."
+		return Board.OfficerView() and "Click a day to make a raid or a dungeon group on it, or to mark yourself away."
+			or "Click a day to mark yourself away, or to make a dungeon group (UBRS) on it."
 	end
 	if Board.OfficerView() then return "Guild raids, sign-ups and attendance (officer tools on: /sr officer turns them off)" end
-	return "Guild raids made by officers and raid leaders. Sign up here so they know who's coming."
+	return "Guild raids made by officers, and dungeon groups anyone can make. Sign up so they know who's coming."
 end
 
 function RT:RefreshUpcoming(board, now, me)
@@ -735,7 +761,7 @@ function RT:RefreshUpcoming(board, now, me)
 	self.events:SetItems(rows)
 	self.events:SetSelected(function(r) return r.id == RT.selected end)
 	self.events:SetEmptyText(Board.OfficerView() and "No raids yet. Make one on the Calendar: click a day."
-		or "No raids yet. Officers and raid leaders make them.")
+		or "No raids yet. Officers make raids; anyone can make a dungeon group on the Calendar.")
 
 	local ev = board and RT.selected and board.events[RT.selected]
 	local shown = ev ~= nil
@@ -777,7 +803,7 @@ function RT:RefreshUpcoming(board, now, me)
 	end
 	self.role:Refresh()
 	-- Reserve loot: signed up or tentative, and the instances are decided.
-	local canReserve = mine ~= nil and (mine.s == "y" or mine.s == "t") and #keys > 0 and not ev.x
+	local canReserve = mine ~= nil and (mine.s == "y" or mine.s == "t") and #keys > 0 and not ev.x and not Board.IsDungeon(ev)
 	self.reserveBtn:SetShown(canReserve)
 	if canReserve then
 		local R = SK.Reserves
@@ -941,7 +967,7 @@ function RT:BuildGroups(page, top)
 	-- v0.14.0: a night with several instances has groups per instance.
 	self.grpKeys = {}
 	local kprev
-	local avail = SK.Data.ShownAttunements()
+	local avail = Board.Instances()
 	for i = #avail, 1, -1 do
 		local r = avail[i]
 		local c = W.Chip(gp, r.short or r.name, function()
@@ -1064,7 +1090,7 @@ function RT:SlotTip(owner, r)
 	Theme.TipLine(GameTooltip, r.statusName .. (r.role and ("  ·  " .. SK.Data.ROLE_NAMES[r.role]) or "") ..
 		(r.mark and r.mark ~= "" and ("  ·  " .. SK.RaidGroups.MARK_NAME[r.mark]) or ""), "dim")
 	if r.ilvl then Theme.TipLine(GameTooltip, string.format("Item level %.0f%s", r.ilvl, r.tree and ("  ·  " .. r.tree) or ""), "dim") end
-	if Board.OfficerView() then
+	if RT.Manage() then
 		Theme.TipLine(GameTooltip, "Drag (or click) to move. Right-click: late, leaving early, absent.", "accent", true)
 	end
 	GameTooltip:Show()
@@ -1072,7 +1098,7 @@ end
 
 -- Officers: pick a player up (drag, or a click), put them down on a click.
 function RT:StartCarry(r, dragging)
-	if not Board.OfficerView() or not RT.selected then return end
+	if not RT.Manage() or not RT.selected then return end
 	RT.carry = { guid = r.guid, name = r.name }
 	RT.dragging = dragging and true or false
 	if dragging then
@@ -1117,7 +1143,7 @@ end
 -- A click on a player or a slot.
 function RT:SlotClick(r, target, button)
 	if button == "RightButton" then
-		if r and Board.OfficerView() and RT.selected then
+		if r and RT.Manage() and RT.selected then
 			local ok, why = SK.RaidGroups:CycleMark(RT.selected, r.guid, RT.grpKey)
 			if not ok then SK:Print("Couldn't mark them: %s.", tostring(why)) end
 			RT:Refresh()
@@ -1126,7 +1152,7 @@ function RT:SlotClick(r, target, button)
 		end
 		return
 	end
-	if not Board.OfficerView() then
+	if not RT.Manage() then
 		if r then SK.CharacterTab:ShowCharacter(r.guid) end
 		return
 	end
@@ -1146,7 +1172,7 @@ function RT:RefreshGroups(now)
 	if not found then RT.selected = up[1] and up[1].id or nil end
 	self.grpMenu:Refresh()
 	local ev = RT.selected and board.events[RT.selected]
-	local officer = Board.OfficerView()
+	local officer = Board.ManageView(ev) -- v0.16.8: or this dungeon group's maker
 	for _, box in ipairs(self.grpBoxes) do box:Hide() end
 	self.grpAvail:SetShown(ev ~= nil)
 	self.grpBench:SetShown(ev ~= nil)
@@ -1287,7 +1313,7 @@ function RT:BuildAssign(page, top)
 		columns = { { key = "name", title = "Bosses", width = RT.ASG_BOSS_W - SP.m } },
 		setCell = function(fs, b) fs:SetText(b.name .. Theme.Paint("faint", "  " .. #b.lines)) end,
 		onClick = function(b, button)
-			if button == "RightButton" and Board.OfficerView() then
+			if button == "RightButton" and RT.Manage() then
 				SK.RaidAssign:DeleteBlock(RT.selected, b.key)
 				RT.asgBlock = nil
 			else
@@ -1326,7 +1352,7 @@ function RT:BuildAssign(page, top)
 			if col.key == "task" then fs:SetText(SK.RaidAssign.TASK_NAME[l.t]) else fs:SetText(RT.LinePlayers(l, SK.DBM:Guild())) end
 		end,
 		onClick = function(l, button)
-			if not Board.OfficerView() then return end
+			if not RT.Manage() then return end
 			if button == "RightButton" then
 				SK.RaidAssign:RemoveLine(RT.selected, RT.asgBlock, l.index)
 				RT.asgLine = nil
@@ -1342,7 +1368,7 @@ function RT:BuildAssign(page, top)
 		columns = { { key = "name", title = "In this raid", width = RT.ASG_IN_W - SP.m } },
 		setCell = function(fs, r) fs:SetText(RT.SlotText(r)) end,
 		onClick = function(r)
-			if not (Board.OfficerView() and RT.asgBlock and RT.asgLine) then return end
+			if not (RT.Manage() and RT.asgBlock and RT.asgLine) then return end
 			local ok, why = SK.RaidAssign:TogglePlayer(RT.selected, RT.asgBlock, RT.asgLine, r.guid)
 			if not ok then SK:Print("Couldn't change it: %s.", tostring(why)) end
 			RT:Refresh()
@@ -1374,7 +1400,7 @@ function RT:RefreshAssign(now)
 	if not found then RT.selected = up[1] and up[1].id or nil end
 	self.asgMenu:Refresh()
 	local ev = RT.selected and board.events[RT.selected]
-	local officer = Board.OfficerView() and ev ~= nil
+	local officer = ev ~= nil and Board.ManageView(ev)
 	for _, f in ipairs({ self.asgName, self.asgAdd, self.asgCopy, self.asgTask }) do f:SetShown(officer) end
 	local blocks = ev and SK.RaidAssign.Blocks(board, ev.id) or {}
 	local block
@@ -1467,7 +1493,7 @@ function RT:BuildCalendar(page, top)
 			if cell.awayCount > 0 then Theme.TipLine(GameTooltip, Theme.Count(cell.awayCount, "player") .. " away", "dim") end
 			if not cell.past then
 				Theme.TipLine(GameTooltip, Board.OfficerView() and "Click: mark yourself away, or make a raid on this day."
-					or "Click: mark yourself away (or not).", "accent")
+					or "Click: mark yourself away, or make a dungeon group on this day.", "accent")
 			end
 			GameTooltip:Show()
 		end)
@@ -1616,6 +1642,19 @@ function RT:BuildDay(cal)
 		box.keys[#box.keys + 1] = c
 		prev = c
 	end
+	-- v0.16.8: dungeon groups (UBRS). Anyone can make one; placed in DrawDay.
+	box.dkeys = {}
+	for _, r in ipairs(SK.Data.DUNGEONS or {}) do
+		local c = W.Chip(box, r.short or r.name, function()
+			local form = RT.NewRaidForm()
+			form.keys = RT.ToggleKey(RT.FormKeys(Board.OfficerView()), r.key)
+			RT:DrawDay()
+		end)
+		c.value = r.key
+		c.tooltip = r.name .. " (" .. (r.size or "?") .. "): a dungeon group. Anyone can make one; it doesn't count " ..
+			"for attendance and has no soft reserves."
+		box.dkeys[#box.dkeys + 1] = c
+	end
 	-- v0.16.0: repeat weekly.
 	box.repeatMenu = W.Menu(box, {
 		width = 170,
@@ -1631,7 +1670,8 @@ function RT:BuildDay(cal)
 	box.create = W.Button(box, "Create raid", nil, S.control, function()
 		local e, why, n = RT:CreateRaid(RT.dayCell and RT.dayCell.at)
 		if e and n > 1 then
-			RT.dayResult = Theme.Paint("good", "Made " .. n .. " raids: ") .. Board.EventName(e, true) .. ", " ..
+			RT.dayResult = Theme.Paint("good", "Made " .. n .. (Board.IsDungeon(e) and " groups: " or " raids: ")) ..
+				Board.EventName(e, true) .. ", " ..
 				date("%As %H:%M", e.at) .. ", until " .. date("%d %b", Board.WeeklyStarts(e.at, n)[n])
 		elseif e then
 			RT.dayResult = Theme.Paint("good", "Made: ") .. Board.EventName(e, true) .. ", " .. date("%H:%M", e.at)
@@ -1730,31 +1770,46 @@ function RT:DrawDay()
 	-- The start time counts, not the day (v0.15.1: the last day was offered,
 	-- then refused).
 	local startAt = Board.StartAt(Board.DayStart(cell.at, 0), RT.NewRaidForm().minutes or 20 * 60)
-	local canMake = officer and startAt <= now + Board.AHEAD
+	-- v0.16.8: everyone can make a dungeon group; raids stay with officers.
+	local canMake = startAt <= now + Board.AHEAD
 	for _, f in ipairs({ box.newLabel, box.time, box.repeatMenu, box.create, box.what, box.result }) do f:SetShown(canMake) end
-	for _, c in ipairs(box.keys) do c:SetShown(canMake) end
+	for _, c in ipairs(box.keys) do c:SetShown(canMake and officer) end
+	for _, c in ipairs(box.dkeys) do c:SetShown(canMake) end
 	if canMake then
+		local keys = RT.FormKeys(officer)
+		local probe = { raid = (keys[1] or Board.TBD), rs = #keys == 1 and nil or table.concat(keys, ",") }
+		local dungeon = Board.IsDungeon(probe)
+		box.newLabel:SetText(officer and "NEW RAID OR DUNGEON GROUP" or "NEW DUNGEON GROUP")
+		box.create:SetText(dungeon and "Create group" or "Create raid")
 		box.newLabel:ClearAllPoints()
 		box.newLabel:SetPoint("TOPLEFT", SP.m, -(y + SP.m))
 		y = y + SP.m + W.CARD_LABEL_H
 		box.time:ClearAllPoints()
 		box.time:SetPoint("TOPLEFT", SP.m, -y)
 		box.time:Refresh()
-		local form = RT.NewRaidForm()
 		local on = {}
-		for _, k in ipairs(form.keys) do on[k] = true end
+		for _, k in ipairs(keys) do on[k] = true end
 		for _, c in ipairs(box.keys) do c:SetActive(on[c.value] == true) end
+		for _, c in ipairs(box.dkeys) do c:SetActive(on[c.value] == true) end
 		y = y + S.control + SP.xs
 		box.repeatMenu:ClearAllPoints()
 		box.repeatMenu:SetPoint("TOPLEFT", SP.m, -y)
 		box.repeatMenu:Refresh()
+		-- Dungeon chips: after the time for members; beside Repeat for
+		-- officers (the time row holds the raids).
+		local dprev = officer and box.repeatMenu or box.time
+		for _, c in ipairs(box.dkeys) do
+			c:ClearAllPoints()
+			c:SetPoint("LEFT", dprev, "RIGHT", (dprev == box.time or dprev == box.repeatMenu) and SP.s or SP.xxs, 0)
+			dprev = c
+		end
 		y = y + S.control + SP.xs
-		local probe = { raid = (form.keys[1] or Board.TBD), rs = #form.keys == 1 and nil or table.concat(form.keys, ",") }
 		box.what:ClearAllPoints()
 		box.what:SetPoint("TOPLEFT", SP.m, -y)
 		box.what:SetPoint("RIGHT", -SP.m, 0)
-		box.what:SetText(#form.keys == 0 and "No instance picked: the raid is \"to be decided\". Pick them later on the Raids page."
-			or (Board.EventName(probe) .. " (" .. Board.EventSize(probe) .. ")"))
+		box.what:SetText(#keys == 0 and "No instance picked: the raid is \"to be decided\". Pick them later on the Raids page."
+			or (Board.EventName(probe) .. " (" .. Board.EventSize(probe) .. ")" ..
+				(dungeon and ": a dungeon group, no attendance or reserves." or "")))
 		y = y + 28
 		box.create:ClearAllPoints()
 		box.create:SetPoint("TOPLEFT", SP.m, -y)
