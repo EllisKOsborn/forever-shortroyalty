@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.8 (not released yet): dungeon groups (UBRS)
+## v0.16.8 (25 Nov 2026): dungeon groups (UBRS), Raider check
 
 - **Anyone can make a dungeon group for Upper Blackrock Spire** (10 players,
   from Forever's own game data) on the Raids calendar: click a day, pick the
